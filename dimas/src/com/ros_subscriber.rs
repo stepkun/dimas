@@ -99,7 +99,9 @@ where
 		} = self;
 		RosSubscriberBuilder {
 			prefix,
-			topic: Topic { topic: topic.into() },
+			topic: Topic {
+				topic: topic.into(),
+			},
 			callback,
 			storage,
 			phantom,

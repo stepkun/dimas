@@ -25,7 +25,15 @@ async fn main() -> Result<()> {
 	let mut agent = Agent::new(properties).config(Config::default())?;
 
 	// create publisher for topic "hello"
-	agent.ros_publisher().topic("hello").add()?;
+	agent
+		.ros_publisher()
+		.topic(
+			"chatter",
+			"std_msgs",
+			"String",
+			Arc::new("test".to_string()),
+		)
+		.add()?;
 
 	// add a timer
 	agent

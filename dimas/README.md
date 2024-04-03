@@ -198,3 +198,6 @@ It is necessary to enable all those features you want to use within your `Agent`
 - `queryable`: Enables to store `Queryable`s within the `Agent`s `Context`.
 - `subscriber`: Enables to store `Subscriber` within the `Agent`s `Context`.
 - `timer`: Enables to store `Timer` within the `Agent`s `Context`.
+- `ros`: Enables using ROS2 features like `RosPublisher` and `RosSubscriber`.
+- `ros_publisher`: Enables to store `RosPublisher` within the `Agent`s `Context`. Includes feature `ros`.
+- `ros_subscriber`: Enables to store `RosSubscriber` within the `Agent`s `Context`.  Includes feature `ros`.

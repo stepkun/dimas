@@ -15,6 +15,8 @@
 
 // region:		--- modules
 use crate::prelude::*;
+#[cfg(feature = "ros")]
+use ros2_client::{Context, Node, NodeName, NodeOptions};
 use std::fmt::Debug;
 use tracing::error;
 use zenoh::prelude::{r#async::*, sync::SyncResolve};
@@ -23,12 +25,31 @@ use zenoh::publication::Publisher;
 
 // region:		--- Communicator
 /// [`Communicator`] handles all communication aspects
-#[derive(Debug)]
 pub struct Communicator {
 	/// The zenoh session
 	pub(crate) session: Arc<Session>,
+	/// The ros2 node
+	#[cfg(feature = "ros")]
+	pub(crate) node: Node,
 	/// A prefix to separate communication for different groups of [`Agent`]s
 	pub(crate) prefix: Option<String>,
+}
+impl Debug for Communicator {
+	#[cfg(feature = "ros")]
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("Communicator")
+			.field("session", &self.session)
+			.field("node", &self.node.fully_qualified_name())
+			.field("prefix", &self.prefix)
+			.finish()
+	}
+	#[cfg(not(feature = "ros"))]
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("Communicator")
+			.field("session", &self.session)
+			.field("prefix", &self.prefix)
+			.finish()
+	}
 }
 
 impl Communicator {
@@ -40,10 +61,25 @@ impl Communicator {
 				.res_sync()
 				.map_err(DimasError::CreateSession)?,
 		);
-		Ok(Self {
+		#[cfg(feature = "ros")]
+		let context = Context::new()?;
+		#[cfg(feature = "ros")]
+		let node = context.new_node(
+			NodeName::new("/rustdds", "dimas").map_err(|_| DimasError::ShouldNotHappen)?,
+			NodeOptions::default(),
+		)?;
+		#[cfg(feature = "ros")]
+		let ret = Self {
+			session,
+			node,
+			prefix: None,
+		};
+		#[cfg(not(feature = "ros"))]
+		let ret = Self {
 			session,
 			prefix: None,
-		})
+		};
+		Ok(ret)
 	}
 
 	/// Get [`Agent`]s globally unique ID

@@ -455,10 +455,8 @@ where
 	#[must_use]
 	pub fn ros_publisher(
 		&self,
-	) -> RosPublisherBuilder<
-		crate::com::ros_publisher::NoTopic,
-		crate::com::ros_publisher::Storage,
-	> {
+	) -> RosPublisherBuilder<crate::com::ros_publisher::NoTopic, crate::com::ros_publisher::Storage>
+	{
 		RosPublisherBuilder::new(self.prefix()).storage(self.ros_publishers.clone())
 	}
 	/// Get a [`RosPublisherBuilder`], the builder for a [`RosPublisher`].
@@ -466,10 +464,8 @@ where
 	#[must_use]
 	pub fn ros_publisher(
 		&self,
-	) -> RosPublisherBuilder<
-		crate::com::ros_publisher::NoTopic,
-		crate::com::ros_publisher::NoStorage,
-	> {
+	) -> RosPublisherBuilder<crate::com::ros_publisher::NoTopic, crate::com::ros_publisher::NoStorage>
+	{
 		RosPublisherBuilder::new(self.prefix())
 	}
 

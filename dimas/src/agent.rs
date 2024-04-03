@@ -65,8 +65,9 @@ pub struct UnconfiguredAgent<P>
 where
 	P: Send + Sync + Unpin + 'static,
 {
-	prefix: Option<String>,
 	props: P,
+	name: Option<String>,
+	prefix: Option<String>,
 }
 
 impl<'a, P> UnconfiguredAgent<P>
@@ -77,8 +78,16 @@ where
 	const fn new(properties: P) -> Self {
 		Self {
 			props: properties,
+			name: None,
 			prefix: None,
 		}
+	}
+
+	/// Set a new name
+	#[must_use]
+	pub fn name(mut self, name: impl Into<String>) -> Self {
+		self.name = Some(name.into());
+		self
 	}
 
 	/// Set a prefix
@@ -89,6 +98,7 @@ where
 	}
 
 	/// Set the [`Config`]uration.
+	/// Returns a configured Agent
 	///
 	/// # Errors
 	pub fn config(self, config: Config) -> Result<Agent<'a, P>> {
@@ -134,7 +144,7 @@ impl<'a, P> Agent<'a, P>
 where
 	P: Send + Sync + Unpin + 'static,
 {
-	/// Builder
+	/// Returns an unconfigured Agent.
 	#[allow(clippy::new_ret_no_self)]
 	pub const fn new(properties: P) -> UnconfiguredAgent<P> {
 		UnconfiguredAgent::new(properties)
@@ -303,10 +313,8 @@ where
 	#[must_use]
 	pub fn ros_publisher(
 		&self,
-	) -> RosPublisherBuilder<
-		crate::com::ros_publisher::NoTopic,
-		crate::com::ros_publisher::Storage,
-	> {
+	) -> RosPublisherBuilder<crate::com::ros_publisher::NoTopic, crate::com::ros_publisher::Storage>
+	{
 		self.context.ros_publisher()
 	}
 	/// Get a [`RosPublisherBuilder`], the builder for a [`RosPublisher`].
@@ -314,10 +322,8 @@ where
 	#[must_use]
 	pub fn ros_publisher(
 		&self,
-	) -> RosPublisherBuilder<
-		crate::com::ros_publisher::NoTopic,
-		crate::com::ros_publisher::NoStorage,
-	> {
+	) -> RosPublisherBuilder<crate::com::ros_publisher::NoTopic, crate::com::ros_publisher::NoStorage>
+	{
 		self.context.ros_publisher()
 	}
 

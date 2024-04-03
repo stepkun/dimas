@@ -35,7 +35,7 @@ authors = [
 ]
 #license = "NGMC"
 license-file = "LICENSE"
-keywords = ["automation", "mas", "robots", "robotics"]
+keywords = ["automation", "mas", "network", "robots", "robotics"]
 categories = [
 	"development-tools",
 	"network-programming",

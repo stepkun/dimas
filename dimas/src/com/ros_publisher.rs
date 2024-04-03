@@ -4,7 +4,7 @@
 use crate::prelude::*;
 #[allow(unused_imports)]
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 // endregion:	--- modules
 
 // region:		--- states
@@ -21,8 +21,14 @@ pub struct Storage {
 pub struct NoTopic;
 /// State signaling that the [`RosPublisherBuilder`] has the topic set
 pub struct Topic {
-	/// The topic
-	topic: String,
+	/// The topic name
+	name: String,
+	/// The messages package
+	package: String,
+	/// The messages name within package
+	message_name: String,
+	/// The message
+	message: Arc<dyn Any + Send + Sync + Unpin>,
 }
 // endregion:	--- states
 
@@ -45,6 +51,13 @@ impl RosPublisherBuilder<NoTopic, NoStorage> {
 			storage: NoStorage,
 		}
 	}
+
+	/// set a different namespace
+	#[must_use]
+	pub fn namespace(mut self, namespace: impl Into<String>) -> Self {
+		self.prefix = Some(namespace.into());
+		self
+	}
 }
 
 #[cfg(feature = "ros_publisher")]
@@ -55,9 +68,7 @@ impl<K> RosPublisherBuilder<K, NoStorage> {
 		self,
 		storage: Arc<RwLock<std::collections::HashMap<String, RosPublisher>>>,
 	) -> RosPublisherBuilder<K, Storage> {
-		let Self {
-			prefix, topic, ..
-		} = self;
+		let Self { prefix, topic, .. } = self;
 		RosPublisherBuilder {
 			prefix,
 			topic,
@@ -70,13 +81,24 @@ impl<S> RosPublisherBuilder<NoTopic, S> {
 	/// Set the topic of the [`Publisher`].
 	/// Will be prefixed with [`Agent`]s prefix as namespace.
 	#[must_use]
-	pub fn topic(self, topic: &str) -> RosPublisherBuilder<Topic, S> {
+	pub fn topic(
+		self,
+		name: &str,
+		package: &str,
+		message_name: &str,
+		message: Arc<dyn Any + Send + Sync + Unpin>,
+	) -> RosPublisherBuilder<Topic, S> {
 		let Self {
 			prefix, storage, ..
 		} = self;
 		RosPublisherBuilder {
 			prefix,
-			topic: Topic { topic: topic.into() },
+			topic: Topic {
+				name: name.into(),
+				package: package.into(),
+				message_name: message_name.into(),
+				message,
+			},
 			storage,
 		}
 	}
@@ -89,7 +111,10 @@ impl<S> RosPublisherBuilder<Topic, S> {
 	/// Currently none
 	pub fn build(self) -> Result<RosPublisher> {
 		Ok(RosPublisher {
-			topic: self.topic.topic,
+			name: self.topic.name,
+			package: self.topic.package,
+			message_name: self.topic.message_name,
+			message: self.topic.message,
 		})
 	}
 }
@@ -102,12 +127,13 @@ impl RosPublisherBuilder<Topic, Storage> {
 	/// Currently none
 	#[cfg_attr(any(nightly, docrs), doc, doc(cfg(feature = "ros_publisher")))]
 	pub fn add(self) -> Result<Option<RosPublisher>> {
+		let key = format!("/{}/{}", &self.topic.package, &self.topic.message_name);
 		let collection = self.storage.storage.clone();
 		let p = self.build()?;
 		let r = collection
 			.write()
 			.map_err(|_| DimasError::ShouldNotHappen)?
-			.insert(p.topic.to_string(), p);
+			.insert(key, p);
 		Ok(r)
 	}
 }
@@ -116,13 +142,17 @@ impl RosPublisherBuilder<Topic, Storage> {
 // region:		--- RosPublisher
 /// `RosPublisher`
 pub struct RosPublisher {
-	pub(crate) topic: String,
+	pub(crate) name: String,
+	pub(crate) package: String,
+	pub(crate) message_name: String,
+	pub(crate) message: Arc<dyn Any + Send + Sync + Unpin>,
 }
 
 impl Debug for RosPublisher {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("RosPublisher")
-			.field("topic", &self.topic)
+			.field("package", &self.package)
+			.field("name", &self.message_name)
 			//.field("initialized", &self.publisher.is_some())
 			.finish_non_exhaustive()
 	}
