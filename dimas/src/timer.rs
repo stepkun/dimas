@@ -4,9 +4,16 @@
 //! When fired, a `Timer` calls his assigned `TimerCallback`.
 
 // region:		--- modules
-use crate::{com::task_signal::TaskSignal, prelude::*};
-use dimas_core::traits::{ManageState, OperationState};
-use std::{fmt::Debug, sync::Mutex, time::Duration};
+use dimas_core::{
+	error::{DimasError, Result},
+	task_signal::TaskSignal,
+	traits::{Capability, Context, OperationState},
+};
+use std::{
+	fmt::Debug,
+	sync::{Arc, Mutex, RwLock},
+	time::Duration,
+};
 use tokio::{task::JoinHandle, time};
 use tracing::{error, info, instrument, warn, Level};
 // endregion:	--- modules
@@ -14,9 +21,8 @@ use tracing::{error, info, instrument, warn, Level};
 // region:		--- types
 /// type definition for the functions called by a timer
 #[allow(clippy::module_name_repetitions)]
-pub type TimerCallback<P> = Arc<
-	Mutex<Option<Box<dyn FnMut(&ArcContext<P>) -> Result<()> + Send + Sync + Unpin + 'static>>>,
->;
+pub type TimerCallback<P> =
+	Arc<Mutex<Option<Box<dyn FnMut(&Context<P>) -> Result<()> + Send + Sync + Unpin + 'static>>>>;
 // endregion:	--- types
 
 // region:		--- states
@@ -68,7 +74,7 @@ pub struct TimerBuilder<P, K, I, C, S>
 where
 	P: Send + Sync + Unpin + 'static,
 {
-	context: ArcContext<P>,
+	context: Context<P>,
 	activation_state: OperationState,
 	key_expr: K,
 	interval: I,
@@ -83,7 +89,7 @@ where
 {
 	/// Construct a `TimerBuilder` in initial state
 	#[must_use]
-	pub const fn new(context: ArcContext<P>) -> Self {
+	pub const fn new(context: Context<P>) -> Self {
 		Self {
 			context,
 			activation_state: OperationState::Active,
@@ -210,7 +216,7 @@ where
 	#[must_use]
 	pub fn callback<F>(self, callback: F) -> TimerBuilder<P, K, I, IntervalCallback<P>, S>
 	where
-		F: FnMut(&ArcContext<P>) -> Result<()> + Send + Sync + Unpin + 'static,
+		F: FnMut(&Context<P>) -> Result<()> + Send + Sync + Unpin + 'static,
 	{
 		let Self {
 			context,
@@ -326,7 +332,7 @@ where
 		/// The Timers ID
 		key_expr: String,
 		/// Context for the Timer
-		context: ArcContext<P>,
+		context: Context<P>,
 		/// [`OperationState`] on which this timer is started
 		activation_state: OperationState,
 		/// Timers Callback function called, when Timer is fired
@@ -341,7 +347,7 @@ where
 		/// The Timers ID
 		key_expr: String,
 		/// Context for the Timer
-		context: ArcContext<P>,
+		context: Context<P>,
 		/// [`OperationState`] on which this timer is started
 		activation_state: OperationState,
 		/// Timers Callback function called, when Timer is fired
@@ -376,11 +382,11 @@ where
 	}
 }
 
-impl<P> ManageState for Timer<P>
+impl<P> Capability for Timer<P>
 where
 	P: Send + Sync + Unpin + 'static,
 {
-	fn manage_state(&mut self, state: &OperationState) -> Result<()> {
+	fn manage_operation_state(&mut self, state: &OperationState) -> Result<()> {
 		match self {
 			Self::Interval {
 				key_expr: _,
@@ -419,7 +425,7 @@ where
 	#[must_use]
 	pub fn new(
 		name: String,
-		context: ArcContext<P>,
+		context: Context<P>,
 		activation_state: OperationState,
 		callback: TimerCallback<P>,
 		interval: Duration,
@@ -478,7 +484,7 @@ where
 					std::panic::set_hook(Box::new(move |reason| {
 						error!("interval timer panic: {}", reason);
 						if let Err(reason) = ctx1
-							.tx
+							.sender()
 							.send(TaskSignal::RestartTimer(key.clone()))
 						{
 							error!("could not restart timer: {}", reason);
@@ -517,7 +523,7 @@ where
 					std::panic::set_hook(Box::new(move |reason| {
 						error!("delayed timer panic: {}", reason);
 						if let Err(reason) = ctx1
-							.tx
+							.sender()
 							.send(TaskSignal::RestartTimer(key.clone()))
 						{
 							error!("could not restart timer: {}", reason);
@@ -563,7 +569,7 @@ where
 }
 
 #[instrument(name="timer", level = Level::ERROR, skip_all)]
-async fn run_timer<P>(interval: Duration, cb: TimerCallback<P>, ctx: ArcContext<P>)
+async fn run_timer<P>(interval: Duration, cb: TimerCallback<P>, ctx: Context<P>)
 where
 	P: Send + Sync + Unpin + 'static,
 {
