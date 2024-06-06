@@ -12,7 +12,13 @@ struct AgentProps {}
 
 fn query_callback(_ctx: &Context<AgentProps>, response: Response) -> Result<()> {
 	let message: u128 = response.decode()?;
-	println!("Response is '{message}'");
+	println!("Response 1 is '{message}'");
+	Ok(())
+}
+
+fn query_callback2(response: Response) -> Result<()> {
+	let message: u128 = response.decode()?;
+	println!("Response 2 is '{message}'");
 	Ok(())
 }
 
@@ -30,25 +36,99 @@ async fn main() -> Result<()> {
 		.name("query")
 		.config(&Config::default())?;
 
-	// create publisher for topic "ping"
+	// create query for topic "query/1"
 	agent
 		.query()
-		.topic("query")
+		.topic("query1")
 		.callback(query_callback)
 		.add()?;
 
 	// timer for regular querying
-	let duration = Duration::from_secs(1);
-	let mut counter = 0i128;
+	let interval = Duration::from_secs(4);
+	let mut counter1 = 0i128;
 	agent
 		.timer()
-		.name("timer")
-		.interval(duration)
+		.name("timer1")
+		.interval(interval)
 		.callback(move |ctx| -> Result<()> {
-			info!("Querying [{counter}]");
+			info!("Querying [{counter1}]");
+			let message = Message::encode(&counter1);
 			// querying with stored query
-			ctx.get_with("query")?;
-			counter += 1;
+			ctx.get("query1", Some(message), None)?;
+			counter1 += 4;
+			Ok(())
+		})
+		.add()?;
+
+	// timer for regular querying
+	let interval = Duration::from_secs(4);
+	let delay = Duration::from_secs(1);
+	let mut counter2 = 1i128;
+	agent
+		.timer()
+		.name("timer2")
+		.interval(interval)
+		.delay(delay)
+		.callback(move |ctx| -> Result<()> {
+			info!("Querying [{counter2}]");
+			let message = Message::encode(&counter2);
+			// querying with ad-hoc query
+			ctx.get("query2", Some(message), Some(&query_callback2))?;
+			counter2 += 4;
+			Ok(())
+		})
+		.add()?;
+
+	// timer for regular querying
+	let interval = Duration::from_secs(4);
+	let delay = Duration::from_secs(2);
+	let mut counter3 = 2i128;
+	agent
+		.timer()
+		.name("timer3")
+		.interval(interval)
+		.delay(delay)
+		.callback(move |ctx| -> Result<()> {
+			info!("Querying [{counter3}]");
+			let message = Message::encode(&counter3);
+			// querying with ad-hoc query & closure
+			ctx.get(
+				"query3",
+				Some(message),
+				Some(&|response| -> Result<()> {
+					let message: u128 = response.decode()?;
+					println!("Response 3 is '{message}'");
+					Ok(())
+				}),
+			)?;
+			counter3 += 4;
+			Ok(())
+		})
+		.add()?;
+
+	// timer for regular querying
+	let interval = Duration::from_secs(4);
+	let delay = Duration::from_secs(3);
+	let mut counter4 = 3i128;
+	agent
+		.timer()
+		.name("timer4")
+		.interval(interval)
+		.delay(delay)
+		.callback(move |ctx| -> Result<()> {
+			info!("Querying [{counter4}]");
+			let message = Message::encode(&counter4);
+			// querying with stored query & closure
+			ctx.get(
+				"query1",
+				Some(message),
+				Some(&|response| -> Result<()> {
+					let message: u128 = response.decode()?;
+					println!("Response 4 is '{message}'");
+					Ok(())
+				}),
+			)?;
+			counter4 += 4;
 			Ok(())
 		})
 		.add()?;

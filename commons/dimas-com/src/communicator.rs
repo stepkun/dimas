@@ -10,7 +10,6 @@ use dimas_core::{
 };
 use std::fmt::Debug;
 use std::sync::Arc;
-use std::time::Duration;
 use zenoh::prelude::{r#async::*, sync::SyncResolve};
 // endregion:	--- modules
 
@@ -22,8 +21,6 @@ pub struct Communicator {
 	session: Arc<Session>,
 	/// Mode of the session (router|peer|client)
 	mode: String,
-	/// A prefix to separate communication for different groups
-	prefix: Option<String>,
 }
 
 impl Communicator {
@@ -40,7 +37,6 @@ impl Communicator {
 		Ok(Self {
 			session,
 			mode: kind,
-			prefix: None,
 		})
 	}
 
@@ -62,65 +58,47 @@ impl Communicator {
 		&self.mode
 	}
 
-	/// Get group prefix
-	#[must_use]
-	pub const fn prefix(&self) -> &Option<String> {
-		&self.prefix
-	}
-
-	/// Set group prefix
-	pub fn set_prefix(&mut self, prefix: impl Into<String>) {
-		self.prefix = Some(prefix.into());
-	}
-
-	/// Create a key expression from a topic by adding prefix if one is given.
-	#[must_use]
-	pub fn key_expr(&self, topic: &str) -> String {
-		self.prefix
-			.clone()
-			.map_or_else(|| topic.into(), |prefix| format!("{prefix}/{topic}"))
-	}
-
-	/// Send an ad hoc put `message` of type `Message` using the given `topic`.
-	/// The `topic` will be enhanced with the group prefix.
+	/// Send an ad hoc put `message` of type `Message` using the given `selector`.
 	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn put(&self, topic: &str, message: Message) -> Result<()> {
-		let key_expr = self.key_expr(topic);
-
+	pub fn put(&self, selector: &str, message: Message) -> Result<()> {
 		self.session
-			.put(&key_expr, message.0)
+			.put(selector, message.0)
 			.res_sync()
 			.map_err(|_| DimasError::Put.into())
 	}
 
-	/// Send an ad hoc delete using the given `topic`.
-	/// The `topic` will be enhanced with the group prefix.
+	/// Send an ad hoc delete using the given `selector`.
 	/// # Errors
-	pub fn delete(&self, topic: &str) -> Result<()> {
-		let key_expr = self.key_expr(topic);
-
+	pub fn delete(&self, selector: &str) -> Result<()> {
 		self.session
-			.delete(&key_expr)
+			.delete(selector)
 			.res_sync()
 			.map_err(|_| DimasError::Delete.into())
 	}
 
-	/// Send an ad hoc query using the given `selector`.
+	/// Send an ad hoc query with an optional [`Message`] using the given `selector`.
 	/// Answers are collected via callback
 	/// # Errors
 	/// # Panics
-	pub fn get<F>(&self, selector: &str, mut callback: F) -> Result<()>
+	pub fn get<F>(&self, selector: &str, message: Option<Message>, mut callback: F) -> Result<()>
 	where
-		F: FnMut(Response) + Sized,
+		F: FnMut(Response) -> Result<()> + Sized,
 	{
-		let replies = self
+		let mut query = self
 			.session
 			.get(selector)
 			.consolidation(ConsolidationMode::None)
 			.target(QueryTarget::All)
-			.allowed_destination(Locality::Any)
-			.timeout(Duration::from_millis(1000))
+			.allowed_destination(Locality::Any);
+		//.timeout(Duration::from_millis(1000));
+
+		if let Some(message) = message {
+			let value = message.value().to_owned();
+			query = query.with_value(value);
+		};
+
+		let replies = query
 			.res_sync()
 			.map_err(|_| DimasError::ShouldNotHappen)?;
 
@@ -129,7 +107,7 @@ impl Communicator {
 				Ok(sample) => match sample.kind {
 					SampleKind::Put => {
 						let content: Vec<u8> = sample.value.try_into()?;
-						callback(Response(content));
+						callback(Response(content))?;
 					}
 					SampleKind::Delete => {
 						println!("Delete in Query");
@@ -137,8 +115,9 @@ impl Communicator {
 				},
 				Err(err) => {
 					println!(
-						">> Received (ERROR: '{}')",
-						String::try_from(&err).expect("snh")
+						">> Received (ERROR: '{}' for {})",
+						String::try_from(&err).expect("snh"),
+						selector
 					);
 				}
 			}
@@ -163,10 +142,9 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	//#[serial]
-	async fn communicator_create_multi() -> Result<()> {
+	async fn communicator_create() -> Result<()> {
 		let cfg = dimas_config::Config::default();
-		let mut peer = Communicator::new(&cfg)?;
-		peer.set_prefix("test");
+		let _peer = Communicator::new(&cfg)?;
 		Ok(())
 	}
 }
