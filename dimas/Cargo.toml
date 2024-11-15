@@ -16,12 +16,14 @@ documentation = "https://docs.rs/dimas/latest/dimas/"
 readme = "README.md"
 exclude = [
     "tests/**/*",
+    "examples/**/*",
 ]
 
 [lints]
 workspace = true
 
 [dependencies]
+behaviortree-rs = { workspace = true }
 bitcode = { workspace = true }
 chrono = { workspace = true }
 derive_more = { workspace = true, features = ["from"] }
