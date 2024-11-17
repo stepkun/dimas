@@ -1,0 +1,36 @@
+/// This file attempts to list and document available configuration elements for a DiMAS agent.
+/// Note that the values here are correctly typed, but may not be a valid configuration.
+/// Copying this file to change only the parts that matter to you is not good practice.
+{
+  /// Configuration for the default communication session
+  /// This **must** always be a zenoh session. 
+  /// You can either include a distinct valid zenoh configuration file with the #include statement
+  /// or write the configuration directly to the tag using { <configuration data> }
+  /// see: https://github.com/eclipse-zenoh/zenoh/blob/main/DEFAULT_CONFIG.json5
+  /// Internal name of this session is "default"
+  ///
+  /// Simple inline configuration
+  zenoh: {
+    mode: "peer",
+    connect: : {
+      endpoints: ["tcp/localhost:7447"],
+    },
+  },
+  // /// Include of a separate zenoh configuration
+  // zenoh: "#include ./zenoh_config.json5",
+
+  // /// For additonal communication sessions add an optional array of protocol definitions.
+  // /// Currently there is only the zenoh protocol implemented. 
+  // sessions: [
+  //   /// Protocol definition, currently only "zenoh" available
+  //   { 
+  //     /// protocol type, currently only "zenoh" available
+  //     protocol: "zenoh",
+  //     /// A unique name to distinguish different sessions.
+  //     /// Don't use "default" as this will overwrite the dafault session above.
+  //     name: "network",
+  //     /// configuration via include of file or directly, same as with default session above
+  //     config: "#include ./other_zenoh_config.json5",
+  //   },
+  // ],
+}
