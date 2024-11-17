@@ -15,6 +15,10 @@ repository.workspace = true
 description = "dimas-time - time library for DiMAS"
 documentation = "https://docs.rs/dimas-time/latest/dimas-time/"
 readme = "README.md"
+exclude = [
+    "tests/**/*",
+    "examples/**/*",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
