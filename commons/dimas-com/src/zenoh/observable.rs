@@ -12,6 +12,7 @@ use alloc::{
 	sync::Arc,
 	vec::Vec,
 };
+use anyhow::Result;
 use bitcode::encode;
 use core::time::Duration;
 use dimas_core::{
@@ -19,7 +20,6 @@ use dimas_core::{
 	message_types::{ControlResponse, Message, ObservableResponse},
 	traits::{Capability, Context},
 	utils::feedback_selector_from,
-	Result,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -246,7 +246,7 @@ async fn run_observable<P>(
 	execution_function: ArcExecutionCallback<P>,
 	execution_handle: Arc<Mutex<Option<JoinHandle<()>>>>,
 	ctx: Context<P>,
-) -> Result<()>
+) -> core::result::Result<(), Box<dyn core::error::Error + Send + Sync + 'static>>
 where
 	P: Send + Sync + 'static,
 {

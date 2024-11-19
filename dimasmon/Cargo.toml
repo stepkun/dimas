@@ -34,6 +34,7 @@ unsafe_code = "allow"
 private_intra_doc_links = "allow"
 
 [dependencies]
+anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 slint = { workspace = true }
 

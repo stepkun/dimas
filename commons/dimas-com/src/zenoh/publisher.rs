@@ -11,8 +11,9 @@ extern crate std;
 // region:		--- modules
 use crate::error::Error;
 use alloc::{string::String, sync::Arc};
+use anyhow::Result;
 use core::fmt::Debug;
-use dimas_core::{enums::OperationState, message_types::Message, traits::Capability, Result};
+use dimas_core::{enums::OperationState, message_types::Message, traits::Capability};
 use tracing::{instrument, Level};
 #[cfg(feature = "unstable")]
 use zenoh::{qos::Reliability, sample::Locality};
@@ -155,15 +156,18 @@ impl Publisher {
 			.allowed_destination(self.allowed_destination)
 			.reliability(self.reliability);
 
-		let new_publisher = builder.wait()?;
-		//.map_err(|_| DimasError::Put.into())?;
-		self.publisher.lock().map_or_else(
+		builder.wait().map_or_else(
 			|_| todo!(),
-			|mut publisher| {
-				publisher.replace(new_publisher);
-				Ok(())
+			|new_publisher| {
+				self.publisher.lock().map_or_else(
+					|_| todo!(),
+					|mut publisher| {
+						publisher.replace(new_publisher);
+					},
+				);
 			},
-		)
+		);
+		Ok(())
 	}
 
 	/// De-Initialize

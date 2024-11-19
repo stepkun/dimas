@@ -46,9 +46,8 @@ Your `Cargo.toml` should include:
 dimas = "0.4.0"
 ```
 
-It makes sense to return a `Result`, as most DiMAS `Agent`s functions return one.
-DiMAS errors are of type `Box<dyn core::error::Error>` and must be thread safe.
-DiMAS provides a type definition `Result<T>` to make life easier
+It makes sense to return a `Result` in `main`, as most DiMAS `Agent`s functions return one.
+DiMAS internally uses `anyhow::Result<T>` and re-exports it for convenience.
 
 DiMAS also provides a `main` attribute macro to create the runtime environment
 and a `prelude` to import most used declarations.
@@ -202,7 +201,7 @@ and more complex examples in [dimas-fw/examples](https://github.com/dimas-fw/exa
 
 ## License
 
-Licensed with a proprietary "NGMC" license, see [license file](LICENSE)
+Licensed with a proprietary "NGMC" license, see [license file](https://github.com/dimas-fw/dimas/blob/main/LICENSE)
 
 ## Contribution
 

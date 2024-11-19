@@ -47,6 +47,7 @@
 // region:		--- modules
 use crate::context::ContextImpl;
 use crate::error::Error;
+use anyhow::Result;
 use chrono::Local;
 use core::{fmt::Debug, time::Duration};
 #[cfg(feature = "unstable")]
@@ -65,7 +66,6 @@ use dimas_core::{
 	enums::{OperationState, Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
 	traits::{Capability, Context, ContextAbstraction},
-	Result,
 };
 use dimas_time::{Timer, TimerBuilder};
 use std::sync::Arc;

@@ -34,6 +34,7 @@
 #[cfg(doc)]
 use crate::agent::Agent;
 use crate::error::Error;
+use anyhow::Result;
 use core::fmt::Debug;
 #[cfg(feature = "unstable")]
 use dimas_com::traits::LivelinessSubscriber;
@@ -47,7 +48,6 @@ use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::{Message, QueryableMsg},
 	traits::{Capability, ContextAbstraction},
-	Result,
 };
 use dimas_time::Timer;
 use std::{

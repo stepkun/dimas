@@ -11,12 +11,12 @@ extern crate std;
 // region:		--- modules
 use alloc::sync::Arc;
 use alloc::{boxed::Box, string::String};
+use anyhow::Result;
 use core::fmt::Debug;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::QueryMsg,
 	traits::{Capability, Context},
-	Result,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -190,7 +190,7 @@ async fn run_queryable<P>(
 	completeness: bool,
 	#[cfg(feature = "unstable")] allowed_origin: Locality,
 	ctx: Context<P>,
-) -> Result<()>
+) -> core::result::Result<(), Box<dyn core::error::Error + Send + Sync + 'static>>
 where
 	P: Send + Sync + 'static,
 {

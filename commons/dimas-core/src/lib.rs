@@ -16,6 +16,3 @@ pub mod message_types;
 pub mod traits;
 /// Utilities
 pub mod utils;
-
-// flatten
-pub use error::Result;

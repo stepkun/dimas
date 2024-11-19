@@ -15,11 +15,12 @@ use alloc::{
 	borrow::ToOwned,
 	string::{String, ToString},
 };
+use anyhow::Result;
 use chrono::Local;
 use core::time::Duration;
 use dimas_com::{traits::CommunicatorImplementationMethods, zenoh::Communicator};
 use dimas_config::Config;
-use dimas_core::{enums::Signal, message_types::Message, utils::selector_from, Result};
+use dimas_core::{enums::Signal, message_types::Message, utils::selector_from};
 #[cfg(feature = "std")]
 use std::collections::HashMap;
 use zenoh::{
@@ -101,21 +102,26 @@ pub fn ping_list(com: &Communicator, base_selector: &String) -> Result<Vec<(Ping
 pub fn scouting_list(config: &Config) -> Result<Vec<ScoutingEntity>> {
 	let mut map: HashMap<String, ScoutingEntity> = HashMap::new();
 	let what = WhatAmI::Router | WhatAmI::Peer | WhatAmI::Client;
-	let receiver = zenoh::scout(what, config.zenoh_config().to_owned()).wait()?;
+	zenoh::scout(what, config.zenoh_config().to_owned())
+		.wait()
+		.map_or_else(
+			|_| todo!(),
+			|receiver| {
+				while let Ok(Some(hello)) = receiver.recv_timeout(Duration::from_millis(250)) {
+					let zid = hello.zid().to_string();
+					let locators: Vec<String> = hello
+						.locators()
+						.iter()
+						.map(Locator::to_string)
+						.collect();
 
-	while let Ok(Some(hello)) = receiver.recv_timeout(Duration::from_millis(250)) {
-		let zid = hello.zid().to_string();
-		let locators: Vec<String> = hello
-			.locators()
-			.iter()
-			.map(Locator::to_string)
-			.collect();
-
-		let entry = ScoutingEntity::new(zid.clone(), hello.whatami().to_string(), locators);
-		map.entry(zid).or_insert(entry);
-	}
-	let result: Vec<ScoutingEntity> = map.values().cloned().collect();
-
-	Ok(result)
+					let entry =
+						ScoutingEntity::new(zid.clone(), hello.whatami().to_string(), locators);
+					map.entry(zid).or_insert(entry);
+				}
+				let result: Vec<ScoutingEntity> = map.values().cloned().collect();
+				Ok(result)
+			},
+		)
 }
 // endregion:	--- scouting_list

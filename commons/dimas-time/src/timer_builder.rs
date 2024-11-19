@@ -22,8 +22,9 @@ use alloc::{
 	string::{String, ToString},
 	sync::Arc,
 };
+use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{enums::OperationState, traits::Context, Result};
+use dimas_core::{enums::OperationState, traits::Context};
 use std::{
 	collections::HashMap,
 	sync::{Mutex, RwLock},

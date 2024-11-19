@@ -17,11 +17,11 @@ use alloc::{
 	string::{String, ToString},
 	sync::Arc,
 };
+use anyhow::Result;
 use core::time::Duration;
 use dimas_core::builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage};
 use dimas_core::{
 	enums::OperationState, message_types::QueryableMsg, traits::Context, utils::selector_from,
-	Result,
 };
 use futures::Future;
 #[cfg(feature = "std")]

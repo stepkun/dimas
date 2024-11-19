@@ -16,11 +16,6 @@ use alloc::{boxed::Box, string::String};
 use thiserror::Error;
 // endregion:	--- modules
 
-// region:		--- types
-/// Result type alias.
-pub type Result<T> = core::result::Result<T, Box<dyn core::error::Error + Send + Sync + 'static>>;
-// endregion:	--- types
-
 // region:		--- Error
 /// `dimas-core` error type.
 #[derive(Error, Debug)]

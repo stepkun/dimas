@@ -26,9 +26,10 @@ use alloc::{
 	sync::Arc,
 	vec::Vec,
 };
+use anyhow::Result;
 use dimas_config::Config;
 use dimas_core::message_types::{Message, QueryableMsg};
-use dimas_core::{enums::OperationState, traits::Capability, Result};
+use dimas_core::{enums::OperationState, traits::Capability};
 use std::{collections::HashMap, sync::RwLock};
 use zenoh::{config::ZenohId, Session};
 // endregion:   --- modules

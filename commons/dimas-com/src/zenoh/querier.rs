@@ -11,12 +11,12 @@ extern crate std;
 // region:		--- modules
 use crate::error::Error;
 use alloc::sync::Arc;
+use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::OperationState,
 	message_types::{Message, QueryableMsg},
 	traits::{Capability, Context},
-	Result,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -250,11 +250,10 @@ where
 		self.key_expr.lock().map_or_else(
 			|_| todo!(),
 			|mut key_expr| {
-				let new_key_expr = self
-					.session
+				self.session
 					.declare_keyexpr(self.selector.clone())
-					.wait()?;
-				key_expr.replace(new_key_expr);
+					.wait()
+					.map_or_else(|_| todo!(), |new_key_expr| key_expr.replace(new_key_expr));
 				Ok(())
 			},
 		)

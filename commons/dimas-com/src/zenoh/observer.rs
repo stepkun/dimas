@@ -14,6 +14,7 @@ use alloc::{
 	string::{String, ToString},
 	vec::Vec,
 };
+use anyhow::Result;
 use bitcode::decode;
 use core::time::Duration;
 use dimas_core::{
@@ -21,7 +22,6 @@ use dimas_core::{
 	message_types::{ControlResponse, Message, ObservableResponse},
 	traits::{Capability, Context},
 	utils::{cancel_selector_from, feedback_selector_from, request_selector_from},
-	Result,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -344,7 +344,7 @@ async fn run_observation<P>(
 	selector: String,
 	ctx: Context<P>,
 	rcb: ArcResponseCallback<P>,
-) -> Result<()> {
+) -> core::result::Result<(), Box<dyn core::error::Error + Send + Sync + 'static>> {
 	// create the feedback subscriber
 	let subscriber = session.declare_subscriber(&selector).await?;
 

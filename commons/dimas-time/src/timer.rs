@@ -11,11 +11,11 @@ extern crate std;
 
 // region:		--- modules
 use alloc::{boxed::Box, string::String, sync::Arc};
+use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	traits::{Capability, Context},
-	Result,
 };
 #[cfg(feature = "std")]
 use std::sync::Mutex;

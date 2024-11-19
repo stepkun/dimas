@@ -6,8 +6,9 @@
 extern crate alloc;
 
 // region:		--- modules
-use crate::error::{Error, Result};
+use crate::error::Error;
 use alloc::{boxed::Box, string::ToString, vec::Vec};
+use anyhow::Result;
 use bitcode::{decode, encode, Decode, Encode};
 use core::ops::Deref;
 use zenoh::{query::Query, Wait};

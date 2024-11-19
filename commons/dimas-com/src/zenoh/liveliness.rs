@@ -15,11 +15,11 @@ use alloc::{
 	boxed::Box,
 	string::{String, ToString},
 };
+use anyhow::Result;
 use core::time::Duration;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	traits::{Capability, Context},
-	Result,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -192,7 +192,11 @@ async fn run_liveliness<P>(
 	let subscriber = session
 		.liveliness()
 		.declare_subscriber(&token)
-		.await?;
+		.await
+		.map_or_else(
+			|_| todo!(),
+			|subscriber| subscriber,
+		);
 
 	loop {
 		let result = subscriber.recv_async().await;

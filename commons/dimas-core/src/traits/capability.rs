@@ -12,11 +12,11 @@ extern crate std;
 // region:		--- modules
 use crate::{
 	enums::{OperationState, TaskSignal},
-	error::Result,
 	message_types::{Message, QueryableMsg},
 	utils::selector_from,
 };
 use alloc::{string::String, sync::Arc};
+use anyhow::Result;
 use core::fmt::Debug;
 #[cfg(feature = "std")]
 use tokio::sync::mpsc::Sender;

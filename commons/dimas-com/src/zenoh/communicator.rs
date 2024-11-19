@@ -19,12 +19,12 @@ use alloc::{
 	sync::Arc,
 	vec::Vec,
 };
+use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::OperationState,
 	message_types::{Message, QueryableMsg},
 	traits::Capability,
-	Result,
 };
 use zenoh::config::WhatAmI;
 #[cfg(feature = "unstable")]

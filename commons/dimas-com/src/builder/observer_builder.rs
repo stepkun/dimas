@@ -19,6 +19,7 @@ use alloc::{
 	string::{String, ToString},
 	sync::Arc,
 };
+use anyhow::Result;
 use core::time::Duration;
 use dimas_core::builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage};
 use dimas_core::{
@@ -26,7 +27,6 @@ use dimas_core::{
 	message_types::{ControlResponse, ObservableResponse},
 	traits::Context,
 	utils::selector_from,
-	Result,
 };
 use futures::future::Future;
 #[cfg(feature = "std")]

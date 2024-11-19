@@ -26,6 +26,7 @@ exclude = [
 workspace = true
 
 [dependencies]
+anyhow = { workspace = true}
 dimas-core = { workspace = true}
 thiserror = { workspace = true }
 tokio = { workspace = true}

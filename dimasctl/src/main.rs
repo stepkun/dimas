@@ -3,11 +3,12 @@
 //! Commandline tool for `DiMAS`
 
 // region:		--- modules
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 use core::time::Duration;
 use dimas_com::zenoh::Communicator;
 use dimas_config::Config;
-use dimas_core::{enums::OperationState, Result};
+use dimas_core::enums::OperationState;
 // endregion:	--- modules
 
 // region:		--- Cli
@@ -22,7 +23,9 @@ struct DimasctlArgs {
 }
 // endregion:	--- Cli
 
-fn operation_state_parser(s: &str) -> Result<OperationState> {
+fn operation_state_parser(
+	s: &str,
+) -> core::result::Result<OperationState, Box<dyn core::error::Error + Send + Sync + 'static>> {
 	OperationState::try_from(s)
 }
 

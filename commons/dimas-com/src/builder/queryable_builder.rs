@@ -14,8 +14,9 @@ use alloc::{
 	string::{String, ToString},
 	sync::Arc,
 };
+use anyhow::Result;
 use dimas_core::{
-	enums::OperationState, message_types::QueryMsg, traits::Context, utils::selector_from, Result,
+	enums::OperationState, message_types::QueryMsg, traits::Context, utils::selector_from,
 };
 use futures::future::Future;
 #[cfg(feature = "std")]

@@ -19,7 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- documented config file
+
 ### Changed
+
+- replaced own Result type with anyhow::Result
 
 ### Fixed
 

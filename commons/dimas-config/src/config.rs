@@ -49,8 +49,8 @@ extern crate std;
 
 // region:		--- modules
 use crate::utils::{find_config_file, read_config_file};
-use crate::Result;
 use alloc::vec::Vec;
+use anyhow::Result;
 #[cfg(feature = "std")]
 use tracing::{debug, warn};
 // endregion:	--- modules

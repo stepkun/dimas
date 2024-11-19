@@ -24,6 +24,7 @@ exclude = [
 workspace = true
 
 [dependencies]
+anyhow = { workspace = true}
 bitcode = { workspace = true}
 chrono = { workspace = true }
 dimas-com = { workspace = true }

@@ -69,7 +69,7 @@ pub enum Error {
 	#[error("callback of query failed with reason: {source}")]
 	QueryCallback {
 		/// the original callback error
-		source: Box<dyn core::error::Error + Send + Sync>,
+		source: anyhow::Error,
 	},
 	/// read access failed
 	#[error("read storage for {0} failed")]

@@ -7,8 +7,8 @@
 extern crate alloc;
 
 use alloc::string::String;
+use anyhow::Result;
 use dimas_core::{
-	error::Result,
 	message_types::{Message, QueryableMsg},
 	traits::Capability,
 };

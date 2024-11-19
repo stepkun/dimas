@@ -23,8 +23,8 @@ extern crate std;
 // region:      --- factory method
 use crate::traits::Communicator;
 use alloc::sync::Arc;
+use anyhow::Result;
 use dimas_config::Config;
-use dimas_core::Result;
 
 /// Create a [`Communicator`] from a [`Config`]
 /// # Errors

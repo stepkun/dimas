@@ -5,10 +5,8 @@
 
 // region:      --- modules
 use crate::error::Error;
-use dimas_core::{
-	error::Result,
-	message_types::{Message, QueryableMsg},
-};
+use anyhow::Result;
+use dimas_core::message_types::{Message, QueryableMsg};
 // endregion:   --- modules
 
 // region:		--- CommunicatorMethods

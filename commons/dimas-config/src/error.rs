@@ -15,9 +15,14 @@ use thiserror::Error;
 /// `dimas-time` error type.
 #[derive(Error, Debug)]
 pub enum Error {
-	/// ivalid #include directive
-	#[error("invalid '#include' at {0} in {0}")]
+	/// invalid #include directive
+	#[error("invalid '#include' in file {0}")]
 	InvalidInclude(String),
+	/// file not found
+	#[error("file {0} not found")]
+	FileNotFound(String),
+
+
 }
 // region:		--- Error
 

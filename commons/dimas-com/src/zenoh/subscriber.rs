@@ -13,11 +13,11 @@ extern crate std;
 use crate::error::Error;
 use alloc::sync::Arc;
 use alloc::{boxed::Box, string::String, vec::Vec};
+use anyhow::Result;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::Message,
 	traits::{Capability, Context},
-	Result,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -197,7 +197,7 @@ async fn run_subscriber<P>(
 	p_cb: ArcPutCallback<P>,
 	d_cb: Option<ArcDeleteCallback<P>>,
 	ctx: Context<P>,
-) -> Result<()>
+) -> core::result::Result<(), Box<dyn core::error::Error + Send + Sync + 'static>>
 where
 	P: Send + Sync + 'static,
 {

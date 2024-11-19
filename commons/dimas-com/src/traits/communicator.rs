@@ -10,12 +10,13 @@ extern crate alloc;
 extern crate std;
 
 // region:		--- modules
-#[cfg(feature = "unstable")]
+#[cfg(any(feature = "unstable", doc))]
 use super::LivelinessSubscriber;
 use super::{CommunicatorMethods, Observer, Publisher, Querier, Responder};
 use crate::error::Error;
 use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
-use dimas_core::{enums::OperationState, error::Result, traits::Capability};
+use anyhow::Result;
+use dimas_core::{enums::OperationState, traits::Capability};
 #[cfg(feature = "std")]
 use std::{collections::HashMap, sync::RwLock};
 use tracing::error;
