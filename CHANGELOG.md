@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - replaced own Result type with anyhow::Result
+- changed name of Trait `Capability` to `Operational`
+- restructured module dimas_core::enums
 
 ### Fixed
 

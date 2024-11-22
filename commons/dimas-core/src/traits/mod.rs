@@ -3,9 +3,9 @@
 //! core traits
 //!
 
-mod operational;
 mod context;
+mod operational;
 
 // flatten
-pub use operational::*;
-pub use context::*;
+pub use context::{Context, ContextAbstraction};
+pub use operational::Operational;
