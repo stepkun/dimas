@@ -18,7 +18,7 @@ use core::time::Duration;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::{ControlResponse, Message, ObservableResponse},
-	traits::{Operational, Context},
+	traits::{Context, Operational},
 	utils::feedback_selector_from,
 };
 use futures::future::BoxFuture;

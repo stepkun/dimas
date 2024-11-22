@@ -193,10 +193,7 @@ async fn run_liveliness<P>(
 		.liveliness()
 		.declare_subscriber(&token)
 		.await
-		.map_or_else(
-			|_| todo!(),
-			|subscriber| subscriber,
-		);
+		.map_or_else(|_| todo!(), |subscriber| subscriber);
 
 	loop {
 		let result = subscriber.recv_async().await;

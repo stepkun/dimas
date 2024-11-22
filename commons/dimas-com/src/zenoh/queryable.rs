@@ -16,7 +16,7 @@ use core::fmt::Debug;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::QueryMsg,
-	traits::{Operational, Context},
+	traits::{Context, Operational},
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]

@@ -14,22 +14,15 @@ use alloc::boxed::Box;
 use anyhow::Result;
 use core::fmt::Debug;
 
-use crate::error::Error;
-
 use super::CapabilityDescription;
 // endregion:	--- modules
 
 // region:		--- Capability
-/// contract for a `Capability`
+/// Contract for a `Capability`
 pub trait Capability: Debug {
-    /// get description
-    /// # Errors
-    /// if function is not implemented
-    /// if no description is set
-    fn description(&self) -> Result<Box<dyn CapabilityDescription>> {
-        let err = Error::NotImplemented.into();
-        Err(err)
-    }
-
+	/// get description
+	/// # Errors
+	/// implementation must fail if no description is set
+	fn description(&self) -> Result<Box<dyn CapabilityDescription>>;
 }
 // endregion:   --- Capability

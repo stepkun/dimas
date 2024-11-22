@@ -16,9 +16,9 @@ use core::fmt::Debug;
 // endregion:	--- modules
 
 // region:		--- Operational
-/// Operational
+/// Contract for [`Operational`]
 pub trait Operational: Debug {
-	/// Checks whether state of component is appropriate for the given [`OperationState`].
+	/// Checks wether state of component is appropriate for the given [`OperationState`].
 	/// If not, implementation has to adjusts components state to needs.
 	/// # Errors
 	fn manage_operation_state(&self, state: &OperationState) -> Result<()>;

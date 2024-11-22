@@ -14,8 +14,6 @@ use core::fmt::Debug;
 // endregion:	--- modules
 
 // region:		--- Connection
-/// contract for a `Connection`
-pub trait Connection: Debug {
-
-}
+/// Contract for a `Connection`
+pub trait Connection: Debug {}
 // endregion:   --- Connection

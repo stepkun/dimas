@@ -16,7 +16,7 @@ use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::OperationState,
 	message_types::{Message, QueryableMsg},
-	traits::{Operational, Context},
+	traits::{Context, Operational},
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]

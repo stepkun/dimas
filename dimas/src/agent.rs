@@ -65,12 +65,12 @@ use dimas_core::{
 	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
 	enums::{OperationState, Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
-	traits::{Operational, Context, ContextAbstraction},
+	traits::{Context, ContextAbstraction, Operational, Plugin, PluginId, PluginRegistrar, System},
 };
 use dimas_time::{Timer, TimerBuilder};
-use std::sync::Arc;
 #[cfg(feature = "unstable")]
 use std::sync::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use tokio::{select, signal, sync::mpsc};
 use tracing::{error, info, warn};
 #[cfg(feature = "unstable")]
@@ -243,6 +243,7 @@ where
 		let agent = Agent {
 			rx,
 			context,
+			plugins: HashMap::new(),
 			#[cfg(feature = "unstable")]
 			liveliness: false,
 			#[cfg(feature = "unstable")]
@@ -288,6 +289,8 @@ where
 	rx: mpsc::Receiver<TaskSignal>,
 	/// The agents context structure
 	context: Arc<ContextImpl<P>>,
+	/// stroage for the plugins
+	plugins: HashMap<PluginId, Box<dyn Plugin>>,
 	/// Flag to control whether sending liveliness or not
 	#[cfg(feature = "unstable")]
 	liveliness: bool,
@@ -314,6 +317,46 @@ where
 			.finish_non_exhaustive()
 	}
 }
+
+impl<P> Operational for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn manage_operation_state(&self, state: &OperationState) -> Result<()> {
+		for (_, plugin) in self.plugins() {
+			plugin.manage_operation_state(state)?;
+		}
+		self.context.set_state(state.into())
+	}
+}
+
+impl<P> PluginRegistrar for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn register(&mut self, plugin: Box<dyn Plugin>) {
+		self.plugins.insert(plugin.id(), plugin);
+	}
+
+	fn deregister(&mut self, id: &PluginId) -> Result<Option<Box<dyn Plugin>>> {
+		let mut plugin = self.plugins.remove(id);
+		let downstate = OperationState::Configured;
+		// shutdown plugin
+		plugin = if let Some(plugin) = plugin {
+			plugin.manage_operation_state(&downstate)?;
+			Some(plugin)
+		} else {
+			None
+		};
+		Ok(plugin)
+	}
+
+	fn plugins(&self) -> impl Iterator<Item = (usize, &Box<dyn Plugin>)> {
+		self.plugins.values().enumerate()
+	}
+}
+
+impl<P> System for Agent<P> where P: Debug + Send + Sync + 'static {}
 
 impl<P> Agent<P>
 where
@@ -506,6 +549,7 @@ where
 		RunningAgent {
 			rx: self.rx,
 			context: self.context,
+			plugins: self.plugins,
 			#[cfg(feature = "unstable")]
 			liveliness: self.liveliness,
 			#[cfg(feature = "unstable")]
@@ -528,6 +572,8 @@ where
 	rx: mpsc::Receiver<TaskSignal>,
 	/// The agents context structure
 	context: Arc<ContextImpl<P>>,
+	/// stroage for the plugins
+	plugins: HashMap<PluginId, Box<dyn Plugin>>,
 	/// Flag to control whether sending liveliness or not
 	#[cfg(feature = "unstable")]
 	liveliness: bool,
@@ -632,6 +678,7 @@ where
 		let r = Agent {
 			rx: self.rx,
 			context: self.context,
+			plugins: self.plugins,
 			#[cfg(feature = "unstable")]
 			liveliness: self.liveliness,
 			#[cfg(feature = "unstable")]

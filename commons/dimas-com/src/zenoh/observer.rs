@@ -20,7 +20,7 @@ use core::time::Duration;
 use dimas_core::{
 	enums::OperationState,
 	message_types::{ControlResponse, Message, ObservableResponse},
-	traits::{Operational, Context},
+	traits::{Context, Operational},
 	utils::{cancel_selector_from, feedback_selector_from, request_selector_from},
 };
 use futures::future::BoxFuture;

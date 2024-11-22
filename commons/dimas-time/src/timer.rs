@@ -15,7 +15,7 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
-	traits::{Operational, Context},
+	traits::{Context, Operational},
 };
 #[cfg(feature = "std")]
 use std::sync::Mutex;

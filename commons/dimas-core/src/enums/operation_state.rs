@@ -7,14 +7,11 @@
 extern crate alloc;
 
 // region:		--- modules
+use crate::error::Error;
 #[cfg(doc)]
 use crate::traits::Operational;
-use crate::error::Error;
 use alloc::vec::Vec;
-use alloc::{
-	boxed::Box,
-	string::ToString,
-};
+use alloc::{boxed::Box, string::ToString};
 use bitcode::{Decode, Encode};
 use core::fmt::{Debug, Display};
 // endregion:	--- modules
@@ -36,6 +33,12 @@ pub enum OperationState {
 	Standby,
 	/// Entity is fully operational
 	Active,
+}
+
+impl From<&Self> for OperationState {
+	fn from(value: &Self) -> Self {
+		value.clone()
+	}
 }
 
 impl TryFrom<&str> for OperationState {

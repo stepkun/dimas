@@ -17,7 +17,7 @@ use anyhow::Result;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::Message,
-	traits::{Operational, Context},
+	traits::{Context, Operational},
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
