@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Operational
+//! Lifecycle interface for `DiMAS` entities
 //!
 
 #[doc(hidden)]

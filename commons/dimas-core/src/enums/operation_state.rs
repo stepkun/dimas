@@ -7,6 +7,8 @@
 extern crate alloc;
 
 // region:		--- modules
+#[cfg(doc)]
+use crate::traits::Operational;
 use crate::error::Error;
 use alloc::vec::Vec;
 use alloc::{

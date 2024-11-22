@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Capability interface for `DiMAS`
+//! Capability description interface for `DiMAS` capabilities
 //!
 
 #[doc(hidden)]
@@ -16,20 +16,19 @@ use core::fmt::Debug;
 
 use crate::error::Error;
 
-use super::CapabilityDescription;
+use super::Capability;
 // endregion:	--- modules
 
-// region:		--- Capability
-/// contract for a `Capability`
-pub trait Capability: Debug {
+// region:		--- CapabilityDescription
+/// contract for a `CapabilityDescription`
+pub trait CapabilityDescription: Debug {
     /// get description
     /// # Errors
     /// if function is not implemented
-    /// if no description is set
-    fn description(&self) -> Result<Box<dyn CapabilityDescription>> {
+    /// if no capability is connected
+    fn describes(&self) -> Result<Box<dyn Capability>> {
         let err = Error::NotImplemented.into();
         Err(err)
     }
-
 }
-// endregion:   --- Capability
+// endregion:   --- CapabilityDescription
