@@ -65,7 +65,7 @@ use dimas_core::{
 	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
 	enums::{OperationState, Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
-	traits::{Capability, Context, ContextAbstraction},
+	traits::{Operational, Context, ContextAbstraction},
 };
 use dimas_time::{Timer, TimerBuilder};
 use std::sync::Arc;

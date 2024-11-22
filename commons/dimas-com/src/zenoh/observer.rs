@@ -20,7 +20,7 @@ use core::time::Duration;
 use dimas_core::{
 	enums::OperationState,
 	message_types::{ControlResponse, Message, ObservableResponse},
-	traits::{Capability, Context},
+	traits::{Operational, Context},
 	utils::{cancel_selector_from, feedback_selector_from, request_selector_from},
 };
 use futures::future::BoxFuture;
@@ -269,7 +269,7 @@ where
 	}
 }
 
-impl<P> Capability for Observer<P>
+impl<P> Operational for Observer<P>
 where
 	P: Send + Sync + 'static,
 {

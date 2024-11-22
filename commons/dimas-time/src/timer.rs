@@ -15,7 +15,7 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
-	traits::{Capability, Context},
+	traits::{Operational, Context},
 };
 #[cfg(feature = "std")]
 use std::sync::Mutex;
@@ -91,7 +91,7 @@ where
 	}
 }
 
-impl<P> Capability for Timer<P>
+impl<P> Operational for Timer<P>
 where
 	P: Send + Sync + 'static,
 {

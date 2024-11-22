@@ -24,7 +24,7 @@ use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::OperationState,
 	message_types::{Message, QueryableMsg},
-	traits::Capability,
+	traits::Operational,
 };
 use zenoh::config::WhatAmI;
 #[cfg(feature = "unstable")]
@@ -47,7 +47,7 @@ pub struct Communicator {
 	mode: String,
 }
 
-impl Capability for Communicator {
+impl Operational for Communicator {
 	fn manage_operation_state(&self, _state: &OperationState) -> Result<()> {
 		Ok(())
 	}

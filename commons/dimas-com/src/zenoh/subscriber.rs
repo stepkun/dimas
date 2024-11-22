@@ -17,7 +17,7 @@ use anyhow::Result;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::Message,
-	traits::{Capability, Context},
+	traits::{Operational, Context},
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -84,7 +84,7 @@ where
 	}
 }
 
-impl<P> Capability for Subscriber<P>
+impl<P> Operational for Subscriber<P>
 where
 	P: Send + Sync + 'static,
 {

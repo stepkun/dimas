@@ -29,7 +29,7 @@ use alloc::{
 use anyhow::Result;
 use dimas_config::Config;
 use dimas_core::message_types::{Message, QueryableMsg};
-use dimas_core::{enums::OperationState, traits::Capability};
+use dimas_core::{enums::OperationState, traits::Operational};
 use std::{collections::HashMap, sync::RwLock};
 use zenoh::{config::ZenohId, Session};
 // endregion:   --- modules
@@ -66,7 +66,7 @@ pub struct MultiCommunicator {
 	responders: Arc<RwLock<HashMap<String, Box<dyn Responder>>>>,
 }
 
-impl Capability for MultiCommunicator {
+impl Operational for MultiCommunicator {
 	fn manage_operation_state(&self, new_state: &OperationState) -> Result<()> {
 		if new_state >= &self.state {
 			self.upgrade_capabilities(new_state)?;

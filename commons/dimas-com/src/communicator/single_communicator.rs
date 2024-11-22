@@ -28,7 +28,7 @@ use alloc::{
 };
 use anyhow::Result;
 use dimas_config::Config;
-use dimas_core::{enums::OperationState, message_types::Message, traits::Capability};
+use dimas_core::{enums::OperationState, message_types::Message, traits::Operational};
 use std::{collections::HashMap, sync::RwLock};
 use zenoh::{config::ZenohId, Session};
 // endregion:	--- modules
@@ -63,7 +63,7 @@ pub struct SingleCommunicator {
 	responders: Arc<RwLock<HashMap<String, Box<dyn Responder>>>>,
 }
 
-impl Capability for SingleCommunicator {
+impl Operational for SingleCommunicator {
 	fn manage_operation_state(&self, new_state: &OperationState) -> Result<()> {
 		if new_state >= &self.state {
 			self.upgrade_capabilities(new_state)?;

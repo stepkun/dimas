@@ -13,7 +13,7 @@ use crate::error::Error;
 use alloc::{string::String, sync::Arc};
 use anyhow::Result;
 use core::fmt::Debug;
-use dimas_core::{enums::OperationState, message_types::Message, traits::Capability};
+use dimas_core::{enums::OperationState, message_types::Message, traits::Operational};
 use tracing::{instrument, Level};
 #[cfg(feature = "unstable")]
 use zenoh::{qos::Reliability, sample::Locality};
@@ -95,7 +95,7 @@ impl crate::traits::Publisher for Publisher {
 	}
 }
 
-impl Capability for Publisher {
+impl Operational for Publisher {
 	fn manage_operation_state(&self, state: &OperationState) -> Result<()> {
 		if state >= &self.activation_state {
 			return self.init();

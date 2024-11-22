@@ -16,7 +16,7 @@ use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	enums::OperationState,
 	message_types::{Message, QueryableMsg},
-	traits::{Capability, Context},
+	traits::{Operational, Context},
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -190,7 +190,7 @@ where
 	}
 }
 
-impl<P> Capability for Querier<P>
+impl<P> Operational for Querier<P>
 where
 	P: Send + Sync + 'static,
 {

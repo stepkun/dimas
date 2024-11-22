@@ -47,7 +47,7 @@ use dimas_core::traits::Context;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::{Message, QueryableMsg},
-	traits::{Capability, ContextAbstraction},
+	traits::{Operational, ContextAbstraction},
 };
 use dimas_time::Timer;
 use std::{

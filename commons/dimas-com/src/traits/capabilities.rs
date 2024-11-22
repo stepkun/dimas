@@ -10,18 +10,18 @@ use alloc::string::String;
 use anyhow::Result;
 use dimas_core::{
 	message_types::{Message, QueryableMsg},
-	traits::Capability,
+	traits::Operational,
 };
 
 // region:		--- capabilities
 /// `LivelinessSubscriber` capabilities
-pub trait LivelinessSubscriber: Capability + Send + Sync {
+pub trait LivelinessSubscriber: Operational + Send + Sync {
 	/// get token
 	fn token(&self) -> &String;
 }
 
 /// `Observer` capabilities
-pub trait Observer: Capability + Send + Sync {
+pub trait Observer: Operational + Send + Sync {
 	/// Get `selector`
 	#[must_use]
 	fn selector(&self) -> &str;
@@ -36,7 +36,7 @@ pub trait Observer: Capability + Send + Sync {
 }
 
 /// `Publisher` capabilities
-pub trait Publisher: Capability + Send + Sync {
+pub trait Publisher: Operational + Send + Sync {
 	/// Get `selector`
 	#[must_use]
 	fn selector(&self) -> &str;
@@ -51,7 +51,7 @@ pub trait Publisher: Capability + Send + Sync {
 }
 
 /// `Querier` capabilities
-pub trait Querier: Capability + Send + Sync {
+pub trait Querier: Operational + Send + Sync {
 	/// Get `selector`
 	#[must_use]
 	fn selector(&self) -> &str;
@@ -66,7 +66,7 @@ pub trait Querier: Capability + Send + Sync {
 }
 
 /// `Responder` capabilities
-pub trait Responder: Capability + Send + Sync {
+pub trait Responder: Operational + Send + Sync {
 	/// Get `selector`
 	#[must_use]
 	fn selector(&self) -> &str;

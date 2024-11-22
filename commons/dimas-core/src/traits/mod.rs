@@ -3,9 +3,9 @@
 //! core traits
 //!
 
-mod capability;
+mod operational;
 mod context;
 
 // flatten
-pub use capability::*;
+pub use operational::*;
 pub use context::*;

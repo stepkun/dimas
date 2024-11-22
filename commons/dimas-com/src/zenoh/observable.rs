@@ -18,7 +18,7 @@ use core::time::Duration;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
 	message_types::{ControlResponse, Message, ObservableResponse},
-	traits::{Capability, Context},
+	traits::{Operational, Context},
 	utils::feedback_selector_from,
 };
 use futures::future::BoxFuture;
@@ -98,7 +98,7 @@ where
 	}
 }
 
-impl<P> Capability for Observable<P>
+impl<P> Operational for Observable<P>
 where
 	P: Send + Sync + 'static,
 {

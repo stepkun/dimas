@@ -24,7 +24,6 @@ workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-behaviortree-rs = { workspace = true }
 bitcode = { workspace = true }
 chrono = { workspace = true }
 #derive_more = { workspace = true, features = ["from"] }

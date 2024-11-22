@@ -16,7 +16,7 @@ use super::{CommunicatorMethods, Observer, Publisher, Querier, Responder};
 use crate::error::Error;
 use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 use anyhow::Result;
-use dimas_core::{enums::OperationState, traits::Capability};
+use dimas_core::{enums::OperationState, traits::Operational};
 #[cfg(feature = "std")]
 use std::{collections::HashMap, sync::RwLock};
 use tracing::error;
@@ -25,7 +25,7 @@ use zenoh::Session;
 
 // region:		--- Communicator
 /// the methodes to be implemented by any communicator
-pub trait Communicator: Capability + CommunicatorMethods + Send + Sync {
+pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 	/// Get the liveliness subscribers
 	#[cfg(feature = "unstable")]
 	#[must_use]

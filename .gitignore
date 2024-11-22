@@ -22,3 +22,6 @@ cargo-timing*.html
 
 # things I want to ignore
 *.ignore
+
+# eclipse project files
+.project
