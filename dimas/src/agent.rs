@@ -65,12 +65,13 @@ use dimas_core::{
 	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
 	enums::{OperationState, Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
-	traits::{Component, Context, ContextAbstraction, Operational, System}, utils::{ComponentRegister, LibManager},
+	traits::{Component, Context, ContextAbstraction, Operational, System},
+	utils::{ComponentRegister, LibManager},
 };
 use dimas_time::{Timer, TimerBuilder};
+use std::sync::Arc;
 #[cfg(feature = "unstable")]
 use std::sync::RwLock;
-use std::sync::Arc;
 use tokio::{select, signal, sync::mpsc};
 use tracing::{error, info, warn};
 #[cfg(feature = "unstable")]
@@ -333,7 +334,10 @@ where
 	}
 }
 
-impl<P> System for Agent<P> where P: Debug + Send + Sync + 'static {
+impl<P> System for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
 	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)> {
 		self.register.components.values().enumerate()
 	}
@@ -343,7 +347,8 @@ impl<P> System for Agent<P> where P: Debug + Send + Sync + 'static {
 	}
 
 	fn unload_library(&mut self, path: &str) -> Result<()> {
-		self.libmanager.unload_lib(&mut self.register, path)
+		self.libmanager
+			.unload_lib(&mut self.register, path)
 	}
 }
 

@@ -47,9 +47,6 @@ pub enum Error {
 	/// library file not found
 	#[error("library not found")]
 	LibNotFound,
-	/// loading of a library file failed
-	#[error("load of library failed")]
-	LibLoadFailed,
 	/// register of a library file failed
 	#[error("register library failed")]
 	LibRegisterFailed,

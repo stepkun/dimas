@@ -8,8 +8,8 @@ extern crate std;
 // region:      --- modules
 use crate::{Component, ComponentId, ComponentRegistrar, OperationState};
 use anyhow::Result;
-use std::prelude::v1::Box;
 use std::collections::HashMap;
+use std::prelude::v1::Box;
 // endregion:   --- modules
 
 /// Library loader implementation
@@ -20,7 +20,7 @@ pub struct ComponentRegister {
 }
 
 impl Default for ComponentRegister {
-	/// Create a default [`LibLoader`]
+	/// Create a default [`ComponentRegister`]
 	#[must_use]
 	fn default() -> Self {
 		Self::new()
@@ -47,11 +47,11 @@ impl ComponentRegistrar for ComponentRegister {
 }
 
 impl ComponentRegister {
-	/// Creates a [`Component`] register
+	/// Creates a [`ComponentRegister`]
 	#[must_use]
 	pub fn new() -> Self {
 		Self {
-			components: HashMap::new()
+			components: HashMap::new(),
 		}
 	}
 }

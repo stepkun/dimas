@@ -26,7 +26,7 @@ pub type ComponentId = String;
 
 // region:		--- Component
 /// Contract for a `Component`
-pub trait Component: Debug + Operational + Send + Sync{
+pub trait Component: Debug + Operational + Send + Sync {
 	fn id(&self) -> ComponentId;
 
 	// /// get provided capabilities

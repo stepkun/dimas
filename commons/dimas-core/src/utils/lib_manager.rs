@@ -10,9 +10,8 @@ use crate::error::Error;
 use crate::ComponentRegistrar;
 use anyhow::Result;
 use libloading::Library;
-use std::ffi::OsString;
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::ffi::OsString;
 // endregion:   --- modules
 
 /// Library loader implementation
@@ -22,7 +21,7 @@ pub struct LibManager {
 }
 
 impl Default for LibManager {
-	/// Create a default [`LibLoader`]
+	/// Create a default [`LibManager`]
 	#[must_use]
 	fn default() -> Self {
 		Self::new()
@@ -30,7 +29,7 @@ impl Default for LibManager {
 }
 
 impl LibManager {
-	/// Create a [`LibLoader`]
+	/// Create a [`LibManager`]
 	#[must_use]
 	pub fn new() -> Self {
 		Self {
@@ -38,33 +37,28 @@ impl LibManager {
 		}
 	}
 
-	/// Load a library file from path and register contained components
+	/// Load a library with "libname" and register contained components.
+	/// Currently works only, if lib is in same directory as executable
 	/// # Errors
 	///
 	#[allow(unsafe_code)]
-	pub fn load_lib(&mut self, registrar: &mut dyn ComponentRegistrar, path: &str) -> Result<()> {
-		std::dbg!(&path);
-		let pathbuf = PathBuf::from(path);
+	pub fn load_lib(&mut self, registrar: &mut dyn ComponentRegistrar, libname: &str) -> Result<()> {
+		let filename = libloading::library_filename(libname);
+		let pathbuf = std::env::current_exe()?.parent().ok_or(Error::LibNotFound)?.join(&filename);
 		if !pathbuf.exists() || !pathbuf.is_file() {
 			Err(Error::LibNotFound.into())
 		} else {
-			let filename = libloading::library_filename(&pathbuf);
 			unsafe {
-				let lib = libloading::Library::new(&filename);
-				match lib {
-					Ok(lib) => {
-						let func: libloading::Symbol<unsafe extern fn(&mut dyn ComponentRegistrar) -> u32> =
-						lib.get(b"register_components")?;
-						let res = func(registrar);
-						match res {
-							0 => {
-								self.libs.insert(filename, lib);
-								Ok(())
-							},
-							_ => Err(Error::LibRegisterFailed.into())
-						}
-					},
-					Err(_err) => Err(Error::LibLoadFailed.into()),
+				let lib = libloading::Library::new(&filename)?;
+				let func: libloading::Symbol<unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32> =
+					lib.get(b"register_components")?;
+				let res = func(registrar);
+				match res {
+					0 => {
+						self.libs.insert(filename, lib);
+						Ok(())
+					}
+					_ => Err(Error::LibRegisterFailed.into()),
 				}
 			}
 		}
@@ -74,13 +68,14 @@ impl LibManager {
 	/// # Errors
 	///
 	#[allow(unsafe_code)]
-	pub fn unload_lib(&mut self, registrar: &mut dyn ComponentRegistrar, path: &str) -> Result<()> {
-		let filename = libloading::library_filename(path);
+	pub fn unload_lib(&mut self, registrar: &mut dyn ComponentRegistrar, libname: &str) -> Result<()> {
+		let filename = libloading::library_filename(libname);
 		if let Some(lib) = self.libs.remove(&filename) {
 			unsafe {
-				let func: libloading::Symbol<unsafe extern fn(&mut dyn ComponentRegistrar) -> u32> =
+				let func: libloading::Symbol<unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32> = 
 					lib.get(b"unregister_components")?;
 				let res = func(registrar);
+				lib.close()?;
 				match res {
 					0 => return Ok(()),
 					_ => return Err(Error::LibDeregisterFailed.into()),

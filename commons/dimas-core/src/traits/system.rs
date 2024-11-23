@@ -16,7 +16,7 @@ use core::fmt::Debug;
 
 use crate::error::Error;
 
-use super::{Configuration, Connection, Operational, Component};
+use super::{Component, Configuration, Connection, Operational};
 // endregion:	--- modules
 
 // region:		--- System
@@ -41,13 +41,12 @@ pub trait System: Debug + Operational {
 
 	/// Load a library into [`System`]
 	/// # Errors
-	/// 
+	///
 	fn load_library(&mut self, path: &str) -> Result<()>;
 
 	/// Unload a library from [`System`]
 	/// # Errors
-	/// 
+	///
 	fn unload_library(&mut self, path: &str) -> Result<()>;
-
 }
 // endregion:   --- System
