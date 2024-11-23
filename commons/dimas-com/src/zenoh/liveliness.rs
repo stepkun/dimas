@@ -19,7 +19,7 @@ use anyhow::Result;
 use core::time::Duration;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
-	traits::{Capability, Context},
+	traits::{Context, Operational},
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -77,7 +77,7 @@ where
 	}
 }
 
-impl<P> Capability for LivelinessSubscriber<P>
+impl<P> Operational for LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {

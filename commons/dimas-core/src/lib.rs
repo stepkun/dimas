@@ -25,7 +25,7 @@ pub mod utils;
 pub use enums::{OperationState, Signal, TaskSignal};
 #[doc(hidden)]
 pub use traits::{
-	Capability, CapabilityDescription, Component, Configuration, Connection, Plugin, PluginId,
-	PluginRegistrar, System,
+	Capability, CapabilityDescription, Component, Configuration, Connection, ComponentId,
+	ComponentRegistrar, System,
 };
 pub use traits::{Context, ContextAbstraction, Operational};

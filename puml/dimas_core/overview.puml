@@ -6,32 +6,34 @@ title DiMAS Core Overview
 ' Operational
 interface Operational
 enum OperationState
-Operational <|-- Plugin
+Operational <|-- Component
 Operational <|-- Capability
-OperationState -- Operational
+OperationState --right Operational
+
+' ComponentRegister
+class ComponentRegister
+interface ComponentRegistrar
+ComponentRegistrar <|-- ComponentRegister
+ComponentRegister *--left "*" Component : components >
 
 ' System
 interface System
-interface PluginRegistrar
-PluginRegistrar <|-- System
 Operational <|-- System
-System *-- "*" Component : components >
+System *--left "1" ComponentRegister : components >
 System *-- "1" Configuration : configuration >
-System *-- "*" Connection : connections >
+System *--right "*" Connection : connections >
 
 ' Component
 interface Component
-interface Plugin
-Plugin <|-- Component
 'Component *-- "0..*" Component : components
-Component *-- "*" Capability : capabilities >
+Component *--left "*" Capability : capabilities >
 Component o-- "1" Configuration : configuration >
-Component o-- "*" CapabilityDescription : capabilities >
-Component *-- "*" CapabilityDescription : capabilities >
+Component o-- "*" CapabilityDescription : provided >
+Component *-- "*" CapabilityDescription : required >
 
 ' Capability
 interface Capability
-Capability "1" -- "1" CapabilityDescription : >
+Capability -- "1" CapabilityDescription : >
 
 ' CapabilityDescription
 interface CapabilityDescription

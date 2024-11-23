@@ -16,19 +16,17 @@ use core::fmt::Debug;
 
 use crate::error::Error;
 
-use super::{Component, Configuration, Connection, Operational, PluginRegistrar};
+use super::{Configuration, Connection, Operational, Component};
 // endregion:	--- modules
 
 // region:		--- System
 /// Contract for a `System`
-pub trait System: Debug + Operational + PluginRegistrar {
+pub trait System: Debug + Operational {
+	/// get iterator for [`Component`]s
+	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)>;
+
 	/// get all connections
 	fn connections(&self) -> Vec<Box<dyn Connection>> {
-		Vec::new()
-	}
-
-	/// get all components
-	fn components(&self) -> Vec<Box<dyn Component>> {
 		Vec::new()
 	}
 
@@ -40,5 +38,16 @@ pub trait System: Debug + Operational + PluginRegistrar {
 		let err = Error::NotImplemented.into();
 		Err(err)
 	}
+
+	/// Load a library into [`System`]
+	/// # Errors
+	/// 
+	fn load_library(&mut self, path: &str) -> Result<()>;
+
+	/// Unload a library from [`System`]
+	/// # Errors
+	/// 
+	fn unload_library(&mut self, path: &str) -> Result<()>;
+
 }
 // endregion:   --- System

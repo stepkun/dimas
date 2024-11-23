@@ -6,6 +6,16 @@
 #[doc(hidden)]
 extern crate alloc;
 
+// in std environments we can dynamically load libraries
+#[cfg(feature = "std")]
+mod lib_manager;
+#[cfg(feature = "std")]
+pub use lib_manager::*;
+#[cfg(feature = "std")]
+mod component_register;
+#[cfg(feature = "std")]
+pub use component_register::*;
+
 // region:		--- modules
 use alloc::string::{String, ToString};
 // endregion:	--- modules
