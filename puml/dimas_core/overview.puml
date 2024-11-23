@@ -1,0 +1,45 @@
+' https://plantuml.com/de/class-diagram
+@startuml Overview
+title DiMAS Core Overview
+'skinparam Style strictuml
+
+' Operational
+interface Operational
+enum OperationState
+Operational <|-- Plugin
+Operational <|-- Capability
+OperationState -- Operational
+
+' System
+interface System
+interface PluginRegistrar
+PluginRegistrar <|-- System
+Operational <|-- System
+System *-- "*" Component : components >
+System *-- "1" Configuration : configuration >
+System *-- "*" Connection : connections >
+
+' Component
+interface Component
+interface Plugin
+Plugin <|-- Component
+'Component *-- "0..*" Component : components
+Component *-- "*" Capability : capabilities >
+Component o-- "1" Configuration : configuration >
+Component o-- "*" CapabilityDescription : capabilities >
+Component *-- "*" CapabilityDescription : capabilities >
+
+' Capability
+interface Capability
+Capability "1" -- "1" CapabilityDescription : >
+
+' CapabilityDescription
+interface CapabilityDescription
+
+' configuration
+interface Configuration
+Configuration *-- "*" Configuration : configurations >
+
+' Connection
+interface Connection
+@enduml
