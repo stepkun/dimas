@@ -1,17 +1,17 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `dimas-time` errors
+//! `dimas-commands` errors
 
 #[doc(hidden)]
 extern crate alloc;
 
-// region:		--- modules
+// region		--- modules
 use alloc::string::String;
 use thiserror::Error;
-// endregion:	---modules
+// endregion:	--- modules
 
 // region:		--- Error
-/// `dimas-time` error type.
+/// `dimasctl` error type
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Should not happen

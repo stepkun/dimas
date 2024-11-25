@@ -3,6 +3,8 @@
 //! Commandline tool for `DiMAS`
 
 // region:		--- modules
+mod error;
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use core::time::Duration;
@@ -75,8 +77,7 @@ fn main() -> Result<()> {
 
 	match &args.command {
 		DimasctlCommand::List => {
-			let com =
-				Communicator::new(config.zenoh_config()).expect("failed to create 'Communicator'");
+			let com = Communicator::new(config.zenoh_config())?;
 			println!("List of found DiMAS entities:");
 			println!("{h_zid:32}  {h_kind:6}  {h_state:10}  {h_name}");
 			let list = dimas_commands::about_list(&com, &base_selector)?;
@@ -94,8 +95,7 @@ fn main() -> Result<()> {
 			let target = args
 				.selector
 				.map_or_else(|| target.to_owned(), |value| format!("{value}/{target}"));
-			let com =
-				Communicator::new(config.zenoh_config()).expect("failed to create 'Communicator'");
+			let com = Communicator::new(config.zenoh_config())?;
 			for _ in 0..*count {
 				let list = dimas_commands::ping_list(&com, &target)?;
 				for item in list {
@@ -123,8 +123,7 @@ fn main() -> Result<()> {
 			}
 		}
 		DimasctlCommand::SetState { state } => {
-			let com =
-				Communicator::new(config.zenoh_config()).expect("failed to create 'Communicator'");
+			let com = Communicator::new(config.zenoh_config())?;
 			println!("List of current states of DiMAS entities:");
 			println!("{h_zid:32}  {h_kind:6}  {h_state:10}  {h_name}");
 			let list = dimas_commands::set_state(&com, &base_selector, state.to_owned())?;
@@ -142,8 +141,7 @@ fn main() -> Result<()> {
 			let target = args
 				.selector
 				.map_or_else(|| target.to_owned(), |value| format!("{value}/{target}"));
-			let com =
-				Communicator::new(config.zenoh_config()).expect("failed to create 'Communicator'");
+			let com = Communicator::new(config.zenoh_config())?;
 			println!("List of shut down DiMAS entities:");
 			println!("{h_zid:32}  {h_kind:6}  {h_state:10}  {h_name}");
 			let list = dimas_commands::shutdown(&com, &target)?;

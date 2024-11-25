@@ -25,6 +25,8 @@ use tracing::{error, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::Session;
+
+use crate::error::Error;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -135,7 +137,7 @@ where
 		let session = self.session.clone();
 
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.replace(tokio::task::spawn(async move {
 					let key = selector.clone();
@@ -173,7 +175,7 @@ where
 	#[instrument(level = Level::TRACE)]
 	fn stop(&self) -> Result<()> {
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.take();
 				Ok(())

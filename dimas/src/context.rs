@@ -104,17 +104,12 @@ where
 
 	#[must_use]
 	fn fq_name(&self) -> Option<String> {
-		if self.name().is_some() && self.prefix().is_some() {
-			Some(format!(
-				"{}/{}",
-				self.prefix().expect("snh"),
-				self.name().expect("snh")
-			))
-		} else if self.name().is_some() {
-			Some(self.name().expect("snh").to_owned())
-		} else {
-			None
-		}
+		self.name().and_then(|name| {
+			self.prefix().map_or_else(
+				|| Some(name.into()),
+				|prefix| Some(format!("{prefix}/{name}")),
+			)
+		})
 	}
 
 	#[must_use]
@@ -222,7 +217,6 @@ where
 				.ok_or_else(|| Error::Get("publishers".into()))?
 				.put(message)?;
 		} else {
-			dbg!(&selector);
 			self.communicator.put(selector, message)?;
 		};
 		Ok(())
@@ -244,7 +238,7 @@ where
 				.ok_or_else(|| Error::Get("publishers".into()))?
 				.delete()?;
 		} else {
-			todo!(); //self.communicator.delete(selector)?;
+			self.communicator.delete(selector)?;
 		}
 		Ok(())
 	}

@@ -32,6 +32,8 @@ use zenoh::{
 	qos::{CongestionControl, Priority},
 	Session,
 };
+
+use crate::error::Error;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -165,7 +167,7 @@ where
 		let session = self.session.clone();
 
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.replace(tokio::task::spawn(async move {
 					let key = selector.clone();
@@ -198,7 +200,7 @@ where
 	#[allow(clippy::significant_drop_in_scrutinee)]
 	fn stop(&self) -> Result<()> {
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				if let Some(handle) = handle.take() {
 					let feedback_publisher = self.feedback_publisher.clone();
@@ -212,7 +214,9 @@ where
 							// send back cancelation message
 							if let Some(publisher) = feedback_publisher.lock().await.take() {
 								let Ok(msg) = feedback_callback.lock().await(ctx).await else {
-									todo!()
+									// @TODO maybe implement retry!!
+									error!("could not send feedback");
+									return;
 								};
 								let response = ObservableResponse::Canceled(msg.value().clone());
 								match publisher
@@ -333,7 +337,10 @@ where
 									let execution_function_clone = execution_function.clone();
 									let ctx_clone = ctx.clone();
 									execution_handle.lock().await.replace(tokio::spawn( async move {
-										let res = execution_function_clone.lock().await(ctx_clone).await.unwrap_or_else(|_| { todo!() });
+										let res = execution_function_clone.lock().await(ctx_clone).await.unwrap_or_else(|_| {
+											error!("execution function failed");
+											todo!()
+										});
 										if !matches!(tx_clone.send(res).await, Ok(())) { error!("failed to send back execution result") };
 									}));
 
@@ -361,7 +368,10 @@ where
 							h.abort();
 							// wait for abortion
 							let _ = h.await;
-							let Ok(msg) = feedback_callback.lock().await(ctx).await else { todo!() };
+							let Ok(msg) = feedback_callback.lock().await(ctx).await else {
+								error!("feedback callback failed during cancel");
+								todo!()
+							};
 							let response =
 								ObservableResponse::Canceled(msg.value().clone());
 							if let Some(p) = publisher {
@@ -407,13 +417,19 @@ where
 
 			// feedback timer expired and observable still is executing
 			() = &mut feedback_timer, if is_running => {
-				let Ok(msg) = feedback_callback.lock().await(ctx).await else { todo!() };
+				let Ok(msg) = feedback_callback.lock().await(ctx).await else {
+					error!("calling feedback callback failed");
+					todo!()
+				};
 				let response =
 					ObservableResponse::Feedback(msg.value().clone());
 
 				let lock = feedback_publisher.lock().await;
 				let publisher = lock.as_ref().map_or_else(
-					|| { todo!() },
+					|| {
+						error!("calling feedback publisher failed");
+						todo!()
+					},
 					|p| p
 				);
 				match publisher.put(Message::encode(&response).value().clone()).wait() {

@@ -102,8 +102,7 @@ where
 		selector: String,
 		context: Context<P>,
 		activation_state: OperationState,
-		#[cfg(feature = "unstable")]
-		allowed_origin: Locality, 
+		#[cfg(feature = "unstable")] allowed_origin: Locality,
 		put_callback: ArcPutCallback<P>,
 		delete_callback: Option<ArcDeleteCallback<P>>,
 	) -> Self {
@@ -135,7 +134,7 @@ where
 		let allowed_origin = self.allowed_origin;
 
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.replace(tokio::task::spawn(async move {
 					let key = selector.clone();
@@ -173,7 +172,7 @@ where
 	#[instrument(level = Level::TRACE, skip_all)]
 	fn stop(&self) -> Result<()> {
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.take();
 				Ok(())

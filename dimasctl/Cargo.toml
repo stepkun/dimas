@@ -30,3 +30,4 @@ dimas-com = { workspace = true }
 dimas-commands = { workspace = true }
 dimas-config = { workspace = true }
 dimas-core = { workspace = true }
+thiserror = { workspace = true }

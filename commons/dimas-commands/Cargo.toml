@@ -31,6 +31,7 @@ dimas-com = { workspace = true }
 dimas-config = { workspace = true }
 dimas-core = { workspace = true }
 itertools = { workspace = true }
+thiserror = { workspace = true }
 tracing = { workspace = true}
 zenoh = { workspace = true }
 

@@ -4,6 +4,7 @@
 //! Commands for `DiMAS` control & monitoring
 
 mod control;
+mod error;
 mod lists;
 /// the command messages
 pub mod messages;

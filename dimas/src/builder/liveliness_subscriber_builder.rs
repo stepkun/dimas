@@ -250,7 +250,7 @@ where
 		} = self;
 		let session = context
 			.session(&session_id)
-			.ok_or_else(|| Error::NoZenohSession)?;
+			.ok_or(Error::NoZenohSession)?;
 		Ok(LivelinessSubscriber::new(
 			session,
 			token,

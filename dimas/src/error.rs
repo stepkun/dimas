@@ -42,6 +42,9 @@ pub enum Error {
 	/// write access to context failed
 	#[error("write context for {0} failed")]
 	ModifyStruct(String),
+	/// Should not happen
+	#[error("this should not have happened in file {0} at line {1}")]
+	Unexpected(String, u32),
 }
 // region:		--- Error
 

@@ -62,7 +62,7 @@ impl crate::traits::Publisher for Publisher {
 	#[instrument(name="publish", level = Level::ERROR, skip_all)]
 	fn put(&self, message: Message) -> Result<()> {
 		self.publisher.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|publisher| match publisher
 				.as_ref()
 				.ok_or(Error::AccessPublisher)?
@@ -81,7 +81,7 @@ impl crate::traits::Publisher for Publisher {
 	#[instrument(level = Level::ERROR, skip_all)]
 	fn delete(&self) -> Result<()> {
 		self.publisher.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|publisher| match publisher
 				.as_ref()
 				.ok_or(Error::AccessPublisher)?
@@ -157,17 +157,17 @@ impl Publisher {
 			.reliability(self.reliability);
 
 		builder.wait().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|new_publisher| {
 				self.publisher.lock().map_or_else(
-					|_| todo!(),
+					|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 					|mut publisher| {
 						publisher.replace(new_publisher);
+						Ok(())
 					},
-				);
+				)
 			},
-		);
-		Ok(())
+		)
 	}
 
 	/// De-Initialize
@@ -176,7 +176,7 @@ impl Publisher {
 	#[allow(clippy::unnecessary_wraps)]
 	fn de_init(&self) -> Result<()> {
 		self.publisher.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut publisher| {
 				publisher.take();
 				Ok(())

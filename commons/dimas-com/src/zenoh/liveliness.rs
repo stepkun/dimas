@@ -28,6 +28,8 @@ use tracing::info;
 use tracing::{error, instrument, warn, Level};
 use zenoh::sample::SampleKind;
 use zenoh::Session;
+
+use crate::error::Error;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -137,7 +139,7 @@ where
 		let ctx2 = self.context.clone();
 
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.replace(tokio::task::spawn(async move {
 					std::panic::set_hook(Box::new(move |reason| {
@@ -172,7 +174,7 @@ where
 	#[instrument(level = Level::TRACE)]
 	fn stop(&self) -> Result<()> {
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.take();
 				Ok(())
@@ -193,7 +195,7 @@ async fn run_liveliness<P>(
 		.liveliness()
 		.declare_subscriber(&token)
 		.await
-		.map_or_else(|_| todo!(), |subscriber| subscriber);
+		.map_err(|_| Error::Unexpected(file!().into(), line!()))?;
 
 	loop {
 		let result = subscriber.recv_async().await;

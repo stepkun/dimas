@@ -4,9 +4,9 @@
 //!
 
 // region:		--- modules
-use anyhow::Result;
 #[cfg(feature = "unstable")]
 use crate::traits::LivelinessSubscriber;
+use anyhow::Result;
 use dimas_config::Config;
 use dimas_core::{
 	enums::OperationState,

@@ -197,7 +197,7 @@ where
 						SampleKind::Put => {
 							let content: Vec<u8> = sample.payload().to_bytes().into_owned();
 							decode::<ObservableControlResponse>(&content).map_or_else(
-								|_| todo!(),
+								|_| error!("could not decode observation control response"),
 								|response| {
 									if matches!(response, ObservableControlResponse::Accepted) {
 										let ctx = self.context.clone();
@@ -329,7 +329,7 @@ where
 		// cancel current request before stopping
 		let _ = crate::traits::Observer::cancel(self);
 		self.handle.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut handle| {
 				handle.take();
 				Ok(())
@@ -358,19 +358,18 @@ async fn run_observation<P>(
 				match sample.kind() {
 					SampleKind::Put => {
 						let content: Vec<u8> = sample.payload().to_bytes().into_owned();
-						match decode::<ObservableResponse>(&content) {
-							Ok(response) => {
-								// remember to stop loop on anything that is not feedback
-								let stop = !matches!(response, ObservableResponse::Feedback(_));
-								let ctx = ctx.clone();
-								if let Err(error) = rcb.lock().await(ctx, response).await {
-									error!("response callback failed with {error}");
-								};
-								if stop {
-									break;
-								};
-							}
-							Err(_) => todo!(),
+						if let Ok(response) = decode::<ObservableResponse>(&content) {
+							// remember to stop loop on anything that is not feedback
+							let stop = !matches!(response, ObservableResponse::Feedback(_));
+							let ctx = ctx.clone();
+							if let Err(error) = rcb.lock().await(ctx, response).await {
+								error!("response callback failed with {error}");
+							};
+							if stop {
+								break;
+							};
+						} else {
+							error!("could not decode observation response");
 						};
 					}
 					SampleKind::Delete => {

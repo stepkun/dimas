@@ -104,6 +104,9 @@ pub enum Error {
 		/// observables selector
 		selector: String,
 	},
+	/// Should not happen
+	#[error("this should not have happened in file {0} at line {1}")]
+	Unexpected(String, u32),
 	/// Found unknown communication protocol
 	#[error("the protocol '{protocol}' is unknown")]
 	UnknownProtocol {

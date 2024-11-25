@@ -27,6 +27,8 @@ use zenoh::{
 	config::{Locator, WhatAmI},
 	Wait,
 };
+
+use crate::error::Error;
 // endregion:	--- modules
 
 // region:		--- about_list
@@ -102,26 +104,21 @@ pub fn ping_list(com: &Communicator, base_selector: &String) -> Result<Vec<(Ping
 pub fn scouting_list(config: &Config) -> Result<Vec<ScoutingEntity>> {
 	let mut map: HashMap<String, ScoutingEntity> = HashMap::new();
 	let what = WhatAmI::Router | WhatAmI::Peer | WhatAmI::Client;
-	zenoh::scout(what, config.zenoh_config().to_owned())
+	let receiver = zenoh::scout(what, config.zenoh_config().to_owned())
 		.wait()
-		.map_or_else(
-			|_| todo!(),
-			|receiver| {
-				while let Ok(Some(hello)) = receiver.recv_timeout(Duration::from_millis(250)) {
-					let zid = hello.zid().to_string();
-					let locators: Vec<String> = hello
-						.locators()
-						.iter()
-						.map(Locator::to_string)
-						.collect();
+		.map_err(|_| Error::Unexpected(file!().into(), line!()))?;
+	while let Ok(Some(hello)) = receiver.recv_timeout(Duration::from_millis(250)) {
+		let zid = hello.zid().to_string();
+		let locators: Vec<String> = hello
+			.locators()
+			.iter()
+			.map(Locator::to_string)
+			.collect();
 
-					let entry =
-						ScoutingEntity::new(zid.clone(), hello.whatami().to_string(), locators);
-					map.entry(zid).or_insert(entry);
-				}
-				let result: Vec<ScoutingEntity> = map.values().cloned().collect();
-				Ok(result)
-			},
-		)
+		let entry = ScoutingEntity::new(zid.clone(), hello.whatami().to_string(), locators);
+		map.entry(zid).or_insert(entry);
+	}
+	let result: Vec<ScoutingEntity> = map.values().cloned().collect();
+	Ok(result)
 }
 // endregion:	--- scouting_list

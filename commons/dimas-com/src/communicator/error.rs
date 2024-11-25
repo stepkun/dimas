@@ -22,10 +22,10 @@ pub enum Error {
 	/// Not available/implemented
 	#[error("no implementation available")]
 	NotImplemented,
-	/// no communicator for that id
+	/// No communicator for that id
 	#[error("no communicator with id: {0}")]
 	NoCommunicator(String),
-	/// read access failed
+	/// Read access failed
 	#[error("read storage for {0} failed")]
 	ReadAccess(String),
 	/// Found unknown communication protocol

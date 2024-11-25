@@ -22,6 +22,8 @@ use std::sync::Mutex;
 #[cfg(feature = "std")]
 use tokio::{task::JoinHandle, time};
 use tracing::{error, info, instrument, warn, Level};
+
+use crate::error::Error;
 // endregion:	--- modules
 
 // region:		--- types
@@ -191,7 +193,7 @@ where
 				let ctx2 = context.clone();
 
 				handle.lock().map_or_else(
-					|_| todo!(),
+					|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 					|mut handle| {
 						handle.replace(tokio::task::spawn(async move {
 							std::panic::set_hook(Box::new(move |reason| {
@@ -236,7 +238,7 @@ where
 				let ctx2 = context.clone();
 
 				handle.lock().map_or_else(
-					|_| todo!(),
+					|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 					|mut handle| {
 						handle.replace(tokio::task::spawn(async move {
 							std::panic::set_hook(Box::new(move |reason| {
@@ -281,7 +283,7 @@ where
 				callback: _,
 				handle,
 			} => handle.lock().map_or_else(
-				|_| todo!(),
+				|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 				|mut handle| {
 					if let Some(handle) = handle.take() {
 						handle.abort();

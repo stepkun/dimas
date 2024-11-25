@@ -9,7 +9,6 @@ extern crate alloc;
 extern crate std;
 
 // region:		--- modules
-use crate::error::Error;
 use alloc::sync::Arc;
 use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
@@ -35,6 +34,8 @@ use zenoh::{
 	sample::SampleKind,
 	Session, Wait,
 };
+
+use crate::error::Error;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -107,11 +108,11 @@ where
 	) -> Result<()> {
 		let cb = self.callback.clone();
 		self.key_expr.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|key_expr| {
 				let key_expr = key_expr
 					.clone()
-					.ok_or_else(|| Error::InvalidSelector("querier".into()))?;
+					.ok_or(Error::InvalidSelector("querier".into()))?;
 
 				let builder = message
 					.map_or_else(
@@ -155,11 +156,10 @@ where
 											}
 										});
 									} else {
-										let callback = callback.as_mut().ok_or_else(|| {
-											Error::AccessingQuerier {
+										let callback =
+											callback.as_mut().ok_or(Error::AccessingQuerier {
 												selector: key_expr.to_string(),
-											}
-										})?;
+											})?;
 										callback(msg)
 											.map_err(|source| Error::QueryCallback { source })?;
 									}
@@ -248,13 +248,18 @@ where
 		self.de_init()?;
 
 		self.key_expr.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut key_expr| {
 				self.session
 					.declare_keyexpr(self.selector.clone())
 					.wait()
-					.map_or_else(|_| todo!(), |new_key_expr| key_expr.replace(new_key_expr));
-				Ok(())
+					.map_or_else(
+						|_| Err(Error::Unexpected(file!().into(), line!()).into()),
+						|new_key_expr| {
+							key_expr.replace(new_key_expr);
+							Ok(())
+						},
+					)
 			},
 		)
 	}
@@ -267,7 +272,7 @@ where
 		P: Send + Sync + 'static,
 	{
 		self.key_expr.lock().map_or_else(
-			|_| todo!(),
+			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|mut key_expr| {
 				key_expr.take();
 				Ok(())

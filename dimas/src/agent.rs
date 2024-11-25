@@ -517,7 +517,7 @@ where
 		// activate sending liveliness
 		#[cfg(feature = "unstable")]
 		if self.liveliness {
-			let session = self.context.session("default");
+			//let session = self.context.session("default")?;
 			let token_str = self
 				.context
 				.prefix()
@@ -525,8 +525,10 @@ where
 					format!("{}/{}", prefix, self.context.uuid())
 				});
 
-			let token = session
-				.expect("snh")
+			let token = self
+				.context
+				.session("default")
+				.ok_or_else(|| Error::Unexpected(file!().into(), line!()))?
 				.liveliness()
 				.declare_token(&token_str)
 				.wait()
@@ -598,7 +600,7 @@ where
 								.write()
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
-								.ok_or_else(|| Error::GetMut("liveliness".into()))?
+								.ok_or(Error::GetMut("liveliness".into()))?
 								.manage_operation_state(&self.context.state())?;
 						},
 						TaskSignal::RestartQueryable(selector) => {
