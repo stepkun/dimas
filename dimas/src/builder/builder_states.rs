@@ -2,17 +2,12 @@
 
 //! Commonly used states for builders
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:      --- modules
-use alloc::{string::String, sync::Arc};
 use core::time::Duration;
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
 // endtregion:  --- modules
 
 // region:		--- builder_states

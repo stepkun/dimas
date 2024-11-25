@@ -19,8 +19,19 @@ exclude = [
     "examples/**/*",
 ]
 
-[lints]
-workspace = true
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+missing_docs = "warn"
+
+[lints.rustdoc]
+private_intra_doc_links = "allow"
+
+[lints.clippy]
+enum_glob_use = "deny"
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+unwrap_used = "deny"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -35,6 +46,7 @@ dimas-core = { workspace = true }
 dimas-macros = { workspace =true }
 dimas-time = { workspace = true }
 futures = { workspace = true }
+libloading = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal", "sync", "time"] }
 tracing = { workspace = true }

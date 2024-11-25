@@ -16,18 +16,21 @@ pub struct FibonacciRequest {
 	pub limit: u128,
 }
 
-async fn control_callback(ctx: Context<AgentProps>, msg: Message) -> Result<ControlResponse> {
+async fn control_callback(
+	ctx: Context<AgentProps>,
+	msg: Message,
+) -> Result<ObservableControlResponse> {
 	let message: FibonacciRequest = msg.decode()?;
 	// check wanted limit
 	if message.limit > 2 && message.limit <= 20 {
 		// accept
 		println!("Accepting Fibonacci sequence up to {}", message.limit);
 		ctx.write()?.limit = message.limit;
-		Ok(ControlResponse::Accepted)
+		Ok(ObservableControlResponse::Accepted)
 	} else {
 		// decline
 		println!("Declining Fibonacci sequence up to {}", message.limit);
-		Ok(ControlResponse::Declined)
+		Ok(ObservableControlResponse::Declined)
 	}
 }
 

@@ -1,16 +1,19 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `dimas-time` errors
+//! `builder` errors
 
 use thiserror::Error;
 
 // region:		--- Error
-/// `dimas-time` error type.
+/// `builder` error type
 #[derive(Error, Debug)]
 pub enum Error {
-	// /// a Mutex is poisoned.
-	// #[error("a Mutex poison error happened in {0}")]
-	// MutexPoison(String),
+	/// No zenoh available/implemented
+	#[error("no zenoh session available")]
+	NoZenohSession,
+	/// a Mutex is poisoned.
+	#[error("a Mutex poison error happened in {0}")]
+	MutexPoison(String),
 }
 // region:		--- Error
 

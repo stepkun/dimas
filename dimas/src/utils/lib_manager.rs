@@ -6,9 +6,9 @@
 extern crate std;
 
 // region:      --- modules
-use crate::error::Error;
-use crate::ComponentRegistrar;
+use super::error::Error;
 use anyhow::Result;
+use dimas_core::ComponentRegistrar;
 use libloading::Library;
 use std::collections::HashMap;
 use std::ffi::OsString;
@@ -42,23 +42,31 @@ impl LibManager {
 	/// # Errors
 	///
 	#[allow(unsafe_code)]
-	pub fn load_lib(&mut self, registrar: &mut dyn ComponentRegistrar, libname: &str) -> Result<()> {
+	pub fn load_lib(
+		&mut self,
+		registrar: &mut dyn ComponentRegistrar,
+		libname: &str,
+	) -> Result<()> {
 		let filename = libloading::library_filename(libname);
-		let pathbuf = std::env::current_exe()?.parent().ok_or(Error::LibNotFound)?.join(&filename);
+		let pathbuf = std::env::current_exe()?
+			.parent()
+			.ok_or(Error::NotFound)?
+			.join(&filename);
 		if !pathbuf.exists() || !pathbuf.is_file() {
-			Err(Error::LibNotFound.into())
+			Err(Error::NotFound.into())
 		} else {
 			unsafe {
 				let lib = libloading::Library::new(&filename)?;
-				let func: libloading::Symbol<unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32> =
-					lib.get(b"register_components")?;
+				let func: libloading::Symbol<
+					unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32,
+				> = lib.get(b"register_components")?;
 				let res = func(registrar);
 				match res {
 					0 => {
 						self.libs.insert(filename, lib);
 						Ok(())
 					}
-					_ => Err(Error::LibRegisterFailed.into()),
+					_ => Err(Error::RegisterFailed.into()),
 				}
 			}
 		}
@@ -68,20 +76,25 @@ impl LibManager {
 	/// # Errors
 	///
 	#[allow(unsafe_code)]
-	pub fn unload_lib(&mut self, registrar: &mut dyn ComponentRegistrar, libname: &str) -> Result<()> {
+	pub fn unload_lib(
+		&mut self,
+		registrar: &mut dyn ComponentRegistrar,
+		libname: &str,
+	) -> Result<()> {
 		let filename = libloading::library_filename(libname);
 		if let Some(lib) = self.libs.remove(&filename) {
 			unsafe {
-				let func: libloading::Symbol<unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32> = 
-					lib.get(b"unregister_components")?;
+				let func: libloading::Symbol<
+					unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32,
+				> = lib.get(b"unregister_components")?;
 				let res = func(registrar);
 				lib.close()?;
 				match res {
 					0 => return Ok(()),
-					_ => return Err(Error::LibDeregisterFailed.into()),
+					_ => return Err(Error::DeregisterFailed.into()),
 				}
 			}
 		}
-		Err(Error::LibUnloadFailed.into())
+		Err(Error::UnloadFailed.into())
 	}
 }

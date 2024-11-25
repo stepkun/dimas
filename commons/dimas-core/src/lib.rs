@@ -5,9 +5,6 @@
 
 // see: https://robmosys.eu/wiki/start
 
-/// States for usage in builders
-#[cfg(feature = "std")]
-pub mod builder_states;
 #[doc(hidden)]
 /// Enums
 pub mod enums;

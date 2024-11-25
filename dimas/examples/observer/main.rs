@@ -17,20 +17,23 @@ pub struct FibonacciRequest {
 	pub limit: u128,
 }
 
-async fn control_response(ctx: Context<AgentProps>, response: ControlResponse) -> Result<()> {
+async fn control_response(
+	ctx: Context<AgentProps>,
+	response: ObservableControlResponse,
+) -> Result<()> {
 	match response {
-		ControlResponse::Accepted => {
+		ObservableControlResponse::Accepted => {
 			let limit = ctx.read()?.new_limit;
 			println!("Accepted fibonacci up to {limit}");
 			ctx.write()?.limit = limit;
 			ctx.write()?.new_limit += 1;
 		}
-		ControlResponse::Declined => {
+		ObservableControlResponse::Declined => {
 			println!("Declined fibonacci up to {}", ctx.read()?.new_limit);
 			ctx.write()?.limit = 0;
 			ctx.write()?.new_limit = 5;
 		}
-		ControlResponse::Occupied => {
+		ObservableControlResponse::Occupied => {
 			println!("Service fibonacci is occupied");
 			let occupied_counter = ctx.read()?.occupied_counter + 1;
 			// cancel running request whenever 5 occupied messages arrived
@@ -41,7 +44,7 @@ async fn control_response(ctx: Context<AgentProps>, response: ControlResponse) -
 				ctx.write()?.occupied_counter = occupied_counter;
 			}
 		}
-		ControlResponse::Canceled => {
+		ObservableControlResponse::Canceled => {
 			println!("Canceled fibonacci up to {}", ctx.read()?.limit);
 		}
 	};

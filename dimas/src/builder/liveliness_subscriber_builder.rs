@@ -1,29 +1,26 @@
 // Copyright © 2023 Stephan Kunz
 
-//! Module `liveliness` provides a `LivelinessSubscriber` which can be created using the `LivelinessSubscriberBuilder`.
-//! A `LivelinessSubscriber` can optional subscribe on a delete message.
-
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
+//! Builder for a [`LivelinessSubscriber`]
+//!
 
 // region:		--- modules
-use crate::error::Error;
-use crate::{
+use anyhow::Result;
+use dimas_com::{
 	traits::LivelinessSubscriber as LivelinessSubscriberTrait,
 	zenoh::liveliness::{ArcLivelinessCallback, LivelinessCallback, LivelinessSubscriber},
 };
-use alloc::{boxed::Box, format, string::String, sync::Arc};
-use anyhow::Result;
-use dimas_core::builder_states::{Callback, NoCallback, NoStorage, Storage};
 use dimas_core::{enums::OperationState, traits::Context, utils::selector_from};
 use futures::future::Future;
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-#[cfg(feature = "std")]
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
 use tokio::sync::Mutex;
+
+use super::{
+	builder_states::{Callback, NoCallback, NoStorage, Storage},
+	error::Error,
+};
 // endregion:	--- modules
 
 // region:		--- LivelinessSubscriberBuilder

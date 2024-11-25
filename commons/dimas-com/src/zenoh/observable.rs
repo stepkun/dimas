@@ -17,7 +17,7 @@ use bitcode::encode;
 use core::time::Duration;
 use dimas_core::{
 	enums::{OperationState, TaskSignal},
-	message_types::{ControlResponse, Message, ObservableResponse},
+	message_types::{Message, ObservableControlResponse, ObservableResponse},
 	traits::{Context, Operational},
 	utils::feedback_selector_from,
 };
@@ -37,7 +37,9 @@ use zenoh::{
 // region:    	--- types
 /// Type definition for an observables `control` callback
 pub type ControlCallback<P> = Box<
-	dyn FnMut(Context<P>, Message) -> BoxFuture<'static, Result<ControlResponse>> + Send + Sync,
+	dyn FnMut(Context<P>, Message) -> BoxFuture<'static, Result<ObservableControlResponse>>
+		+ Send
+		+ Sync,
 >;
 /// Type definition for an observables atomic reference counted `control` callback
 pub type ArcControlCallback<P> = Arc<Mutex<ControlCallback<P>>>;
@@ -289,7 +291,7 @@ where
 					if is_running {
 						// send occupied response
 						let key = query.selector().key_expr().to_string();
-						let encoded: Vec<u8> = encode(&ControlResponse::Occupied);
+						let encoded: Vec<u8> = encode(&ObservableControlResponse::Occupied);
 						match query.reply(&key, encoded).wait() {
 							Ok(()) => {},
 							Err(err) => error!("failed to reply with {err}"),
@@ -312,7 +314,7 @@ where
 						let res = control_callback.lock().await(ctx_clone, msg).await;
 						match res {
 							Ok(response) => {
-								if matches!(response, ControlResponse::Accepted ) {
+								if matches!(response, ObservableControlResponse::Accepted ) {
 									// create feedback publisher
 									let mut fp = feedback_publisher.lock().await;
 									session
@@ -375,7 +377,7 @@ where
 						};
 					}
 					// acknowledge cancel request
-					let encoded: Vec<u8> = encode(&ControlResponse::Canceled);
+					let encoded: Vec<u8> = encode(&ObservableControlResponse::Canceled);
 					match query.reply(&key, encoded).wait() {
 						Ok(()) => {},
 						Err(err) => error!("failed to reply with {err}"),

@@ -2,31 +2,25 @@
 
 //! Module `publisher` provides a message sender `Publisher` which can be created using the `PublisherBuilder`.
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
-use crate::error::Error;
-use crate::traits::Publisher as PublisherTrait;
-use crate::zenoh::publisher::Publisher;
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-};
 use anyhow::Result;
-use dimas_core::builder_states::{NoSelector, NoStorage, Selector, Storage};
+use dimas_com::{traits::Publisher as PublisherTrait, zenoh::publisher::Publisher};
 use dimas_core::{enums::OperationState, traits::Context, utils::selector_from};
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-use zenoh::bytes::Encoding;
-use zenoh::qos::CongestionControl;
-use zenoh::qos::Priority;
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
+use zenoh::{
+	bytes::Encoding,
+	qos::{CongestionControl, Priority},
+};
 #[cfg(feature = "unstable")]
 use zenoh::{qos::Reliability, sample::Locality};
+
+use super::{
+	builder_states::{NoSelector, NoStorage, Selector, Storage},
+	error::Error,
+};
 // endregion:	--- modules
 
 // region:		--- PublisherBuilder
@@ -243,7 +237,7 @@ where
 		let session = self
 			.context
 			.session(&self.session_id)
-			.ok_or_else(|| Error::NoZenohSession)?;
+			.ok_or(Error::NoZenohSession)?;
 		Ok(Publisher::new(
 			session,
 			self.selector.selector,

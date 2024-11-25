@@ -23,9 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- replaced own Result type with anyhow::Result
+- replaced own Result type with `anyhow::Result`
 - changed name of Trait `Capability` to `Operational`
-- restructured module dimas_core::enums
+- restructured crate `dimas_com`
+- restructured crates `dimas_core` & `dimas_time`,
+  moving builders that require `std` to `dimas`
 
 ### Fixed
 

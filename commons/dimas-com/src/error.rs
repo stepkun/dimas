@@ -29,9 +29,6 @@ pub enum Error {
 	/// no communicator for that id
 	#[error("no communicator with id: {0}")]
 	NoCommunicator(String),
-	/// No zenoh available/implemented
-	#[error("no zenoh session available")]
-	NoZenohSession,
 	/// Invalid selector
 	#[error("invalid selector for '{0}'")]
 	InvalidSelector(String),

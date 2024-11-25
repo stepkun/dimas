@@ -45,30 +45,30 @@
 //!
 
 // region:		--- modules
+#[cfg(feature = "unstable")]
+use crate::builder::LivelinessSubscriberBuilder;
+use crate::builder::{
+	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
+	ObservableBuilder, ObserverBuilder, PublisherBuilder, QuerierBuilder, QueryableBuilder,
+	SubscriberBuilder, TimerBuilder,
+};
 use crate::context::ContextImpl;
 use crate::error::Error;
+use crate::utils::{ComponentRegister, LibManager};
 use anyhow::Result;
 use chrono::Local;
 use core::{fmt::Debug, time::Duration};
-#[cfg(feature = "unstable")]
-use dimas_com::builder::LivelinessSubscriberBuilder;
-use dimas_com::builder::{
-	ObservableBuilder, ObserverBuilder, PublisherBuilder, QuerierBuilder, QueryableBuilder,
-	SubscriberBuilder,
-};
 #[cfg(feature = "unstable")]
 use dimas_com::traits::LivelinessSubscriber;
 use dimas_com::traits::{Observer, Publisher, Querier, Responder};
 use dimas_commands::messages::{AboutEntity, PingEntity};
 use dimas_config::Config;
 use dimas_core::{
-	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
 	enums::{OperationState, Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
 	traits::{Component, Context, ContextAbstraction, Operational, System},
-	utils::{ComponentRegister, LibManager},
 };
-use dimas_time::{Timer, TimerBuilder};
+use dimas_time::Timer;
 use std::sync::Arc;
 #[cfg(feature = "unstable")]
 use std::sync::RwLock;

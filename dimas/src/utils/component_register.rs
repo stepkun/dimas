@@ -6,8 +6,8 @@
 extern crate std;
 
 // region:      --- modules
-use crate::{Component, ComponentId, ComponentRegistrar, OperationState};
 use anyhow::Result;
+use dimas_core::{Component, ComponentId, ComponentRegistrar, OperationState};
 use std::collections::HashMap;
 use std::prelude::v1::Box;
 // endregion:   --- modules

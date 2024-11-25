@@ -2,36 +2,28 @@
 
 //! Module `queryable` provides an information/compute provider `Queryable` which can be created using the `QueryableBuilder`.
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-};
 use anyhow::Result;
+use dimas_com::{
+	traits::Responder,
+	zenoh::queryable::{ArcGetCallback, GetCallback, Queryable},
+};
 use dimas_core::{
 	enums::OperationState, message_types::QueryMsg, traits::Context, utils::selector_from,
 };
 use futures::future::Future;
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-#[cfg(feature = "std")]
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
 use tokio::sync::Mutex;
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 
-use crate::error::Error;
-use crate::{
-	traits::Responder,
-	zenoh::queryable::{ArcGetCallback, GetCallback, Queryable},
+use super::{
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	error::Error,
 };
-use dimas_core::builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage};
 // endregion:	--- modules
 
 // region:		--- QueryableBuilder
@@ -247,7 +239,7 @@ where
 		let selector = selector.selector;
 		let session = context
 			.session(&session_id)
-			.ok_or_else(|| Error::NoZenohSession)?;
+			.ok_or(Error::NoZenohSession)?;
 		Ok(Queryable::new(
 			session,
 			selector,

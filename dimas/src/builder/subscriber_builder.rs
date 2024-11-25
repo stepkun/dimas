@@ -3,35 +3,30 @@
 //! Module `subscriber` provides a message `Subscriber` which can be created using the `SubscriberBuilder`.
 //! A `Subscriber` can optional subscribe on a delete message.
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
-use crate::error::Error;
-use crate::traits::Responder as SubscriberTrait;
-use crate::zenoh::subscriber::{
-	ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber,
-};
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-};
 use anyhow::Result;
-use dimas_core::builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage};
+use dimas_com::{
+	traits::Responder as SubscriberTrait,
+	zenoh::subscriber::{
+		ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber,
+	},
+};
 use dimas_core::{
 	enums::OperationState, message_types::Message, traits::Context, utils::selector_from,
 };
 use futures::future::Future;
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-#[cfg(feature = "std")]
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
 use tokio::sync::Mutex;
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
+
+use super::{
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	error::Error,
+};
 // endregion:	--- modules
 
 // region:		--- SubscriberBuilder
@@ -253,7 +248,7 @@ where
 		} = self;
 		let session = context
 			.session(&session_id)
-			.ok_or_else(|| Error::NoZenohSession)?;
+			.ok_or(Error::NoZenohSession)?;
 		Ok(Subscriber::new(
 			session,
 			selector.selector,

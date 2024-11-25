@@ -3,6 +3,7 @@
 //! Enums for communication capabilities
 //!
 
+mod error;
 /// a multi session communicator
 mod multi_communicator;
 /// a single session communicator
@@ -14,18 +15,15 @@ pub use multi_communicator::MultiCommunicator;
 #[allow(clippy::module_name_repetitions)]
 pub use single_communicator::SingleCommunicator;
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
-// region:      --- factory method
-use crate::traits::Communicator;
-use alloc::sync::Arc;
+// region:      --- modules
 use anyhow::Result;
 use dimas_config::Config;
+use std::sync::Arc;
 
+use crate::traits::Communicator;
+// endregion:	--- modules
+
+// region:      --- factory method
 /// Create a [`Communicator`] from a [`Config`]
 /// # Errors
 pub fn from(config: &Config) -> Result<Arc<dyn Communicator>> {

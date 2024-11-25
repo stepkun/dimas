@@ -3,24 +3,21 @@
 //! Traits for communication.
 //!
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
+use anyhow::Result;
+use dimas_core::{enums::OperationState, traits::Operational};
+#[cfg(feature = "std")]
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
+use tracing::error;
+use zenoh::Session;
+
 #[cfg(any(feature = "unstable", doc))]
 use super::LivelinessSubscriber;
 use super::{CommunicatorMethods, Observer, Publisher, Querier, Responder};
 use crate::error::Error;
-use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
-use anyhow::Result;
-use dimas_core::{enums::OperationState, traits::Operational};
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-use tracing::error;
-use zenoh::Session;
 // endregion:	--- modules
 
 // region:		--- Communicator

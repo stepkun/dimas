@@ -3,16 +3,23 @@
 //! Implementation of a multi session/protocol communicator
 //!
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
-use crate::error::Error;
+use anyhow::Result;
 #[cfg(feature = "unstable")]
 use crate::traits::LivelinessSubscriber;
+use dimas_config::Config;
+use dimas_core::{
+	enums::OperationState,
+	message_types::{Message, QueryableMsg},
+	traits::Operational,
+};
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
+use zenoh::{config::ZenohId, Session};
+
+use super::error::Error;
 use crate::{
 	enums::CommunicatorImplementation,
 	traits::{
@@ -20,18 +27,6 @@ use crate::{
 		Querier, Responder,
 	},
 };
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-	vec::Vec,
-};
-use anyhow::Result;
-use dimas_config::Config;
-use dimas_core::message_types::{Message, QueryableMsg};
-use dimas_core::{enums::OperationState, traits::Operational};
-use std::{collections::HashMap, sync::RwLock};
-use zenoh::{config::ZenohId, Session};
 // endregion:   --- modules
 
 // region:		--- types
@@ -319,7 +314,7 @@ impl MultiCommunicator {
 			for session in sessions {
 				match session.protocol.as_str() {
 					"zenoh" => {
-						let zenoh = crate::zenoh::Communicator::new(&session.config)?;
+						let zenoh = crate::zenoh::Communicator::new(config.zenoh_config())?;
 						com.communicators
 							.write()
 							.map_err(|_| Error::ModifyStruct("commmunicators".into()))?

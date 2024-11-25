@@ -32,14 +32,14 @@ pub use zenoh::sample::Locality;
 
 // dimas stuff
 pub use crate::agent::Agent;
+pub use crate::utils::LibManager;
 pub use dimas_config::Config;
 pub use dimas_core::enums::OperationState;
 pub use dimas_core::message_types::{
-	ControlResponse, Message, ObservableResponse, QueryMsg, QueryableMsg,
+	Message, ObservableControlResponse, ObservableResponse, QueryMsg, QueryableMsg,
 };
 pub use dimas_core::traits::Context;
 pub use dimas_core::traits::{Component, ComponentId, ComponentRegistrar, Operational, System};
 pub use dimas_core::utils::init_tracing;
-pub use dimas_core::utils::LibManager;
 pub use dimas_macros::main;
 pub use dimas_time::Timer;

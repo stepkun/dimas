@@ -5,6 +5,8 @@
 //!
 
 // region:    	--- modules
+pub mod builder_states;
+mod error;
 #[cfg(feature = "unstable")]
 mod liveliness_subscriber_builder;
 mod observable_builder;
@@ -13,6 +15,7 @@ mod publisher_builder;
 mod querier_builder;
 mod queryable_builder;
 mod subscriber_builder;
+mod timer_builder;
 
 // flatten
 #[cfg(feature = "unstable")]
@@ -23,6 +26,7 @@ pub use publisher_builder::PublisherBuilder;
 pub use querier_builder::QuerierBuilder;
 pub use queryable_builder::QueryableBuilder;
 pub use subscriber_builder::SubscriberBuilder;
+pub use timer_builder::TimerBuilder;
 // endregion: 	--- modules
 
 #[cfg(test)]

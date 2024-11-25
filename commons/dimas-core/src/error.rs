@@ -44,18 +44,6 @@ pub enum Error {
 		/// name of the operation state
 		state: String,
 	},
-	/// library file not found
-	#[error("library not found")]
-	LibNotFound,
-	/// register of a library file failed
-	#[error("register library failed")]
-	LibRegisterFailed,
-	/// unloading of a library file failed
-	#[error("unload of file failed")]
-	LibUnloadFailed,
-	/// deregister of a library file failed
-	#[error("register library failed")]
-	LibDeregisterFailed,
 }
 // region:		--- Error
 

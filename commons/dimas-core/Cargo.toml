@@ -22,24 +22,12 @@ exclude = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lints.rust]
-unsafe_code = "deny"
-unsafe_op_in_unsafe_fn = "deny"
-missing_docs = "warn"
-
-[lints.rustdoc]
-private_intra_doc_links = "allow"
-
-[lints.clippy]
-enum_glob_use = "deny"
-pedantic = { level = "deny", priority = -1 }
-nursery = { level = "deny", priority = -1 }
-unwrap_used = "deny"
+[lints]
+workspace = true
 
 [dependencies]
 anyhow = { workspace = true}
 bitcode = { workspace = true}
-libloading = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true}
 tracing = { workspace = true}

@@ -30,9 +30,6 @@ pub enum Error {
 	/// get mutable from collection failed
 	#[error("get mutable in {0} failed")]
 	GetMut(String),
-	/// a Mutex is poisoned.
-	#[error("a Mutex poison error happened in {0}")]
-	MutexPoison(String),
 	/// read access failed
 	#[error("accesssing the storage for read failed")]
 	ReadAccess,

@@ -3,15 +3,18 @@
 //! Implementation of a multi session/protocol communicator
 //!
 
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
+use anyhow::Result;
 #[cfg(feature = "unstable")]
 use crate::traits::LivelinessSubscriber;
+use dimas_config::Config;
+use dimas_core::{enums::OperationState, message_types::Message, traits::Operational};
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
+use zenoh::{config::ZenohId, Session};
+
 use crate::{
 	enums::CommunicatorImplementation,
 	error::Error,
@@ -20,17 +23,6 @@ use crate::{
 		Querier, Responder,
 	},
 };
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-	vec::Vec,
-};
-use anyhow::Result;
-use dimas_config::Config;
-use dimas_core::{enums::OperationState, message_types::Message, traits::Operational};
-use std::{collections::HashMap, sync::RwLock};
-use zenoh::{config::ZenohId, Session};
 // endregion:	--- modules
 
 // region:		--- types

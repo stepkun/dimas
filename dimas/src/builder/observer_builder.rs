@@ -1,38 +1,32 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Module
-
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
+//! Builder for an [`Observer`]
 
 // region:		--- modules
-use crate::error::Error;
-use crate::traits::Observer as ObserverTrait;
-use crate::zenoh::observer::{
-	ArcControlCallback, ArcResponseCallback, ControlCallback, Observer, ResponseCallback,
-};
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-};
 use anyhow::Result;
-use core::time::Duration;
-use dimas_core::builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage};
+use dimas_com::{
+	traits::Observer as ObserverTrait,
+	zenoh::observer::{
+		ArcControlCallback, ArcResponseCallback, ControlCallback, Observer, ResponseCallback,
+	},
+};
 use dimas_core::{
 	enums::OperationState,
-	message_types::{ControlResponse, ObservableResponse},
+	message_types::{ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::selector_from,
 };
 use futures::future::Future;
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-#[cfg(feature = "std")]
-use tokio::sync::Mutex;
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
+use tokio::{sync::Mutex, time::Duration};
+
+use super::{
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	error::Error,
+};
 // endregion:	--- modules
 
 // region:		--- ObserverBuilder
@@ -152,7 +146,7 @@ where
 		mut callback: C,
 	) -> ObserverBuilder<P, K, Callback<ArcControlCallback<P>>, RC, S>
 	where
-		C: FnMut(Context<P>, ControlResponse) -> F + Send + Sync + 'static,
+		C: FnMut(Context<P>, ObservableControlResponse) -> F + Send + Sync + 'static,
 		F: Future<Output = Result<()>> + Send + Sync + 'static,
 	{
 		let Self {
@@ -275,7 +269,7 @@ where
 		let selector = selector.selector;
 		let session = context
 			.session(&session_id)
-			.ok_or_else(|| Error::NoZenohSession)?;
+			.ok_or(Error::NoZenohSession)?;
 		Ok(Observer::new(
 			session,
 			selector,

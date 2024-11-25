@@ -1,13 +1,9 @@
 // Copyright © 2023 Stephan Kunz
-#![no_std]
 
 //! dimas-com implements the communication capabilities.
 //!
 
-// /// Builders
-#[cfg(feature = "std")]
-pub mod builder;
-/// the different communicators
+/// Communicator
 pub mod communicator;
 /// Enums
 pub mod enums;

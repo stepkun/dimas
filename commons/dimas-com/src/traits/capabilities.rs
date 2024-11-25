@@ -3,10 +3,6 @@
 //! Traits for communication capabilities.
 //!
 
-#[doc(hidden)]
-extern crate alloc;
-
-use alloc::string::String;
 use anyhow::Result;
 use dimas_core::{
 	message_types::{Message, QueryableMsg},

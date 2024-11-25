@@ -19,7 +19,7 @@ use bitcode::decode;
 use core::time::Duration;
 use dimas_core::{
 	enums::OperationState,
-	message_types::{ControlResponse, Message, ObservableResponse},
+	message_types::{Message, ObservableControlResponse, ObservableResponse},
 	traits::{Context, Operational},
 	utils::{cancel_selector_from, feedback_selector_from, request_selector_from},
 };
@@ -41,8 +41,11 @@ use crate::error::Error;
 
 // region:    	--- types
 /// Type definition for an observers `control` callback
-pub type ControlCallback<P> =
-	Box<dyn FnMut(Context<P>, ControlResponse) -> BoxFuture<'static, Result<()>> + Send + Sync>;
+pub type ControlCallback<P> = Box<
+	dyn FnMut(Context<P>, ObservableControlResponse) -> BoxFuture<'static, Result<()>>
+		+ Send
+		+ Sync,
+>;
 /// Type definition for an observers atomic reference counted `control` callback
 pub type ArcControlCallback<P> = Arc<Mutex<ControlCallback<P>>>;
 /// Type definition for an observers `response` callback
@@ -123,8 +126,8 @@ where
 							let ccb = self.control_callback.clone();
 							let ctx = self.context.clone();
 							let content: Vec<u8> = sample.payload().to_bytes().into_owned();
-							let response: ControlResponse = decode(&content)?;
-							if matches!(response, ControlResponse::Canceled) {
+							let response: ObservableControlResponse = decode(&content)?;
+							if matches!(response, ObservableControlResponse::Canceled) {
 								// without spawning possible deadlock when called inside an control response
 								tokio::spawn(async move {
 									let mut lock = ccb.lock().await;
@@ -193,10 +196,10 @@ where
 					Ok(sample) => match sample.kind() {
 						SampleKind::Put => {
 							let content: Vec<u8> = sample.payload().to_bytes().into_owned();
-							decode::<ControlResponse>(&content).map_or_else(
+							decode::<ObservableControlResponse>(&content).map_or_else(
 								|_| todo!(),
 								|response| {
-									if matches!(response, ControlResponse::Accepted) {
+									if matches!(response, ObservableControlResponse::Accepted) {
 										let ctx = self.context.clone();
 										// use "<query_selector>/feedback/<source_id/replier_id>" as key
 										// in case there is no source_id/replier_id, listen on all id's

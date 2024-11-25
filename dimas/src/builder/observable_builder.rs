@@ -1,41 +1,33 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Module
-
-#[doc(hidden)]
-extern crate alloc;
-
-#[cfg(feature = "std")]
-extern crate std;
+//! Builder for an [`Observable`]
 
 // region:		--- modules
-use crate::error::Error;
-use crate::{
+use anyhow::Result;
+use dimas_com::{
 	traits::Responder,
 	zenoh::observable::{
 		ArcControlCallback, ArcExecutionCallback, ArcFeedbackCallback, ControlCallback,
 		ExecutionCallback, FeedbackCallback, Observable,
 	},
 };
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-};
-use anyhow::Result;
-use core::time::Duration;
-use dimas_core::builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage};
 use dimas_core::{
 	enums::OperationState,
-	message_types::{ControlResponse, Message},
+	message_types::{Message, ObservableControlResponse},
 	traits::Context,
 	utils::selector_from,
 };
 use futures::future::{BoxFuture, Future};
-#[cfg(feature = "std")]
-use std::{collections::HashMap, sync::RwLock};
-#[cfg(feature = "std")]
-use tokio::sync::Mutex;
+use std::{
+	collections::HashMap,
+	sync::{Arc, RwLock},
+};
+use tokio::{sync::Mutex, time::Duration};
+
+use super::{
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	error::Error,
+};
 // endregion:	--- modules
 
 // region:		--- ObservableBuilder
@@ -157,7 +149,7 @@ where
 	) -> ObservableBuilder<P, K, Callback<ArcControlCallback<P>>, FC, EF, S>
 	where
 		C: FnMut(Context<P>, Message) -> F + Send + Sync + 'static,
-		F: Future<Output = Result<ControlResponse>> + Send + Sync + 'static,
+		F: Future<Output = Result<ObservableControlResponse>> + Send + Sync + 'static,
 	{
 		let Self {
 			session_id,
@@ -338,7 +330,7 @@ where
 		} = self;
 		let session = context
 			.session(&session_id)
-			.ok_or_else(|| Error::NoZenohSession)?;
+			.ok_or(Error::NoZenohSession)?;
 		Ok(Observable::new(
 			session,
 			selector.selector,

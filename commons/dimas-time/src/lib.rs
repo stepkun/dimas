@@ -7,13 +7,9 @@
 // region:    --- modules
 mod error;
 mod timer;
-#[cfg(feature = "std")]
-mod timer_builder;
 
 // flatten
 pub use timer::*;
-#[cfg(feature = "std")]
-pub use timer_builder::*;
 // endregion: --- modules
 
 #[cfg(test)]
