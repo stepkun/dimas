@@ -213,26 +213,26 @@ where
 	#[allow(clippy::too_many_arguments)]
 	pub fn new(
 		session: Arc<Session>,
-		selector: String,
+		selector: impl Into<String>,
 		context: Context<P>,
 		activation_state: OperationState,
 		response_callback: ArcGetCallback<P>,
 		mode: ConsolidationMode,
 		#[cfg(feature = "unstable")] allowed_destination: Locality,
-		encoding: String,
+		encoding: impl Into<String>,
 		target: QueryTarget,
 		timeout: Duration,
 	) -> Self {
 		Self {
 			session,
-			selector,
+			selector: selector.into(),
 			context,
 			activation_state,
 			callback: response_callback,
 			mode,
 			#[cfg(feature = "unstable")]
 			allowed_destination,
-			encoding,
+			encoding: encoding.into(),
 			target,
 			timeout,
 			key_expr: std::sync::Mutex::new(None),

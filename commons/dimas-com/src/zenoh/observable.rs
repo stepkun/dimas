@@ -126,7 +126,7 @@ where
 	#[must_use]
 	pub fn new(
 		session: Arc<Session>,
-		selector: String,
+		selector: impl Into<String>,
 		context: Context<P>,
 		activation_state: OperationState,
 		feedback_interval: Duration,
@@ -136,7 +136,7 @@ where
 	) -> Self {
 		Self {
 			session,
-			selector,
+			selector: selector.into(),
 			context,
 			activation_state,
 			feedback_interval,

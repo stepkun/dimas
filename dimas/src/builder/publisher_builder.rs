@@ -104,8 +104,8 @@ where
 
 	/// Set the publishers encoding
 	#[must_use]
-	pub fn encoding(mut self, encoding: String) -> Self {
-		self.encoding = encoding;
+	pub fn encoding(mut self, encoding: impl Into<String>) -> Self {
+		self.encoding = encoding.into();
 		self
 	}
 

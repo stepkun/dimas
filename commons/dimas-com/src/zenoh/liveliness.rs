@@ -101,7 +101,7 @@ where
 	/// Constructor for a [`LivelinessSubscriber`]
 	pub fn new(
 		session: Arc<Session>,
-		token: String,
+		token: impl Into<String>,
 		context: Context<P>,
 		activation_state: OperationState,
 		put_callback: ArcLivelinessCallback<P>,
@@ -109,7 +109,7 @@ where
 	) -> Self {
 		Self {
 			session,
-			token,
+			token: token.into(),
 			context,
 			activation_state,
 			put_callback,
@@ -186,14 +186,15 @@ where
 #[instrument(name="liveliness", level = Level::ERROR, skip_all)]
 async fn run_liveliness<P>(
 	session: Arc<Session>,
-	token: String,
+	token: impl Into<String>,
 	p_cb: ArcLivelinessCallback<P>,
 	d_cb: Option<ArcLivelinessCallback<P>>,
 	ctx: Context<P>,
 ) -> Result<()> {
+	let token = token.into();
 	let subscriber = session
 		.liveliness()
-		.declare_subscriber(&token)
+		.declare_subscriber(token)
 		.await
 		.map_err(|_| Error::Unexpected(file!().into(), line!()))?;
 
@@ -235,14 +236,15 @@ async fn run_liveliness<P>(
 #[instrument(name="initial liveliness", level = Level::ERROR, skip_all)]
 async fn run_initial<P>(
 	session: Arc<Session>,
-	token: String,
+	token: impl Into<String>,
 	p_cb: ArcLivelinessCallback<P>,
 	ctx: Context<P>,
 	timeout: Duration,
 ) -> Result<()> {
+	let token = token.into();
 	let result = session
 		.liveliness()
-		.get(&token)
+		.get(token)
 		.timeout(timeout)
 		.await;
 

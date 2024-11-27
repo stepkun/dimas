@@ -294,7 +294,7 @@ where
 	#[must_use]
 	pub fn new(
 		session: Arc<Session>,
-		selector: String,
+		selector: impl Into<String>,
 		context: Context<P>,
 		activation_state: OperationState,
 		control_callback: ArcControlCallback<P>,
@@ -303,7 +303,7 @@ where
 	) -> Self {
 		Self {
 			session,
-			selector,
+			selector: selector.into(),
 			context,
 			activation_state,
 			control_callback,

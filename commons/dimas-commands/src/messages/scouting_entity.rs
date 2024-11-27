@@ -38,10 +38,10 @@ impl Display for ScoutingEntity {
 impl ScoutingEntity {
 	/// Constructor
 	#[must_use]
-	pub const fn new(zid: String, kind: String, locators: Vec<String>) -> Self {
+	pub fn new(zid: impl Into<String>, kind: impl Into<String>, locators: Vec<String>) -> Self {
 		Self {
-			zid,
-			kind,
+			zid: zid.into(),
+			kind: kind.into(),
 			locators,
 		}
 	}

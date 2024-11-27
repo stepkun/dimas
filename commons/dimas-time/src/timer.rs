@@ -135,7 +135,7 @@ where
 	/// Constructor for a [Timer]
 	#[must_use]
 	pub fn new(
-		name: String,
+		name: impl Into<String>,
 		context: Context<P>,
 		activation_state: OperationState,
 		callback: ArcTimerCallback<P>,
@@ -144,7 +144,7 @@ where
 	) -> Self {
 		match delay {
 			Some(delay) => Self::DelayedInterval {
-				selector: name,
+				selector: name.into(),
 				context,
 				activation_state,
 				delay,
@@ -153,7 +153,7 @@ where
 				handle: Mutex::new(None),
 			},
 			None => Self::Interval {
-				selector: name,
+				selector: name.into(),
 				context,
 				activation_state,
 				interval,

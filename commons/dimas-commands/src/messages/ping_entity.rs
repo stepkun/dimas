@@ -35,8 +35,8 @@ impl Display for PingEntity {
 impl PingEntity {
 	/// Constructor
 	#[must_use]
-	pub const fn new(name: String, zid: String, oneway: i64) -> Self {
-		Self { name, zid, oneway }
+	pub fn new(name: impl Into<String>, zid: impl Into<String>, oneway: i64) -> Self {
+		Self { name: name.into(), zid: zid.into(), oneway }
 	}
 
 	/// Get the Name

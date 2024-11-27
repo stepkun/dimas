@@ -60,9 +60,12 @@ fn read_file_without_comments(path: &PathBuf) -> Result<String> {
 /// function parses for #include directives, loads the files and puts the content in place
 /// # Errors
 #[cfg(feature = "std")]
-pub fn parse_config_file(filename: &String, mut input: String) -> Result<String> {
+pub fn parse_config_file(filename: impl Into<String>, input: impl Into<String>) -> Result<String> {
 	// we always start from the very beginning
+	let mut input = input.into();
+	let filename = filename.into();
 	while let Some(pos) = input.find("#include ") {
+		let filename = filename.clone();
 		// calculate offsets
 		let start = pos - 1;
 		let len = input[pos..]

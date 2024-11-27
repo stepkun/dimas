@@ -110,25 +110,25 @@ impl Publisher {
 	/// Constructor for a [`Publisher`]
 	#[allow(clippy::too_many_arguments)]
 	#[must_use]
-	pub const fn new(
+	pub fn new(
 		session: Arc<Session>,
-		selector: String,
+		selector: impl Into<String>,
 		activation_state: OperationState,
 		#[cfg(feature = "unstable")] allowed_destination: Locality,
 		congestion_control: CongestionControl,
-		encoding: String,
+		encoding: impl Into<String>,
 		express: bool,
 		priority: Priority,
 		#[cfg(feature = "unstable")] reliability: Reliability,
 	) -> Self {
 		Self {
 			session,
-			selector,
+			selector: selector.into(),
 			activation_state,
 			#[cfg(feature = "unstable")]
 			allowed_destination,
 			congestion_control,
-			encoding,
+			encoding: encoding.into(),
 			express,
 			priority,
 			#[cfg(feature = "unstable")]

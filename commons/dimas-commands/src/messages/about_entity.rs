@@ -37,11 +37,11 @@ impl Display for AboutEntity {
 impl AboutEntity {
 	/// Constructor
 	#[must_use]
-	pub const fn new(name: String, kind: String, zid: String, state: OperationState) -> Self {
+	pub fn new(name: impl Into<String>, kind: impl Into<String>, zid: impl Into<String>, state: OperationState) -> Self {
 		Self {
-			name,
-			kind,
-			zid,
+			name: name.into(),
+			kind: kind.into(),
+			zid: zid.into(),
 			state,
 		}
 	}
