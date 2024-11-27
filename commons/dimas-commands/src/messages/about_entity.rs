@@ -66,8 +66,8 @@ impl AboutEntity {
 
 	/// Get the state
 	#[must_use]
-	pub const fn state(&self) -> &OperationState {
-		&self.state
+	pub const fn state(&self) -> OperationState {
+		self.state
 	}
 }
 // endregion:	--- AboutEntity

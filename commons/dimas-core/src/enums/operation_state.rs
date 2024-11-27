@@ -10,15 +10,14 @@ extern crate alloc;
 use crate::error::Error;
 #[cfg(doc)]
 use crate::traits::Operational;
-use alloc::vec::Vec;
-use alloc::{boxed::Box, string::ToString};
+use alloc::{boxed::Box, string::ToString, vec::Vec};
 use bitcode::{Decode, Encode};
 use core::fmt::{Debug, Display};
 // endregion:	--- modules
 
 // region:		--- OperationState
 /// The possible states a [`Operational`] entity can take
-#[derive(Debug, Decode, Encode, Clone, Default, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Copy, Clone, Debug, Default, Decode, Encode, Eq, PartialEq, Ord, PartialOrd)]
 pub enum OperationState {
 	/// Entity is in an erronous state
 	Error,
@@ -27,18 +26,12 @@ pub enum OperationState {
 	Created,
 	/// Entity is setup properly
 	Configured,
-	/// Entity is listening to important messages only
+	/// Entity is listening and reacting only to important messages
 	Inactive,
-	/// Entity has full situational awareness but does not react
+	/// Entity has full situational awareness (sensing) but does not act
 	Standby,
 	/// Entity is fully operational
 	Active,
-}
-
-impl From<&Self> for OperationState {
-	fn from(value: &Self) -> Self {
-		value.clone()
-	}
 }
 
 impl TryFrom<&str> for OperationState {

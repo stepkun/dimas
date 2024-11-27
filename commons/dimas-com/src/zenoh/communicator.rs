@@ -48,7 +48,7 @@ pub struct Communicator {
 }
 
 impl Operational for Communicator {
-	fn manage_operation_state(&self, _state: &OperationState) -> Result<()> {
+	fn manage_operation_state(&self, _state: OperationState) -> Result<()> {
 		Ok(())
 	}
 }

@@ -114,7 +114,7 @@ where
 
 	#[must_use]
 	fn state(&self) -> OperationState {
-		self.state.read().expect("snh").clone()
+		*self.state.read().expect("snh")
 	}
 
 	#[must_use]
@@ -404,7 +404,7 @@ where
 	fn upgrade_registered_tasks(&self, new_state: OperationState) -> Result<()> {
 		// start communication
 		self.communicator
-			.manage_operation_state(&new_state)?;
+			.manage_operation_state(new_state)?;
 
 		// start all registered timers
 		self.timers
@@ -412,7 +412,7 @@ where
 			.map_err(|_| Error::ModifyStruct("timers".into()))?
 			.iter_mut()
 			.for_each(|timer| {
-				let _ = timer.1.manage_operation_state(&new_state);
+				let _ = timer.1.manage_operation_state(new_state);
 			});
 
 		self.modify_state_property(new_state)?;
@@ -433,12 +433,12 @@ where
 			.map_err(|_| Error::ModifyStruct("timers".into()))?
 			.iter_mut()
 			.for_each(|timer| {
-				let _ = timer.1.manage_operation_state(&new_state);
+				let _ = timer.1.manage_operation_state(new_state);
 			});
 
 		// start communication
 		self.communicator
-			.manage_operation_state(&new_state)?;
+			.manage_operation_state(new_state)?;
 
 		self.modify_state_property(new_state)?;
 		Ok(())

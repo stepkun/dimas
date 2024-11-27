@@ -96,10 +96,10 @@ impl crate::traits::Publisher for Publisher {
 }
 
 impl Operational for Publisher {
-	fn manage_operation_state(&self, state: &OperationState) -> Result<()> {
-		if state >= &self.activation_state {
+	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+		if state >= self.activation_state {
 			return self.init();
-		} else if state < &self.activation_state {
+		} else if state < self.activation_state {
 			return self.de_init();
 		}
 		Ok(())

@@ -83,10 +83,10 @@ impl<P> Operational for LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: &OperationState) -> Result<()> {
-		if state >= &self.activation_state {
+	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+		if state >= self.activation_state {
 			self.start()
-		} else if state < &self.activation_state {
+		} else if state < self.activation_state {
 			self.stop()
 		} else {
 			Ok(())

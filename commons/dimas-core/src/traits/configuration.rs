@@ -18,6 +18,6 @@ use core::fmt::Debug;
 /// Contract for a `Configuration`
 pub trait Configuration: Debug {
 	/// get all sub configurations
-	fn sub_configurations(&self) -> Vec<Box<dyn Configuration>>;
+	fn configurations(&self) -> Vec<Box<dyn Configuration>>;
 }
 // endregion:   --- Configuration

@@ -326,11 +326,11 @@ impl<P> Operational for Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: &OperationState) -> Result<()> {
+	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
 		for (_, component) in self.components() {
 			component.manage_operation_state(state)?;
 		}
-		self.context.set_state(state.into())
+		self.context.set_state(state)
 	}
 }
 
@@ -601,7 +601,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or(Error::GetMut("liveliness".into()))?
-								.manage_operation_state(&self.context.state())?;
+								.manage_operation_state(self.context.state())?;
 						},
 						TaskSignal::RestartQueryable(selector) => {
 							self.context.responders()
@@ -609,7 +609,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("queryables".into()))?
-								.manage_operation_state(&self.context.state())?;
+								.manage_operation_state(self.context.state())?;
 						},
 						TaskSignal::RestartObservable(selector) => {
 							self.context.responders()
@@ -617,7 +617,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("observables".into()))?
-								.manage_operation_state(&self.context.state())?;
+								.manage_operation_state(self.context.state())?;
 						},
 						TaskSignal::RestartSubscriber(selector) => {
 							self.context.responders()
@@ -625,7 +625,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("subscribers".into()))?
-								.manage_operation_state(&self.context.state())?;
+								.manage_operation_state(self.context.state())?;
 						},
 						TaskSignal::RestartTimer(selector) => {
 							self.context.timers()
@@ -633,7 +633,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("timers".into()))?
-								.manage_operation_state(&self.context.state())?;
+								.manage_operation_state(self.context.state())?;
 						},
 						TaskSignal::Shutdown => {
 							return self.stop();

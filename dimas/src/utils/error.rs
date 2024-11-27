@@ -11,14 +11,14 @@ pub enum Error {
 	/// library file not found
 	#[error("library not found")]
 	NotFound,
-	/// register of a library file failed
+	/// register of a library failed
 	#[error("register library failed")]
 	RegisterFailed,
-	/// unloading of a library file failed
-	#[error("unload of file failed")]
+	/// unloading of a library failed
+	#[error("unload of library failed")]
 	UnloadFailed,
-	/// deregister of a library file failed
-	#[error("register library failed")]
+	/// deregister of a library failed
+	#[error("deregister library failed")]
 	DeregisterFailed,
 }
 // region:		--- Error

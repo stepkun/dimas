@@ -56,7 +56,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 	///
 	/// # Errors
 	/// Currently none
-	fn upgrade_capabilities(&self, new_state: &OperationState) -> Result<()> {
+	fn upgrade_capabilities(&self, new_state: OperationState) -> Result<()> {
 		// start liveliness subscriber
 		#[cfg(feature = "unstable")]
 		self.liveliness_subscribers()
@@ -130,7 +130,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 	///
 	/// # Errors
 	/// Currently none
-	fn downgrade_capabilities(&self, new_state: &OperationState) -> Result<()> {
+	fn downgrade_capabilities(&self, new_state: OperationState) -> Result<()> {
 		// reverse order of start!
 		// de-init all registered queries
 		self.queriers()

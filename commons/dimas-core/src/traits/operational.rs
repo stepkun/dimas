@@ -21,6 +21,6 @@ pub trait Operational: Debug {
 	/// Checks wether state of component is appropriate for the given [`OperationState`].
 	/// If not, implementation has to adjusts components state to needs.
 	/// # Errors
-	fn manage_operation_state(&self, state: &OperationState) -> Result<()>;
+	fn manage_operation_state(&self, state: OperationState) -> Result<()>;
 }
 // endregion:	--- Operational

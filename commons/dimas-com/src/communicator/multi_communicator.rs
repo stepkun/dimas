@@ -62,10 +62,10 @@ pub struct MultiCommunicator {
 }
 
 impl Operational for MultiCommunicator {
-	fn manage_operation_state(&self, new_state: &OperationState) -> Result<()> {
-		if new_state >= &self.state {
+	fn manage_operation_state(&self, new_state: OperationState) -> Result<()> {
+		if new_state >= self.state {
 			self.upgrade_capabilities(new_state)?;
-		} else if new_state < &self.state {
+		} else if new_state < self.state {
 			self.downgrade_capabilities(new_state)?;
 		}
 		Ok(())

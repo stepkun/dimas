@@ -97,8 +97,8 @@ impl<P> Operational for Timer<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: &OperationState) -> Result<()> {
-		match self {
+	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+		match *self {
 			Self::Interval {
 				selector: _,
 				context: _,
