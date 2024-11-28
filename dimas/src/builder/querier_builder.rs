@@ -9,7 +9,7 @@ use dimas_com::{
 	zenoh::querier::{ArcGetCallback, GetCallback, Querier},
 };
 use dimas_core::{
-	enums::OperationState, message_types::QueryableMsg, traits::Context, utils::selector_from,
+	message_types::QueryableMsg, traits::Context, utils::selector_from, OperationState,
 };
 use futures::Future;
 use std::{

@@ -10,7 +10,7 @@ extern crate alloc;
 use alloc::{string::String, vec::Vec};
 use bitcode::{Decode, Encode};
 use core::fmt::Display;
-use dimas_core::enums::OperationState;
+use dimas_core::OperationState;
 // endregion:	--- modules
 
 // region:		--- AboutEntity
@@ -37,7 +37,12 @@ impl Display for AboutEntity {
 impl AboutEntity {
 	/// Constructor
 	#[must_use]
-	pub fn new(name: impl Into<String>, kind: impl Into<String>, zid: impl Into<String>, state: OperationState) -> Self {
+	pub fn new(
+		name: impl Into<String>,
+		kind: impl Into<String>,
+		zid: impl Into<String>,
+		state: OperationState,
+	) -> Self {
 		Self {
 			name: name.into(),
 			kind: kind.into(),

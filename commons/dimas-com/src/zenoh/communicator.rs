@@ -22,9 +22,8 @@ use alloc::{
 use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
-	enums::OperationState,
 	message_types::{Message, QueryableMsg},
-	traits::Operational,
+	OperationState, Operational,
 };
 use zenoh::config::WhatAmI;
 #[cfg(feature = "unstable")]
@@ -48,9 +47,21 @@ pub struct Communicator {
 }
 
 impl Operational for Communicator {
-	fn manage_operation_state(&self, _state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, _state: OperationState) -> Result<()> {
 		Ok(())
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl CommunicatorImplementationMethods for Communicator {

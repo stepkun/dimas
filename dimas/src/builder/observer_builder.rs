@@ -11,10 +11,10 @@ use dimas_com::{
 	},
 };
 use dimas_core::{
-	enums::OperationState,
 	message_types::{ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::selector_from,
+	OperationState,
 };
 use futures::future::Future;
 use std::{

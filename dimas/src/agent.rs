@@ -64,9 +64,10 @@ use dimas_com::traits::{Observer, Publisher, Querier, Responder};
 use dimas_commands::messages::{AboutEntity, PingEntity};
 use dimas_config::Config;
 use dimas_core::{
-	enums::{OperationState, Signal, TaskSignal},
+	enums::{Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
-	traits::{Component, Context, ContextAbstraction, Operational, System},
+	traits::{Component, Context, ContextAbstraction, System},
+	OperationState, Operational,
 };
 use dimas_time::Timer;
 use std::sync::Arc;
@@ -108,7 +109,7 @@ where
 		.unwrap_or_else(|| String::from("--"));
 	let mode = ctx.mode().to_string();
 	let zid = ctx.uuid();
-	let state = ctx.state();
+	let state = ctx.state_old();
 	let value = AboutEntity::new(name, mode, zid, state);
 	drop(ctx);
 	request.reply(value)?;
@@ -145,7 +146,7 @@ where
 		.unwrap_or_else(|| String::from("--"));
 	let mode = ctx.mode().to_string();
 	let zid = ctx.uuid();
-	let state = ctx.state();
+	let state = ctx.state_old();
 	let value = AboutEntity::new(name, mode, zid, state);
 	request.reply(value)?;
 
@@ -153,9 +154,9 @@ where
 	tokio::task::spawn(async move {
 		tokio::time::sleep(Duration::from_millis(10)).await;
 		// gracefully end agent
-		let _ = ctx.set_state(OperationState::Standby);
+		let _ = ctx.set_state_old(OperationState::Standby);
 		tokio::time::sleep(Duration::from_millis(100)).await;
-		let _ = ctx.set_state(OperationState::Created);
+		let _ = ctx.set_state_old(OperationState::Created);
 		let _ = ctx.sender().send(TaskSignal::Shutdown).await;
 	});
 	Ok(())
@@ -167,7 +168,7 @@ where
 {
 	// is a state value given?
 	if let Some(value) = state {
-		let _ = ctx.set_state(value);
+		let _ = ctx.set_state_old(value);
 	}
 
 	// send back result
@@ -176,7 +177,7 @@ where
 		.unwrap_or_else(|| String::from("--"));
 	let mode = ctx.mode().to_string();
 	let zid = ctx.uuid();
-	let state = ctx.state();
+	let state = ctx.state_old();
 	let value = AboutEntity::new(name, mode, zid, state);
 	drop(ctx);
 	request.reply(value)?;
@@ -274,7 +275,7 @@ where
 
 		// set [`OperationState`] to Created
 		// This will also start the basic queryables
-		agent.context.set_state(OperationState::Created)?;
+		agent.context.set_state_old(OperationState::Created)?;
 
 		Ok(agent)
 	}
@@ -326,12 +327,24 @@ impl<P> Operational for Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		for (_, component) in self.components() {
-			component.manage_operation_state(state)?;
+			component.manage_operation_state_old(state)?;
 		}
-		self.context.set_state(state)
+		self.context.set_state_old(state)
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl<P> System for Agent<P>
@@ -540,7 +553,7 @@ where
 				.replace(token);
 		};
 
-		self.context.set_state(OperationState::Active)?;
+		self.context.set_state_old(OperationState::Active)?;
 
 		RunningAgent {
 			rx: self.rx,
@@ -601,7 +614,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or(Error::GetMut("liveliness".into()))?
-								.manage_operation_state(self.context.state())?;
+								.manage_operation_state(self.context.state_old())?;
 						},
 						TaskSignal::RestartQueryable(selector) => {
 							self.context.responders()
@@ -609,7 +622,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("queryables".into()))?
-								.manage_operation_state(self.context.state())?;
+								.manage_operation_state_old(self.context.state_old())?;
 						},
 						TaskSignal::RestartObservable(selector) => {
 							self.context.responders()
@@ -617,7 +630,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("observables".into()))?
-								.manage_operation_state(self.context.state())?;
+								.manage_operation_state_old(self.context.state_old())?;
 						},
 						TaskSignal::RestartSubscriber(selector) => {
 							self.context.responders()
@@ -625,7 +638,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("subscribers".into()))?
-								.manage_operation_state(self.context.state())?;
+								.manage_operation_state_old(self.context.state_old())?;
 						},
 						TaskSignal::RestartTimer(selector) => {
 							self.context.timers()
@@ -633,7 +646,7 @@ where
 								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("timers".into()))?
-								.manage_operation_state(self.context.state())?;
+								.manage_operation_state_old(self.context.state_old())?;
 						},
 						TaskSignal::Shutdown => {
 							return self.stop();
@@ -664,7 +677,7 @@ where
 	/// # Errors
 	#[tracing::instrument(skip_all)]
 	pub fn stop(self) -> Result<Agent<P>> {
-		self.context.set_state(OperationState::Created)?;
+		self.context.set_state_old(OperationState::Created)?;
 
 		// stop liveliness
 		#[cfg(feature = "unstable")]

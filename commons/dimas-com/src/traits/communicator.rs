@@ -5,7 +5,7 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_core::{enums::OperationState, traits::Operational};
+use dimas_core::{OperationState, Operational};
 #[cfg(feature = "std")]
 use std::{
 	collections::HashMap,
@@ -73,7 +73,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("subscribers".into()))?
 			.iter_mut()
 			.for_each(|subscriber| {
-				let _ = subscriber.1.manage_operation_state(new_state);
+				let _ = subscriber.1.manage_operation_state_old(new_state);
 			});
 
 		// init all registered publishers
@@ -82,7 +82,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("publishers".into()))?
 			.iter_mut()
 			.for_each(|publisher| {
-				if let Err(reason) = publisher.1.manage_operation_state(new_state) {
+				if let Err(reason) = publisher.1.manage_operation_state_old(new_state) {
 					error!(
 						"could not initialize publisher for {}, reason: {}",
 						publisher.1.selector(),
@@ -97,7 +97,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("observers".into()))?
 			.iter_mut()
 			.for_each(|observer| {
-				if let Err(reason) = observer.1.manage_operation_state(new_state) {
+				if let Err(reason) = observer.1.manage_operation_state_old(new_state) {
 					error!(
 						"could not initialize observer for {}, reason: {}",
 						observer.1.selector(),
@@ -112,7 +112,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("queries".into()))?
 			.iter_mut()
 			.for_each(|query| {
-				if let Err(reason) = query.1.manage_operation_state(new_state) {
+				if let Err(reason) = query.1.manage_operation_state_old(new_state) {
 					error!(
 						"could not initialize query for {}, reason: {}",
 						query.1.selector(),
@@ -138,7 +138,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("queries".into()))?
 			.iter_mut()
 			.for_each(|query| {
-				if let Err(reason) = query.1.manage_operation_state(new_state) {
+				if let Err(reason) = query.1.manage_operation_state_old(new_state) {
 					error!(
 						"could not de-initialize query for {}, reason: {}",
 						query.1.selector(),
@@ -153,7 +153,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("observers".into()))?
 			.iter_mut()
 			.for_each(|observer| {
-				if let Err(reason) = observer.1.manage_operation_state(new_state) {
+				if let Err(reason) = observer.1.manage_operation_state_old(new_state) {
 					error!(
 						"could not de-initialize observer for {}, reason: {}",
 						observer.1.selector(),
@@ -168,7 +168,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("publishers".into()))?
 			.iter_mut()
 			.for_each(|publisher| {
-				let _ = publisher.1.manage_operation_state(new_state);
+				let _ = publisher.1.manage_operation_state_old(new_state);
 			});
 
 		// stop all registered responders
@@ -177,7 +177,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.map_err(|_| Error::ModifyStruct("subscribers".into()))?
 			.iter_mut()
 			.for_each(|subscriber| {
-				let _ = subscriber.1.manage_operation_state(new_state);
+				let _ = subscriber.1.manage_operation_state_old(new_state);
 			});
 
 		// stop all registered liveliness subscribers

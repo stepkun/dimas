@@ -45,9 +45,10 @@ use dimas_config::Config;
 #[cfg(doc)]
 use dimas_core::traits::Context;
 use dimas_core::{
-	enums::{OperationState, TaskSignal},
+	enums::TaskSignal,
 	message_types::{Message, QueryableMsg},
-	traits::{ContextAbstraction, Operational},
+	traits::ContextAbstraction,
+	OperationState, Operational,
 };
 use dimas_time::Timer;
 use std::{
@@ -113,7 +114,7 @@ where
 	}
 
 	#[must_use]
-	fn state(&self) -> OperationState {
+	fn state_old(&self) -> OperationState {
 		*self.state.read().expect("snh")
 	}
 
@@ -144,13 +145,13 @@ where
 			.map_err(|_| Error::WriteAccess.into())
 	}
 
-	fn set_state(&self, state: OperationState) -> Result<()> {
+	fn set_state_old(&self, state: OperationState) -> Result<()> {
 		info!("changing state to {}", &state);
 		let final_state = state;
 		let mut next_state;
 		// step up?
-		while self.state() < final_state {
-			match self.state() {
+		while self.state_old() < final_state {
+			match self.state_old() {
 				OperationState::Error => {
 					return Err(Error::ManageState.into());
 				}
@@ -174,8 +175,8 @@ where
 		}
 
 		// step down?
-		while self.state() > final_state {
-			match self.state() {
+		while self.state_old() > final_state {
+			match self.state_old() {
 				OperationState::Active => {
 					next_state = OperationState::Standby;
 				}
@@ -404,7 +405,7 @@ where
 	fn upgrade_registered_tasks(&self, new_state: OperationState) -> Result<()> {
 		// start communication
 		self.communicator
-			.manage_operation_state(new_state)?;
+			.manage_operation_state_old(new_state)?;
 
 		// start all registered timers
 		self.timers
@@ -412,7 +413,7 @@ where
 			.map_err(|_| Error::ModifyStruct("timers".into()))?
 			.iter_mut()
 			.for_each(|timer| {
-				let _ = timer.1.manage_operation_state(new_state);
+				let _ = timer.1.manage_operation_state_old(new_state);
 			});
 
 		self.modify_state_property(new_state)?;
@@ -433,12 +434,12 @@ where
 			.map_err(|_| Error::ModifyStruct("timers".into()))?
 			.iter_mut()
 			.for_each(|timer| {
-				let _ = timer.1.manage_operation_state(new_state);
+				let _ = timer.1.manage_operation_state_old(new_state);
 			});
 
 		// start communication
 		self.communicator
-			.manage_operation_state(new_state)?;
+			.manage_operation_state_old(new_state)?;
 
 		self.modify_state_property(new_state)?;
 		Ok(())

@@ -9,9 +9,8 @@ use crate::traits::LivelinessSubscriber;
 use anyhow::Result;
 use dimas_config::Config;
 use dimas_core::{
-	enums::OperationState,
 	message_types::{Message, QueryableMsg},
-	traits::Operational,
+	OperationState, Operational,
 };
 use std::{
 	collections::HashMap,
@@ -62,7 +61,7 @@ pub struct MultiCommunicator {
 }
 
 impl Operational for MultiCommunicator {
-	fn manage_operation_state(&self, new_state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, new_state: OperationState) -> Result<()> {
 		if new_state >= self.state {
 			self.upgrade_capabilities(new_state)?;
 		} else if new_state < self.state {
@@ -70,6 +69,18 @@ impl Operational for MultiCommunicator {
 		}
 		Ok(())
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl CommunicatorMethods for MultiCommunicator {

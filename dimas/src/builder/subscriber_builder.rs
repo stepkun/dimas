@@ -11,9 +11,7 @@ use dimas_com::{
 		ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber,
 	},
 };
-use dimas_core::{
-	enums::OperationState, message_types::Message, traits::Context, utils::selector_from,
-};
+use dimas_core::{message_types::Message, traits::Context, utils::selector_from, OperationState};
 use futures::future::Future;
 use std::{
 	collections::HashMap,

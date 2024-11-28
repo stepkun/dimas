@@ -9,7 +9,7 @@ use dimas_com::{
 	traits::LivelinessSubscriber as LivelinessSubscriberTrait,
 	zenoh::liveliness::{ArcLivelinessCallback, LivelinessCallback, LivelinessSubscriber},
 };
-use dimas_core::{enums::OperationState, traits::Context, utils::selector_from};
+use dimas_core::{traits::Context, utils::selector_from, OperationState};
 use futures::future::Future;
 use std::{
 	collections::HashMap,

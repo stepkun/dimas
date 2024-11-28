@@ -8,7 +8,7 @@
 use crate::traits::LivelinessSubscriber;
 use anyhow::Result;
 use dimas_config::Config;
-use dimas_core::{enums::OperationState, message_types::Message, traits::Operational};
+use dimas_core::{message_types::Message, OperationState, Operational};
 use std::{
 	collections::HashMap,
 	sync::{Arc, RwLock},
@@ -56,7 +56,7 @@ pub struct SingleCommunicator {
 }
 
 impl Operational for SingleCommunicator {
-	fn manage_operation_state(&self, new_state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, new_state: OperationState) -> Result<()> {
 		if new_state >= self.state {
 			self.upgrade_capabilities(new_state)?;
 		} else if new_state < self.state {
@@ -64,6 +64,18 @@ impl Operational for SingleCommunicator {
 		}
 		Ok(())
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl Communicator for SingleCommunicator {

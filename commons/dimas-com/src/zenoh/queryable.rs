@@ -14,9 +14,7 @@ use alloc::{boxed::Box, string::String};
 use anyhow::Result;
 use core::fmt::Debug;
 use dimas_core::{
-	enums::{OperationState, TaskSignal},
-	message_types::QueryMsg,
-	traits::{Context, Operational},
+	enums::TaskSignal, message_types::QueryMsg, traits::Context, OperationState, Operational,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -82,7 +80,7 @@ impl<P> Operational for Queryable<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		if state >= self.activation_state {
 			self.start()
 		} else if state < self.activation_state {
@@ -91,6 +89,18 @@ where
 			Ok(())
 		}
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl<P> Queryable<P>

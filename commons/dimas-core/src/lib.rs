@@ -12,6 +12,8 @@ pub mod enums;
 pub mod error;
 /// `Message`, `Request`, `Response`, `Feedback`
 pub mod message_types;
+/// Operational
+mod operational;
 #[doc(hidden)]
 /// Traits
 pub mod traits;
@@ -19,10 +21,11 @@ pub mod traits;
 pub mod utils;
 
 // flatten:
-pub use enums::{OperationState, Signal, TaskSignal};
+pub use enums::{Signal, TaskSignal};
+pub use operational::{OperationState, Operational};
 #[doc(hidden)]
 pub use traits::{
 	Capability, CapabilityDescription, Component, ComponentId, ComponentRegistrar, Configuration,
 	Connection, System,
 };
-pub use traits::{Context, ContextAbstraction, Operational};
+pub use traits::{Context, ContextAbstraction};

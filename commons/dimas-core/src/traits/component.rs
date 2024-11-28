@@ -14,7 +14,9 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 use anyhow::Result;
 use core::fmt::Debug;
 
-use super::{Capability, CapabilityDescription, Configuration, Operational};
+use crate::Operational;
+
+use super::{Capability, CapabilityDescription, Configuration};
 // endregion:	--- modules
 
 // region:		--- types

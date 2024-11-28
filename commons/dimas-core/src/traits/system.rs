@@ -14,9 +14,9 @@ use alloc::{boxed::Box, vec::Vec};
 use anyhow::Result;
 use core::fmt::Debug;
 
-use crate::error::Error;
+use crate::{error::Error, Operational};
 
-use super::{Component, Configuration, Connection, Operational};
+use super::{Component, Configuration, Connection};
 // endregion:	--- modules
 
 // region:		--- System

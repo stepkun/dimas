@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
 use core::time::Duration;
 use dimas_com::zenoh::Communicator;
 use dimas_config::Config;
-use dimas_core::enums::OperationState;
+use dimas_core::OperationState;
 // endregion:	--- modules
 
 // region:		--- Cli
@@ -126,7 +126,7 @@ fn main() -> Result<()> {
 			let com = Communicator::new(config.zenoh_config())?;
 			println!("List of current states of DiMAS entities:");
 			println!("{h_zid:32}  {h_kind:6}  {h_state:10}  {h_name}");
-			let list = dimas_commands::set_state(&com, &base_selector, state.to_owned())?;
+			let list = dimas_commands::set_state_old(&com, &base_selector, state.to_owned())?;
 			for item in list {
 				println!(
 					"{:32}  {:6}  {:10}  {}",

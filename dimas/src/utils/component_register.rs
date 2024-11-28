@@ -37,7 +37,7 @@ impl ComponentRegistrar for ComponentRegister {
 		let downstate = OperationState::Configured;
 		// shutdown plugin
 		plugin = if let Some(plugin) = plugin {
-			plugin.manage_operation_state(downstate)?;
+			plugin.manage_operation_state_old(downstate)?;
 			Some(plugin)
 		} else {
 			None

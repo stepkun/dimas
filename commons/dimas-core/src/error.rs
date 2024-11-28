@@ -6,13 +6,10 @@
 #[doc(hidden)]
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:		--- modules
 #[cfg(doc)]
-use super::enums::OperationState;
-use alloc::{boxed::Box, string::String};
+use crate::operational::OperationState;
+use alloc::boxed::Box;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -38,12 +35,6 @@ pub enum Error {
 	/// Not available/implemented
 	#[error("no implementation available")]
 	NotImplemented,
-	/// An unknown [`OperationState`] is given
-	#[error("the operation state {state} is unknown")]
-	UnknownOperationState {
-		/// name of the operation state
-		state: String,
-	},
 }
 // region:		--- Error
 

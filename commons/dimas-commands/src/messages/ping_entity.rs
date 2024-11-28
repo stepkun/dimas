@@ -36,7 +36,11 @@ impl PingEntity {
 	/// Constructor
 	#[must_use]
 	pub fn new(name: impl Into<String>, zid: impl Into<String>, oneway: i64) -> Self {
-		Self { name: name.into(), zid: zid.into(), oneway }
+		Self {
+			name: name.into(),
+			zid: zid.into(),
+			oneway,
+		}
 	}
 
 	/// Get the Name

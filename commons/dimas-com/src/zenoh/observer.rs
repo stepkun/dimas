@@ -18,10 +18,10 @@ use anyhow::Result;
 use bitcode::decode;
 use core::time::Duration;
 use dimas_core::{
-	enums::OperationState,
 	message_types::{Message, ObservableControlResponse, ObservableResponse},
-	traits::{Context, Operational},
+	traits::Context,
 	utils::{cancel_selector_from, feedback_selector_from, request_selector_from},
+	OperationState, Operational,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -276,7 +276,7 @@ impl<P> Operational for Observer<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		if state >= self.activation_state {
 			return self.init();
 		} else if state < self.activation_state {
@@ -284,6 +284,18 @@ where
 		}
 		Ok(())
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl<P> Observer<P>

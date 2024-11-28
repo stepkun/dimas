@@ -16,7 +16,6 @@ mod configuration;
 #[doc(hidden)]
 mod connection;
 mod context;
-mod operational;
 #[doc(hidden)]
 mod system;
 
@@ -34,6 +33,5 @@ pub use configuration::Configuration;
 #[doc(hidden)]
 pub use connection::Connection;
 pub use context::{Context, ContextAbstraction};
-pub use operational::Operational;
 #[doc(hidden)]
 pub use system::System;

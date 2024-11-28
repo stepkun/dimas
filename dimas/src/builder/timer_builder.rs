@@ -6,7 +6,7 @@
 // region:		--- modules
 use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{enums::OperationState, traits::Context};
+use dimas_core::{traits::Context, OperationState};
 use dimas_time::{ArcTimerCallback, Timer};
 use std::{
 	collections::HashMap,

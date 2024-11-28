@@ -16,11 +16,7 @@ use alloc::{
 };
 use anyhow::Result;
 use dimas_com::{traits::CommunicatorImplementationMethods, zenoh::Communicator};
-use dimas_core::{
-	enums::{OperationState, Signal},
-	message_types::Message,
-	utils::selector_from,
-};
+use dimas_core::{enums::Signal, message_types::Message, utils::selector_from, OperationState};
 #[cfg(feature = "std")]
 use std::collections::HashMap;
 // endregion:	--- modules
@@ -29,7 +25,7 @@ use std::collections::HashMap;
 /// Set the [`OperationState`] of `DiMAS` entities
 /// # Errors
 #[cfg(feature = "std")]
-pub fn set_state(
+pub fn set_state_old(
 	com: &Communicator,
 	base_selector: &String,
 	state: Option<OperationState>,

@@ -12,10 +12,10 @@ use dimas_com::{
 	},
 };
 use dimas_core::{
-	enums::OperationState,
 	message_types::{Message, ObservableControlResponse},
 	traits::Context,
 	utils::selector_from,
+	OperationState,
 };
 use futures::future::{BoxFuture, Future};
 use std::{

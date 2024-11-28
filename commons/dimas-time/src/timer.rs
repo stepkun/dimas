@@ -13,10 +13,7 @@ extern crate std;
 use alloc::{boxed::Box, string::String, sync::Arc};
 use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
-use dimas_core::{
-	enums::{OperationState, TaskSignal},
-	traits::{Context, Operational},
-};
+use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational};
 #[cfg(feature = "std")]
 use std::sync::Mutex;
 #[cfg(feature = "std")]
@@ -97,7 +94,7 @@ impl<P> Operational for Timer<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		match *self {
 			Self::Interval {
 				selector: _,
@@ -126,6 +123,18 @@ where
 			}
 		}
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut std::vec::Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl<P> Timer<P>

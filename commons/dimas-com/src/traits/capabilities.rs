@@ -6,7 +6,7 @@
 use anyhow::Result;
 use dimas_core::{
 	message_types::{Message, QueryableMsg},
-	traits::Operational,
+	Operational,
 };
 
 // region:		--- capabilities

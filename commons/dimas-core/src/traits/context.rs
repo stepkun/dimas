@@ -11,9 +11,10 @@ extern crate std;
 
 // region:		--- modules
 use crate::{
-	enums::{OperationState, TaskSignal},
+	enums::TaskSignal,
 	message_types::{Message, QueryableMsg},
 	utils::selector_from,
+	OperationState,
 };
 use alloc::{string::String, sync::Arc};
 use anyhow::Result;
@@ -44,13 +45,13 @@ pub trait ContextAbstraction: Debug + Send + Sync {
 	/// Get the [`Context`]s state
 	/// # Panics
 	#[must_use]
-	fn state(&self) -> OperationState;
+	fn state_old(&self) -> OperationState;
 
 	/// Set the [`OperationState`].
 	///
 	/// Setting new state is done step by step
 	/// # Errors
-	fn set_state(&self, state: OperationState) -> Result<()>;
+	fn set_state_old(&self, state: OperationState) -> Result<()>;
 
 	/// Get the uuid
 	#[must_use]

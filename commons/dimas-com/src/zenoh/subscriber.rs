@@ -7,9 +7,7 @@
 use crate::error::Error;
 use anyhow::Result;
 use dimas_core::{
-	enums::{OperationState, TaskSignal},
-	message_types::Message,
-	traits::{Context, Operational},
+	enums::TaskSignal, message_types::Message, traits::Context, OperationState, Operational,
 };
 use futures::future::BoxFuture;
 use std::sync::Arc;
@@ -80,7 +78,7 @@ impl<P> Operational for Subscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		if state >= self.activation_state {
 			self.start()
 		} else if state < self.activation_state {
@@ -89,6 +87,18 @@ where
 			Ok(())
 		}
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl<P> Subscriber<P>

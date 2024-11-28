@@ -8,9 +8,7 @@ use dimas_com::{
 	traits::Responder,
 	zenoh::queryable::{ArcGetCallback, GetCallback, Queryable},
 };
-use dimas_core::{
-	enums::OperationState, message_types::QueryMsg, traits::Context, utils::selector_from,
-};
+use dimas_core::{message_types::QueryMsg, traits::Context, utils::selector_from, OperationState};
 use futures::future::Future;
 use std::{
 	collections::HashMap,

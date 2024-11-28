@@ -5,7 +5,7 @@
 // region:		--- modules
 use anyhow::Result;
 use dimas_com::{traits::Publisher as PublisherTrait, zenoh::publisher::Publisher};
-use dimas_core::{enums::OperationState, traits::Context, utils::selector_from};
+use dimas_core::{traits::Context, utils::selector_from, OperationState};
 use std::{
 	collections::HashMap,
 	sync::{Arc, RwLock},

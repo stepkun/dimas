@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 use bitcode::{Decode, Encode};
 use core::fmt::Debug;
 
-use super::OperationState;
+use crate::OperationState;
 // endregion:	--- modules
 
 // region:		--- Signal

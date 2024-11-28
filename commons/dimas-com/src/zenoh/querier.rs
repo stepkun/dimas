@@ -13,9 +13,9 @@ use alloc::sync::Arc;
 use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
-	enums::OperationState,
 	message_types::{Message, QueryableMsg},
-	traits::{Context, Operational},
+	traits::Context,
+	OperationState, Operational,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -194,7 +194,7 @@ impl<P> Operational for Querier<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		if state >= self.activation_state {
 			return self.init();
 		} else if state < self.activation_state {
@@ -202,6 +202,18 @@ where
 		}
 		Ok(())
 	}
+	
+	fn state(&self) -> OperationState {
+			todo!()
+		}
+	
+	fn set_state(&mut self, _state: OperationState) {
+			todo!()
+		}
+	
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+			todo!()
+		}
 }
 
 impl<P> Querier<P>

@@ -17,10 +17,7 @@ use alloc::{
 };
 use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{
-	enums::{OperationState, TaskSignal},
-	traits::{Context, Operational},
-};
+use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational};
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
@@ -83,7 +80,7 @@ impl<P> Operational for LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state(&self, state: OperationState) -> Result<()> {
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
 		if state >= self.activation_state {
 			self.start()
 		} else if state < self.activation_state {
@@ -91,6 +88,18 @@ where
 		} else {
 			Ok(())
 		}
+	}
+	
+	fn state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+		todo!()
 	}
 }
 
