@@ -29,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - restructured crates `dimas_core` & `dimas_time`,
   moving builders that require `std` to `dimas`
 - replaced std::sync::Mutex and std::sync::RwLock with parking_lot::Mutex and parking_lot::RwLock
-  _breaking change_: read() and write() on context no longer return a Result, but the properties directly 
+  _breaking change_:
+  read() and write() on context no longer return a Result, but the properties directly
 
 ### Fixed
 

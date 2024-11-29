@@ -8,5 +8,5 @@ mod error;
 mod lib_manager;
 
 //pub use error::Error;
-pub use component_register::ComponentRegister;
+pub use component_register::ComponentRegistry;
 pub use lib_manager::LibManager;

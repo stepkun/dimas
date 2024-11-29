@@ -54,7 +54,7 @@ use crate::builder::{
 };
 use crate::context::ContextImpl;
 use crate::error::Error;
-use crate::utils::{ComponentRegister, LibManager};
+use crate::utils::{ComponentRegistry, LibManager};
 use anyhow::Result;
 use chrono::Local;
 use core::{fmt::Debug, time::Duration};
@@ -246,7 +246,7 @@ where
 			rx,
 			context,
 			libmanager: LibManager::new(),
-			register: ComponentRegister::new(),
+			registry: ComponentRegistry::new(),
 			#[cfg(feature = "unstable")]
 			liveliness: false,
 			#[cfg(feature = "unstable")]
@@ -297,7 +297,7 @@ where
 	/// Library manager
 	libmanager: LibManager,
 	/// Component register
-	register: ComponentRegister,
+	registry: ComponentRegistry,
 	/// Flag to control whether sending liveliness or not
 	#[cfg(feature = "unstable")]
 	liveliness: bool,
@@ -305,6 +305,42 @@ where
 	/// Is available in the [`LivelinessSubscriber`] callback
 	#[cfg(feature = "unstable")]
 	liveliness_token: RwLock<Option<LivelinessToken>>,
+}
+
+impl<P> AsMut<ComponentRegistry> for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_mut(&mut self) -> &mut ComponentRegistry {
+		&mut self.registry
+	}
+}
+
+impl<P> AsRef<ComponentRegistry> for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_ref(&self) -> &ComponentRegistry {
+		&self.registry
+	}
+}
+
+impl<P> AsMut<LibManager> for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_mut(&mut self) -> &mut LibManager {
+		&mut self.libmanager
+	}
+}
+
+impl<P> AsRef<LibManager> for Agent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_ref(&self) -> &LibManager {
+		&self.libmanager
+	}
 }
 
 impl<P> Debug for Agent<P>
@@ -354,16 +390,16 @@ where
 	P: Debug + Send + Sync + 'static,
 {
 	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)> {
-		self.register.components.values().enumerate()
+		self.registry.components.values().enumerate()
 	}
 
 	fn load_library(&mut self, path: &str) -> Result<()> {
-		self.libmanager.load_lib(&mut self.register, path)
+		self.libmanager.load_lib(&mut self.registry, path)
 	}
 
 	fn unload_library(&mut self, path: &str) -> Result<()> {
 		self.libmanager
-			.unload_lib(&mut self.register, path)
+			.unload_lib(&mut self.registry, path)
 	}
 }
 
@@ -559,7 +595,7 @@ where
 			rx: self.rx,
 			context: self.context,
 			libmanager: self.libmanager,
-			register: self.register,
+			registry: self.registry,
 			#[cfg(feature = "unstable")]
 			liveliness: self.liveliness,
 			#[cfg(feature = "unstable")]
@@ -585,7 +621,7 @@ where
 	/// The agents context structure
 	context: Arc<ContextImpl<P>>,
 	/// Agents [`Component`] register
-	register: ComponentRegister,
+	registry: ComponentRegistry,
 	/// Flag to control whether sending liveliness or not
 	#[cfg(feature = "unstable")]
 	liveliness: bool,
@@ -593,6 +629,102 @@ where
 	/// Is available in the [`LivelinessSubscriber`] callback
 	#[cfg(feature = "unstable")]
 	liveliness_token: RwLock<Option<LivelinessToken>>,
+}
+
+impl<P> AsMut<ComponentRegistry> for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_mut(&mut self) -> &mut ComponentRegistry {
+		&mut self.registry
+	}
+}
+
+impl<P> AsRef<ComponentRegistry> for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_ref(&self) -> &ComponentRegistry {
+		&self.registry
+	}
+}
+
+impl<P> AsMut<LibManager> for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_mut(&mut self) -> &mut LibManager {
+		&mut self.libmanager
+	}
+}
+
+impl<P> AsRef<LibManager> for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn as_ref(&self) -> &LibManager {
+		&self.libmanager
+	}
+}
+
+impl<P> Debug for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("RunningAgent")
+			.field("id", &self.context.uuid())
+			.field(
+				"prefix",
+				self.context
+					.prefix()
+					.unwrap_or(&"None".to_string()),
+			)
+			.field("name", &self.context.name())
+			.finish_non_exhaustive()
+	}
+}
+
+impl<P> Operational for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
+		for (_, component) in self.components() {
+			component.manage_operation_state_old(state)?;
+		}
+		self.context.set_state_old(state)
+	}
+
+	fn state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+		todo!()
+	}
+}
+
+impl<P> System for RunningAgent<P>
+where
+	P: Debug + Send + Sync + 'static,
+{
+	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)> {
+		self.registry.components.values().enumerate()
+	}
+
+	fn load_library(&mut self, path: &str) -> Result<()> {
+		self.libmanager.load_lib(&mut self.registry, path)
+	}
+
+	fn unload_library(&mut self, path: &str) -> Result<()> {
+		self.libmanager
+			.unload_lib(&mut self.registry, path)
+	}
 }
 
 impl<P> RunningAgent<P>
@@ -684,7 +816,7 @@ where
 			rx: self.rx,
 			context: self.context,
 			libmanager: self.libmanager,
-			register: self.register,
+			registry: self.registry,
 			#[cfg(feature = "unstable")]
 			liveliness: self.liveliness,
 			#[cfg(feature = "unstable")]

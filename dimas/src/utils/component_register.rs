@@ -14,12 +14,12 @@ use std::prelude::v1::Box;
 
 /// Library loader implementation
 #[derive(Debug)]
-pub struct ComponentRegister {
+pub struct ComponentRegistry {
 	/// Storage for the [`Component`]s
 	pub components: HashMap<ComponentId, Box<dyn Component>>,
 }
 
-impl Default for ComponentRegister {
+impl Default for ComponentRegistry {
 	/// Create a default [`ComponentRegister`]
 	#[must_use]
 	fn default() -> Self {
@@ -27,7 +27,7 @@ impl Default for ComponentRegister {
 	}
 }
 
-impl ComponentRegistrar for ComponentRegister {
+impl ComponentRegistrar for ComponentRegistry {
 	fn register(&mut self, plugin: Box<dyn Component>) {
 		self.components.insert(plugin.id(), plugin);
 	}
@@ -46,7 +46,7 @@ impl ComponentRegistrar for ComponentRegister {
 	}
 }
 
-impl ComponentRegister {
+impl ComponentRegistry {
 	/// Creates a [`ComponentRegister`]
 	#[must_use]
 	pub fn new() -> Self {
