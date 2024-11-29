@@ -50,18 +50,18 @@ impl Operational for Communicator {
 	fn manage_operation_state_old(&self, _state: OperationState) -> Result<()> {
 		Ok(())
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl CommunicatorImplementationMethods for Communicator {

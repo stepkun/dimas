@@ -5,7 +5,6 @@
 //!
 
 // region:    --- modules
-mod error;
 mod timer;
 
 // flatten

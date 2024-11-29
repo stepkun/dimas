@@ -4,10 +4,8 @@
 
 // region:      --- modules
 use core::time::Duration;
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 // endtregion:  --- modules
 
 // region:		--- builder_states

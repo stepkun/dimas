@@ -25,7 +25,7 @@ async fn control_callback(
 	if message.limit > 2 && message.limit <= 20 {
 		// accept
 		println!("Accepting Fibonacci sequence up to {}", message.limit);
-		ctx.write()?.limit = message.limit;
+		ctx.write().limit = message.limit;
 		Ok(ObservableControlResponse::Accepted)
 	} else {
 		// decline
@@ -35,30 +35,30 @@ async fn control_callback(
 }
 
 async fn feedback_callback(ctx: Context<AgentProps>) -> Result<Message> {
-	let seq = ctx.read()?.sequence.clone();
+	let seq = ctx.read().sequence.clone();
 	let message = Message::encode(&seq);
 	println!("Sending feedback: {:?}", &seq);
 	Ok(message)
 }
 
 async fn fibonacci(ctx: Context<AgentProps>) -> Result<Message> {
-	let limit = ctx.read()?.limit;
+	let limit = ctx.read().limit;
 	// clear any existing result
-	ctx.write()?.sequence.clear();
+	ctx.write().sequence.clear();
 	// create and add first two elements
 	let mut n_2 = 0;
-	ctx.write()?.sequence.push(n_2);
+	ctx.write().sequence.push(n_2);
 	let mut n_1 = 1;
-	ctx.write()?.sequence.push(n_1);
+	ctx.write().sequence.push(n_1);
 	for _ in 2..limit {
 		let next = n_2 + n_1;
 		n_2 = n_1;
 		n_1 = next;
-		ctx.write()?.sequence.push(next);
+		ctx.write().sequence.push(next);
 		// artificial time consumption
 		tokio::time::sleep(Duration::from_millis(1000)).await;
 	}
-	let sequence = ctx.read()?.sequence.clone();
+	let sequence = ctx.read().sequence.clone();
 	let result = Message::encode(&sequence);
 	println!("Sending result: {:?}", &sequence);
 	Ok(result)

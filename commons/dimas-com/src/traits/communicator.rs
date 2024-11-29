@@ -7,17 +7,15 @@
 use anyhow::Result;
 use dimas_core::{OperationState, Operational};
 #[cfg(feature = "std")]
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+#[cfg(feature = "std")]
+use std::{collections::HashMap, sync::Arc};
 use tracing::error;
 use zenoh::Session;
 
 #[cfg(any(feature = "unstable", doc))]
 use super::LivelinessSubscriber;
 use super::{CommunicatorMethods, Observer, Publisher, Querier, Responder};
-use crate::error::Error;
 // endregion:	--- modules
 
 // region:		--- Communicator
@@ -61,7 +59,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		#[cfg(feature = "unstable")]
 		self.liveliness_subscribers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("liveliness subscribers".into()))?
 			.iter_mut()
 			.for_each(|subscriber| {
 				let _ = subscriber.1.manage_operation_state(new_state);
@@ -70,7 +67,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// start all registered responders
 		self.responders()
 			.write()
-			.map_err(|_| Error::ModifyStruct("subscribers".into()))?
 			.iter_mut()
 			.for_each(|subscriber| {
 				let _ = subscriber.1.manage_operation_state_old(new_state);
@@ -79,7 +75,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// init all registered publishers
 		self.publishers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("publishers".into()))?
 			.iter_mut()
 			.for_each(|publisher| {
 				if let Err(reason) = publisher.1.manage_operation_state_old(new_state) {
@@ -94,7 +89,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// init all registered observers
 		self.observers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("observers".into()))?
 			.iter_mut()
 			.for_each(|observer| {
 				if let Err(reason) = observer.1.manage_operation_state_old(new_state) {
@@ -109,7 +103,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// init all registered queries
 		self.queriers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("queries".into()))?
 			.iter_mut()
 			.for_each(|query| {
 				if let Err(reason) = query.1.manage_operation_state_old(new_state) {
@@ -135,7 +128,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// de-init all registered queries
 		self.queriers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("queries".into()))?
 			.iter_mut()
 			.for_each(|query| {
 				if let Err(reason) = query.1.manage_operation_state_old(new_state) {
@@ -150,7 +142,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// de-init all registered observers
 		self.observers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("observers".into()))?
 			.iter_mut()
 			.for_each(|observer| {
 				if let Err(reason) = observer.1.manage_operation_state_old(new_state) {
@@ -165,7 +156,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// de-init all registered publishers
 		self.publishers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("publishers".into()))?
 			.iter_mut()
 			.for_each(|publisher| {
 				let _ = publisher.1.manage_operation_state_old(new_state);
@@ -174,7 +164,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		// stop all registered responders
 		self.responders()
 			.write()
-			.map_err(|_| Error::ModifyStruct("subscribers".into()))?
 			.iter_mut()
 			.for_each(|subscriber| {
 				let _ = subscriber.1.manage_operation_state_old(new_state);
@@ -184,7 +173,6 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 		#[cfg(feature = "unstable")]
 		self.liveliness_subscribers()
 			.write()
-			.map_err(|_| Error::ModifyStruct("liveliness subscribers".into()))?
 			.iter_mut()
 			.for_each(|subscriber| {
 				let _ = subscriber.1.manage_operation_state(new_state);

@@ -47,6 +47,7 @@ dimas-macros = { workspace =true }
 dimas-time = { workspace = true }
 futures = { workspace = true }
 libloading = { workspace = true }
+parking_lot = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal", "sync", "time"] }
 tracing = { workspace = true }

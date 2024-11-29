@@ -33,8 +33,6 @@ use zenoh::{
 	qos::{CongestionControl, Priority},
 	Session,
 };
-
-use crate::error::Error;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -80,7 +78,7 @@ where
 	/// function for observation execution
 	execution_function: ArcExecutionCallback<P>,
 	execution_handle: Arc<Mutex<Option<JoinHandle<()>>>>,
-	handle: std::sync::Mutex<Option<JoinHandle<()>>>,
+	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> core::fmt::Debug for Observable<P>
@@ -116,18 +114,18 @@ where
 			Ok(())
 		}
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> Observable<P>
@@ -158,7 +156,7 @@ where
 			feedback_publisher: Arc::new(Mutex::new(None)),
 			execution_function,
 			execution_handle: Arc::new(Mutex::new(None)),
-			handle: std::sync::Mutex::new(None),
+			handle: parking_lot::Mutex::new(None),
 		}
 	}
 
@@ -179,74 +177,66 @@ where
 		let ctx2 = self.context.clone();
 		let session = self.session.clone();
 
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.replace(tokio::task::spawn(async move {
-					let key = selector.clone();
-					std::panic::set_hook(Box::new(move |reason| {
-						error!("observable panic: {}", reason);
-						if let Err(reason) = ctx1
-							.sender()
-							.blocking_send(TaskSignal::RestartObservable(key.clone()))
-						{
-							error!("could not restart observable: {}", reason);
-						} else {
-							info!("restarting observable!");
-						};
-					}));
-					if let Err(error) =
-						run_observable(session, selector, interval, ccb, fcb, fcbp, efc, efch, ctx2)
-							.await
+		self.handle
+			.lock()
+			.replace(tokio::task::spawn(async move {
+				let key = selector.clone();
+				std::panic::set_hook(Box::new(move |reason| {
+					error!("observable panic: {}", reason);
+					if let Err(reason) = ctx1
+						.sender()
+						.blocking_send(TaskSignal::RestartObservable(key.clone()))
 					{
-						error!("observable failed with {error}");
+						error!("could not restart observable: {}", reason);
+					} else {
+						info!("restarting observable!");
 					};
 				}));
+				if let Err(error) =
+					run_observable(session, selector, interval, ccb, fcb, fcbp, efc, efch, ctx2)
+						.await
+				{
+					error!("observable failed with {error}");
+				};
+			}));
 
-				Ok(())
-			},
-		)
+		Ok(())
 	}
 
 	/// Stop a running Observable
 	#[instrument(level = Level::TRACE, skip_all)]
 	#[allow(clippy::significant_drop_in_scrutinee)]
 	fn stop(&self) -> Result<()> {
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				if let Some(handle) = handle.take() {
-					let feedback_publisher = self.feedback_publisher.clone();
-					let feedback_callback = self.feedback_callback.clone();
-					let execution_handle = self.execution_handle.clone();
-					let ctx = self.context.clone();
-					tokio::spawn(async move {
-						// stop execution if running
-						if let Some(execution_handle) = execution_handle.lock().await.take() {
-							execution_handle.abort();
-							// send back cancelation message
-							if let Some(publisher) = feedback_publisher.lock().await.take() {
-								let Ok(msg) = feedback_callback.lock().await(ctx).await else {
-									// @TODO maybe implement retry!!
-									error!("could not send feedback");
-									return;
-								};
-								let response = ObservableResponse::Canceled(msg.value().clone());
-								match publisher
-									.put(Message::encode(&response).value().clone())
-									.wait()
-								{
-									Ok(()) => {}
-									Err(err) => error!("could not send cancel state due to {err}"),
-								};
-							};
+		if let Some(handle) = self.handle.lock().take() {
+			let feedback_publisher = self.feedback_publisher.clone();
+			let feedback_callback = self.feedback_callback.clone();
+			let execution_handle = self.execution_handle.clone();
+			let ctx = self.context.clone();
+			tokio::spawn(async move {
+				// stop execution if running
+				if let Some(execution_handle) = execution_handle.lock().await.take() {
+					execution_handle.abort();
+					// send back cancelation message
+					if let Some(publisher) = feedback_publisher.lock().await.take() {
+						let Ok(msg) = feedback_callback.lock().await(ctx).await else {
+							// @TODO maybe implement retry!!
+							error!("could not send feedback");
+							return;
 						};
-						handle.abort();
-					});
-				}
-				Ok(())
-			},
-		)
+						let response = ObservableResponse::Canceled(msg.value().clone());
+						match publisher
+							.put(Message::encode(&response).value().clone())
+							.wait()
+						{
+							Ok(()) => {}
+							Err(err) => error!("could not send cancel state due to {err}"),
+						};
+					};
+				};
+				handle.abort();
+			});
+		}
+		Ok(())
 	}
 }
 // endregion:	--- Observable

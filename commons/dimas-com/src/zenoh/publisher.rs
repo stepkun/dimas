@@ -38,7 +38,7 @@ pub struct Publisher {
 	priority: Priority,
 	#[cfg(feature = "unstable")]
 	reliability: Reliability,
-	publisher: std::sync::Mutex<Option<zenoh::pubsub::Publisher<'static>>>,
+	publisher: parking_lot::Mutex<Option<zenoh::pubsub::Publisher<'static>>>,
 }
 
 impl Debug for Publisher {
@@ -61,18 +61,17 @@ impl crate::traits::Publisher for Publisher {
 	///
 	#[instrument(name="publish", level = Level::ERROR, skip_all)]
 	fn put(&self, message: Message) -> Result<()> {
-		self.publisher.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|publisher| match publisher
-				.as_ref()
-				.ok_or(Error::AccessPublisher)?
-				.put(message.value())
-				.wait()
-			{
-				Ok(()) => Ok(()),
-				Err(source) => Err(Error::PublishingPut { source }.into()),
-			},
-		)
+		match self
+			.publisher
+			.lock()
+			.as_ref()
+			.ok_or(Error::AccessPublisher)?
+			.put(message.value())
+			.wait()
+		{
+			Ok(()) => Ok(()),
+			Err(source) => Err(Error::PublishingPut { source }.into()),
+		}
 	}
 
 	/// Send a "delete" message
@@ -80,18 +79,17 @@ impl crate::traits::Publisher for Publisher {
 	///
 	#[instrument(level = Level::ERROR, skip_all)]
 	fn delete(&self) -> Result<()> {
-		self.publisher.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|publisher| match publisher
-				.as_ref()
-				.ok_or(Error::AccessPublisher)?
-				.delete()
-				.wait()
-			{
-				Ok(()) => Ok(()),
-				Err(source) => Err(Error::PublishingDelete { source }.into()),
-			},
-		)
+		match self
+			.publisher
+			.lock()
+			.as_ref()
+			.ok_or(Error::AccessPublisher)?
+			.delete()
+			.wait()
+		{
+			Ok(()) => Ok(()),
+			Err(source) => Err(Error::PublishingDelete { source }.into()),
+		}
 	}
 }
 
@@ -104,18 +102,18 @@ impl Operational for Publisher {
 		}
 		Ok(())
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl Publisher {
@@ -145,7 +143,7 @@ impl Publisher {
 			priority,
 			#[cfg(feature = "unstable")]
 			reliability,
-			publisher: std::sync::Mutex::new(None),
+			publisher: parking_lot::Mutex::new(None),
 		}
 	}
 
@@ -171,13 +169,8 @@ impl Publisher {
 		builder.wait().map_or_else(
 			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
 			|new_publisher| {
-				self.publisher.lock().map_or_else(
-					|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-					|mut publisher| {
-						publisher.replace(new_publisher);
-						Ok(())
-					},
-				)
+				self.publisher.lock().replace(new_publisher);
+				Ok(())
 			},
 		)
 	}
@@ -187,13 +180,8 @@ impl Publisher {
 	///
 	#[allow(clippy::unnecessary_wraps)]
 	fn de_init(&self) -> Result<()> {
-		self.publisher.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut publisher| {
-				publisher.take();
-				Ok(())
-			},
-		)
+		self.publisher.lock().take();
+		Ok(())
 	}
 }
 // endregion:	--- Publisher

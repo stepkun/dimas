@@ -8,18 +8,11 @@ use anyhow::Result;
 use core::time::Duration;
 use dimas_core::{traits::Context, OperationState};
 use dimas_time::{ArcTimerCallback, Timer};
-use std::{
-	collections::HashMap,
-	sync::{
-		Mutex, {Arc, RwLock},
-	},
-};
+use parking_lot::{Mutex, RwLock};
+use std::{collections::HashMap, sync::Arc};
 
-use super::{
-	builder_states::{
-		Callback, Interval, NoCallback, NoInterval, NoSelector, NoStorage, Selector, Storage,
-	},
-	error::Error,
+use super::builder_states::{
+	Callback, Interval, NoCallback, NoInterval, NoSelector, NoStorage, Selector, Storage,
 };
 // endregion:	--- modules
 
@@ -267,10 +260,7 @@ where
 		let collection = self.storage.storage.clone();
 		let t = self.build()?;
 
-		let r = collection
-			.write()
-			.map_err(|_| Error::MutexPoison(String::from("TimerBuilder")))?
-			.insert(name, t);
+		let r = collection.write().insert(name, t);
 		Ok(r)
 	}
 }

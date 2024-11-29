@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
 		.name("timer1")
 		.interval(Duration::from_secs(1))
 		.callback(|ctx| -> Result<()> {
-			let count = ctx.read()?.count;
+			let count = ctx.read().count;
 			// create structure to send
 			let msg = PubSubMessage {
 				count,
@@ -47,7 +47,7 @@ async fn main() -> Result<()> {
 			println!("Sending {} [{}]", msg.text, msg.count);
 			// publishing with stored publisher
 			let _ = ctx.put("hello", message);
-			ctx.write()?.count += 1;
+			ctx.write().count += 1;
 			Ok(())
 		})
 		.add()?;

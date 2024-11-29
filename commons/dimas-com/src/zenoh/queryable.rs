@@ -23,8 +23,6 @@ use tracing::{error, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::Session;
-
-use crate::error::Error;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -51,7 +49,7 @@ where
 	completeness: bool,
 	#[cfg(feature = "unstable")]
 	allowed_origin: Locality,
-	handle: std::sync::Mutex<Option<JoinHandle<()>>>,
+	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> Debug for Queryable<P>
@@ -89,18 +87,18 @@ where
 			Ok(())
 		}
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> Queryable<P>
@@ -127,7 +125,7 @@ where
 			completeness,
 			#[cfg(feature = "unstable")]
 			allowed_origin,
-			handle: std::sync::Mutex::new(None),
+			handle: parking_lot::Mutex::new(None),
 		}
 	}
 
@@ -146,51 +144,43 @@ where
 		let ctx2 = self.context.clone();
 		let session = self.session.clone();
 
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.replace(tokio::task::spawn(async move {
-					let key = selector.clone();
-					std::panic::set_hook(Box::new(move |reason| {
-						error!("queryable panic: {}", reason);
-						if let Err(reason) = ctx1
-							.sender()
-							.blocking_send(TaskSignal::RestartQueryable(key.clone()))
-						{
-							error!("could not restart queryable: {}", reason);
-						} else {
-							info!("restarting queryable!");
-						};
-					}));
-					if let Err(error) = run_queryable(
-						session,
-						selector,
-						cb,
-						completeness,
-						#[cfg(feature = "unstable")]
-						allowed_origin,
-						ctx2,
-					)
-					.await
+		self.handle
+			.lock()
+			.replace(tokio::task::spawn(async move {
+				let key = selector.clone();
+				std::panic::set_hook(Box::new(move |reason| {
+					error!("queryable panic: {}", reason);
+					if let Err(reason) = ctx1
+						.sender()
+						.blocking_send(TaskSignal::RestartQueryable(key.clone()))
 					{
-						error!("queryable failed with {error}");
+						error!("could not restart queryable: {}", reason);
+					} else {
+						info!("restarting queryable!");
 					};
 				}));
-				Ok(())
-			},
-		)
+				if let Err(error) = run_queryable(
+					session,
+					selector,
+					cb,
+					completeness,
+					#[cfg(feature = "unstable")]
+					allowed_origin,
+					ctx2,
+				)
+				.await
+				{
+					error!("queryable failed with {error}");
+				};
+			}));
+		Ok(())
 	}
 
 	/// Stop a running Queryable
 	#[instrument(level = Level::TRACE)]
 	fn stop(&self) -> Result<()> {
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.take();
-				Ok(())
-			},
-		)
+		self.handle.lock().take();
+		Ok(())
 	}
 }
 

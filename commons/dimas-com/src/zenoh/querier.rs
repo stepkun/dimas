@@ -65,7 +65,7 @@ where
 	encoding: String,
 	target: QueryTarget,
 	timeout: Duration,
-	key_expr: std::sync::Mutex<Option<zenoh::key_expr::KeyExpr<'static>>>,
+	key_expr: parking_lot::Mutex<Option<zenoh::key_expr::KeyExpr<'static>>>,
 }
 
 impl<P> Debug for Querier<P>
@@ -107,86 +107,82 @@ where
 		mut callback: Option<&mut dyn FnMut(QueryableMsg) -> Result<()>>,
 	) -> Result<()> {
 		let cb = self.callback.clone();
-		self.key_expr.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|key_expr| {
-				let key_expr = key_expr
-					.clone()
-					.ok_or(Error::InvalidSelector("querier".into()))?;
+		let key_expr = self
+			.key_expr
+			.lock()
+			.clone()
+			.ok_or(Error::InvalidSelector("querier".into()))?;
 
-				let builder = message
-					.map_or_else(
-						|| self.session.get(&key_expr),
-						|msg| {
-							self.session
-								.get(&self.selector)
-								.payload(msg.value())
-						},
-					)
-					.encoding(self.encoding.as_str())
-					.target(self.target)
-					.consolidation(self.mode)
-					.timeout(self.timeout);
+		let builder = message
+			.map_or_else(
+				|| self.session.get(&key_expr),
+				|msg| {
+					self.session
+						.get(&self.selector)
+						.payload(msg.value())
+				},
+			)
+			.encoding(self.encoding.as_str())
+			.target(self.target)
+			.consolidation(self.mode)
+			.timeout(self.timeout);
 
-				#[cfg(feature = "unstable")]
-				let builder = builder.allowed_destination(self.allowed_destination);
+		#[cfg(feature = "unstable")]
+		let builder = builder.allowed_destination(self.allowed_destination);
 
-				let query = builder
-					.wait()
-					.map_err(|source| Error::QueryCreation { source })?;
+		let query = builder
+			.wait()
+			.map_err(|source| Error::QueryCreation { source })?;
 
-				let mut unreached = true;
-				let mut retry_count = 0u8;
+		let mut unreached = true;
+		let mut retry_count = 0u8;
 
-				while unreached && retry_count <= 5 {
-					retry_count += 1;
-					while let Ok(reply) = query.recv() {
-						match reply.result() {
-							Ok(sample) => match sample.kind() {
-								SampleKind::Put => {
-									let content: Vec<u8> = sample.payload().to_bytes().into_owned();
-									let msg = QueryableMsg(content);
-									if callback.is_none() {
-										let cb = cb.clone();
-										let ctx = self.context.clone();
-										tokio::task::spawn(async move {
-											let mut lock = cb.lock().await;
-											if let Err(error) = lock(ctx, msg).await {
-												error!("querier callback failed with {error}");
-											}
-										});
-									} else {
-										let callback =
-											callback.as_mut().ok_or(Error::AccessingQuerier {
-												selector: key_expr.to_string(),
-											})?;
-										callback(msg)
-											.map_err(|source| Error::QueryCallback { source })?;
+		while unreached && retry_count <= 5 {
+			retry_count += 1;
+			while let Ok(reply) = query.recv() {
+				match reply.result() {
+					Ok(sample) => match sample.kind() {
+						SampleKind::Put => {
+							let content: Vec<u8> = sample.payload().to_bytes().into_owned();
+							let msg = QueryableMsg(content);
+							if callback.is_none() {
+								let cb = cb.clone();
+								let ctx = self.context.clone();
+								tokio::task::spawn(async move {
+									let mut lock = cb.lock().await;
+									if let Err(error) = lock(ctx, msg).await {
+										error!("querier callback failed with {error}");
 									}
-								}
-								SampleKind::Delete => {
-									error!("Delete in Querier");
-								}
-							},
-							Err(err) => error!("receive error: {:?})", err),
-						}
-						unreached = false;
-					}
-					if unreached {
-						if retry_count < 5 {
-							std::thread::sleep(self.timeout);
-						} else {
-							return Err(Error::AccessingQueryable {
-								selector: key_expr.to_string(),
+								});
+							} else {
+								let callback =
+									callback.as_mut().ok_or(Error::AccessingQuerier {
+										selector: key_expr.to_string(),
+									})?;
+								callback(msg).map_err(|source| Error::QueryCallback { source })?;
 							}
-							.into());
 						}
-					}
+						SampleKind::Delete => {
+							error!("Delete in Querier");
+						}
+					},
+					Err(err) => error!("receive error: {:?})", err),
 				}
+				unreached = false;
+			}
+			if unreached {
+				if retry_count < 5 {
+					std::thread::sleep(self.timeout);
+				} else {
+					return Err(Error::AccessingQueryable {
+						selector: key_expr.to_string(),
+					}
+					.into());
+				}
+			}
+		}
 
-				Ok(())
-			},
-		)
+		Ok(())
 	}
 }
 
@@ -202,18 +198,18 @@ where
 		}
 		Ok(())
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> Querier<P>
@@ -247,7 +243,7 @@ where
 			encoding: encoding.into(),
 			target,
 			timeout,
-			key_expr: std::sync::Mutex::new(None),
+			key_expr: parking_lot::Mutex::new(None),
 		}
 	}
 
@@ -259,21 +255,17 @@ where
 	{
 		self.de_init()?;
 
-		self.key_expr.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut key_expr| {
-				self.session
-					.declare_keyexpr(self.selector.clone())
-					.wait()
-					.map_or_else(
-						|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-						|new_key_expr| {
-							key_expr.replace(new_key_expr);
-							Ok(())
-						},
-					)
-			},
-		)
+		let mut key_expr = self.key_expr.lock();
+		self.session
+			.declare_keyexpr(self.selector.clone())
+			.wait()
+			.map_or_else(
+				|_| Err(Error::Unexpected(file!().into(), line!()).into()),
+				|new_key_expr| {
+					key_expr.replace(new_key_expr);
+					Ok(())
+				},
+			)
 	}
 
 	/// De-Initialize
@@ -283,13 +275,8 @@ where
 	where
 		P: Send + Sync + 'static,
 	{
-		self.key_expr.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut key_expr| {
-				key_expr.take();
-				Ok(())
-			},
-		)
+		self.key_expr.lock().take();
+		Ok(())
 	}
 }
 // endregion:	--- Querier

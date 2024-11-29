@@ -10,8 +10,8 @@ struct AgentProps {
 
 async fn query_callback(ctx: Context<AgentProps>, response: QueryableMsg) -> Result<()> {
 	let message: u128 = response.decode()?;
-	println!("Response [{}] is '{message}'", ctx.read()?.counter);
-	ctx.write()?.counter += 1;
+	println!("Response [{}] is '{message}'", ctx.read().counter);
+	ctx.write().counter += 1;
 	Ok(())
 }
 
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
 		.name("timer")
 		.interval(interval)
 		.callback(move |ctx| -> Result<()> {
-			let counter = ctx.read()?.counter;
+			let counter = ctx.read().counter;
 			println!("Querying [{counter}]");
 			let message = Message::encode(&counter);
 			// querying with stored query

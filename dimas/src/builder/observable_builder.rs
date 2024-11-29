@@ -18,10 +18,8 @@ use dimas_core::{
 	OperationState,
 };
 use futures::future::{BoxFuture, Future};
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use tokio::{sync::Mutex, time::Duration};
 
 use super::{
@@ -365,7 +363,6 @@ where
 
 		let r = collection
 			.write()
-			.map_err(|_| Error::MutexPoison(String::from("ObservableBuilder")))?
 			.insert(q.selector().to_string(), Box::new(q));
 		Ok(r)
 	}

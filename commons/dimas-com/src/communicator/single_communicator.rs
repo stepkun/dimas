@@ -9,15 +9,12 @@ use crate::traits::LivelinessSubscriber;
 use anyhow::Result;
 use dimas_config::Config;
 use dimas_core::{message_types::Message, OperationState, Operational};
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use zenoh::{config::ZenohId, Session};
 
 use crate::{
 	enums::CommunicatorImplementation,
-	error::Error,
 	traits::{
 		Communicator, CommunicatorImplementationMethods, CommunicatorMethods, Observer, Publisher,
 		Querier, Responder,
@@ -64,18 +61,18 @@ impl Operational for SingleCommunicator {
 		}
 		Ok(())
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl Communicator for SingleCommunicator {
@@ -137,10 +134,7 @@ impl Communicator for SingleCommunicator {
 
 impl CommunicatorMethods for SingleCommunicator {
 	fn put(&self, selector: &str, message: Message) -> Result<()> {
-		let publishers = self
-			.publishers
-			.read()
-			.map_err(|_| Error::ReadAccess("publishers".into()))?;
+		let publishers = self.publishers.read();
 
 		#[allow(clippy::single_match_else)]
 		match publishers.get(selector) {
@@ -152,10 +146,7 @@ impl CommunicatorMethods for SingleCommunicator {
 	}
 
 	fn delete(&self, selector: &str) -> Result<()> {
-		let publishers = self
-			.publishers
-			.read()
-			.map_err(|_| Error::ReadAccess("publishers".into()))?;
+		let publishers = self.publishers.read();
 
 		#[allow(clippy::option_if_let_else)]
 		match publishers.get(selector) {
@@ -172,10 +163,7 @@ impl CommunicatorMethods for SingleCommunicator {
 		message: Option<dimas_core::message_types::Message>,
 		callback: Option<&mut dyn FnMut(dimas_core::message_types::QueryableMsg) -> Result<()>>,
 	) -> Result<()> {
-		let queriers = self
-			.queriers
-			.read()
-			.map_err(|_| Error::ReadAccess("queriers".into()))?;
+		let queriers = self.queriers.read();
 
 		#[allow(clippy::single_match_else)]
 		match queriers.get(selector) {
@@ -197,10 +185,7 @@ impl CommunicatorMethods for SingleCommunicator {
 		selector: &str,
 		message: Option<dimas_core::message_types::Message>,
 	) -> Result<()> {
-		let observers = self
-			.observers
-			.read()
-			.map_err(|_| Error::ReadAccess("observers".into()))?;
+		let observers = self.observers.read();
 
 		#[allow(clippy::option_if_let_else)]
 		match observers.get(selector) {

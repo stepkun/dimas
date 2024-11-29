@@ -11,10 +11,8 @@ use dimas_com::{
 };
 use dimas_core::{traits::Context, utils::selector_from, OperationState};
 use futures::future::Future;
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
 use super::{
@@ -278,10 +276,7 @@ where
 		let c = self.storage.storage.clone();
 		let s = self.build()?;
 
-		let r = c
-			.write()
-			.map_err(|_| Error::MutexPoison(String::from("LivelinessSubscriberBuilder")))?
-			.insert(s.token().into(), Box::new(s));
+		let r = c.write().insert(s.token().into(), Box::new(s));
 		Ok(r)
 	}
 }

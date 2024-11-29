@@ -16,10 +16,10 @@
 //! // A [`Timer`] callback
 //! fn timer_callback(context: Context<AgentProps>) -> Result<()> {
 //!   // reading properties
-//!   let mut value = context.read()?.counter;
+//!   let mut value = context.read().counter;
 //!   value +=1;
 //!   // writing properties
-//!   context.write()?.counter = value;
+//!   context.write().counter = value;
 //!   Ok(())
 //! }
 //! # #[tokio::main(flavor = "multi_thread")]
@@ -51,10 +51,8 @@ use dimas_core::{
 	OperationState, Operational,
 };
 use dimas_time::Timer;
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::Sender;
 use tracing::{info, instrument, Level};
 use zenoh::Session;
@@ -115,7 +113,7 @@ where
 
 	#[must_use]
 	fn state_old(&self) -> OperationState {
-		*self.state.read().expect("snh")
+		*self.state.read()
 	}
 
 	#[must_use]
@@ -133,16 +131,12 @@ where
 		&self.sender
 	}
 
-	fn read(&self) -> Result<std::sync::RwLockReadGuard<'_, P>> {
-		self.props
-			.read()
-			.map_err(|_| Error::ReadAccess.into())
+	fn read(&self) -> parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, P> {
+		self.props.read()
 	}
 
-	fn write(&self) -> Result<std::sync::RwLockWriteGuard<'_, P>> {
-		self.props
-			.write()
-			.map_err(|_| Error::WriteAccess.into())
+	fn write(&self) -> parking_lot::lock_api::RwLockWriteGuard<'_, parking_lot::RawRwLock, P> {
+		self.props.write()
 	}
 
 	fn set_state_old(&self, state: OperationState) -> Result<()> {
@@ -168,7 +162,8 @@ where
 					next_state = OperationState::Active;
 				}
 				OperationState::Active => {
-					return self.modify_state_property(OperationState::Error);
+					self.modify_state_property(OperationState::Error);
+					return Ok(());
 				}
 			}
 			self.upgrade_registered_tasks(next_state)?;
@@ -190,7 +185,8 @@ where
 					next_state = OperationState::Created;
 				}
 				OperationState::Created => {
-					return self.modify_state_property(OperationState::Error);
+					self.modify_state_property(OperationState::Error);
+					return Ok(());
 				}
 				OperationState::Error => {
 					return Err(Error::ManageState.into());
@@ -204,16 +200,9 @@ where
 
 	#[instrument(level = Level::ERROR, skip_all)]
 	fn put_with(&self, selector: &str, message: Message) -> Result<()> {
-		if self
-			.publishers()
-			.read()
-			.map_err(|_| Error::ReadContext("publishers".into()))?
-			.get(selector)
-			.is_some()
-		{
+		if self.publishers().read().get(selector).is_some() {
 			self.publishers()
 				.read()
-				.map_err(|_| Error::ReadContext("publishers".into()))?
 				.get(selector)
 				.ok_or_else(|| Error::Get("publishers".into()))?
 				.put(message)?;
@@ -225,16 +214,9 @@ where
 
 	#[instrument(level = Level::ERROR, skip_all)]
 	fn delete_with(&self, selector: &str) -> Result<()> {
-		if self
-			.publishers()
-			.read()
-			.map_err(|_| Error::ReadContext("publishers".into()))?
-			.get(selector)
-			.is_some()
-		{
+		if self.publishers().read().get(selector).is_some() {
 			self.publishers()
 				.read()
-				.map_err(|_| Error::ReadContext("publishers".into()))?
 				.get(selector)
 				.ok_or_else(|| Error::Get("publishers".into()))?
 				.delete()?;
@@ -251,16 +233,9 @@ where
 		message: Option<Message>,
 		callback: Option<&mut dyn FnMut(QueryableMsg) -> Result<()>>,
 	) -> Result<()> {
-		if self
-			.queriers()
-			.read()
-			.map_err(|_| Error::ReadContext("queries".into()))?
-			.get(selector)
-			.is_some()
-		{
+		if self.queriers().read().get(selector).is_some() {
 			self.queriers()
 				.read()
-				.map_err(|_| Error::ReadContext("queries".into()))?
 				.get(selector)
 				.ok_or_else(|| Error::Get("queries".into()))?
 				.get(message, callback)?;
@@ -275,7 +250,6 @@ where
 	fn observe_with(&self, selector: &str, message: Option<Message>) -> Result<()> {
 		self.observers()
 			.read()
-			.map_err(|_| Error::ReadContext("observers".into()))?
 			.get(selector)
 			.ok_or_else(|| Error::Get("observers".into()))?
 			.request(message)?;
@@ -286,7 +260,6 @@ where
 	fn cancel_observe_with(&self, selector: &str) -> Result<()> {
 		self.observers()
 			.read()
-			.map_err(|_| Error::ReadContext("observers".into()))?
 			.get(selector)
 			.ok_or_else(|| Error::Get("observers".into()))?
 			.cancel()?;
@@ -339,12 +312,8 @@ where
 
 	/// Set the [`Context`]s state
 	/// # Errors
-	fn modify_state_property(&self, state: OperationState) -> Result<()> {
-		*(self
-			.state
-			.write()
-			.map_err(|_| Error::ModifyStruct("state".into()))?) = state;
-		Ok(())
+	fn modify_state_property(&self, state: OperationState) {
+		*(self.state.write()) = state;
 	}
 
 	/// Get the liveliness subscribers
@@ -408,15 +377,11 @@ where
 			.manage_operation_state_old(new_state)?;
 
 		// start all registered timers
-		self.timers
-			.write()
-			.map_err(|_| Error::ModifyStruct("timers".into()))?
-			.iter_mut()
-			.for_each(|timer| {
-				let _ = timer.1.manage_operation_state_old(new_state);
-			});
+		self.timers.write().iter_mut().for_each(|timer| {
+			let _ = timer.1.manage_operation_state_old(new_state);
+		});
 
-		self.modify_state_property(new_state)?;
+		self.modify_state_property(new_state);
 		Ok(())
 	}
 
@@ -429,19 +394,15 @@ where
 	fn downgrade_registered_tasks(&self, new_state: OperationState) -> Result<()> {
 		// reverse order of start!
 		// stop all registered timers
-		self.timers
-			.write()
-			.map_err(|_| Error::ModifyStruct("timers".into()))?
-			.iter_mut()
-			.for_each(|timer| {
-				let _ = timer.1.manage_operation_state_old(new_state);
-			});
+		self.timers.write().iter_mut().for_each(|timer| {
+			let _ = timer.1.manage_operation_state_old(new_state);
+		});
 
 		// start communication
 		self.communicator
 			.manage_operation_state_old(new_state)?;
 
-		self.modify_state_property(new_state)?;
+		self.modify_state_property(new_state);
 		Ok(())
 	}
 }

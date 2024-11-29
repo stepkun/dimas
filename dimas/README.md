@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
         .callback(
             |ctx| -> Result<()> {
                 let counter = ctx
-                    .read()?
+                    .read()
                     .counter;
                 // the message to send
                 let text = format!("Hello World! [{counter}]");
@@ -131,7 +131,7 @@ async fn main() -> Result<()> {
                 ctx.put("hello", message)?;
                 // modify counter in properties
                 ctx
-                    .write()?
+                    .write()
                     .counter += 1;
                 Ok(())
             }

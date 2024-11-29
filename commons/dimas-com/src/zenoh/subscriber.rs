@@ -50,7 +50,7 @@ where
 	allowed_origin: Locality,
 	put_callback: ArcPutCallback<P>,
 	delete_callback: Option<ArcDeleteCallback<P>>,
-	handle: std::sync::Mutex<Option<JoinHandle<()>>>,
+	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> core::fmt::Debug for Subscriber<P>
@@ -87,18 +87,18 @@ where
 			Ok(())
 		}
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> Subscriber<P>
@@ -125,7 +125,7 @@ where
 			allowed_origin,
 			put_callback,
 			delete_callback,
-			handle: std::sync::Mutex::new(None),
+			handle: parking_lot::Mutex::new(None),
 		}
 	}
 	/// Start or restart the subscriber.
@@ -143,51 +143,43 @@ where
 		#[cfg(feature = "unstable")]
 		let allowed_origin = self.allowed_origin;
 
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.replace(tokio::task::spawn(async move {
-					let key = selector.clone();
-					std::panic::set_hook(Box::new(move |reason| {
-						error!("subscriber panic: {}", reason);
-						if let Err(reason) = ctx1
-							.sender()
-							.blocking_send(TaskSignal::RestartSubscriber(key.clone()))
-						{
-							error!("could not restart subscriber: {}", reason);
-						} else {
-							info!("restarting subscriber!");
-						};
-					}));
-					if let Err(error) = run_subscriber(
-						session,
-						selector,
-						#[cfg(feature = "unstable")]
-						allowed_origin,
-						p_cb,
-						d_cb,
-						ctx2.clone(),
-					)
-					.await
+		self.handle
+			.lock()
+			.replace(tokio::task::spawn(async move {
+				let key = selector.clone();
+				std::panic::set_hook(Box::new(move |reason| {
+					error!("subscriber panic: {}", reason);
+					if let Err(reason) = ctx1
+						.sender()
+						.blocking_send(TaskSignal::RestartSubscriber(key.clone()))
 					{
-						error!("spawning subscriber failed with {error}");
+						error!("could not restart subscriber: {}", reason);
+					} else {
+						info!("restarting subscriber!");
 					};
 				}));
-				Ok(())
-			},
-		)
+				if let Err(error) = run_subscriber(
+					session,
+					selector,
+					#[cfg(feature = "unstable")]
+					allowed_origin,
+					p_cb,
+					d_cb,
+					ctx2.clone(),
+				)
+				.await
+				{
+					error!("spawning subscriber failed with {error}");
+				};
+			}));
+		Ok(())
 	}
 
 	/// Stop a running Subscriber
 	#[instrument(level = Level::TRACE, skip_all)]
 	fn stop(&self) -> Result<()> {
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.take();
-				Ok(())
-			},
-		)
+		self.handle.lock().take();
+		Ok(())
 	}
 }
 

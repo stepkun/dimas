@@ -12,10 +12,8 @@ use dimas_core::{
 	message_types::{Message, QueryableMsg},
 	OperationState, Operational,
 };
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use zenoh::{config::ZenohId, Session};
 
 use super::error::Error;
@@ -69,18 +67,18 @@ impl Operational for MultiCommunicator {
 		}
 		Ok(())
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl CommunicatorMethods for MultiCommunicator {
@@ -88,10 +86,7 @@ impl CommunicatorMethods for MultiCommunicator {
 	/// # Errors
 	/// - `NotImplemented`: there is no implementation within this communicator
 	fn put(&self, selector: &str, message: Message) -> Result<()> {
-		let publishers = self
-			.publishers
-			.read()
-			.map_err(|_| Error::ReadAccess("publishers".into()))?;
+		let publishers = self.publishers.read();
 
 		#[allow(clippy::single_match_else)]
 		match publishers.get(selector) {
@@ -100,7 +95,6 @@ impl CommunicatorMethods for MultiCommunicator {
 				let comm = self
 					.communicators
 					.read()
-					.map_err(|_| Error::ReadAccess("publishers".into()))?
 					.get(DEFAULT)
 					.ok_or_else(|| Error::NoCommunicator(DEFAULT.into()))
 					.cloned()?;
@@ -114,10 +108,7 @@ impl CommunicatorMethods for MultiCommunicator {
 	/// # Errors
 	/// - `NotImplemented`: there is no implementation within this communicator
 	fn delete(&self, selector: &str) -> Result<()> {
-		let publishers = self
-			.publishers
-			.read()
-			.map_err(|_| Error::ReadAccess("publishers".into()))?;
+		let publishers = self.publishers.read();
 
 		#[allow(clippy::single_match_else)]
 		match publishers.get(selector) {
@@ -126,7 +117,6 @@ impl CommunicatorMethods for MultiCommunicator {
 				let comm = self
 					.communicators
 					.read()
-					.map_err(|_| Error::ReadAccess("publishers".into()))?
 					.get(DEFAULT)
 					.ok_or_else(|| Error::NoCommunicator(DEFAULT.into()))
 					.cloned()?;
@@ -148,10 +138,7 @@ impl CommunicatorMethods for MultiCommunicator {
 		message: Option<Message>,
 		callback: Option<&mut dyn FnMut(QueryableMsg) -> Result<()>>,
 	) -> Result<()> {
-		let queriers = self
-			.queriers
-			.read()
-			.map_err(|_| Error::ReadAccess("queriers".into()))?;
+		let queriers = self.queriers.read();
 
 		#[allow(clippy::single_match_else)]
 		match queriers.get(selector) {
@@ -160,7 +147,6 @@ impl CommunicatorMethods for MultiCommunicator {
 				let comm = self
 					.communicators
 					.read()
-					.map_err(|_| Error::ReadAccess("queriers".into()))?
 					.get(DEFAULT)
 					.ok_or_else(|| Error::NoCommunicator(DEFAULT.into()))
 					.cloned()?;
@@ -178,10 +164,7 @@ impl CommunicatorMethods for MultiCommunicator {
 	/// # Errors
 	/// - `NotImplemented`: there is no implementation within this communicator
 	fn observe(&self, selector: &str, message: Option<Message>) -> Result<()> {
-		let observers = self
-			.observers
-			.read()
-			.map_err(|_| Error::ReadAccess("observers".into()))?;
+		let observers = self.observers.read();
 
 		#[allow(clippy::single_match_else)]
 		match observers.get(selector) {
@@ -190,7 +173,6 @@ impl CommunicatorMethods for MultiCommunicator {
 				let comm = self
 					.communicators
 					.read()
-					.map_err(|_| Error::ReadAccess("observers".into()))?
 					.get(DEFAULT)
 					.ok_or_else(|| Error::NoCommunicator(DEFAULT.into()))
 					.cloned()?;
@@ -254,7 +236,6 @@ impl Communicator for MultiCommunicator {
 		let com = self
 			.communicators
 			.read()
-			.expect("snh")
 			.get(DEFAULT)
 			.cloned()
 			.expect("snh");
@@ -267,7 +248,6 @@ impl Communicator for MultiCommunicator {
 		let com = self
 			.communicators
 			.read()
-			.expect("snh")
 			.get(id)
 			.cloned()
 			.expect("snh");
@@ -283,7 +263,6 @@ impl Communicator for MultiCommunicator {
 		let com: Vec<Arc<Session>> = self
 			.communicators
 			.read()
-			.expect("snh")
 			.iter()
 			.map(|(_id, com)| match com.as_ref() {
 				CommunicatorImplementation::Zenoh(communicator) => communicator.session(),
@@ -313,26 +292,20 @@ impl MultiCommunicator {
 			responders: Arc::new(RwLock::new(HashMap::with_capacity(INITIAL_SIZE))),
 		};
 		// add the default communicator
-		com.communicators
-			.write()
-			.map_err(|_| Error::ModifyStruct("commmunicators".into()))?
-			.insert(
-				"default".to_string(),
-				Arc::new(CommunicatorImplementation::Zenoh(zenoh)),
-			);
+		com.communicators.write().insert(
+			"default".to_string(),
+			Arc::new(CommunicatorImplementation::Zenoh(zenoh)),
+		);
 		// create the additional sessions
 		if let Some(sessions) = config.sessions() {
 			for session in sessions {
 				match session.protocol.as_str() {
 					"zenoh" => {
 						let zenoh = crate::zenoh::Communicator::new(config.zenoh_config())?;
-						com.communicators
-							.write()
-							.map_err(|_| Error::ModifyStruct("commmunicators".into()))?
-							.insert(
-								session.name.clone(),
-								Arc::new(CommunicatorImplementation::Zenoh(zenoh)),
-							);
+						com.communicators.write().insert(
+							session.name.clone(),
+							Arc::new(CommunicatorImplementation::Zenoh(zenoh)),
+						);
 					}
 					_ => {
 						return Err(Error::UnknownProtocol {

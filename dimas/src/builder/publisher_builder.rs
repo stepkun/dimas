@@ -6,10 +6,8 @@
 use anyhow::Result;
 use dimas_com::{traits::Publisher as PublisherTrait, zenoh::publisher::Publisher};
 use dimas_core::{traits::Context, utils::selector_from, OperationState};
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use zenoh::{
 	bytes::Encoding,
 	qos::{CongestionControl, Priority},
@@ -267,7 +265,6 @@ where
 		let p = self.build()?;
 		let r = collection
 			.write()
-			.map_err(|_| Error::MutexPoison(String::from("PublisherBuilder")))?
 			.insert(p.selector().to_string(), Box::new(p));
 		Ok(r)
 	}

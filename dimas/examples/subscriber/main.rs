@@ -19,18 +19,18 @@ pub struct PubSubMessage {
 
 async fn hello_publishing(ctx: Context<AgentProps>, message: Message) -> Result<()> {
 	let message: PubSubMessage = message.decode()?;
-	let count = ctx.read()?.count;
+	let count = ctx.read().count;
 	if message.count > count {
 		println!("missed {} messages", message.count - count);
-		ctx.write()?.count = message.count;
+		ctx.write().count = message.count;
 	}
 	println!("Received {} [{}]", message.text, message.count);
-	ctx.write()?.count += 1;
+	ctx.write().count += 1;
 	Ok(())
 }
 
 async fn hello_deletion(ctx: Context<AgentProps>) -> Result<()> {
-	let _value = ctx.read()?.count;
+	let _value = ctx.read().count;
 	println!("Shall delete 'hello' message");
 	Ok(())
 }

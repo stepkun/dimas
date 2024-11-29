@@ -80,12 +80,16 @@ pub trait ContextAbstraction: Debug + Send + Sync {
 	/// Gives read access to the properties
 	///
 	/// # Errors
-	fn read(&self) -> Result<std::sync::RwLockReadGuard<'_, Self::Props>>;
+	fn read(
+		&self,
+	) -> parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, Self::Props>;
 
 	/// Gives write access to the properties
 	///
 	/// # Errors
-	fn write(&self) -> Result<std::sync::RwLockWriteGuard<'_, Self::Props>>;
+	fn write(
+		&self,
+	) -> parking_lot::lock_api::RwLockWriteGuard<'_, parking_lot::RawRwLock, Self::Props>;
 
 	/// Method to do a publishing for a `topic`
 	/// The `topic` will be enhanced with the prefix.

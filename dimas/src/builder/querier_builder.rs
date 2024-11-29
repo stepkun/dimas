@@ -12,10 +12,8 @@ use dimas_core::{
 	message_types::QueryableMsg, traits::Context, utils::selector_from, OperationState,
 };
 use futures::Future;
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use tokio::{sync::Mutex, time::Duration};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
@@ -321,7 +319,6 @@ where
 
 		let r = collection
 			.write()
-			.map_err(|_| Error::MutexPoison(String::from("QuerierBuilder")))?
 			.insert(q.selector().to_string(), Box::new(q));
 		Ok(r)
 	}

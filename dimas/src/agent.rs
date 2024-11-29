@@ -70,9 +70,9 @@ use dimas_core::{
 	OperationState, Operational,
 };
 use dimas_time::Timer;
-use std::sync::Arc;
 #[cfg(feature = "unstable")]
-use std::sync::RwLock;
+use parking_lot::RwLock;
+use std::sync::Arc;
 use tokio::{select, signal, sync::mpsc};
 use tracing::{error, info, warn};
 #[cfg(feature = "unstable")]
@@ -275,7 +275,9 @@ where
 
 		// set [`OperationState`] to Created
 		// This will also start the basic queryables
-		agent.context.set_state_old(OperationState::Created)?;
+		agent
+			.context
+			.set_state_old(OperationState::Created)?;
 
 		Ok(agent)
 	}
@@ -333,18 +335,18 @@ where
 		}
 		self.context.set_state_old(state)
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> System for Agent<P>
@@ -547,13 +549,11 @@ where
 				.wait()
 				.map_err(|source| Error::ActivateLiveliness { source })?;
 
-			self.liveliness_token
-				.write()
-				.map_err(|_| Error::ModifyStruct("liveliness".into()))?
-				.replace(token);
+			self.liveliness_token.write().replace(token);
 		};
 
-		self.context.set_state_old(OperationState::Active)?;
+		self.context
+			.set_state_old(OperationState::Active)?;
 
 		RunningAgent {
 			rx: self.rx,
@@ -611,7 +611,6 @@ where
 						TaskSignal::RestartLiveliness(selector) => {
 							self.context.liveliness_subscribers()
 								.write()
-								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or(Error::GetMut("liveliness".into()))?
 								.manage_operation_state(self.context.state_old())?;
@@ -619,7 +618,6 @@ where
 						TaskSignal::RestartQueryable(selector) => {
 							self.context.responders()
 								.write()
-								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("queryables".into()))?
 								.manage_operation_state_old(self.context.state_old())?;
@@ -627,7 +625,6 @@ where
 						TaskSignal::RestartObservable(selector) => {
 							self.context.responders()
 								.write()
-								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("observables".into()))?
 								.manage_operation_state_old(self.context.state_old())?;
@@ -635,7 +632,6 @@ where
 						TaskSignal::RestartSubscriber(selector) => {
 							self.context.responders()
 								.write()
-								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("subscribers".into()))?
 								.manage_operation_state_old(self.context.state_old())?;
@@ -643,7 +639,6 @@ where
 						TaskSignal::RestartTimer(selector) => {
 							self.context.timers()
 								.write()
-								.map_err(|_| Error::WriteAccess)?
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("timers".into()))?
 								.manage_operation_state_old(self.context.state_old())?;
@@ -677,15 +672,13 @@ where
 	/// # Errors
 	#[tracing::instrument(skip_all)]
 	pub fn stop(self) -> Result<Agent<P>> {
-		self.context.set_state_old(OperationState::Created)?;
+		self.context
+			.set_state_old(OperationState::Created)?;
 
 		// stop liveliness
 		#[cfg(feature = "unstable")]
 		if self.liveliness {
-			self.liveliness_token
-				.write()
-				.map_err(|_| Error::ModifyStruct("liveliness".into()))?
-				.take();
+			self.liveliness_token.write().take();
 		}
 		let r = Agent {
 			rx: self.rx,

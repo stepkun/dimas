@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-## [0.4.2] - 2024-??-??
+## [0.5.0] - 2024-??-?? _Has breaking changes!!_
 
 ### Added
 
@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - restructured crate `dimas_com`
 - restructured crates `dimas_core` & `dimas_time`,
   moving builders that require `std` to `dimas`
+- replaced std::sync::Mutex and std::sync::RwLock with parking_lot::Mutex and parking_lot::RwLock
+  _breaking change_: read() and write() on context no longer return a Result, but the properties directly 
 
 ### Fixed
 

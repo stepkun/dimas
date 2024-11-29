@@ -74,7 +74,7 @@ where
 	response_callback: ArcResponseCallback<P>,
 	/// timeout value
 	timeout: Duration,
-	handle: std::sync::Mutex<Option<JoinHandle<()>>>,
+	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> core::fmt::Debug for Observer<P>
@@ -284,18 +284,18 @@ where
 		}
 		Ok(())
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> Observer<P>
@@ -321,7 +321,7 @@ where
 			control_callback,
 			response_callback,
 			timeout,
-			handle: std::sync::Mutex::new(None),
+			handle: parking_lot::Mutex::new(None),
 		}
 	}
 
@@ -340,13 +340,8 @@ where
 	fn de_init(&self) -> Result<()> {
 		// cancel current request before stopping
 		let _ = crate::traits::Observer::cancel(self);
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.take();
-				Ok(())
-			},
-		)
+		self.handle.lock().take();
+		Ok(())
 	}
 }
 // endregion:	--- Observer

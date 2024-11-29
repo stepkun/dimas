@@ -13,10 +13,8 @@ use dimas_com::{
 };
 use dimas_core::{message_types::Message, traits::Context, utils::selector_from, OperationState};
 use futures::future::Future;
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use parking_lot::RwLock;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
@@ -275,7 +273,6 @@ where
 
 		let r = c
 			.write()
-			.map_err(|_| Error::MutexPoison(String::from("SubscriberBuilder")))?
 			.insert(s.selector().to_string(), Box::new(s));
 		Ok(r)
 	}

@@ -11,9 +11,6 @@ pub enum Error {
 	/// No zenoh available/implemented
 	#[error("no zenoh session available")]
 	NoZenohSession,
-	/// a Mutex is poisoned.
-	#[error("a Mutex poison error happened in {0}")]
-	MutexPoison(String),
 }
 // region:		--- Error
 

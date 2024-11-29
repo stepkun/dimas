@@ -10,7 +10,7 @@ struct AgentProps {
 
 async fn queryable(ctx: Context<AgentProps>, request: QueryMsg) -> Result<()> {
 	let received: u128 = request.decode()?;
-	let value = ctx.read()?.counter;
+	let value = ctx.read().counter;
 	let query = request.key_expr();
 	println!(
 		"Received query for {} with {}, responding with {}",
@@ -18,7 +18,7 @@ async fn queryable(ctx: Context<AgentProps>, request: QueryMsg) -> Result<()> {
 	);
 	request.reply(value)?;
 
-	ctx.write()?.counter += 1;
+	ctx.write().counter += 1;
 	Ok(())
 }
 

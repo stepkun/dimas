@@ -15,12 +15,10 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational};
 #[cfg(feature = "std")]
-use std::sync::Mutex;
+use parking_lot::Mutex;
 #[cfg(feature = "std")]
 use tokio::{task::JoinHandle, time};
 use tracing::{error, info, instrument, warn, Level};
-
-use crate::error::Error;
 // endregion:	--- modules
 
 // region:		--- types
@@ -123,18 +121,18 @@ where
 			}
 		}
 	}
-	
+
 	fn state(&self) -> OperationState {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn set_state(&mut self, _state: OperationState) {
-			todo!()
-		}
-	
+		todo!()
+	}
+
 	fn operationals(&mut self) -> &mut std::vec::Vec<Box<dyn Operational>> {
-			todo!()
-		}
+		todo!()
+	}
 }
 
 impl<P> Timer<P>
@@ -187,40 +185,29 @@ where
 				callback,
 				handle,
 			} => {
-				// check Mutexes
-				{
-					if callback.lock().is_err() {
-						warn!("found poisoned Mutex");
-						callback.clear_poison();
-					}
-				}
-
 				let key = selector.clone();
 				let interval = *interval;
 				let cb = callback.clone();
 				let ctx1 = context.clone();
 				let ctx2 = context.clone();
 
-				handle.lock().map_or_else(
-					|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-					|mut handle| {
-						handle.replace(tokio::task::spawn(async move {
-							std::panic::set_hook(Box::new(move |reason| {
-								error!("delayed timer panic: {}", reason);
-								if let Err(reason) = ctx1
-									.sender()
-									.blocking_send(TaskSignal::RestartTimer(key.clone()))
-								{
-									error!("could not restart timer: {}", reason);
-								} else {
-									info!("restarting timer!");
-								};
-							}));
-							run_timer(interval, cb, ctx2).await;
+				handle
+					.lock()
+					.replace(tokio::task::spawn(async move {
+						std::panic::set_hook(Box::new(move |reason| {
+							error!("delayed timer panic: {}", reason);
+							if let Err(reason) = ctx1
+								.sender()
+								.blocking_send(TaskSignal::RestartTimer(key.clone()))
+							{
+								error!("could not restart timer: {}", reason);
+							} else {
+								info!("restarting timer!");
+							};
 						}));
-						Ok(())
-					},
-				)
+						run_timer(interval, cb, ctx2).await;
+					}));
+				Ok(())
 			}
 			Self::DelayedInterval {
 				selector,
@@ -231,14 +218,6 @@ where
 				callback,
 				handle,
 			} => {
-				// check Mutexes
-				{
-					if callback.lock().is_err() {
-						warn!("found poisoned Mutex");
-						callback.clear_poison();
-					}
-				}
-
 				let key = selector.clone();
 				let delay = *delay;
 				let interval = *interval;
@@ -246,27 +225,24 @@ where
 				let ctx1 = context.clone();
 				let ctx2 = context.clone();
 
-				handle.lock().map_or_else(
-					|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-					|mut handle| {
-						handle.replace(tokio::task::spawn(async move {
-							std::panic::set_hook(Box::new(move |reason| {
-								error!("delayed timer panic: {}", reason);
-								if let Err(reason) = ctx1
-									.sender()
-									.blocking_send(TaskSignal::RestartTimer(key.clone()))
-								{
-									error!("could not restart timer: {}", reason);
-								} else {
-									info!("restarting timer!");
-								};
-							}));
-							tokio::time::sleep(delay).await;
-							run_timer(interval, cb, ctx2).await;
+				handle
+					.lock()
+					.replace(tokio::task::spawn(async move {
+						std::panic::set_hook(Box::new(move |reason| {
+							error!("delayed timer panic: {}", reason);
+							if let Err(reason) = ctx1
+								.sender()
+								.blocking_send(TaskSignal::RestartTimer(key.clone()))
+							{
+								error!("could not restart timer: {}", reason);
+							} else {
+								info!("restarting timer!");
+							};
 						}));
-						Ok(())
-					},
-				)
+						tokio::time::sleep(delay).await;
+						run_timer(interval, cb, ctx2).await;
+					}));
+				Ok(())
 			}
 		}
 	}
@@ -291,15 +267,13 @@ where
 				interval: _,
 				callback: _,
 				handle,
-			} => handle.lock().map_or_else(
-				|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-				|mut handle| {
-					if let Some(handle) = handle.take() {
-						handle.abort();
-					}
-					Ok(())
-				},
-			),
+			} => {
+				let handle = handle.lock().take();
+				if let Some(handle) = handle {
+					handle.abort();
+				};
+				Ok(())
+			}
 		}
 	}
 }
@@ -314,15 +288,8 @@ where
 		let ctx = ctx.clone();
 		interval.tick().await;
 
-		match cb.lock() {
-			Ok(mut cb) => {
-				if let Err(error) = cb(ctx) {
-					error!("callback failed with {error}");
-				}
-			}
-			Err(err) => {
-				error!("callback lock failed with {err}");
-			}
+		if let Err(error) = cb.lock()(ctx) {
+			error!("callback failed with {error}");
 		}
 	}
 }

@@ -52,7 +52,7 @@ where
 	activation_state: OperationState,
 	put_callback: ArcLivelinessCallback<P>,
 	delete_callback: Option<ArcLivelinessCallback<P>>,
-	handle: std::sync::Mutex<Option<JoinHandle<()>>>,
+	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> core::fmt::Debug for LivelinessSubscriber<P>
@@ -89,7 +89,7 @@ where
 			Ok(())
 		}
 	}
-	
+
 	fn state(&self) -> OperationState {
 		todo!()
 	}
@@ -123,7 +123,7 @@ where
 			activation_state,
 			put_callback,
 			delete_callback,
-			handle: std::sync::Mutex::new(None),
+			handle: parking_lot::Mutex::new(None),
 		}
 	}
 
@@ -147,48 +147,40 @@ where
 		let ctx1 = self.context.clone();
 		let ctx2 = self.context.clone();
 
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.replace(tokio::task::spawn(async move {
-					std::panic::set_hook(Box::new(move |reason| {
-						error!("liveliness subscriber panic: {}", reason);
-						if let Err(reason) = ctx
-							.sender()
-							.blocking_send(TaskSignal::RestartLiveliness(key.clone()))
-						{
-							error!("could not restart liveliness subscriber: {}", reason);
-						} else {
-							info!("restarting liveliness subscriber!");
-						};
-					}));
-
-					let timeout = Duration::from_millis(250);
-					// the initial liveliness query
-					if let Err(error) = run_initial(session1, token1, p_cb1, ctx1, timeout).await {
-						error!("running initial liveliness query failed with {error}");
-					};
-
-					// the liveliness subscriber
-					if let Err(error) = run_liveliness(session2, token2, p_cb2, d_cb, ctx2).await {
-						error!("running liveliness subscriber failed with {error}");
+		self.handle
+			.lock()
+			.replace(tokio::task::spawn(async move {
+				std::panic::set_hook(Box::new(move |reason| {
+					error!("liveliness subscriber panic: {}", reason);
+					if let Err(reason) = ctx
+						.sender()
+						.blocking_send(TaskSignal::RestartLiveliness(key.clone()))
+					{
+						error!("could not restart liveliness subscriber: {}", reason);
+					} else {
+						info!("restarting liveliness subscriber!");
 					};
 				}));
-				Ok(())
-			},
-		)
+
+				let timeout = Duration::from_millis(250);
+				// the initial liveliness query
+				if let Err(error) = run_initial(session1, token1, p_cb1, ctx1, timeout).await {
+					error!("running initial liveliness query failed with {error}");
+				};
+
+				// the liveliness subscriber
+				if let Err(error) = run_liveliness(session2, token2, p_cb2, d_cb, ctx2).await {
+					error!("running liveliness subscriber failed with {error}");
+				};
+			}));
+		Ok(())
 	}
 
 	/// Stop a running LivelinessSubscriber
 	#[instrument(level = Level::TRACE)]
 	fn stop(&self) -> Result<()> {
-		self.handle.lock().map_or_else(
-			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-			|mut handle| {
-				handle.take();
-				Ok(())
-			},
-		)
+		self.handle.lock().take();
+		Ok(())
 	}
 }
 
