@@ -7,8 +7,8 @@ extern crate std;
 
 // region:      --- modules
 use super::error::Error;
+use crate::utils::ComponentRegistry;
 use anyhow::Result;
-use dimas_core::ComponentRegistrar;
 use libloading::Library;
 use std::collections::HashMap;
 use std::ffi::OsString;
@@ -42,11 +42,7 @@ impl LibManager {
 	/// # Errors
 	///
 	#[allow(unsafe_code)]
-	pub fn load_lib(
-		&mut self,
-		registrar: &mut dyn ComponentRegistrar,
-		libname: &str,
-	) -> Result<()> {
+	pub fn load_lib(&mut self, registrar: &mut dyn ComponentRegistry, libname: &str) -> Result<()> {
 		let filename = libloading::library_filename(libname);
 		let pathbuf = std::env::current_exe()?
 			.parent()
@@ -58,7 +54,7 @@ impl LibManager {
 			unsafe {
 				let lib = libloading::Library::new(&filename)?;
 				let func: libloading::Symbol<
-					unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32,
+					unsafe extern "C" fn(&mut dyn ComponentRegistry) -> u32,
 				> = lib.get(b"register_components")?;
 				let res = func(registrar);
 				match res {
@@ -78,14 +74,14 @@ impl LibManager {
 	#[allow(unsafe_code)]
 	pub fn unload_lib(
 		&mut self,
-		registrar: &mut dyn ComponentRegistrar,
+		registrar: &mut dyn ComponentRegistry,
 		libname: &str,
 	) -> Result<()> {
 		let filename = libloading::library_filename(libname);
 		if let Some(lib) = self.libs.remove(&filename) {
 			unsafe {
 				let func: libloading::Symbol<
-					unsafe extern "C" fn(&mut dyn ComponentRegistrar) -> u32,
+					unsafe extern "C" fn(&mut dyn ComponentRegistry) -> u32,
 				> = lib.get(b"unregister_components")?;
 				let res = func(registrar);
 				lib.close()?;

@@ -19,6 +19,9 @@ pub struct PubSubMessage {
 
 #[dimas::main]
 async fn main() -> Result<()> {
+	// initialize tracing/logging
+	init_tracing();
+
 	// create & initialize agents properties
 	let properties = AgentProps { count: 0 };
 

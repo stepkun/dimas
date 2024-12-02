@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Core enums of `DiMAS`
+//! Operational states of `DiMAS`
 //!
 
 #[doc(hidden)]
@@ -21,12 +21,15 @@ use super::Operational;
 
 // region:		--- OperationState
 /// The possible states an [`Operational`] entity can take
+#[allow(clippy::module_name_repetitions)]
 #[derive(Copy, Clone, Debug, Default, Decode, Encode, Eq, PartialEq, Ord, PartialOrd)]
 pub enum OperationState {
 	/// Entity is in an erronous state
-	Error = -1,
-	/// Entity is in initial state
+	Error = -2,
+	/// Entity is not initialized
 	#[default]
+	Undefined = -1,
+	/// Entity is in initial state
 	Created = 0,
 	/// Entity is setup properly
 	Configured,
@@ -63,12 +66,25 @@ impl Display for OperationState {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		match self {
 			Self::Error => write!(f, "Error"),
+			Self::Undefined => write!(f, "Undefined"),
 			Self::Created => write!(f, "Created"),
 			Self::Configured => write!(f, "Configured"),
 			Self::Inactive => write!(f, "Inactive"),
 			Self::Standby => write!(f, "Standby"),
 			Self::Active => write!(f, "Active"),
 		}
+	}
+}
+
+impl Sub<Self> for OperationState {
+	type Output = i32;
+
+	/// sub operation for  2 [`OperationState`]s
+	/// returns an [`i32`] difference value
+	fn sub(self, rhs: Self) -> Self::Output {
+		let left: i32 = self.into();
+		let right: i32 = rhs.into();
+		left - right
 	}
 }
 
@@ -93,7 +109,8 @@ impl SubAssign<i32> for OperationState {
 impl From<OperationState> for i32 {
 	fn from(value: OperationState) -> Self {
 		match value {
-			OperationState::Error => -1,
+			OperationState::Error => -2,
+			OperationState::Undefined => -1,
 			OperationState::Created => 0,
 			OperationState::Configured => 1,
 			OperationState::Inactive => 2,
@@ -108,13 +125,14 @@ impl TryFrom<i32> for OperationState {
 
 	fn try_from(value: i32) -> Result<Self, Box<dyn core::error::Error + Send + Sync + 'static>> {
 		match value {
-			-1 => Ok(Self::Error),
+			-2 => Ok(Self::Error),
+			-1 => Ok(Self::Undefined),
 			0 => Ok(Self::Created),
 			1 => Ok(Self::Configured),
 			2 => Ok(Self::Inactive),
 			3 => Ok(Self::Standby),
 			4 => Ok(Self::Active),
-			_ => Err(Error::ParseInt { value }.into()),
+			_ => Err(Box::new(Error::ParseInt { value })),
 		}
 	}
 }
@@ -159,7 +177,6 @@ mod tests {
 
 	#[test]
 	fn add() {
-		assert_eq!(OperationState::Error + 1, OperationState::Created);
 		assert_eq!(OperationState::Created + 1, OperationState::Configured);
 		assert_eq!(OperationState::Configured + 1, OperationState::Inactive);
 		assert_eq!(OperationState::Inactive + 1, OperationState::Standby);
@@ -169,9 +186,7 @@ mod tests {
 
 	#[test]
 	fn add_assign() {
-		let mut state = OperationState::Error;
-		state += 1;
-		assert_eq!(&state, &OperationState::Created);
+		let mut state = OperationState::Created;
 		state += 1;
 		assert_eq!(&state, &OperationState::Configured);
 		state += 1;
@@ -190,7 +205,6 @@ mod tests {
 	fn failing_add() {
 		assert!(catch_unwind(|| OperationState::Active + 1).is_err());
 		assert!(catch_unwind(|| OperationState::Created + 5).is_err());
-		assert!(catch_unwind(|| OperationState::Error + 6).is_err());
 	}
 
 	#[test]
@@ -199,7 +213,6 @@ mod tests {
 		assert_eq!(OperationState::Standby - 1, OperationState::Inactive);
 		assert_eq!(OperationState::Inactive - 1, OperationState::Configured);
 		assert_eq!(OperationState::Configured - 1, OperationState::Created);
-		assert_eq!(OperationState::Created - 1, OperationState::Error);
 		assert_eq!(OperationState::Active - 4, OperationState::Created);
 	}
 
@@ -214,18 +227,15 @@ mod tests {
 		assert_eq!(&state, &OperationState::Configured);
 		state -= 1;
 		assert_eq!(&state, &OperationState::Created);
-		state -= 1;
-		assert_eq!(&state, &OperationState::Error);
-		state = OperationState::Active;
 
+		state = OperationState::Active;
 		state -= 4;
 		assert_eq!(&state, &OperationState::Created);
 	}
 
 	#[test]
 	fn failing_sub() {
-		assert!(catch_unwind(|| OperationState::Error - 1).is_err());
-		assert!(catch_unwind(|| OperationState::Created - 2).is_err());
-		assert!(catch_unwind(|| OperationState::Active - 6).is_err());
+		assert!(catch_unwind(|| OperationState::Created - 3).is_err());
+		assert!(catch_unwind(|| OperationState::Active - 7).is_err());
 	}
 }

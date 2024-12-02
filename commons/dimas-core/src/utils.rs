@@ -6,21 +6,44 @@
 #[doc(hidden)]
 extern crate alloc;
 
+#[cfg(feature = "std")]
+extern crate std;
+
 // region:		--- modules
 use alloc::string::{String, ToString};
+#[cfg(feature = "std")]
+use tracing_subscriber::EnvFilter;
 // endregion:	--- modules
 
 // region:    --- tracing
 /// Initialize tracing
 pub fn init_tracing() {
-	let subscriber = tracing_subscriber::fmt()
-		//.with_env_filter(env_filter)
+	#[cfg(feature = "std")]
+	let subscriber = std::env::var("RUST_LOG").map_or_else(
+		|_| tracing_subscriber::fmt().with_env_filter("dimas=warn,zenoh=warn"),
+		|content| {
+			let levels = content.split(',');
+			if levels.count() == 1 {
+				tracing_subscriber::fmt()
+					.with_env_filter(EnvFilter::new(std::format!("dimas={content},zenoh=warn")))
+			} else {
+				tracing_subscriber::fmt().with_env_filter(EnvFilter::new(content))
+			}
+		},
+	);
+	#[cfg(not(feature = "std"))]
+	let subscriber = tracing_subscriber::fmt();
+
+	let subscriber = subscriber
+		.compact()
+		.with_file(true)
+		.with_line_number(true)
 		.with_thread_ids(true)
 		.with_thread_names(true)
 		.with_level(true)
-		.with_target(true);
+		.with_target(true)
+		.finish();
 
-	let subscriber = subscriber.finish();
 	let _ = tracing::subscriber::set_global_default(subscriber);
 }
 // endregion: --- tracing

@@ -126,7 +126,7 @@ fn main() -> Result<()> {
 			let com = Communicator::new(config.zenoh_config())?;
 			println!("List of current states of DiMAS entities:");
 			println!("{h_zid:32}  {h_kind:6}  {h_state:10}  {h_name}");
-			let list = dimas_commands::set_state_old(&com, &base_selector, state.to_owned())?;
+			let list = dimas_commands::set_state(&com, &base_selector, state.to_owned())?;
 			for item in list {
 				println!(
 					"{:32}  {:6}  {:10}  {}",

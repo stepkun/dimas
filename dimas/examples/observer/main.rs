@@ -85,6 +85,9 @@ async fn response(ctx: Context<AgentProps>, response: ObservableResponse) -> Res
 
 #[dimas::main]
 async fn main() -> Result<()> {
+	// initialize tracing/logging
+	init_tracing();
+
 	// create & initialize agents properties
 	let properties = AgentProps {
 		limit: 0u128,

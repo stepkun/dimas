@@ -19,17 +19,20 @@ use dimas_com::{traits::CommunicatorImplementationMethods, zenoh::Communicator};
 use dimas_core::{enums::Signal, message_types::Message, utils::selector_from, OperationState};
 #[cfg(feature = "std")]
 use std::collections::HashMap;
+use tracing::{event, instrument, Level};
 // endregion:	--- modules
 
 // region:		--- set_state
 /// Set the [`OperationState`] of `DiMAS` entities
 /// # Errors
 #[cfg(feature = "std")]
-pub fn set_state_old(
+#[instrument(level = Level::DEBUG, skip_all)]
+pub fn set_state(
 	com: &Communicator,
 	base_selector: &String,
 	state: Option<OperationState>,
 ) -> Result<Vec<AboutEntity>> {
+	event!(Level::DEBUG, "set_state");
 	let mut map: HashMap<String, AboutEntity> = HashMap::new();
 
 	let selector = selector_from("signal", Some(base_selector));
@@ -56,7 +59,9 @@ pub fn set_state_old(
 /// Shutdown of `DiMAS` entities
 /// # Errors
 #[cfg(feature = "std")]
+#[instrument(level = Level::DEBUG, skip_all)]
 pub fn shutdown(com: &Communicator, base_selector: &String) -> Result<Vec<AboutEntity>> {
+	event!(Level::DEBUG, "shutdown");
 	let mut map: HashMap<String, AboutEntity> = HashMap::new();
 
 	let selector = selector_from("signal", Some(base_selector));

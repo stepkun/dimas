@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - documented config file
+- tracing in examples
 
 ### Changed
 
@@ -31,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - replaced std::sync::Mutex and std::sync::RwLock with parking_lot::Mutex and parking_lot::RwLock
   _breaking change_:
   read() and write() on context no longer return a Result, but the properties directly
+- improved tracing:
+  - default level is "warn" also for zenoh
+  - now uses `RUST_LOG=<level definitions>`
 
 ### Fixed
 

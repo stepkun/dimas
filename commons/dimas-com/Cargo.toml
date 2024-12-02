@@ -30,6 +30,7 @@ anyhow = { workspace = true }
 bitcode = { workspace = true}
 dimas-config = { workspace = true }
 dimas-core = { workspace = true }
+dimas-macros = { workspace = true }
 futures = { workspace = true }
 itertools = { workspace = true }
 parking_lot = { workspace = true }

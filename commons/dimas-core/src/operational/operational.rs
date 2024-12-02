@@ -6,185 +6,167 @@
 #[doc(hidden)]
 extern crate alloc;
 
+#[cfg(feature = "std")]
+extern crate std;
+
 // region:		--- modules
-use alloc::{boxed::Box, vec::Vec};
 use anyhow::Result;
 use core::fmt::Debug;
-
-//use crate::traits::Component;
+use tracing::{event, instrument, Level};
 
 use super::{Error, OperationState};
 // endregion:	--- modules
 
 // region:		--- Operational
 /// Contract for [`Operational`]
-pub trait Operational: Debug + Send + Sync {
-	/// A method to read the entities current [`OperationState`] must be provided
+pub trait Operational: Transitions + Debug + Send + Sync {
+	/// Read the entities state when it shall be active
+	/// different from parent components [`OperationState`] can be provided.
+	/// The default is [`OperationState::Undefined`]
+	#[must_use]
+	fn activation_state(&self) -> OperationState;
+
+	/// Write the entities state when it shall be active
+	fn set_activation_state(&mut self, _state: OperationState);
+
+	/// Calculate the desired [`OperationState`] from a given [`OperationState`].
+	#[must_use]
+	fn desired_state(&self, state: OperationState) -> OperationState;
+
+	/// Read the entities current [`OperationState`] must be provided
+	#[must_use]
 	fn state(&self) -> OperationState;
 
-	/// A method to write the entities current [`OperationState`] must be provided
+	/// Write the entities current [`OperationState`] must be provided
 	fn set_state(&mut self, _state: OperationState);
 
-	/// A method to access the entities sub [`Operational`]s must be provided
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>>;
-
+	/// Call the appropriate transitions and return the reached state.
 	/// # Errors
-	/// @TODO: remove
-	fn manage_operation_state_old(&self, _state: OperationState) -> Result<()> {
-		Ok(())
-	}
-
-	/// Checks wether state of [`Operational`] is appropriate for the given [`OperationState`].
-	/// If not, adjusts components state to needs considering its sub-components.
-	/// # Errors
-	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
-		// step up?
+	/// In case of error, the [`Operational`]s state is set to [`OperationalState::Error`]
+	#[instrument(level = Level::TRACE, skip_all)]
+	fn state_transitions(&mut self, state: OperationState) -> Result<()> {
+		event!(Level::TRACE, "state_transitions");
+		let mut next_state;
 		while self.state() < state {
+			assert!(self.state() < OperationState::Active);
+			next_state = self.state() + 1;
+			// next do own transition
 			match self.state() {
 				OperationState::Error | OperationState::Active => {
 					return Err(Error::ManageState.into())
 				}
+				OperationState::Undefined => {} // no transition for now
 				OperationState::Created => {
-					for component in self.operationals() {
-						let state = component.configure()?;
-						component.set_state(state);
-					}
-					let state = self.configure()?;
-					self.set_state(state);
+					self.configure()?;
 				}
 				OperationState::Configured => {
-					for component in self.operationals() {
-						let state = component.commission()?;
-						component.set_state(state);
-					}
-					let state = self.commission()?;
-					self.set_state(state);
+					self.commission()?;
 				}
 				OperationState::Inactive => {
-					for component in self.operationals() {
-						let state = component.wakeup()?;
-						component.set_state(state);
-					}
-					let state = self.wakeup()?;
-					self.set_state(state);
+					self.wakeup()?;
 				}
 				OperationState::Standby => {
-					for component in self.operationals() {
-						let state = component.activate()?;
-						component.set_state(state);
-					}
-					let state = self.activate()?;
-					self.set_state(state);
+					self.activate()?;
 				}
 			}
+			// update own state
+			self.set_state(next_state);
 		}
 
 		// step down?
 		while self.state() > state {
+			assert!(self.state() > OperationState::Created);
+			next_state = self.state() - 1;
+			// next do own transition
 			match self.state() {
-				OperationState::Error | OperationState::Created => {
+				OperationState::Error | OperationState::Undefined | OperationState::Created => {
 					return Err(Error::ManageState.into())
 				}
 				OperationState::Active => {
-					for component in self.operationals() {
-						let state = component.deactivate()?;
-						component.set_state(state);
-					}
-					let state = self.deactivate()?;
-					self.set_state(state);
+					self.deactivate()?;
 				}
 				OperationState::Standby => {
-					for component in self.operationals() {
-						let state = component.suspend()?;
-						component.set_state(state);
-					}
-					let state = self.suspend()?;
-					self.set_state(state);
+					self.suspend()?;
 				}
 				OperationState::Inactive => {
-					for component in self.operationals() {
-						let state = component.decommission()?;
-						component.set_state(state);
-					}
-					let state = self.decommission()?;
-					self.set_state(state);
+					self.decommission()?;
 				}
 				OperationState::Configured => {
-					for component in self.operationals() {
-						let state = component.deconfigure()?;
-						component.set_state(state);
-					}
-					let state = self.deconfigure()?;
-					self.set_state(state);
+					self.deconfigure()?;
 				}
 			}
+			// update own state
+			self.set_state(next_state);
 		}
 
 		Ok(())
 	}
+}
 
+/// Transition contract for [`Operational`]
+pub trait Transitions: Debug + Send + Sync {
 	/// configuration transition
-	/// The default implementation just returns [`OperationState::Configured`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn configure(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Configured)
+	fn configure(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// comissioning transition
-	/// The default implementation just returns [`OperationState::Inactive`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn commission(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Inactive)
+	fn commission(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// wake up transition
-	/// The default implementation just returns [`OperationState::Standby`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn wakeup(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Standby)
+	fn wakeup(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// activate transition
-	/// The default implementation just returns [`OperationState::Active`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn activate(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Active)
+	fn activate(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// deactivate transition
-	/// The default implementation just returns [`OperationState::Standby`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn deactivate(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Standby)
+	fn deactivate(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// suspend transition
-	/// The default implementation just returns [`OperationState::Inactive`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn suspend(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Inactive)
+	fn suspend(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// decomission transition
-	/// The default implementation just returns [`OperationState::Configured`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn decommission(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Configured)
+	fn decommission(&mut self) -> Result<()> {
+		Ok(())
 	}
 
 	/// deconfigure transition
-	/// The default implementation just returns [`OperationState::Created`]
+	/// The default implementation just returns Ok(())
 	/// # Errors
 	/// if something went wrong
-	fn deconfigure(&mut self) -> Result<OperationState> {
-		Ok(OperationState::Created)
+	fn deconfigure(&mut self) -> Result<()> {
+		Ok(())
 	}
 }
 // endregion:	--- Operational
@@ -192,6 +174,7 @@ pub trait Operational: Debug + Send + Sync {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use alloc::boxed::Box;
 
 	// check, that the auto traits are available
 	const fn is_normal<T: Sized + Send + Sync>() {}
@@ -201,158 +184,88 @@ mod tests {
 		is_normal::<Box<dyn Operational>>();
 	}
 
-	#[derive(Debug)]
+	#[dimas_macros::operational]
 	struct TestOperational {
+		/// A value to test that all hooks have been processed
 		value: i32,
-		state: OperationState,
-		subs: Vec<Box<dyn Operational>>,
 	}
 
-	impl Operational for TestOperational {
-		fn state(&self) -> OperationState {
-			self.state
-		}
-
-		fn set_state(&mut self, state: OperationState) {
-			self.state = state;
-		}
-
-		fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-			&mut self.subs
-		}
-
-		fn manage_operation_state_old(&self, _state: OperationState) -> Result<()> {
-			todo!()
-		}
-
-		fn configure(&mut self) -> Result<OperationState> {
+	impl Transitions for TestOperational {
+		fn configure(&mut self) -> Result<()> {
 			self.value += 1;
-			Ok(OperationState::Configured)
+			Ok(())
 		}
 
-		fn commission(&mut self) -> Result<OperationState> {
+		fn commission(&mut self) -> Result<()> {
 			self.value += 2;
-			Ok(OperationState::Inactive)
+			Ok(())
 		}
 
-		fn wakeup(&mut self) -> Result<OperationState> {
+		fn wakeup(&mut self) -> Result<()> {
 			self.value += 4;
-			Ok(OperationState::Standby)
+			Ok(())
 		}
 
-		fn activate(&mut self) -> Result<OperationState> {
+		fn activate(&mut self) -> Result<()> {
 			self.value += 8;
-			Ok(OperationState::Active)
+			Ok(())
 		}
 
-		fn deactivate(&mut self) -> Result<OperationState> {
+		fn deactivate(&mut self) -> Result<()> {
 			self.value -= 8;
-			Ok(OperationState::Standby)
+			Ok(())
 		}
 
-		fn suspend(&mut self) -> Result<OperationState> {
+		fn suspend(&mut self) -> Result<()> {
 			self.value -= 4;
-			Ok(OperationState::Inactive)
+			Ok(())
 		}
 
-		fn decommission(&mut self) -> Result<OperationState> {
+		fn decommission(&mut self) -> Result<()> {
 			self.value -= 2;
-			Ok(OperationState::Configured)
+			Ok(())
 		}
 
-		fn deconfigure(&mut self) -> Result<OperationState> {
+		fn deconfigure(&mut self) -> Result<()> {
 			self.value -= 1;
-			Ok(OperationState::Created)
+			Ok(())
 		}
 	}
 
-	#[test]
-	#[allow(clippy::vec_init_then_push)]
-	fn up_stepping() {
-		let subs: Vec<Box<dyn Operational>> = Vec::new();
-		let sub_operational = TestOperational {
-			value: 0,
-			state: OperationState::Created,
-			subs,
-		};
-
-		let mut subs: Vec<Box<dyn Operational>> = Vec::new();
-		subs.push(Box::new(sub_operational));
-
-		let mut operational = TestOperational {
-			value: 0,
-			state: OperationState::Created,
-			subs,
-		};
-
-		assert!(operational
-			.manage_operation_state(OperationState::Active)
-			.is_ok());
-		assert_eq!(operational.value, 15);
-		assert_eq!(operational.state, OperationState::Active);
-
-		for sub in operational.subs {
-			assert_eq!(sub.state(), OperationState::Active);
-		}
+	fn create_test_data() -> TestOperational {
+		let mut operational = TestOperational::default();
+		assert_eq!(operational.state(), OperationState::Undefined);
+		assert_eq!(operational.activation_state(), OperationState::Undefined);
+		operational.set_activation_state(OperationState::Active);
+		assert_eq!(operational.activation_state(), OperationState::Active);
+		operational
 	}
 
 	#[test]
-	#[allow(clippy::vec_init_then_push)]
-	fn down_stepping() {
-		let subs: Vec<Box<dyn Operational>> = Vec::new();
-		let sub_operational = TestOperational {
-			value: 0,
-			state: OperationState::Active,
-			subs,
-		};
-
-		let mut subs: Vec<Box<dyn Operational>> = Vec::new();
-		subs.push(Box::new(sub_operational));
-
-		let mut operational = TestOperational {
-			value: 15,
-			state: OperationState::Active,
-			subs,
-		};
-
+	fn operational() {
+		let mut operational = create_test_data();
 		assert!(operational
-			.manage_operation_state(OperationState::Created)
+			.state_transitions(OperationState::Created)
 			.is_ok());
 		assert_eq!(operational.value, 0);
-		assert_eq!(operational.state, OperationState::Created);
-
-		for sub in operational.subs {
-			assert_eq!(sub.state(), OperationState::Created);
-		}
-	}
-
-	#[test]
-	#[allow(clippy::vec_init_then_push)]
-	fn no_stepping() {
-		let subs: Vec<Box<dyn Operational>> = Vec::new();
-		let sub_operational = TestOperational {
-			value: 0,
-			state: OperationState::Standby,
-			subs,
-		};
-
-		let mut subs: Vec<Box<dyn Operational>> = Vec::new();
-		subs.push(Box::new(sub_operational));
-
-		let mut operational = TestOperational {
-			value: 7,
-			state: OperationState::Standby,
-			subs,
-		};
+		assert_eq!(operational.state(), OperationState::Created);
 
 		assert!(operational
-			.manage_operation_state(OperationState::Standby)
+			.state_transitions(OperationState::Active)
 			.is_ok());
-		assert_eq!(operational.value, 7);
-		assert_eq!(operational.state, OperationState::Standby);
+		assert_eq!(operational.value, 15);
+		assert_eq!(operational.state(), OperationState::Active);
 
-		for sub in operational.subs {
-			assert_eq!(sub.state(), OperationState::Standby);
-		}
+		assert!(operational
+			.state_transitions(OperationState::Inactive)
+			.is_ok());
+		assert_eq!(operational.value, 3);
+		assert_eq!(operational.state(), OperationState::Inactive);
+
+		assert!(operational
+			.state_transitions(OperationState::Created)
+			.is_ok());
+		assert_eq!(operational.value, 0);
+		assert_eq!(operational.state(), OperationState::Created);
 	}
 }

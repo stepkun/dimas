@@ -16,14 +16,14 @@ use core::fmt::Debug;
 
 use crate::{error::Error, Operational};
 
-use super::{Component, Configuration, Connection};
+use super::{Configuration, Connection};
 // endregion:	--- modules
 
 // region:		--- System
 /// Contract for a `System`
 pub trait System: Debug + Operational {
 	/// get iterator for [`Component`]s
-	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)>;
+	//fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)>;
 
 	/// get all connections
 	fn connections(&self) -> Vec<Box<dyn Connection>> {

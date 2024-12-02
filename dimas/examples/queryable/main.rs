@@ -24,6 +24,9 @@ async fn queryable(ctx: Context<AgentProps>, request: QueryMsg) -> Result<()> {
 
 #[dimas::main]
 async fn main() -> Result<()> {
+	// initialize tracing/logging
+	init_tracing();
+
 	// create & initialize agents properties
 	let properties = AgentProps { counter: 0 };
 

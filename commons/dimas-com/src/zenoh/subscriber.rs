@@ -6,13 +6,14 @@
 // region:		--- modules
 use crate::error::Error;
 use anyhow::Result;
+use dimas_core::Transitions;
 use dimas_core::{
 	enums::TaskSignal, message_types::Message, traits::Context, OperationState, Operational,
 };
 use futures::future::BoxFuture;
 use std::sync::Arc;
 use tokio::{sync::Mutex, task::JoinHandle};
-use tracing::{error, info, instrument, warn, Level};
+use tracing::{error, event, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::sample::SampleKind;
@@ -38,13 +39,15 @@ pub struct Subscriber<P>
 where
 	P: Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this subscriber belongs to
 	session: Arc<Session>,
 	/// The subscribers key expression
 	selector: String,
 	/// Context for the Subscriber
 	context: Context<P>,
-	/// [`OperationState`] on which this subscriber is started
+	/// The state from parent, at which [`OperationState::Active`] should be reached
 	activation_state: OperationState,
 	#[cfg(feature = "unstable")]
 	allowed_origin: Locality,
@@ -74,66 +77,13 @@ where
 	}
 }
 
-impl<P> Operational for Subscriber<P>
+impl<P> Transitions for Subscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			self.start()
-		} else if state < self.activation_state {
-			self.stop()
-		} else {
-			Ok(())
-		}
-	}
-
-	fn state(&self) -> OperationState {
-		todo!()
-	}
-
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-		todo!()
-	}
-}
-
-impl<P> Subscriber<P>
-where
-	P: Send + Sync + 'static,
-{
-	/// Constructor for a [`Subscriber`].
-	#[must_use]
-	pub fn new(
-		session: Arc<Session>,
-		selector: impl Into<String>,
-		context: Context<P>,
-		activation_state: OperationState,
-		#[cfg(feature = "unstable")] allowed_origin: Locality,
-		put_callback: ArcPutCallback<P>,
-		delete_callback: Option<ArcDeleteCallback<P>>,
-	) -> Self {
-		Self {
-			session,
-			selector: selector.into(),
-			context,
-			activation_state,
-			#[cfg(feature = "unstable")]
-			allowed_origin,
-			put_callback,
-			delete_callback,
-			handle: parking_lot::Mutex::new(None),
-		}
-	}
-	/// Start or restart the subscriber.
-	/// An already running subscriber will be stopped, eventually damaged Mutexes will be repaired
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn start(&self) -> Result<()> {
-		self.stop()?;
-
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
 		let selector = self.selector.clone();
 		let p_cb = self.put_callback.clone();
 		let d_cb = self.delete_callback.clone();
@@ -175,11 +125,66 @@ where
 		Ok(())
 	}
 
-	/// Stop a running Subscriber
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn stop(&self) -> Result<()> {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
 		self.handle.lock().take();
 		Ok(())
+	}
+}
+
+impl<P> Operational for Subscriber<P>
+where
+	P: Send + Sync + 'static,
+{
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		self.current_state
+	}
+
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+}
+
+impl<P> Subscriber<P>
+where
+	P: Send + Sync + 'static,
+{
+	/// Constructor for a [`Subscriber`].
+	#[must_use]
+	pub fn new(
+		session: Arc<Session>,
+		selector: impl Into<String>,
+		context: Context<P>,
+		activation_state: OperationState,
+		#[cfg(feature = "unstable")] allowed_origin: Locality,
+		put_callback: ArcPutCallback<P>,
+		delete_callback: Option<ArcDeleteCallback<P>>,
+	) -> Self {
+		Self {
+			current_state: OperationState::default(),
+			session,
+			selector: selector.into(),
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_origin,
+			put_callback,
+			delete_callback,
+			handle: parking_lot::Mutex::new(None),
+		}
 	}
 }
 

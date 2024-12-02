@@ -13,7 +13,10 @@ extern crate std;
 use alloc::{boxed::Box, string::String, sync::Arc};
 use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
-use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational};
+use dimas_core::{
+	enums::TaskSignal, traits::Context, Component, ComponentType, OperationState, Operational,
+	Transitions,
+};
 #[cfg(feature = "std")]
 use parking_lot::Mutex;
 #[cfg(feature = "std")]
@@ -29,42 +32,22 @@ pub type ArcTimerCallback<P> =
 
 // region:		--- Timer
 /// Timer
-pub enum Timer<P>
+pub struct Timer<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// A Timer with an Interval
-	Interval {
-		/// The Timers ID
-		selector: String,
-		/// Context for the Timer
-		context: Context<P>,
-		/// [`OperationState`] on which this timer is started
-		activation_state: OperationState,
-		/// Timers Callback function called, when Timer is fired
-		callback: ArcTimerCallback<P>,
-		/// The interval in which the Timer is fired
-		interval: Duration,
-		/// The handle to stop the Timer
-		handle: Mutex<Option<JoinHandle<()>>>,
-	},
-	/// A delayed Timer with an Interval
-	DelayedInterval {
-		/// The Timers ID
-		selector: String,
-		/// Context for the Timer
-		context: Context<P>,
-		/// [`OperationState`] on which this timer is started
-		activation_state: OperationState,
-		/// Timers Callback function called, when Timer is fired
-		callback: ArcTimerCallback<P>,
-		/// The interval in which the Timer is fired
-		interval: Duration,
-		/// The delay after which the first firing of the Timer happenes
-		delay: Duration,
-		/// The handle to stop the Timer
-		handle: Mutex<Option<JoinHandle<()>>>,
-	},
+	/// Inheritance of necessary fields & methods for [`Component`]
+	component: ComponentType,
+	/// Context for the Timer
+	context: Context<P>,
+	/// Timers Callback function called, when Timer is fired
+	callback: ArcTimerCallback<P>,
+	/// The interval in which the Timer is fired
+	interval: Duration,
+	/// The optional delay
+	delay: Option<Duration>,
+	/// The handle to stop the Timer
+	handle: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> Debug for Timer<P>
@@ -72,19 +55,56 @@ where
 	P: Send + Sync + 'static,
 {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		match self {
-			Self::Interval { interval, .. } => f
-				.debug_struct("IntervalTimer")
-				.field("interval", interval)
-				.finish_non_exhaustive(),
-			Self::DelayedInterval {
-				delay, interval, ..
-			} => f
-				.debug_struct("DelayedIntervalTimer")
-				.field("delay", delay)
-				.field("interval", interval)
-				.finish_non_exhaustive(),
-		}
+		f.debug_struct("Timer")
+			.field("interval", &self.interval)
+			.field("delay", &self.delay)
+			.finish_non_exhaustive()
+	}
+}
+
+impl<P> Transitions for Timer<P>
+where
+	P: Send + Sync + 'static,
+{
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		let key = self.component.id();
+		let delay = self.delay;
+		let interval = self.interval;
+		let cb = self.callback.clone();
+		let ctx1 = self.context.clone();
+		let ctx2 = self.context.clone();
+
+		self.handle
+			.lock()
+			.replace(tokio::task::spawn(async move {
+				std::panic::set_hook(Box::new(move |reason| {
+					error!("delayed timer panic: {}", reason);
+					if let Err(reason) = ctx1
+						.sender()
+						.blocking_send(TaskSignal::RestartTimer(key.clone()))
+					{
+						error!("could not restart timer: {}", reason);
+					} else {
+						info!("restarting timer!");
+					};
+				}));
+				// if there is a delay, wait
+				if let Some(delay) = delay {
+					tokio::time::sleep(delay).await;
+				}
+				run_timer(interval, cb, ctx2).await;
+			}));
+		Ok(())
+	}
+
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		let handle = self.handle.lock().take();
+		if let Some(handle) = handle {
+			handle.abort();
+		};
+		Ok(())
 	}
 }
 
@@ -92,45 +112,23 @@ impl<P> Operational for Timer<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		match *self {
-			Self::Interval {
-				selector: _,
-				context: _,
-				activation_state,
-				interval: _,
-				callback: _,
-				handle: _,
-			}
-			| Self::DelayedInterval {
-				selector: _,
-				context: _,
-				activation_state,
-				delay: _,
-				interval: _,
-				callback: _,
-				handle: _,
-			} => {
-				if state >= activation_state {
-					self.start()
-				} else if state < activation_state {
-					self.stop()
-				} else {
-					Ok(())
-				}
-			}
-		}
+	fn activation_state(&self) -> OperationState {
+		self.component.activation_state()
+	}
+
+	fn desired_state(&self, state: OperationState) -> OperationState {
+		self.component.desired_state(state)
 	}
 
 	fn state(&self) -> OperationState {
-		todo!()
+		self.component.state()
 	}
 
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_state(&mut self, state: OperationState) {
+		self.component.set_state(state);
 	}
 
-	fn operationals(&mut self) -> &mut std::vec::Vec<Box<dyn Operational>> {
+	fn set_activation_state(&mut self, _state: OperationState) {
 		todo!()
 	}
 }
@@ -149,131 +147,13 @@ where
 		interval: Duration,
 		delay: Option<Duration>,
 	) -> Self {
-		match delay {
-			Some(delay) => Self::DelayedInterval {
-				selector: name.into(),
-				context,
-				activation_state,
-				delay,
-				interval,
-				callback,
-				handle: Mutex::new(None),
-			},
-			None => Self::Interval {
-				selector: name.into(),
-				context,
-				activation_state,
-				interval,
-				callback,
-				handle: Mutex::new(None),
-			},
-		}
-	}
-
-	/// Start or restart the timer
-	/// An already running timer will be stopped, eventually damaged Mutexes will be repaired
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn start(&self) -> Result<()> {
-		self.stop()?;
-
-		match self {
-			Self::Interval {
-				selector,
-				context,
-				activation_state: _,
-				interval,
-				callback,
-				handle,
-			} => {
-				let key = selector.clone();
-				let interval = *interval;
-				let cb = callback.clone();
-				let ctx1 = context.clone();
-				let ctx2 = context.clone();
-
-				handle
-					.lock()
-					.replace(tokio::task::spawn(async move {
-						std::panic::set_hook(Box::new(move |reason| {
-							error!("delayed timer panic: {}", reason);
-							if let Err(reason) = ctx1
-								.sender()
-								.blocking_send(TaskSignal::RestartTimer(key.clone()))
-							{
-								error!("could not restart timer: {}", reason);
-							} else {
-								info!("restarting timer!");
-							};
-						}));
-						run_timer(interval, cb, ctx2).await;
-					}));
-				Ok(())
-			}
-			Self::DelayedInterval {
-				selector,
-				context,
-				activation_state: _,
-				delay,
-				interval,
-				callback,
-				handle,
-			} => {
-				let key = selector.clone();
-				let delay = *delay;
-				let interval = *interval;
-				let cb = callback.clone();
-				let ctx1 = context.clone();
-				let ctx2 = context.clone();
-
-				handle
-					.lock()
-					.replace(tokio::task::spawn(async move {
-						std::panic::set_hook(Box::new(move |reason| {
-							error!("delayed timer panic: {}", reason);
-							if let Err(reason) = ctx1
-								.sender()
-								.blocking_send(TaskSignal::RestartTimer(key.clone()))
-							{
-								error!("could not restart timer: {}", reason);
-							} else {
-								info!("restarting timer!");
-							};
-						}));
-						tokio::time::sleep(delay).await;
-						run_timer(interval, cb, ctx2).await;
-					}));
-				Ok(())
-			}
-		}
-	}
-
-	/// Stop a running Timer
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn stop(&self) -> Result<()> {
-		match self {
-			Self::Interval {
-				selector: _,
-				context: _,
-				activation_state: _,
-				interval: _,
-				callback: _,
-				handle,
-			}
-			| Self::DelayedInterval {
-				selector: _,
-				context: _,
-				activation_state: _,
-				delay: _,
-				interval: _,
-				callback: _,
-				handle,
-			} => {
-				let handle = handle.lock().take();
-				if let Some(handle) = handle {
-					handle.abort();
-				};
-				Ok(())
-			}
+		Self {
+			component: ComponentType::with_activation_state(name.into(), activation_state),
+			context,
+			delay,
+			interval,
+			callback,
+			handle: Mutex::new(None),
 		}
 	}
 }

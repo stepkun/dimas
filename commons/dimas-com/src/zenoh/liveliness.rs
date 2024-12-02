@@ -22,7 +22,7 @@ use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::info;
-use tracing::{error, instrument, warn, Level};
+use tracing::{error, event, instrument, warn, Level};
 use zenoh::sample::SampleKind;
 use zenoh::Session;
 
@@ -45,6 +45,8 @@ pub struct LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this liveliness subscriber belongs to
 	session: Arc<Session>,
 	token: String,
@@ -76,64 +78,13 @@ where
 	}
 }
 
-impl<P> Operational for LivelinessSubscriber<P>
+impl<P> Transitions for LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			self.start()
-		} else if state < self.activation_state {
-			self.stop()
-		} else {
-			Ok(())
-		}
-	}
-
-	fn state(&self) -> OperationState {
-		todo!()
-	}
-
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-		todo!()
-	}
-}
-
-impl<P> LivelinessSubscriber<P>
-where
-	P: Send + Sync + 'static,
-{
-	/// Constructor for a [`LivelinessSubscriber`]
-	pub fn new(
-		session: Arc<Session>,
-		token: impl Into<String>,
-		context: Context<P>,
-		activation_state: OperationState,
-		put_callback: ArcLivelinessCallback<P>,
-		delete_callback: Option<ArcLivelinessCallback<P>>,
-	) -> Self {
-		Self {
-			session,
-			token: token.into(),
-			context,
-			activation_state,
-			put_callback,
-			delete_callback,
-			handle: parking_lot::Mutex::new(None),
-		}
-	}
-
-	/// Start or restart the liveliness subscriber.
-	/// An already running subscriber will be stopped before,
-	/// eventually damaged Mutexes will be repaired
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn start(&self) -> Result<()> {
-		self.stop()?;
-
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
 		// liveliness handling
 		let key = self.token.clone();
 		let session1 = self.session.clone();
@@ -176,11 +127,62 @@ where
 		Ok(())
 	}
 
-	/// Stop a running LivelinessSubscriber
-	#[instrument(level = Level::TRACE)]
-	fn stop(&self) -> Result<()> {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
 		self.handle.lock().take();
 		Ok(())
+	}
+}
+
+impl<P> Operational for LivelinessSubscriber<P>
+where
+	P: Send + Sync + 'static,
+{
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, state: OperationState) -> OperationState {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		self.current_state
+	}
+
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
+	}
+}
+
+impl<P> LivelinessSubscriber<P>
+where
+	P: Send + Sync + 'static,
+{
+	/// Constructor for a [`LivelinessSubscriber`]
+	pub fn new(
+		session: Arc<Session>,
+		token: impl Into<String>,
+		context: Context<P>,
+		activation_state: OperationState,
+		put_callback: ArcLivelinessCallback<P>,
+		delete_callback: Option<ArcLivelinessCallback<P>>,
+	) -> Self {
+		Self {
+			current_state: OperationState::default(),
+			session,
+			token: token.into(),
+			context,
+			activation_state,
+			put_callback,
+			delete_callback,
+			handle: parking_lot::Mutex::new(None),
+		}
 	}
 }
 

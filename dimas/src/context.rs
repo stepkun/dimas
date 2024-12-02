@@ -54,7 +54,7 @@ use dimas_time::Timer;
 use parking_lot::RwLock;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::Sender;
-use tracing::{info, instrument, Level};
+use tracing::{event, info, instrument, Level};
 use zenoh::Session;
 // endregion:	--- modules
 
@@ -85,7 +85,7 @@ where
 	/// The [`Agent`]s property structure
 	props: Arc<RwLock<P>>,
 	/// The [`Agent`]s [`Communicator`]
-	communicator: Arc<dyn Communicator>,
+	communicator: Arc<RwLock<dyn Communicator>>,
 	/// Registered [`Timer`]
 	timers: Arc<RwLock<HashMap<String, Timer<P>>>>,
 }
@@ -139,8 +139,9 @@ where
 		self.props.write()
 	}
 
+	#[instrument(level = Level::DEBUG, skip_all)]
 	fn set_state_old(&self, state: OperationState) -> Result<()> {
-		info!("changing state to {}", &state);
+		event!(Level::DEBUG, "set_state_old");
 		let final_state = state;
 		let mut next_state;
 		// step up?
@@ -148,6 +149,9 @@ where
 			match self.state_old() {
 				OperationState::Error => {
 					return Err(Error::ManageState.into());
+				}
+				OperationState::Undefined => {
+					next_state = OperationState::Created;
 				}
 				OperationState::Created => {
 					next_state = OperationState::Configured;
@@ -188,7 +192,7 @@ where
 					self.modify_state_property(OperationState::Error);
 					return Ok(());
 				}
-				OperationState::Error => {
+				OperationState::Undefined | OperationState::Error => {
 					return Err(Error::ManageState.into());
 				}
 			}
@@ -207,7 +211,7 @@ where
 				.ok_or_else(|| Error::Get("publishers".into()))?
 				.put(message)?;
 		} else {
-			self.communicator.put(selector, message)?;
+			self.communicator.read().put(selector, message)?;
 		};
 		Ok(())
 	}
@@ -221,7 +225,7 @@ where
 				.ok_or_else(|| Error::Get("publishers".into()))?
 				.delete()?;
 		} else {
-			self.communicator.delete(selector)?;
+			self.communicator.read().delete(selector)?;
 		}
 		Ok(())
 	}
@@ -241,6 +245,7 @@ where
 				.get(message, callback)?;
 		} else {
 			self.communicator
+				.read()
 				.get(selector, message, callback)?;
 		};
 		Ok(())
@@ -266,19 +271,19 @@ where
 		Ok(())
 	}
 
-	fn mode(&self) -> &String {
-		self.communicator.mode()
+	fn mode(&self) -> String {
+		self.communicator.read().mode()
 	}
 
 	fn default_session(&self) -> Arc<Session> {
-		self.communicator.default_session()
+		self.communicator.read().default_session()
 	}
 
 	fn session(&self, session_id: &str) -> Option<Arc<Session>> {
 		if session_id == "default" {
-			Some(self.communicator.default_session())
+			Some(self.communicator.read().default_session())
 		} else {
-			self.communicator.session(session_id)
+			self.communicator.read().session(session_id)
 		}
 	}
 }
@@ -297,7 +302,7 @@ where
 		prefix: Option<String>,
 	) -> Result<Self> {
 		let communicator = dimas_com::communicator::from(config)?;
-		let uuid = communicator.uuid();
+		let uuid = communicator.read().uuid();
 		Ok(Self {
 			uuid,
 			name,
@@ -322,31 +327,31 @@ where
 	pub fn liveliness_subscribers(
 		&self,
 	) -> Arc<RwLock<HashMap<String, Box<dyn LivelinessSubscriber>>>> {
-		self.communicator.liveliness_subscribers()
+		self.communicator.read().liveliness_subscribers()
 	}
 
 	/// Get the observers
 	#[must_use]
 	pub fn observers(&self) -> Arc<RwLock<HashMap<String, Box<dyn Observer>>>> {
-		self.communicator.observers()
+		self.communicator.read().observers()
 	}
 
 	/// Get the publishers
 	#[must_use]
 	pub fn publishers(&self) -> Arc<RwLock<HashMap<String, Box<dyn Publisher>>>> {
-		self.communicator.publishers()
+		self.communicator.read().publishers()
 	}
 
 	/// Get the queries
 	#[must_use]
 	pub fn queriers(&self) -> Arc<RwLock<HashMap<String, Box<dyn Querier>>>> {
-		self.communicator.queriers()
+		self.communicator.read().queriers()
 	}
 
 	/// Get the responders
 	#[must_use]
 	pub fn responders(&self) -> Arc<RwLock<HashMap<String, Box<dyn Responder>>>> {
-		self.communicator.responders()
+		self.communicator.read().responders()
 	}
 
 	/// Get the timers
@@ -371,14 +376,17 @@ where
 	///
 	/// # Errors
 	/// Currently none
+	#[instrument(level = Level::DEBUG, skip_all)]
 	fn upgrade_registered_tasks(&self, new_state: OperationState) -> Result<()> {
+		event!(Level::DEBUG, "upgrade_registered_tasks");
 		// start communication
 		self.communicator
-			.manage_operation_state_old(new_state)?;
+			.write()
+			.state_transitions(new_state)?;
 
 		// start all registered timers
 		self.timers.write().iter_mut().for_each(|timer| {
-			let _ = timer.1.manage_operation_state_old(new_state);
+			let _ = timer.1.state_transitions(new_state);
 		});
 
 		self.modify_state_property(new_state);
@@ -391,16 +399,19 @@ where
 	///
 	/// # Errors
 	/// Currently none
+	#[instrument(level = Level::DEBUG, skip_all)]
 	fn downgrade_registered_tasks(&self, new_state: OperationState) -> Result<()> {
+		event!(Level::DEBUG, "downgrade_registered_tasks");
 		// reverse order of start!
 		// stop all registered timers
 		self.timers.write().iter_mut().for_each(|timer| {
-			let _ = timer.1.manage_operation_state_old(new_state);
+			let _ = timer.1.state_transitions(new_state);
 		});
 
 		// start communication
 		self.communicator
-			.manage_operation_state_old(new_state)?;
+			.write()
+			.state_transitions(new_state)?;
 
 		self.modify_state_property(new_state);
 		Ok(())

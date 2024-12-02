@@ -13,13 +13,14 @@ use alloc::sync::Arc;
 use alloc::{boxed::Box, string::String};
 use anyhow::Result;
 use core::fmt::Debug;
+use dimas_core::Transitions;
 use dimas_core::{
 	enums::TaskSignal, message_types::QueryMsg, traits::Context, OperationState, Operational,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
-use tracing::{error, info, instrument, warn, Level};
+use tracing::{error, event, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::Session;
@@ -39,6 +40,8 @@ pub struct Queryable<P>
 where
 	P: Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this queryable belongs to
 	session: Arc<Session>,
 	selector: String,
@@ -74,67 +77,13 @@ where
 	}
 }
 
-impl<P> Operational for Queryable<P>
+impl<P> Transitions for Queryable<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			self.start()
-		} else if state < self.activation_state {
-			self.stop()
-		} else {
-			Ok(())
-		}
-	}
-
-	fn state(&self) -> OperationState {
-		todo!()
-	}
-
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-		todo!()
-	}
-}
-
-impl<P> Queryable<P>
-where
-	P: Send + Sync + 'static,
-{
-	/// Constructor for a [`Queryable`]
-	#[must_use]
-	pub fn new(
-		session: Arc<Session>,
-		selector: impl Into<String>,
-		context: Context<P>,
-		activation_state: OperationState,
-		request_callback: ArcGetCallback<P>,
-		completeness: bool,
-		#[cfg(feature = "unstable")] allowed_origin: Locality,
-	) -> Self {
-		Self {
-			session,
-			selector: selector.into(),
-			context,
-			activation_state,
-			callback: request_callback,
-			completeness,
-			#[cfg(feature = "unstable")]
-			allowed_origin,
-			handle: parking_lot::Mutex::new(None),
-		}
-	}
-
-	/// Start or restart the queryable.
-	/// An already running queryable will be stopped, eventually damaged Mutexes will be repaired
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn start(&self) -> Result<()> {
-		self.stop()?;
-
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
 		let completeness = self.completeness;
 		#[cfg(feature = "unstable")]
 		let allowed_origin = self.allowed_origin;
@@ -176,11 +125,66 @@ where
 		Ok(())
 	}
 
-	/// Stop a running Queryable
-	#[instrument(level = Level::TRACE)]
-	fn stop(&self) -> Result<()> {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
 		self.handle.lock().take();
 		Ok(())
+	}
+}
+
+impl<P> Operational for Queryable<P>
+where
+	P: Send + Sync + 'static,
+{
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		self.current_state
+	}
+
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+}
+
+impl<P> Queryable<P>
+where
+	P: Send + Sync + 'static,
+{
+	/// Constructor for a [`Queryable`]
+	#[must_use]
+	pub fn new(
+		session: Arc<Session>,
+		selector: impl Into<String>,
+		context: Context<P>,
+		activation_state: OperationState,
+		request_callback: ArcGetCallback<P>,
+		completeness: bool,
+		#[cfg(feature = "unstable")] allowed_origin: Locality,
+	) -> Self {
+		Self {
+			current_state: OperationState::default(),
+			session,
+			selector: selector.into(),
+			context,
+			activation_state,
+			callback: request_callback,
+			completeness,
+			#[cfg(feature = "unstable")]
+			allowed_origin,
+			handle: parking_lot::Mutex::new(None),
+		}
 	}
 }
 

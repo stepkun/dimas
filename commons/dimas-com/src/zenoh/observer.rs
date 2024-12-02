@@ -17,6 +17,7 @@ use alloc::{
 use anyhow::Result;
 use bitcode::decode;
 use core::time::Duration;
+use dimas_core::Transitions;
 use dimas_core::{
 	message_types::{Message, ObservableControlResponse, ObservableResponse},
 	traits::Context,
@@ -26,7 +27,7 @@ use dimas_core::{
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
-use tracing::{error, instrument, warn, Level};
+use tracing::{error, event, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::Session;
@@ -61,6 +62,8 @@ pub struct Observer<P>
 where
 	P: Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this observer belongs to
 	session: Arc<Session>,
 	/// The observers key expression
@@ -272,28 +275,46 @@ where
 	}
 }
 
+impl<P> Transitions for Observer<P>
+where
+	P: Send + Sync + 'static,
+{
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
+		Ok(())
+	}
+
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
+		let _ = crate::traits::Observer::cancel(self);
+		self.handle.lock().take();
+		Ok(())
+	}
+}
+
 impl<P> Operational for Observer<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			return self.init();
-		} else if state < self.activation_state {
-			return self.de_init();
-		}
-		Ok(())
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
 	}
 
 	fn state(&self) -> OperationState {
-		todo!()
+		self.current_state
 	}
 
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
 	}
 
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+	fn set_activation_state(&mut self, _state: OperationState) {
 		todo!()
 	}
 }
@@ -314,6 +335,7 @@ where
 		timeout: Duration,
 	) -> Self {
 		Self {
+			current_state: OperationState::default(),
 			session,
 			selector: selector.into(),
 			context,
@@ -323,25 +345,6 @@ where
 			timeout,
 			handle: parking_lot::Mutex::new(None),
 		}
-	}
-
-	/// Initialize
-	/// # Errors
-	///
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn init(&self) -> Result<()> {
-		self.de_init()
-	}
-
-	/// De-Initialize
-	/// # Errors
-	///
-	#[allow(clippy::unnecessary_wraps)]
-	fn de_init(&self) -> Result<()> {
-		// cancel current request before stopping
-		let _ = crate::traits::Observer::cancel(self);
-		self.handle.lock().take();
-		Ok(())
 	}
 }
 // endregion:	--- Observer

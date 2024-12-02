@@ -20,12 +20,12 @@ use dimas_core::{
 	message_types::{Message, ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::feedback_selector_from,
-	OperationState, Operational,
+	OperationState, Operational, Transitions,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
-use tracing::{error, info, instrument, warn, Level};
+use tracing::{error, event, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::Wait;
@@ -62,6 +62,8 @@ pub struct Observable<P>
 where
 	P: Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this observable belongs to
 	session: Arc<Session>,
 	/// The observables key expression
@@ -101,71 +103,13 @@ where
 	}
 }
 
-impl<P> Operational for Observable<P>
+impl<P> Transitions for Observable<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			self.start()
-		} else if state < self.activation_state {
-			self.stop()
-		} else {
-			Ok(())
-		}
-	}
-
-	fn state(&self) -> OperationState {
-		todo!()
-	}
-
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-		todo!()
-	}
-}
-
-impl<P> Observable<P>
-where
-	P: Send + Sync + 'static,
-{
-	/// Constructor for an [`Observable`]
-	#[allow(clippy::too_many_arguments)]
-	#[must_use]
-	pub fn new(
-		session: Arc<Session>,
-		selector: impl Into<String>,
-		context: Context<P>,
-		activation_state: OperationState,
-		feedback_interval: Duration,
-		control_callback: ArcControlCallback<P>,
-		feedback_callback: ArcFeedbackCallback<P>,
-		execution_function: ArcExecutionCallback<P>,
-	) -> Self {
-		Self {
-			session,
-			selector: selector.into(),
-			context,
-			activation_state,
-			feedback_interval,
-			control_callback,
-			feedback_callback,
-			feedback_publisher: Arc::new(Mutex::new(None)),
-			execution_function,
-			execution_handle: Arc::new(Mutex::new(None)),
-			handle: parking_lot::Mutex::new(None),
-		}
-	}
-
-	/// Start or restart the Observable.
-	/// An already running Observable will be stopped, eventually damaged Mutexes will be repaired
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn start(&self) -> Result<()> {
-		self.stop()?;
-
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
 		let selector = self.selector.clone();
 		let interval = self.feedback_interval;
 		let ccb = self.control_callback.clone();
@@ -203,21 +147,23 @@ where
 		Ok(())
 	}
 
-	/// Stop a running Observable
-	#[instrument(level = Level::TRACE, skip_all)]
-	#[allow(clippy::significant_drop_in_scrutinee)]
-	fn stop(&self) -> Result<()> {
-		if let Some(handle) = self.handle.lock().take() {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
+		let handle = self.handle.lock().take();
+		if let Some(handle) = handle {
 			let feedback_publisher = self.feedback_publisher.clone();
 			let feedback_callback = self.feedback_callback.clone();
 			let execution_handle = self.execution_handle.clone();
 			let ctx = self.context.clone();
 			tokio::spawn(async move {
 				// stop execution if running
-				if let Some(execution_handle) = execution_handle.lock().await.take() {
+				let handle = execution_handle.lock().await.take();
+				if let Some(execution_handle) = handle {
 					execution_handle.abort();
 					// send back cancelation message
-					if let Some(publisher) = feedback_publisher.lock().await.take() {
+					let handle = feedback_publisher.lock().await.take();
+					if let Some(publisher) = handle {
 						let Ok(msg) = feedback_callback.lock().await(ctx).await else {
 							// @TODO maybe implement retry!!
 							error!("could not send feedback");
@@ -233,10 +179,69 @@ where
 						};
 					};
 				};
-				handle.abort();
 			});
+			handle.abort();
 		}
 		Ok(())
+	}
+}
+
+impl<P> Operational for Observable<P>
+where
+	P: Send + Sync + 'static,
+{
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		self.current_state
+	}
+
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+}
+
+impl<P> Observable<P>
+where
+	P: Send + Sync + 'static,
+{
+	/// Constructor for an [`Observable`]
+	#[allow(clippy::too_many_arguments)]
+	#[must_use]
+	pub fn new(
+		session: Arc<Session>,
+		selector: impl Into<String>,
+		context: Context<P>,
+		activation_state: OperationState,
+		feedback_interval: Duration,
+		control_callback: ArcControlCallback<P>,
+		feedback_callback: ArcFeedbackCallback<P>,
+		execution_function: ArcExecutionCallback<P>,
+	) -> Self {
+		Self {
+			current_state: OperationState::default(),
+			session,
+			selector: selector.into(),
+			context,
+			activation_state,
+			feedback_interval,
+			control_callback,
+			feedback_callback,
+			feedback_publisher: Arc::new(Mutex::new(None)),
+			execution_function,
+			execution_handle: Arc::new(Mutex::new(None)),
+			handle: parking_lot::Mutex::new(None),
+		}
 	}
 }
 // endregion:	--- Observable

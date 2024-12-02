@@ -63,7 +63,7 @@ pub trait ContextAbstraction: Debug + Send + Sync {
 
 	/// Get session mode
 	#[must_use]
-	fn mode(&self) -> &String;
+	fn mode(&self) -> String;
 
 	/// Get default session reference
 	#[must_use]

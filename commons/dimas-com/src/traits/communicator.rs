@@ -61,7 +61,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|subscriber| {
-				let _ = subscriber.1.manage_operation_state(new_state);
+				let _ = subscriber.1.state_transitions(new_state);
 			});
 
 		// start all registered responders
@@ -69,7 +69,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|subscriber| {
-				let _ = subscriber.1.manage_operation_state_old(new_state);
+				let _ = subscriber.1.state_transitions(new_state);
 			});
 
 		// init all registered publishers
@@ -77,7 +77,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|publisher| {
-				if let Err(reason) = publisher.1.manage_operation_state_old(new_state) {
+				if let Err(reason) = publisher.1.state_transitions(new_state) {
 					error!(
 						"could not initialize publisher for {}, reason: {}",
 						publisher.1.selector(),
@@ -91,7 +91,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|observer| {
-				if let Err(reason) = observer.1.manage_operation_state_old(new_state) {
+				if let Err(reason) = observer.1.state_transitions(new_state) {
 					error!(
 						"could not initialize observer for {}, reason: {}",
 						observer.1.selector(),
@@ -105,7 +105,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|query| {
-				if let Err(reason) = query.1.manage_operation_state_old(new_state) {
+				if let Err(reason) = query.1.state_transitions(new_state) {
 					error!(
 						"could not initialize query for {}, reason: {}",
 						query.1.selector(),
@@ -130,7 +130,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|query| {
-				if let Err(reason) = query.1.manage_operation_state_old(new_state) {
+				if let Err(reason) = query.1.state_transitions(new_state) {
 					error!(
 						"could not de-initialize query for {}, reason: {}",
 						query.1.selector(),
@@ -144,7 +144,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|observer| {
-				if let Err(reason) = observer.1.manage_operation_state_old(new_state) {
+				if let Err(reason) = observer.1.state_transitions(new_state) {
 					error!(
 						"could not de-initialize observer for {}, reason: {}",
 						observer.1.selector(),
@@ -158,7 +158,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|publisher| {
-				let _ = publisher.1.manage_operation_state_old(new_state);
+				let _ = publisher.1.state_transitions(new_state);
 			});
 
 		// stop all registered responders
@@ -166,7 +166,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|subscriber| {
-				let _ = subscriber.1.manage_operation_state_old(new_state);
+				let _ = subscriber.1.state_transitions(new_state);
 			});
 
 		// stop all registered liveliness subscribers
@@ -175,7 +175,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 			.write()
 			.iter_mut()
 			.for_each(|subscriber| {
-				let _ = subscriber.1.manage_operation_state(new_state);
+				let _ = subscriber.1.state_transitions(new_state);
 			});
 
 		Ok(())
@@ -187,7 +187,7 @@ pub trait Communicator: Operational + CommunicatorMethods + Send + Sync {
 
 	/// the mode of the communicator
 	#[must_use]
-	fn mode(&self) -> &String;
+	fn mode(&self) -> String;
 
 	/// get the default session
 	fn default_session(&self) -> Arc<Session>;

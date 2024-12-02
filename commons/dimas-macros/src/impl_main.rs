@@ -1,16 +1,21 @@
 // Copyright © 2024 Stephan Kunz
+#![allow(unused)]
+#![allow(clippy::needless_pass_by_value)]
 
-//! Macro implementation
+//! Macro implementations
 //!
 
 use proc_macro2::TokenStream;
+use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::{parse::Parser, punctuated::Punctuated, ItemFn, Meta, Token};
+use syn::{parse_macro_input, ItemStruct};
 
 type Arguments = Punctuated<Meta, Token![,]>;
 
 const UNSUPPORTED: &str = "not supported by macro";
 
+#[derive(Debug)]
 struct Config {
 	additional_threads: usize,
 }
@@ -81,14 +86,14 @@ fn parse_config(args: Arguments) -> Result<Config, syn::Error> {
 
 pub fn main(args: TokenStream, main_fn: TokenStream) -> TokenStream {
 	// save original for creation of result with error
-	let mut result_with_error = main_fn.clone();
+	let mut origin_with_error = main_fn.clone();
 
 	// parse the `main()` function
 	let mut main_fn: ItemFn = match syn::parse2(main_fn) {
 		Ok(item) => item,
 		Err(error) => {
-			result_with_error.extend(error.into_compile_error());
-			return result_with_error;
+			origin_with_error.extend(error.into_compile_error());
+			return origin_with_error;
 		}
 	};
 
@@ -98,24 +103,24 @@ pub fn main(args: TokenStream, main_fn: TokenStream) -> TokenStream {
 			&main_fn.sig.ident,
 			"macro can only be used for main function",
 		);
-		result_with_error.extend(err.into_compile_error());
-		return result_with_error;
+		origin_with_error.extend(err.into_compile_error());
+		return origin_with_error;
 	}
 	if !main_fn.sig.inputs.is_empty() {
 		let err = syn::Error::new_spanned(
 			&main_fn.sig.ident,
 			"the main function cannot accept arguments",
 		);
-		result_with_error.extend(err.into_compile_error());
-		return result_with_error;
+		origin_with_error.extend(err.into_compile_error());
+		return origin_with_error;
 	}
 	if main_fn.sig.asyncness.is_none() {
 		let err = syn::Error::new_spanned(
 			main_fn.sig.fn_token,
 			"missing `async` keyword in function declaration",
 		);
-		result_with_error.extend(err.into_compile_error());
-		return result_with_error;
+		origin_with_error.extend(err.into_compile_error());
+		return origin_with_error;
 	}
 
 	// parse args
@@ -147,8 +152,8 @@ pub fn main(args: TokenStream, main_fn: TokenStream) -> TokenStream {
 			}
 		}
 		Err(err) => {
-			result_with_error.extend(err.into_compile_error());
-			result_with_error
+			origin_with_error.extend(err.into_compile_error());
+			origin_with_error
 		}
 	}
 }

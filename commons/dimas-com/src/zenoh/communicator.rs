@@ -23,7 +23,7 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	message_types::{Message, QueryableMsg},
-	OperationState, Operational,
+	OperationState, Operational, Transitions,
 };
 use zenoh::config::WhatAmI;
 #[cfg(feature = "unstable")]
@@ -40,26 +40,35 @@ use zenoh::{
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct Communicator {
-	/// The zenoh session
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	session: Arc<Session>,
 	/// Mode of the session (router|peer|client)
 	mode: String,
+	/// The state from parent, at which [`OperationState::Active`] should be reached
+	activation_state: OperationState,
 }
 
+impl Transitions for Communicator {}
+
 impl Operational for Communicator {
-	fn manage_operation_state_old(&self, _state: OperationState) -> Result<()> {
-		Ok(())
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
 	}
 
 	fn state(&self) -> OperationState {
-		todo!()
+		self.current_state
 	}
 
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
 	}
 
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+	fn set_activation_state(&mut self, _state: OperationState) {
 		todo!()
 	}
 }
@@ -169,8 +178,10 @@ impl Communicator {
 				.map_err(|source| Error::CreateCommunicator { source })?,
 		);
 		Ok(Self {
+			current_state: OperationState::default(),
 			session,
 			mode: kind,
+			activation_state: OperationState::Active,
 		})
 	}
 

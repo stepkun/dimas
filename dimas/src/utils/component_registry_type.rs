@@ -7,19 +7,20 @@ extern crate std;
 
 // region:      --- modules
 use anyhow::Result;
-use dimas_core::{Component, ComponentId, ComponentRegistrar, OperationState};
+use dimas_core::{Component, ComponentId, ComponentType, OperationState};
 use std::collections::HashMap;
-use std::prelude::v1::Box;
+
+use super::ComponentRegistry;
 // endregion:   --- modules
 
 /// Library loader implementation
 #[derive(Debug)]
-pub struct ComponentRegistry {
+pub struct ComponentRegistryType {
 	/// Storage for the [`Component`]s
-	pub components: HashMap<ComponentId, Box<dyn Component>>,
+	pub components: HashMap<ComponentId, ComponentType>,
 }
 
-impl Default for ComponentRegistry {
+impl Default for ComponentRegistryType {
 	/// Create a default [`ComponentRegister`]
 	#[must_use]
 	fn default() -> Self {
@@ -27,17 +28,17 @@ impl Default for ComponentRegistry {
 	}
 }
 
-impl ComponentRegistrar for ComponentRegistry {
-	fn register(&mut self, plugin: Box<dyn Component>) {
+impl ComponentRegistry for ComponentRegistryType {
+	fn register(&mut self, plugin: ComponentType) {
 		self.components.insert(plugin.id(), plugin);
 	}
 
-	fn deregister(&mut self, id: &ComponentId) -> Result<Option<Box<dyn Component>>> {
+	fn deregister(&mut self, id: &ComponentId) -> Result<Option<ComponentType>> {
 		let mut plugin = self.components.remove(id);
 		let downstate = OperationState::Configured;
 		// shutdown plugin
-		plugin = if let Some(plugin) = plugin {
-			plugin.manage_operation_state_old(downstate)?;
+		plugin = if let Some(mut plugin) = plugin {
+			plugin.manage_operation_state(downstate)?;
 			Some(plugin)
 		} else {
 			None
@@ -46,7 +47,7 @@ impl ComponentRegistrar for ComponentRegistry {
 	}
 }
 
-impl ComponentRegistry {
+impl ComponentRegistryType {
 	/// Creates a [`ComponentRegister`]
 	#[must_use]
 	pub fn new() -> Self {

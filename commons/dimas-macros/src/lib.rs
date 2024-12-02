@@ -5,7 +5,10 @@
 
 extern crate proc_macro;
 
-mod r#impl;
+pub(crate) mod impl_activity;
+pub(crate) mod impl_component;
+mod impl_main;
+pub(crate) mod impl_operational;
 
 use proc_macro::TokenStream;
 
@@ -34,5 +37,31 @@ use proc_macro::TokenStream;
 #[proc_macro_attribute]
 pub fn main(metadata: TokenStream, input: TokenStream) -> TokenStream {
 	// call implementation with conversion to and from proc-macro2 library
-	r#impl::main(metadata.into(), input.into()).into()
+	impl_main::main(metadata.into(), input.into()).into()
+}
+
+/// Activity
+#[proc_macro_attribute]
+pub fn activity(metadata: TokenStream, input: TokenStream) -> TokenStream {
+	// call implementation with conversion to and from proc-macro2 library
+	impl_activity::activity(metadata.into(), input.into()).into()
+}
+
+/// Component
+#[proc_macro_attribute]
+pub fn component(metadata: TokenStream, input: TokenStream) -> TokenStream {
+	// call implementation with conversion to and from proc-macro2 library
+	impl_component::component(metadata.into(), input.into()).into()
+}
+
+/// Operational
+#[proc_macro_attribute]
+pub fn operational(metadata: TokenStream, input: TokenStream) -> TokenStream {
+	// call implementation with conversion to and from proc-macro2 library
+	impl_operational::operational(metadata.into(), input.into()).into()
+}
+
+// some helper functions
+fn common_derives() -> Vec<proc_macro2::TokenStream> {
+	vec![quote::quote! { ::core::clone::Clone, ::core::fmt::Debug, ::core::default::Default }]
 }

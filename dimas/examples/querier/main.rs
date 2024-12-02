@@ -17,6 +17,9 @@ async fn query_callback(ctx: Context<AgentProps>, response: QueryableMsg) -> Res
 
 #[dimas::main]
 async fn main() -> Result<()> {
+	// initialize tracing/logging
+	init_tracing();
+
 	// create & initialize agents properties
 	let properties = AgentProps { counter: 0 };
 

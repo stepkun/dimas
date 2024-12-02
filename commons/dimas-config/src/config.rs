@@ -52,7 +52,7 @@ use crate::utils::{find_config_file, read_config_file};
 use alloc::vec::Vec;
 use anyhow::Result;
 #[cfg(feature = "std")]
-use tracing::{debug, warn};
+use tracing::{debug, instrument, warn, Level};
 // endregion:	--- modules
 
 // region:		--- Session
@@ -94,6 +94,7 @@ impl Default for Config {
 	/// If no file is found, it will create a defined minimal default configuration.
 	/// Currently this is just a default zenoh peer configuration which connects to peers in same subnet.
 	#[allow(clippy::cognitive_complexity)]
+	#[instrument(level = Level::DEBUG, skip_all)]
 	fn default() -> Self {
 		match find_config_file("default.json5") {
 			Ok(path) => {

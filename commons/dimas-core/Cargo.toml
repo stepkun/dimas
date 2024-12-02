@@ -28,6 +28,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bitcode = { workspace = true }
+dimas-macros = { workspace = true }
 parking_lot = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }

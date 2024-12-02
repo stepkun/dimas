@@ -18,6 +18,7 @@ pub use single_communicator::SingleCommunicator;
 // region:      --- modules
 use anyhow::Result;
 use dimas_config::Config;
+use parking_lot::RwLock;
 use std::sync::Arc;
 
 use crate::traits::Communicator;
@@ -26,11 +27,11 @@ use crate::traits::Communicator;
 // region:      --- factory method
 /// Create a [`Communicator`] from a [`Config`]
 /// # Errors
-pub fn from(config: &Config) -> Result<Arc<dyn Communicator>> {
+pub fn from(config: &Config) -> Result<Arc<RwLock<dyn Communicator>>> {
 	if config.sessions().is_none() {
-		Ok(Arc::new(SingleCommunicator::new(config)?))
+		Ok(Arc::new(RwLock::new(SingleCommunicator::new(config)?)))
 	} else {
-		Ok(Arc::new(MultiCommunicator::new(config)?))
+		Ok(Arc::new(RwLock::new(MultiCommunicator::new(config)?)))
 	}
 }
 // endregion:   --- factory method

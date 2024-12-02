@@ -13,8 +13,8 @@ use crate::error::Error;
 use alloc::{string::String, sync::Arc};
 use anyhow::Result;
 use core::fmt::Debug;
-use dimas_core::{message_types::Message, OperationState, Operational};
-use tracing::{instrument, Level};
+use dimas_core::{message_types::Message, OperationState, Operational, Transitions};
+use tracing::{event, instrument, Level};
 #[cfg(feature = "unstable")]
 use zenoh::{qos::Reliability, sample::Locality};
 use zenoh::{
@@ -26,9 +26,12 @@ use zenoh::{
 // region:		--- Publisher
 /// Publisher
 pub struct Publisher {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this publisher belongs to
 	session: Arc<Session>,
 	selector: String,
+	/// The state from parent, at which [`OperationState::Active`] should be reached
 	activation_state: OperationState,
 	#[cfg(feature = "unstable")]
 	allowed_destination: Locality,
@@ -93,66 +96,11 @@ impl crate::traits::Publisher for Publisher {
 	}
 }
 
-impl Operational for Publisher {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			return self.init();
-		} else if state < self.activation_state {
-			return self.de_init();
-		}
-		Ok(())
-	}
-
-	fn state(&self) -> OperationState {
-		todo!()
-	}
-
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
-		todo!()
-	}
-}
-
-impl Publisher {
-	/// Constructor for a [`Publisher`]
-	#[allow(clippy::too_many_arguments)]
-	#[must_use]
-	pub fn new(
-		session: Arc<Session>,
-		selector: impl Into<String>,
-		activation_state: OperationState,
-		#[cfg(feature = "unstable")] allowed_destination: Locality,
-		congestion_control: CongestionControl,
-		encoding: impl Into<String>,
-		express: bool,
-		priority: Priority,
-		#[cfg(feature = "unstable")] reliability: Reliability,
-	) -> Self {
-		Self {
-			session,
-			selector: selector.into(),
-			activation_state,
-			#[cfg(feature = "unstable")]
-			allowed_destination,
-			congestion_control,
-			encoding: encoding.into(),
-			express,
-			priority,
-			#[cfg(feature = "unstable")]
-			reliability,
-			publisher: parking_lot::Mutex::new(None),
-		}
-	}
-
-	/// Initialize
-	/// # Errors
-	///
-	fn init(&self) -> Result<()> {
-		self.de_init()?;
-
+impl Transitions for Publisher {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
+		println!("Test");
 		let builder = self
 			.session
 			.declare_publisher(self.selector.clone())
@@ -175,13 +123,66 @@ impl Publisher {
 		)
 	}
 
-	/// De-Initialize
-	/// # Errors
-	///
-	#[allow(clippy::unnecessary_wraps)]
-	fn de_init(&self) -> Result<()> {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
 		self.publisher.lock().take();
 		Ok(())
+	}
+}
+
+impl Operational for Publisher {
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		self.current_state
+	}
+
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+}
+
+impl Publisher {
+	/// Constructor for a [`Publisher`]
+	#[allow(clippy::too_many_arguments)]
+	#[must_use]
+	pub fn new(
+		session: Arc<Session>,
+		selector: impl Into<String>,
+		activation_state: OperationState,
+		#[cfg(feature = "unstable")] allowed_destination: Locality,
+		congestion_control: CongestionControl,
+		encoding: impl Into<String>,
+		express: bool,
+		priority: Priority,
+		#[cfg(feature = "unstable")] reliability: Reliability,
+	) -> Self {
+		Self {
+			current_state: OperationState::default(),
+			session,
+			selector: selector.into(),
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_destination,
+			congestion_control,
+			encoding: encoding.into(),
+			express,
+			priority,
+			#[cfg(feature = "unstable")]
+			reliability,
+			publisher: parking_lot::Mutex::new(None),
+		}
 	}
 }
 // endregion:	--- Publisher

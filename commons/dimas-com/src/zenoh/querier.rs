@@ -15,7 +15,7 @@ use core::{fmt::Debug, time::Duration};
 use dimas_core::{
 	message_types::{Message, QueryableMsg},
 	traits::Context,
-	OperationState, Operational,
+	OperationState, Operational, Transitions,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -26,7 +26,7 @@ use std::{
 };
 #[cfg(feature = "std")]
 use tokio::sync::Mutex;
-use tracing::{error, instrument, warn, Level};
+use tracing::{error, event, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::{
@@ -52,6 +52,8 @@ pub struct Querier<P>
 where
 	P: Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
 	/// the zenoh session this querier belongs to
 	session: Arc<Session>,
 	selector: String,
@@ -186,28 +188,55 @@ where
 	}
 }
 
+impl<P> Transitions for Querier<P>
+where
+	P: Send + Sync + 'static,
+{
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
+		let mut key_expr = self.key_expr.lock();
+		self.session
+			.declare_keyexpr(self.selector.clone())
+			.wait()
+			.map_or_else(
+				|_| Err(Error::Unexpected(file!().into(), line!()).into()),
+				|new_key_expr| {
+					key_expr.replace(new_key_expr);
+					Ok(())
+				},
+			)
+	}
+
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn deactivate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "deactivate");
+		self.key_expr.lock().take();
+		Ok(())
+	}
+}
+
 impl<P> Operational for Querier<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		if state >= self.activation_state {
-			return self.init();
-		} else if state < self.activation_state {
-			return self.de_init();
-		}
-		Ok(())
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
 	}
 
 	fn state(&self) -> OperationState {
-		todo!()
+		self.current_state
 	}
 
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
 	}
 
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+	fn set_activation_state(&mut self, _state: OperationState) {
 		todo!()
 	}
 }
@@ -232,6 +261,7 @@ where
 		timeout: Duration,
 	) -> Self {
 		Self {
+			current_state: OperationState::default(),
 			session,
 			selector: selector.into(),
 			context,
@@ -245,38 +275,6 @@ where
 			timeout,
 			key_expr: parking_lot::Mutex::new(None),
 		}
-	}
-
-	/// Initialize
-	/// # Errors
-	fn init(&self) -> Result<()>
-	where
-		P: Send + Sync + 'static,
-	{
-		self.de_init()?;
-
-		let mut key_expr = self.key_expr.lock();
-		self.session
-			.declare_keyexpr(self.selector.clone())
-			.wait()
-			.map_or_else(
-				|_| Err(Error::Unexpected(file!().into(), line!()).into()),
-				|new_key_expr| {
-					key_expr.replace(new_key_expr);
-					Ok(())
-				},
-			)
-	}
-
-	/// De-Initialize
-	/// # Errors
-	#[allow(clippy::unnecessary_wraps)]
-	fn de_init(&self) -> Result<()>
-	where
-		P: Send + Sync + 'static,
-	{
-		self.key_expr.lock().take();
-		Ok(())
 	}
 }
 // endregion:	--- Querier

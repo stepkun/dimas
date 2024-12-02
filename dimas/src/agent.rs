@@ -54,7 +54,7 @@ use crate::builder::{
 };
 use crate::context::ContextImpl;
 use crate::error::Error;
-use crate::utils::{ComponentRegistry, LibManager};
+use crate::utils::{ComponentRegistryType, LibManager};
 use anyhow::Result;
 use chrono::Local;
 use core::{fmt::Debug, time::Duration};
@@ -66,15 +66,15 @@ use dimas_config::Config;
 use dimas_core::{
 	enums::{Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
-	traits::{Component, Context, ContextAbstraction, System},
-	OperationState, Operational,
+	traits::{Context, ContextAbstraction, System},
+	OperationState, Operational, Transitions,
 };
 use dimas_time::Timer;
 #[cfg(feature = "unstable")]
 use parking_lot::RwLock;
 use std::sync::Arc;
 use tokio::{select, signal, sync::mpsc};
-use tracing::{error, info, warn};
+use tracing::{error, event, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::liveliness::LivelinessToken;
 #[cfg(feature = "unstable")]
@@ -82,6 +82,7 @@ use zenoh::Wait;
 // endregion:	--- modules
 
 // region:	   --- callbacks
+#[instrument(level = Level::DEBUG, skip_all)]
 async fn callback_dispatcher<P>(ctx: Context<P>, request: QueryMsg) -> Result<()>
 where
 	P: Send + Sync + 'static,
@@ -100,6 +101,7 @@ where
 	Ok(())
 }
 
+#[instrument(level = Level::DEBUG, skip_all)]
 fn about_handler<P>(ctx: Context<P>, request: QueryMsg) -> Result<()>
 where
 	P: Send + Sync + 'static,
@@ -107,7 +109,7 @@ where
 	let name = ctx
 		.fq_name()
 		.unwrap_or_else(|| String::from("--"));
-	let mode = ctx.mode().to_string();
+	let mode = ctx.mode();
 	let zid = ctx.uuid();
 	let state = ctx.state_old();
 	let value = AboutEntity::new(name, mode, zid, state);
@@ -116,6 +118,7 @@ where
 	Ok(())
 }
 
+#[instrument(level = Level::DEBUG, skip_all)]
 fn ping_handler<P>(ctx: Context<P>, request: QueryMsg, sent: i64) -> Result<()>
 where
 	P: Send + Sync + 'static,
@@ -136,6 +139,7 @@ where
 	Ok(())
 }
 
+#[instrument(level = Level::DEBUG, skip_all)]
 fn shutdown_handler<P>(ctx: Context<P>, request: QueryMsg) -> Result<()>
 where
 	P: Send + Sync + 'static,
@@ -144,7 +148,7 @@ where
 	let name = ctx
 		.fq_name()
 		.unwrap_or_else(|| String::from("--"));
-	let mode = ctx.mode().to_string();
+	let mode = ctx.mode();
 	let zid = ctx.uuid();
 	let state = ctx.state_old();
 	let value = AboutEntity::new(name, mode, zid, state);
@@ -162,6 +166,7 @@ where
 	Ok(())
 }
 
+#[instrument(level = Level::DEBUG, skip_all)]
 fn state_handler<P>(ctx: Context<P>, request: QueryMsg, state: Option<OperationState>) -> Result<()>
 where
 	P: Send + Sync + 'static,
@@ -175,7 +180,7 @@ where
 	let name = ctx
 		.fq_name()
 		.unwrap_or_else(|| String::from("--"));
-	let mode = ctx.mode().to_string();
+	let mode = ctx.mode();
 	let zid = ctx.uuid();
 	let state = ctx.state_old();
 	let value = AboutEntity::new(name, mode, zid, state);
@@ -231,6 +236,7 @@ where
 	///
 	/// # Errors
 	///
+	#[instrument(level = Level::DEBUG, skip_all)]
 	pub fn config(self, config: &Config) -> Result<Agent<P>> {
 		// we need an mpsc channel with a receiver behind a mutex guard
 		let (tx, rx) = mpsc::channel(32);
@@ -243,10 +249,13 @@ where
 		)?);
 
 		let agent = Agent {
+			current_state: OperationState::default(),
+			activation_state: OperationState::Active,
+			dummy: Vec::default(),
 			rx,
 			context,
 			libmanager: LibManager::new(),
-			registry: ComponentRegistry::new(),
+			registry: ComponentRegistryType::new(),
 			#[cfg(feature = "unstable")]
 			liveliness: false,
 			#[cfg(feature = "unstable")]
@@ -290,6 +299,11 @@ pub struct Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
+	/// The state from parent, at which [`OperationState::Active`] should be reached
+	activation_state: OperationState,
+	dummy: Vec<Box<dyn Operational>>,
 	/// A reciever for signals from tasks
 	rx: mpsc::Receiver<TaskSignal>,
 	/// The agents context structure
@@ -297,7 +311,7 @@ where
 	/// Library manager
 	libmanager: LibManager,
 	/// Component register
-	registry: ComponentRegistry,
+	registry: ComponentRegistryType,
 	/// Flag to control whether sending liveliness or not
 	#[cfg(feature = "unstable")]
 	liveliness: bool,
@@ -307,20 +321,20 @@ where
 	liveliness_token: RwLock<Option<LivelinessToken>>,
 }
 
-impl<P> AsMut<ComponentRegistry> for Agent<P>
+impl<P> AsMut<ComponentRegistryType> for Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn as_mut(&mut self) -> &mut ComponentRegistry {
+	fn as_mut(&mut self) -> &mut ComponentRegistryType {
 		&mut self.registry
 	}
 }
 
-impl<P> AsRef<ComponentRegistry> for Agent<P>
+impl<P> AsRef<ComponentRegistryType> for Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn as_ref(&self) -> &ComponentRegistry {
+	fn as_ref(&self) -> &ComponentRegistryType {
 		&self.registry
 	}
 }
@@ -361,26 +375,29 @@ where
 	}
 }
 
+impl<P> Transitions for Agent<P> where P: Debug + Send + Sync + 'static {}
+
 impl<P> Operational for Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		for (_, component) in self.components() {
-			component.manage_operation_state_old(state)?;
-		}
-		self.context.set_state_old(state)
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
 	}
 
 	fn state(&self) -> OperationState {
-		todo!()
+		self.current_state
 	}
 
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
 	}
 
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+	fn set_activation_state(&mut self, _state: OperationState) {
 		todo!()
 	}
 }
@@ -389,10 +406,6 @@ impl<P> System for Agent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)> {
-		self.registry.components.values().enumerate()
-	}
-
 	fn load_library(&mut self, path: &str) -> Result<()> {
 		self.libmanager.load_lib(&mut self.registry, path)
 	}
@@ -563,8 +576,9 @@ where
 	/// The agent can be stopped properly using `ctrl-c`
 	///
 	/// # Errors
-	#[tracing::instrument(skip_all)]
+	#[instrument(level = Level::INFO, skip_all)]
 	pub async fn start(self) -> Result<Self> {
+		event!(Level::INFO, "start");
 		// activate sending liveliness
 		#[cfg(feature = "unstable")]
 		if self.liveliness {
@@ -592,6 +606,9 @@ where
 			.set_state_old(OperationState::Active)?;
 
 		RunningAgent {
+			current_state: self.current_state,
+			activation_state: self.activation_state,
+			dummy: self.dummy,
 			rx: self.rx,
 			context: self.context,
 			libmanager: self.libmanager,
@@ -614,6 +631,11 @@ pub struct RunningAgent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
+	/// The current state for [`Operational`]
+	current_state: OperationState,
+	/// The state from parent, at which [`OperationState::Active`] should be reached
+	activation_state: OperationState,
+	dummy: Vec<Box<dyn Operational>>,
 	/// The receiver for signals from tasks
 	rx: mpsc::Receiver<TaskSignal>,
 	/// Library manager
@@ -621,7 +643,7 @@ where
 	/// The agents context structure
 	context: Arc<ContextImpl<P>>,
 	/// Agents [`Component`] register
-	registry: ComponentRegistry,
+	registry: ComponentRegistryType,
 	/// Flag to control whether sending liveliness or not
 	#[cfg(feature = "unstable")]
 	liveliness: bool,
@@ -631,20 +653,20 @@ where
 	liveliness_token: RwLock<Option<LivelinessToken>>,
 }
 
-impl<P> AsMut<ComponentRegistry> for RunningAgent<P>
+impl<P> AsMut<ComponentRegistryType> for RunningAgent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn as_mut(&mut self) -> &mut ComponentRegistry {
+	fn as_mut(&mut self) -> &mut ComponentRegistryType {
 		&mut self.registry
 	}
 }
 
-impl<P> AsRef<ComponentRegistry> for RunningAgent<P>
+impl<P> AsRef<ComponentRegistryType> for RunningAgent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn as_ref(&self) -> &ComponentRegistry {
+	fn as_ref(&self) -> &ComponentRegistryType {
 		&self.registry
 	}
 }
@@ -685,26 +707,29 @@ where
 	}
 }
 
+impl<P> Transitions for RunningAgent<P> where P: Debug + Send + Sync + 'static {}
+
 impl<P> Operational for RunningAgent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn manage_operation_state_old(&self, state: OperationState) -> Result<()> {
-		for (_, component) in self.components() {
-			component.manage_operation_state_old(state)?;
-		}
-		self.context.set_state_old(state)
+	fn activation_state(&self) -> OperationState {
+		self.activation_state
+	}
+
+	fn desired_state(&self, _state: OperationState) -> OperationState {
+		todo!()
 	}
 
 	fn state(&self) -> OperationState {
-		todo!()
+		self.current_state
 	}
 
-	fn set_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_state(&mut self, state: OperationState) {
+		self.current_state = state;
 	}
 
-	fn operationals(&mut self) -> &mut Vec<Box<dyn Operational>> {
+	fn set_activation_state(&mut self, _state: OperationState) {
 		todo!()
 	}
 }
@@ -713,10 +738,6 @@ impl<P> System for RunningAgent<P>
 where
 	P: Debug + Send + Sync + 'static,
 {
-	fn components(&self) -> impl Iterator<Item = (usize, &Box<dyn Component>)> {
-		self.registry.components.values().enumerate()
-	}
-
 	fn load_library(&mut self, path: &str) -> Result<()> {
 		self.libmanager.load_lib(&mut self.registry, path)
 	}
@@ -732,7 +753,10 @@ where
 	P: Debug + Send + Sync + 'static,
 {
 	/// run
+	#[instrument(level = Level::DEBUG, skip_all)]
 	async fn run(mut self) -> Result<Agent<P>> {
+		event!(Level::DEBUG, "run");
+
 		loop {
 			// different possibilities that can happen
 			select! {
@@ -745,35 +769,35 @@ where
 								.write()
 								.get_mut(&selector)
 								.ok_or(Error::GetMut("liveliness".into()))?
-								.manage_operation_state(self.context.state_old())?;
+								.state_transitions(self.context.state_old())?;
 						},
 						TaskSignal::RestartQueryable(selector) => {
 							self.context.responders()
 								.write()
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("queryables".into()))?
-								.manage_operation_state_old(self.context.state_old())?;
+								.state_transitions(self.context.state_old())?;
 						},
 						TaskSignal::RestartObservable(selector) => {
 							self.context.responders()
 								.write()
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("observables".into()))?
-								.manage_operation_state_old(self.context.state_old())?;
+								.state_transitions(self.context.state_old())?;
 						},
 						TaskSignal::RestartSubscriber(selector) => {
 							self.context.responders()
 								.write()
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("subscribers".into()))?
-								.manage_operation_state_old(self.context.state_old())?;
+								.state_transitions(self.context.state_old())?;
 						},
 						TaskSignal::RestartTimer(selector) => {
 							self.context.timers()
 								.write()
 								.get_mut(&selector)
 								.ok_or_else(|| Error::GetMut("timers".into()))?
-								.manage_operation_state_old(self.context.state_old())?;
+								.state_transitions(self.context.state_old())?;
 						},
 						TaskSignal::Shutdown => {
 							return self.stop();
@@ -802,8 +826,9 @@ where
 	/// Stop the agent
 	///
 	/// # Errors
-	#[tracing::instrument(skip_all)]
+	#[instrument(level = Level::INFO, skip_all)]
 	pub fn stop(self) -> Result<Agent<P>> {
+		event!(Level::INFO, "stop");
 		self.context
 			.set_state_old(OperationState::Created)?;
 
@@ -813,6 +838,9 @@ where
 			self.liveliness_token.write().take();
 		}
 		let r = Agent {
+			current_state: self.current_state,
+			activation_state: self.activation_state,
+			dummy: self.dummy,
 			rx: self.rx,
 			context: self.context,
 			libmanager: self.libmanager,
