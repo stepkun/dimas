@@ -17,7 +17,7 @@ use alloc::{
 };
 use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational};
+use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational, Transitions};
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
@@ -139,16 +139,12 @@ impl<P> Operational for LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
+	fn set_activation_state(&mut self, state: OperationState) {
+		self.activation_state = state;
 	}
 
 	fn activation_state(&self) -> OperationState {
 		self.activation_state
-	}
-
-	fn desired_state(&self, state: OperationState) -> OperationState {
-		todo!()
 	}
 
 	fn state(&self) -> OperationState {

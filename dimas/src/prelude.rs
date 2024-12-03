@@ -43,7 +43,8 @@ pub use dimas_core::message_types::{
 };
 pub use dimas_core::traits::{Context, System};
 pub use dimas_core::utils::init_tracing;
+pub use dimas_core::Activity;
 pub use dimas_core::{Component, ComponentId};
-pub use dimas_core::{OperationState, Operational};
+pub use dimas_core::{OperationState, Operational, Transitions};
 pub use dimas_macros::main;
 pub use dimas_time::Timer;

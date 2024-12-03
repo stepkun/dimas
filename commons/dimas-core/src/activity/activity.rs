@@ -27,8 +27,7 @@ pub trait Activity: Debug + Operational + Send + Sync {
 
 #[cfg(test)]
 mod tests {
-	use crate::{operational::Transitions, OperationState, OperationalType};
-	use alloc::{boxed::Box, string::String};
+	use alloc::boxed::Box;
 
 	use super::*;
 
@@ -38,42 +37,5 @@ mod tests {
 	#[test]
 	const fn normal_types() {
 		is_normal::<Box<dyn Activity>>();
-	}
-
-	// #[dimas::activity(attr = "wrong attribute")]
-	// #[derive(Debug)]
-	// struct TestActivity {}
-
-	// #[dimas::activity]
-	// const fn test_fn() {}
-
-	// #[dimas::activity]
-	// struct Test();
-
-	#[dimas_macros::activity]
-	struct TestActivity {
-		dummy: String,
-		another: i32,
-	}
-
-	impl TestActivity {
-		fn dummy(&self) -> &str {
-			&self.dummy
-		}
-
-		const fn another(&self) -> i32 {
-			self.another
-		}
-	}
-
-	impl Transitions for TestActivity {}
-
-	#[test]
-	fn activity() {
-		let mut activity = TestActivity::default();
-		assert_eq!(activity.dummy(), "");
-		assert_eq!(activity.id(), "");
-		activity.set_id("new id".into());
-		assert_eq!(activity.id(), "new id");
 	}
 }

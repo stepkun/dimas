@@ -11,17 +11,17 @@ extern crate alloc;
 // region:		--- modules
 use anyhow::Result;
 use core::fmt::Debug;
-use dimas_core::{ComponentId, ComponentType};
+use dimas_core::{Component, ComponentId};
 // endregion:	--- modules
 
 // region:		--- ComponentRegistrar
 /// Contract for registering [`Component`]s
 pub trait ComponentRegistry: Debug {
 	/// to register a [`Component`]
-	fn register(&mut self, component: ComponentType);
+	fn register(&mut self, component: Box<dyn Component>);
 
 	/// to remove a registered [`Component`]
 	/// # Errors
-	fn deregister(&mut self, id: &ComponentId) -> Result<Option<ComponentType>>;
+	fn deregister(&mut self, id: &ComponentId) -> Result<Option<Box<dyn Component>>>;
 }
 // endregion:   --- ComponentRegistrar

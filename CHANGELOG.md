@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- _breaking change_: macros for automatic creation of inheritance boilerplate
 - documented config file
 - tracing in examples
 
@@ -26,9 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - replaced own Result type with `anyhow::Result`
 - changed name of Trait `Capability` to `Operational`
-- restructured crate `dimas_com`
-- restructured crates `dimas_core` & `dimas_time`,
-  moving builders that require `std` to `dimas`
+- restructured crates `dimas_com`, `dimas_core` & `dimas_time`,
+  moving builders that require `std` from `dimas_com` to `dimas`
 - replaced std::sync::Mutex and std::sync::RwLock with parking_lot::Mutex and parking_lot::RwLock
   _breaking change_:
   read() and write() on context no longer return a Result, but the properties directly

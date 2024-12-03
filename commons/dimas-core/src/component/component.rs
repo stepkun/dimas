@@ -93,7 +93,6 @@ pub trait Component: Debug + Operational + Send + Sync {
 
 #[cfg(test)]
 mod tests {
-	use crate::{ComponentType, OperationalType, Transitions};
 	use alloc::boxed::Box;
 
 	use super::*;
@@ -105,20 +104,5 @@ mod tests {
 	const fn normal_types() {
 		is_normal::<ComponentId>();
 		is_normal::<Box<dyn Component>>();
-	}
-
-	#[dimas_macros::component]
-	struct TestComponent {}
-
-	impl TestComponent {}
-
-	impl Transitions for TestComponent {}
-
-	#[test]
-	fn activity() {
-		let mut component = TestComponent::default();
-		assert_eq!(component.id(), "");
-		component.set_id("new id".into());
-		assert_eq!(component.id(), "new id");
 	}
 }

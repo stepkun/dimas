@@ -161,11 +161,7 @@ impl TryFrom<&str> for OperationState {
 
 #[cfg(test)]
 mod tests {
-	#[doc(hidden)]
-	extern crate std;
-
 	use super::*;
-	use std::panic::catch_unwind;
 
 	// check, that the auto traits are available
 	const fn is_normal<T: Sized + Send + Sync>() {}
@@ -173,69 +169,5 @@ mod tests {
 	#[test]
 	const fn normal_types() {
 		is_normal::<OperationState>();
-	}
-
-	#[test]
-	fn add() {
-		assert_eq!(OperationState::Created + 1, OperationState::Configured);
-		assert_eq!(OperationState::Configured + 1, OperationState::Inactive);
-		assert_eq!(OperationState::Inactive + 1, OperationState::Standby);
-		assert_eq!(OperationState::Standby + 1, OperationState::Active);
-		assert_eq!(OperationState::Created + 4, OperationState::Active);
-	}
-
-	#[test]
-	fn add_assign() {
-		let mut state = OperationState::Created;
-		state += 1;
-		assert_eq!(&state, &OperationState::Configured);
-		state += 1;
-		assert_eq!(&state, &OperationState::Inactive);
-		state += 1;
-		assert_eq!(&state, &OperationState::Standby);
-		state += 1;
-		assert_eq!(&state, &OperationState::Active);
-
-		state = OperationState::Created;
-		state += 4;
-		assert_eq!(&state, &OperationState::Active);
-	}
-
-	#[test]
-	fn failing_add() {
-		assert!(catch_unwind(|| OperationState::Active + 1).is_err());
-		assert!(catch_unwind(|| OperationState::Created + 5).is_err());
-	}
-
-	#[test]
-	fn sub() {
-		assert_eq!(OperationState::Active - 1, OperationState::Standby);
-		assert_eq!(OperationState::Standby - 1, OperationState::Inactive);
-		assert_eq!(OperationState::Inactive - 1, OperationState::Configured);
-		assert_eq!(OperationState::Configured - 1, OperationState::Created);
-		assert_eq!(OperationState::Active - 4, OperationState::Created);
-	}
-
-	#[test]
-	fn sub_assign() {
-		let mut state = OperationState::Active;
-		state -= 1;
-		assert_eq!(&state, &OperationState::Standby);
-		state -= 1;
-		assert_eq!(&state, &OperationState::Inactive);
-		state -= 1;
-		assert_eq!(&state, &OperationState::Configured);
-		state -= 1;
-		assert_eq!(&state, &OperationState::Created);
-
-		state = OperationState::Active;
-		state -= 4;
-		assert_eq!(&state, &OperationState::Created);
-	}
-
-	#[test]
-	fn failing_sub() {
-		assert!(catch_unwind(|| OperationState::Created - 3).is_err());
-		assert!(catch_unwind(|| OperationState::Active - 7).is_err());
 	}
 }

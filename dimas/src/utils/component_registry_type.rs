@@ -7,7 +7,7 @@ extern crate std;
 
 // region:      --- modules
 use anyhow::Result;
-use dimas_core::{Component, ComponentId, ComponentType, OperationState};
+use dimas_core::{Component, ComponentId, OperationState};
 use std::collections::HashMap;
 
 use super::ComponentRegistry;
@@ -17,7 +17,7 @@ use super::ComponentRegistry;
 #[derive(Debug)]
 pub struct ComponentRegistryType {
 	/// Storage for the [`Component`]s
-	pub components: HashMap<ComponentId, ComponentType>,
+	pub components: HashMap<ComponentId, Box<dyn Component>>,
 }
 
 impl Default for ComponentRegistryType {
@@ -29,11 +29,11 @@ impl Default for ComponentRegistryType {
 }
 
 impl ComponentRegistry for ComponentRegistryType {
-	fn register(&mut self, plugin: ComponentType) {
+	fn register(&mut self, plugin: Box<dyn Component>) {
 		self.components.insert(plugin.id(), plugin);
 	}
 
-	fn deregister(&mut self, id: &ComponentId) -> Result<Option<ComponentType>> {
+	fn deregister(&mut self, id: &ComponentId) -> Result<Option<Box<dyn Component>>> {
 		let mut plugin = self.components.remove(id);
 		let downstate = OperationState::Configured;
 		// shutdown plugin
