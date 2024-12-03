@@ -69,7 +69,7 @@ use dimas_core::{
 	traits::{Context, ContextAbstraction, System},
 	OperationState, Operational, Transitions,
 };
-use dimas_time::Timer;
+use dimas_time::IntervalTimer;
 #[cfg(feature = "unstable")]
 use parking_lot::RwLock;
 use std::sync::Arc;
@@ -567,7 +567,9 @@ where
 
 	/// Get a [`TimerBuilder`], the builder for a [`Timer`].
 	#[must_use]
-	pub fn timer(&self) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, Storage<Timer<P>>> {
+	pub fn timer(
+		&self,
+	) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, Storage<IntervalTimer<P>>> {
 		TimerBuilder::new(self.context.clone()).storage(self.context.timers())
 	}
 

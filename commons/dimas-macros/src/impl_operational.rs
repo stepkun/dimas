@@ -15,6 +15,10 @@ use quote::{quote, TokenStreamExt};
 use syn::{parse::Parser, punctuated::Punctuated, Fields, ItemFn, Meta, Result, Token};
 use syn::{parse2, parse_macro_input, AttrStyle, Error, ItemStruct, Path};
 
+use crate::utils::{
+	collect_data, convert_attrs, convert_derives, create_impl_header, create_struct_header,
+};
+
 type Arguments = Punctuated<Meta, Token![,]>;
 
 const ARGS_UNSUPPORTED: &str = "arguments are not supported by 'operational' macro";
@@ -62,6 +66,8 @@ pub fn operational_functions() -> TokenStream {
 	}
 }
 
+#[allow(clippy::explicit_iter_loop)]
+#[allow(clippy::equatable_if_let)]
 fn operational_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	// check for struct with named fields
 	let old_fields = match &item.fields {
@@ -78,72 +84,34 @@ fn operational_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	let mut derives = super::common_derives();
 	let mut user_attrs = Vec::new();
 
-	let vis = &item.vis;
-	let item_ident = &item.ident;
-
 	// collect existing data
-	for attr in item.attrs {
-		if attr.path().is_ident("derive") {
-			derives.push(attr.parse_args()?);
-		} else if attr.style == AttrStyle::Outer {
-			user_attrs.push(attr);
-		}
-	}
-
-	let operational_block = operational_functions();
-
+	collect_data(&item, &mut derives, &mut user_attrs);
 	// Convert Vec of derive Paths into one TokenStream
-	let derives = derives
-		.into_iter()
-		.fold(proc_macro2::TokenStream::new(), |acc, d| {
-			if acc.is_empty() {
-				quote! {
-					#d
-				}
-			} else {
-				quote! {
-					#acc, #d
-				}
-			}
-		});
+	let derives = convert_derives(derives);
+	// Convert Vec of user attribs into one TokenStream
+	let user_attrs = convert_attrs(user_attrs);
 
-	//
-	let user_attrs = user_attrs
-		.into_iter()
-		.fold(proc_macro2::TokenStream::new(), |acc, a| {
-			// Only want to transfer outer attributes
-			if a.style == AttrStyle::Outer {
-				if acc.is_empty() {
-					quote! {
-						#a
-					}
-				} else {
-					quote! {
-						#acc
-						#a
-					}
-				}
-			} else {
-				acc
-			}
-		});
-
-	let new_fields = operational_fields();
+	// create headers
+	let struct_header = create_struct_header(&item);
+	let operational_header = create_impl_header(&item, "Operational")?;
+	// create blocks
+	let operational_block = operational_functions();
+	// create fields
+	let operational_fields = operational_fields();
 
 	let out = quote! {
 		#user_attrs
 		#[derive(#derives)]
-		#vis struct #item_ident {
-			#new_fields
+		#struct_header {
+			#operational_fields
 			#old_fields
 		}
 
 		// add the impl for block after the struct
-		impl Operational for #item_ident {
+		#operational_header {
 			#operational_block
 		}
 	};
-	//dbg!(out.to_string());
 	Ok(out)
 }
 

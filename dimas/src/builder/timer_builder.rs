@@ -7,7 +7,7 @@
 use anyhow::Result;
 use core::time::Duration;
 use dimas_core::{traits::Context, OperationState};
-use dimas_time::{ArcTimerCallback, Timer};
+use dimas_time::{ArcTimerCallback, IntervalTimer};
 use parking_lot::{Mutex, RwLock};
 use std::{collections::HashMap, sync::Arc};
 
@@ -196,8 +196,8 @@ where
 	#[must_use]
 	pub fn storage(
 		self,
-		storage: Arc<RwLock<HashMap<String, Timer<P>>>>,
-	) -> TimerBuilder<P, K, I, C, Storage<Timer<P>>> {
+		storage: Arc<RwLock<HashMap<String, IntervalTimer<P>>>>,
+	) -> TimerBuilder<P, K, I, C, Storage<IntervalTimer<P>>> {
 		let Self {
 			context,
 			activation_state,
@@ -226,7 +226,7 @@ where
 	/// Build the [Timer]
 	/// # Errors
 	///
-	pub fn build(self) -> Result<Timer<P>> {
+	pub fn build(self) -> Result<IntervalTimer<P>> {
 		let Self {
 			context,
 			activation_state,
@@ -237,7 +237,7 @@ where
 			..
 		} = self;
 
-		Ok(Timer::new(
+		Ok(IntervalTimer::new(
 			name.selector,
 			context,
 			activation_state,
@@ -248,14 +248,15 @@ where
 	}
 }
 
-impl<P> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, Storage<Timer<P>>>
+impl<P>
+	TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, Storage<IntervalTimer<P>>>
 where
 	P: Send + Sync + 'static,
 {
 	/// Build and add the timer to the agents context
 	/// # Errors
 	///
-	pub fn add(self) -> Result<Option<Timer<P>>> {
+	pub fn add(self) -> Result<Option<IntervalTimer<P>>> {
 		let name = self.selector.selector.clone();
 		let collection = self.storage.storage.clone();
 		let t = self.build()?;

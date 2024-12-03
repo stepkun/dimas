@@ -15,16 +15,3 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {}
 // endregion:	--- Error
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	// check, that the auto traits are available
-	const fn is_normal<T: Sized + Send + Sync>() {}
-
-	#[test]
-	const fn normal_types() {
-		is_normal::<Error>();
-	}
-}

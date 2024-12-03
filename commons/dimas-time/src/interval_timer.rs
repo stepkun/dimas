@@ -30,9 +30,10 @@ pub type ArcTimerCallback<P> =
 	Arc<Mutex<dyn FnMut(Context<P>) -> Result<()> + Send + Sync + 'static>>;
 // endregion:	--- types
 
-// region:		--- Timer
-/// Timer
-pub struct Timer<P>
+// region:		--- IntervalTimer
+/// A timer that fires in regular intervals.
+/// May have a delay otherwise it fires at once.
+pub struct IntervalTimer<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -50,7 +51,7 @@ where
 	handle: Mutex<Option<JoinHandle<()>>>,
 }
 
-impl<P> Debug for Timer<P>
+impl<P> Debug for IntervalTimer<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -62,7 +63,7 @@ where
 	}
 }
 
-impl<P> Transitions for Timer<P>
+impl<P> Transitions for IntervalTimer<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -108,7 +109,7 @@ where
 	}
 }
 
-impl<P> Operational for Timer<P>
+impl<P> Operational for IntervalTimer<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -133,7 +134,7 @@ where
 	}
 }
 
-impl<P> Timer<P>
+impl<P> IntervalTimer<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -173,4 +174,4 @@ where
 		}
 	}
 }
-// endregion:	--- Timer
+// endregion:	--- IntervalTimer

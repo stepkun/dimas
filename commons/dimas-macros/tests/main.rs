@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Macro tests
+//! Test macro `main`
 
 #[dimas_macros::main(additional_threads = 5)]
 async fn main() -> core::result::Result<(), std::io::Error> {

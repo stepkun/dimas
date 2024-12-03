@@ -50,7 +50,7 @@ use dimas_core::{
 	traits::ContextAbstraction,
 	OperationState, Operational,
 };
-use dimas_time::Timer;
+use dimas_time::IntervalTimer;
 use parking_lot::RwLock;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::Sender;
@@ -87,7 +87,7 @@ where
 	/// The [`Agent`]s [`Communicator`]
 	communicator: Arc<RwLock<dyn Communicator>>,
 	/// Registered [`Timer`]
-	timers: Arc<RwLock<HashMap<String, Timer<P>>>>,
+	timers: Arc<RwLock<HashMap<String, IntervalTimer<P>>>>,
 }
 
 impl<P> ContextAbstraction for ContextImpl<P>
@@ -356,7 +356,7 @@ where
 
 	/// Get the timers
 	#[must_use]
-	pub fn timers(&self) -> Arc<RwLock<HashMap<String, Timer<P>>>> {
+	pub fn timers(&self) -> Arc<RwLock<HashMap<String, IntervalTimer<P>>>> {
 		self.timers.clone()
 	}
 

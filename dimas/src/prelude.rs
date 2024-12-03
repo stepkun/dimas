@@ -47,4 +47,4 @@ pub use dimas_core::Activity;
 pub use dimas_core::{Component, ComponentId};
 pub use dimas_core::{OperationState, Operational, Transitions};
 pub use dimas_macros::main;
-pub use dimas_time::Timer;
+pub use dimas_time::IntervalTimer;

@@ -1,15 +1,26 @@
 //! Copyright © 2024 Stephan Kunz
 
 use anyhow::Result;
+use core::fmt::Debug;
 use dimas_core::{OperationState, Operational, OperationalType, Transitions};
 
 #[dimas_macros::operational]
-struct TestOperational {
+struct TestOperational1<P>
+where
+	P: Debug + Send + Sync,
+{
+	dummy: P,
+}
+
+impl<P> Transitions for TestOperational1<P> where P: Debug + Send + Sync {}
+
+#[dimas_macros::operational]
+struct TestOperational2 {
 	/// A value to test that all hooks have been processed
 	value: i32,
 }
 
-impl Transitions for TestOperational {
+impl Transitions for TestOperational2 {
 	fn configure(&mut self) -> Result<()> {
 		self.value += 1;
 		Ok(())
@@ -51,8 +62,8 @@ impl Transitions for TestOperational {
 	}
 }
 
-fn create_test_data() -> TestOperational {
-	let operational = TestOperational::default();
+fn create_test_data() -> TestOperational2 {
+	let operational = TestOperational2::default();
 	assert_eq!(operational.state(), OperationState::Undefined);
 	assert_eq!(operational.activation_state(), OperationState::Active);
 	operational

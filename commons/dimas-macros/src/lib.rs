@@ -9,6 +9,7 @@ pub(crate) mod impl_activity;
 pub(crate) mod impl_component;
 mod impl_main;
 pub(crate) mod impl_operational;
+pub(crate) mod utils;
 
 use proc_macro::TokenStream;
 

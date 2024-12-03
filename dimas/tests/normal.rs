@@ -19,7 +19,8 @@ const fn normal_types() {
 	is_normal::<ContextImpl<Props>>();
 	#[cfg(feature = "unstable")]
 	is_normal::<LivelinessSubscriberBuilder<Props, NoCallback, NoStorage>>();
-	is_normal::<ObservableBuilder<Props, NoSelector, NoCallback, NoCallback, NoCallback, NoStorage>>();
+	is_normal::<ObservableBuilder<Props, NoSelector, NoCallback, NoCallback, NoCallback, NoStorage>>(
+	);
 	is_normal::<ObserverBuilder<Props, NoSelector, NoCallback, NoCallback, NoStorage>>();
 	is_normal::<PublisherBuilder<Props, NoSelector, NoStorage>>();
 	is_normal::<QuerierBuilder<Props, NoSelector, NoCallback, NoStorage>>();
