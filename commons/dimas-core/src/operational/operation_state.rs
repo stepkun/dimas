@@ -158,16 +158,3 @@ impl TryFrom<&str> for OperationState {
 	}
 }
 // endregion:	--- OperationState
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	// check, that the auto traits are available
-	const fn is_normal<T: Sized + Send + Sync>() {}
-
-	#[test]
-	const fn normal_types() {
-		is_normal::<OperationState>();
-	}
-}

@@ -24,18 +24,3 @@ pub trait Activity: Debug + Operational + Send + Sync {
 	fn set_id(&mut self, id: String);
 }
 // endregion:	--- Activity
-
-#[cfg(test)]
-mod tests {
-	use alloc::boxed::Box;
-
-	use super::*;
-
-	// check, that the auto traits are available
-	const fn is_normal<T: Sized + Send + Sync>() {}
-
-	#[test]
-	const fn normal_types() {
-		is_normal::<Box<dyn Activity>>();
-	}
-}

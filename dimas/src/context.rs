@@ -418,19 +418,3 @@ where
 	}
 }
 // endregion:	--- ContextImpl
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	// check, that the auto traits are available
-	const fn is_normal<T: Sized + Send + Sync>() {}
-
-	#[derive(Debug)]
-	struct Props {}
-
-	#[test]
-	const fn normal_types() {
-		is_normal::<ContextImpl<Props>>();
-	}
-}

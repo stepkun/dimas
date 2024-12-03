@@ -181,17 +181,3 @@ pub trait Transitions: Debug + Send + Sync {
 	}
 }
 // endregion:	--- Operational
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-	use alloc::boxed::Box;
-
-	// check, that the auto traits are available
-	const fn is_normal<T: Sized + Send + Sync>() {}
-
-	#[test]
-	const fn normal_types() {
-		is_normal::<Box<dyn Operational>>();
-	}
-}

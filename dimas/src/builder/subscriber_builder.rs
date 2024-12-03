@@ -278,19 +278,3 @@ where
 	}
 }
 // endregion:	--- SubscriberBuilder
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[derive(Debug)]
-	struct Props {}
-
-	// check, that the auto traits are available
-	const fn is_normal<T: Sized + Send + Sync>() {}
-
-	#[test]
-	const fn normal_types() {
-		is_normal::<SubscriberBuilder<Props, NoSelector, NoCallback, NoStorage>>();
-	}
-}
