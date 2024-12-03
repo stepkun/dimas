@@ -23,7 +23,7 @@ pub mod traits;
 pub mod utils;
 
 // flatten:
-pub use activity::Activity;
+pub use activity::{Activity, ActivityType};
 pub use component::{Component, ComponentId, ComponentType};
 pub use enums::{Signal, TaskSignal};
 pub use operational::{OperationState, Operational, OperationalType, Transitions};

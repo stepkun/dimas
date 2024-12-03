@@ -31,7 +31,18 @@ pub trait Operational: Transitions + Debug + Send + Sync {
 
 	/// Calculate the desired [`OperationState`] from a given [`OperationState`].
 	#[must_use]
-	fn desired_state(&self, state: OperationState) -> OperationState;
+	fn desired_state(&self, state: OperationState) -> OperationState {
+		let state: i32 = state.into();
+		let state_diff = OperationState::Active - self.activation_state();
+
+		// limit to bounds [`OperationState::Created`] <=> [`OperationState::Active`]
+		let min_state: i32 = OperationState::Created.into();
+		let max_state: i32 = OperationState::Active.into();
+		let desired_state_int = min_state.max(max_state.min(state + state_diff));
+
+		OperationState::try_from(desired_state_int)
+			.unwrap_or_else(|_| panic!("should be infallible"))
+	}
 
 	/// Read the entities current [`OperationState`] must be provided
 	#[must_use]
@@ -174,6 +185,7 @@ pub trait Transitions: Debug + Send + Sync {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::OperationalType;
 	use alloc::boxed::Box;
 
 	// check, that the auto traits are available
@@ -233,10 +245,8 @@ mod tests {
 	}
 
 	fn create_test_data() -> TestOperational {
-		let mut operational = TestOperational::default();
+		let operational = TestOperational::default();
 		assert_eq!(operational.state(), OperationState::Undefined);
-		assert_eq!(operational.activation_state(), OperationState::Undefined);
-		operational.set_activation_state(OperationState::Active);
 		assert_eq!(operational.activation_state(), OperationState::Active);
 		operational
 	}

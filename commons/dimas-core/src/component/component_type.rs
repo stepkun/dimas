@@ -16,7 +16,7 @@ use super::{Component, ComponentId};
 
 // region:		--- ComponentType
 /// Data necessary for a [`Component`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ComponentType {
 	id: ComponentId,
 	operational: OperationalType,
@@ -59,10 +59,10 @@ impl Component for ComponentType {
 	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>> {
 		self.components.write()
 	}
-	
+
 	fn set_id(&mut self, id: alloc::string::String) {
-			self.id = id;
-		}
+		self.id = id;
+	}
 }
 
 impl Transitions for ComponentType {}
@@ -126,11 +126,6 @@ mod tests {
 		is_normal::<ComponentType>();
 	}
 
-	#[test]
-	fn component_type() {
-		let _ = ComponentType::new(ComponentId::from("test"));
-	}
-
 	#[derive(Debug)]
 	struct TestComponent {
 		operational: OperationalType,
@@ -186,11 +181,11 @@ mod tests {
 		fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>> {
 			self.component.components_mut()
 		}
-		
+
 		#[inline]
 		fn set_id(&mut self, id: alloc::string::String) {
-				self.component.set_id(id);
-			}
+			self.component.set_id(id);
+		}
 	}
 
 	impl Operational for TestComponent {
@@ -249,7 +244,6 @@ mod tests {
 		component
 	}
 
-	#[test]
 	fn activate() {
 		let mut component = create_test_data();
 		assert_eq!(component.state(), OperationState::Undefined);
@@ -274,7 +268,6 @@ mod tests {
 		}
 	}
 
-	#[test]
 	fn up_stepping() {
 		let mut component = create_test_data();
 
@@ -317,7 +310,6 @@ mod tests {
 		}
 	}
 
-	#[test]
 	fn down_stepping() {
 		let mut component = create_test_data();
 		assert!(component
@@ -363,7 +355,6 @@ mod tests {
 		}
 	}
 
-	#[test]
 	fn up_and_down() {
 		let mut component = create_test_data();
 		assert!(component
@@ -390,8 +381,6 @@ mod tests {
 		}
 	}
 
-	#[test]
-	#[allow(clippy::vec_init_then_push)]
 	fn no_stepping() {
 		let mut component = create_test_data();
 		assert!(component
@@ -416,5 +405,15 @@ mod tests {
 				}
 			}
 		}
+	}
+
+	#[test]
+	fn all_tests() {
+		let _ = ComponentType::new(ComponentId::from("test"));
+		activate();
+		up_stepping();
+		down_stepping();
+		up_and_down();
+		no_stepping();
 	}
 }

@@ -36,9 +36,7 @@ fn parse_config(args: Arguments) -> Result<Config> {
 
 fn component_fields() -> TokenStream {
 	quote! {
-		id: ComponentId,
-		activities: Arc<RwLock<Vec<Box<dyn Activity>>>>,
-		components: Arc<RwLock<Vec<Box<dyn Component>>>>,
+		component: ComponentType,
 	}
 }
 
@@ -46,42 +44,42 @@ fn component_functions() -> TokenStream {
 	quote! {
 		#[inline]
 		fn id(&self) -> String {
-			self.id.clone()
+			self.component.id()
 		}
 
 		#[inline]
 		fn set_id(&mut self, id: String){
-			self.id = id;
+			self.component.set_id(id);
 		}
 
 		#[inline]
 		fn add(&mut self, component: Box<dyn Component>) {
-			self.components.write().push(component);
+			self.component.add(component);
 		}
 
 		#[inline]
-		fn remove(&mut self, _id: ComponentId) {
-			todo!()
+		fn remove(&mut self, id: ComponentId) {
+			self.component.remove(id);
 		}
 
 		#[inline]
-		fn activities(&self) -> RwLockReadGuard<Vec<Box<dyn Activity>>> {
-			self.activities.read()
+		fn activities(&self) -> parking_lot::RwLockReadGuard<Vec<Box<dyn Activity>>> {
+			self.component.activities()
 		}
 
 		#[inline]
-		fn activities_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Activity>>> {
-			self.activities.write()
+		fn activities_mut(&mut self) -> parking_lot::RwLockWriteGuard<Vec<Box<dyn Activity>>> {
+			self.component.activities_mut()
 		}
 
 		#[inline]
-		fn components(&self) -> RwLockReadGuard<Vec<Box<dyn Component>>> {
-			self.components.read()
+		fn components(&self) -> parking_lot::RwLockReadGuard<Vec<Box<dyn Component>>> {
+			self.component.components()
 		}
 
 		#[inline]
-		fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>> {
-			self.components.write()
+		fn components_mut(&mut self) -> parking_lot::RwLockWriteGuard<Vec<Box<dyn Component>>> {
+			self.component.components_mut()
 		}
 	}
 }

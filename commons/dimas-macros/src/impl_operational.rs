@@ -34,8 +34,7 @@ fn parse_config(args: Arguments) -> Result<Config> {
 
 pub fn operational_fields() -> TokenStream {
 	quote! {
-		current: OperationState,
-		activation: OperationState,
+		operational: OperationalType,
 	}
 }
 
@@ -43,35 +42,22 @@ pub fn operational_functions() -> TokenStream {
 	quote! {
 		#[inline]
 		fn activation_state(&self) -> OperationState {
-			self.activation
+			self.operational.activation_state()
 		}
 
 		#[inline]
 		fn set_activation_state(&mut self, state: OperationState) {
-			self.activation = state;
-		}
-
-		fn desired_state(&self, state: OperationState) -> OperationState {
-			let state: i32 = state.into();
-			let state_diff = OperationState::Active - self.activation;
-
-			// limit to bounds [`OperationState::Created`] <=> [`OperationState::Active`]
-			let min_state: i32 = OperationState::Created.into();
-			let max_state: i32 = OperationState::Active.into();
-			let desired_state_int = min_state.max(max_state.min(state + state_diff));
-
-			OperationState::try_from(desired_state_int)
-				.unwrap_or_else(|_| panic!("should be infallible"))
+			self.operational.set_activation_state(state);
 		}
 
 		#[inline]
 		fn state(&self) -> OperationState {
-			self.current
+			self.operational.state()
 		}
 
 		#[inline]
 		fn set_state(&mut self, state: OperationState) {
-			self.current = state;
+			self.operational.set_state(state);
 		}
 	}
 }

@@ -6,7 +6,9 @@
 //!
 
 mod activity;
+mod activity_type;
 mod error;
 
 // flatten
 pub use activity::Activity;
+pub use activity_type::ActivityType;

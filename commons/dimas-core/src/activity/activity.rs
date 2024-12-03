@@ -27,7 +27,7 @@ pub trait Activity: Debug + Operational + Send + Sync {
 
 #[cfg(test)]
 mod tests {
-	use crate::{operational::Transitions, OperationState};
+	use crate::{operational::Transitions, OperationState, OperationalType};
 	use alloc::{boxed::Box, string::String};
 
 	use super::*;

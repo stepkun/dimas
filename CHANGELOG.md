@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   _breaking change_:
   read() and write() on context no longer return a Result, but the properties directly
 - improved tracing:
-  - default level is "warn" also for zenoh
+  - default level is "warn", also for zenoh
   - now uses `RUST_LOG=<level definitions>`
 
 ### Fixed

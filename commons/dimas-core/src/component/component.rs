@@ -93,9 +93,8 @@ pub trait Component: Debug + Operational + Send + Sync {
 
 #[cfg(test)]
 mod tests {
-	use crate::Transitions;
-	use alloc::{boxed::Box, sync::Arc};
-	use parking_lot::RwLock;
+	use crate::{ComponentType, OperationalType, Transitions};
+	use alloc::boxed::Box;
 
 	use super::*;
 
@@ -109,11 +108,9 @@ mod tests {
 	}
 
 	#[dimas_macros::component]
-	struct TestComponent {
-	}
+	struct TestComponent {}
 
-	impl TestComponent {
-	}
+	impl TestComponent {}
 
 	impl Transitions for TestComponent {}
 

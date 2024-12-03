@@ -38,19 +38,6 @@ impl Operational for OperationalType {
 		self.activation = state;
 	}
 
-	fn desired_state(&self, state: OperationState) -> OperationState {
-		let state: i32 = state.into();
-		let state_diff = OperationState::Active - self.activation;
-
-		// limit to bounds [`OperationState::Created`] <=> [`OperationState::Active`]
-		let min_state: i32 = OperationState::Created.into();
-		let max_state: i32 = OperationState::Active.into();
-		let desired_state_int = min_state.max(max_state.min(state + state_diff));
-
-		OperationState::try_from(desired_state_int)
-			.unwrap_or_else(|_| panic!("should be infallible"))
-	}
-
 	#[inline]
 	fn state(&self) -> OperationState {
 		self.current
