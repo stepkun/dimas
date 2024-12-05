@@ -7,8 +7,10 @@
 extern crate alloc;
 
 // region:		--- modules
-use crate::{operational::Transitions, Activity, OperationState, Operational, OperationalType};
-use alloc::{boxed::Box, sync::Arc, vec::Vec};
+use crate::{
+	operational::Transitions, Activity, ActivityId, OperationState, Operational, OperationalType,
+};
+use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use super::{Component, ComponentId};
@@ -31,12 +33,12 @@ impl Component for ComponentType {
 	}
 
 	#[inline]
-	fn add(&mut self, component: Box<dyn Component>) {
-		self.components.write().push(component);
+	fn add_activity(&mut self, activity: Box<dyn Activity>) {
+		self.activities.write().push(activity);
 	}
 
 	#[inline]
-	fn remove(&mut self, _id: ComponentId) {
+	fn remove_activity(&mut self, _id: ActivityId) {
 		todo!()
 	}
 
@@ -49,6 +51,16 @@ impl Component for ComponentType {
 	fn activities_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Activity>>> {
 		self.activities.write()
 	}
+	#[inline]
+
+	fn add_component(&mut self, component: Box<dyn Component>) {
+		self.components.write().push(component);
+	}
+
+	#[inline]
+	fn remove_component(&mut self, _id: ComponentId) {
+		todo!()
+	}
 
 	#[inline]
 	fn components(&self) -> RwLockReadGuard<Vec<Box<dyn Component>>> {
@@ -60,7 +72,7 @@ impl Component for ComponentType {
 		self.components.write()
 	}
 
-	fn set_id(&mut self, id: alloc::string::String) {
+	fn set_id(&mut self, id: String) {
 		self.id = id;
 	}
 }
@@ -94,14 +106,26 @@ impl Operational for ComponentType {
 	}
 }
 
+impl AsRef<OperationalType> for ComponentType {
+	fn as_ref(&self) -> &OperationalType {
+		&self.operational
+	}
+}
+
+impl AsMut<OperationalType> for ComponentType {
+	fn as_mut(&mut self) -> &mut OperationalType {
+		&mut self.operational
+	}
+}
+
 impl ComponentType {
-	/// Create a [`ComponentId`] wirh default activation state [`OperationState::Active`].
+	/// Create a [`ComponentType`] with default activation state [`OperationState::Active`].
 	#[must_use]
 	pub fn new(id: ComponentId) -> Self {
 		Self::with_activation_state(id, OperationState::Active)
 	}
 
-	/// Create a [`ComponentId`] with given state.
+	/// Create a [`ComponentType`] with given activation state.
 	#[must_use]
 	pub fn with_activation_state(id: ComponentId, activation_state: OperationState) -> Self {
 		Self {
@@ -110,6 +134,20 @@ impl ComponentType {
 			activities: Arc::new(RwLock::new(Vec::default())),
 			components: Arc::new(RwLock::new(Vec::default())),
 		}
+	}
+
+	/// Operational
+	#[must_use]
+	#[inline]
+	pub const fn operational(&self) -> &OperationalType {
+		&self.operational
+	}
+
+	/// Operational mut
+	#[must_use]
+	#[inline]
+	pub fn operational_mut(&mut self) -> &mut OperationalType {
+		&mut self.operational
 	}
 }
 // endregion:	--- ComponentType

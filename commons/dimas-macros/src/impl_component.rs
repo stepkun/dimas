@@ -37,6 +37,26 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
+fn self_functions() -> TokenStream {
+	quote! {
+		fn component(&self) -> &ComponentType {
+			&self.component
+		}
+
+		fn component_mut(&mut self) -> &mut ComponentType {
+			&mut self.component
+		}
+
+		fn operational(&self) -> &OperationalType {
+			self.component.operational()
+		}
+
+		fn operational_mut(&mut self) -> &mut OperationalType {
+			self.component.operational_mut()
+		}
+	}
+}
+
 fn component_fields() -> TokenStream {
 	quote! {
 		component: ComponentType,
@@ -56,13 +76,13 @@ fn component_functions() -> TokenStream {
 		}
 
 		#[inline]
-		fn add(&mut self, component: Box<dyn Component>) {
-			self.component.add(component);
+		fn add_activity(&mut self, activity: Box<dyn Activity>) {
+			self.component.add_activity(activity);
 		}
 
 		#[inline]
-		fn remove(&mut self, id: ComponentId) {
-			self.component.remove(id);
+		fn remove_activity(&mut self, id: ActivityId) {
+			self.component.remove_activity(id);
 		}
 
 		#[inline]
@@ -73,6 +93,16 @@ fn component_functions() -> TokenStream {
 		#[inline]
 		fn activities_mut(&mut self) -> parking_lot::RwLockWriteGuard<Vec<Box<dyn Activity>>> {
 			self.component.activities_mut()
+		}
+
+		#[inline]
+		fn add_component(&mut self, component: Box<dyn Component>) {
+			self.component.add_component(component);
+		}
+
+		#[inline]
+		fn remove_component(&mut self, id: ComponentId) {
+			self.component.remove_component(id);
 		}
 
 		#[inline]
@@ -114,25 +144,29 @@ fn component_struct(mut item: ItemStruct) -> Result<TokenStream> {
 
 	// create headers
 	let struct_header = create_struct_header(&item);
-	let operational_header = create_impl_header(&item, "Operational")?;
-	let component_header = create_impl_header(&item, "Component")?;
+	let impl_header = create_impl_header(&item, None)?;
+	let operational_header = create_impl_header(&item, Some("Operational"))?;
+	let component_header = create_impl_header(&item, Some("Component"))?;
 	// create blocks
+	let self_impl = self_functions();
 	let operational_block = impl_operational::operational_functions();
 	let component_block = component_functions();
 	// create fields
-	let operational_fields = impl_operational::operational_fields();
 	let component_fields = component_fields();
 
 	let out = quote! {
 		#user_attrs
 		#[derive(#derives)]
 		#struct_header {
-			#operational_fields
 			#component_fields
 			#old_fields
 		}
 
-		// add the impl for block after the struct
+		// add the necessary impl for blocks after the struct
+		#impl_header {
+			#self_impl
+		}
+
 		#operational_header {
 			#operational_block
 		}

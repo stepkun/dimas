@@ -1,8 +1,8 @@
 //! Copyright © 2024 Stephan Kunz
 
 use dimas_core::{
-	Activity, Component, ComponentId, ComponentType, OperationState, Operational, OperationalType,
-	Transitions,
+	Activity, ActivityId, Component, ComponentId, ComponentType, OperationState, Operational,
+	OperationalType, Transitions,
 };
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 
@@ -28,16 +28,6 @@ impl Transitions for TestComponent {}
 
 impl Component for TestComponent {
 	#[inline]
-	fn add(&mut self, component: Box<dyn Component>) {
-		self.component.add(component);
-	}
-
-	#[inline]
-	fn remove(&mut self, id: ComponentId) {
-		self.component.remove(id);
-	}
-
-	#[inline]
 	fn id(&self) -> ComponentId {
 		self.component.id()
 	}
@@ -48,8 +38,28 @@ impl Component for TestComponent {
 	}
 
 	#[inline]
+	fn add_activity(&mut self, activity: Box<dyn Activity>) {
+		self.component.add_activity(activity);
+	}
+
+	#[inline]
+	fn remove_activity(&mut self, id: ActivityId) {
+		self.component.remove_activity(id);
+	}
+
+	#[inline]
 	fn activities_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Activity>>> {
 		self.component.activities_mut()
+	}
+
+	#[inline]
+	fn add_component(&mut self, component: Box<dyn Component>) {
+		self.component.add_component(component);
+	}
+
+	#[inline]
+	fn remove_component(&mut self, id: ComponentId) {
+		self.component.remove_component(id);
 	}
 
 	#[inline]
@@ -117,9 +127,15 @@ fn create_test_data() -> TestComponent {
 	};
 
 	// create structure
-	component2.component.add(Box::new(component3));
-	component1.component.add(Box::new(component2));
-	component.component.add(Box::new(component1));
+	component2
+		.component
+		.add_component(Box::new(component3));
+	component1
+		.component
+		.add_component(Box::new(component2));
+	component
+		.component
+		.add_component(Box::new(component1));
 
 	component
 }

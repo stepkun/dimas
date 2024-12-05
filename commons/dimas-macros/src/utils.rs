@@ -76,12 +76,46 @@ pub fn create_struct_header(item: &ItemStruct) -> TokenStream {
 	}
 }
 
-pub fn create_impl_header(item: &ItemStruct, trait_name: &str) -> Result<TokenStream, LexError> {
+pub fn create_impl_header(
+	item: &ItemStruct,
+	trait_name: Option<&str>,
+) -> Result<TokenStream, LexError> {
 	let generics = &item.generics.params;
 	let where_clause = &item.generics.where_clause;
 	let item_ident = &item.ident;
+	if let Some(trait_name) = trait_name {
+		let name = trait_name.parse::<TokenStream>()?;
+		Ok(quote! {
+			impl<#generics> #name for #item_ident<#generics> #where_clause
+		})
+	} else {
+		Ok(quote! {
+			impl<#generics> #item_ident<#generics> #where_clause
+		})
+	}
+}
+
+pub fn create_as_refs(item: &ItemStruct, trait_name: &str) -> Result<TokenStream, LexError> {
+	let generics = &item.generics.params;
+	let where_clause = &item.generics.where_clause;
 	let name = trait_name.parse::<TokenStream>()?;
+	let item_ident = &item.ident;
+	let variable = trait_name.to_lowercase();
+	let mut variable_mut = variable.clone();
+	let variable = variable.parse::<TokenStream>()?;
+	variable_mut.push_str("_mut");
+	let variable_mut = variable_mut.parse::<TokenStream>()?;
 	Ok(quote! {
-		impl <#generics> #name for #item_ident <#generics> #where_clause
+		impl<#generics> AsRef<#name> for #item_ident<#generics> #where_clause {
+			fn as_ref(&self) {
+				self.#variable()
+			}
+		}
+
+		impl<#generics> AsMut<#name> for #item_ident<#generics> #where_clause {
+			fn as_mut(&mut self) {
+				self.#variable_mut()
+			}
+		}
 	})
 }

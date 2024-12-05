@@ -14,6 +14,8 @@ use alloc::{boxed::Box, vec::Vec};
 use anyhow::Result;
 use core::fmt::Debug;
 
+#[cfg(doc)]
+use crate::Component;
 use crate::{error::Error, Operational};
 
 use super::{Configuration, Connection};

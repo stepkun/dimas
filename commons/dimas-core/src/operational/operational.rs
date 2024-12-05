@@ -18,7 +18,7 @@ use super::{Error, OperationState};
 // endregion:	--- modules
 
 // region:		--- Operational
-/// Contract for [`Operational`]
+/// Contract for an [`Operational`]
 pub trait Operational: Transitions + Debug + Send + Sync {
 	/// Read the entities state when it shall be active
 	/// different from parent components [`OperationState`] can be provided.
@@ -53,7 +53,7 @@ pub trait Operational: Transitions + Debug + Send + Sync {
 
 	/// Call the appropriate transitions and return the reached state.
 	/// # Errors
-	/// In case of error, the [`Operational`]s state is set to [`OperationalState::Error`]
+	/// In case of error, the [`Operational`]s state is set to [`OperationState::Error`]
 	#[instrument(level = Level::TRACE, skip_all)]
 	fn state_transitions(&mut self, state: OperationState) -> Result<()> {
 		event!(Level::TRACE, "state_transitions");

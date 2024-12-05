@@ -13,7 +13,7 @@ use core::fmt::Debug;
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use tracing::{event, instrument, Level};
 
-use crate::{Activity, OperationState, Operational};
+use crate::{Activity, ActivityId, OperationState, Operational};
 // endregion:	--- modules
 
 // region:		--- types
@@ -24,19 +24,19 @@ pub type ComponentId = String;
 // endregion:	--- types
 
 // region:		--- Component
-/// Contract for a `Component`
+/// Contract for a [`Component`]
 pub trait Component: Debug + Operational + Send + Sync {
-	/// Add a sub [`Component`]
-	fn add(&mut self, component: Box<dyn Component>);
-
-	/// Remove the sub [`Component`] with the given `id`
-	fn remove(&mut self, id: ComponentId);
-
-	/// Get the [`Components`] unique ID
+	/// Get the [`Component`]s unique ID
 	fn id(&self) -> ComponentId;
 
-	/// Set the [`Components`] unique ID
+	/// Set the [`Component`]s unique ID
 	fn set_id(&mut self, id: String);
+
+	/// Add a sub [`Activity`]
+	fn add_activity(&mut self, activity: Box<dyn Activity>);
+
+	/// Remove the sub [`Activity`] with the given `id`
+	fn remove_activity(&mut self, id: ActivityId);
 
 	/// Read access to activities
 	/// @TODO: should return an Iterator
@@ -45,6 +45,12 @@ pub trait Component: Debug + Operational + Send + Sync {
 	/// Write access to activities
 	/// @TODO: should return an Iterator
 	fn activities_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Activity>>>;
+
+	/// Add a sub [`Component`]
+	fn add_component(&mut self, component: Box<dyn Component>);
+
+	/// Remove the sub [`Component`] with the given `id`
+	fn remove_component(&mut self, id: ComponentId);
 
 	/// Read access to sub components
 	/// @TODO: should return an Iterator

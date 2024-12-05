@@ -16,7 +16,8 @@ use syn::{parse::Parser, punctuated::Punctuated, Fields, ItemFn, Meta, Result, T
 use syn::{parse2, parse_macro_input, AttrStyle, Error, ItemStruct, Path};
 
 use crate::utils::{
-	collect_data, convert_attrs, convert_derives, create_impl_header, create_struct_header,
+	collect_data, convert_attrs, convert_derives, create_as_refs, create_impl_header,
+	create_struct_header,
 };
 
 type Arguments = Punctuated<Meta, Token![,]>;
@@ -36,6 +37,18 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
+fn self_functions() -> TokenStream {
+	quote! {
+		fn operational(&self) -> &OperationalType {
+			&self.operational
+		}
+
+		fn operational_mut(&mut self) -> &mut OperationalType {
+			&mut self.operational
+		}
+	}
+}
+
 pub fn operational_fields() -> TokenStream {
 	quote! {
 		operational: OperationalType,
@@ -46,22 +59,22 @@ pub fn operational_functions() -> TokenStream {
 	quote! {
 		#[inline]
 		fn activation_state(&self) -> OperationState {
-			self.operational.activation_state()
+			self.operational().activation_state()
 		}
 
 		#[inline]
 		fn set_activation_state(&mut self, state: OperationState) {
-			self.operational.set_activation_state(state);
+			self.operational_mut().set_activation_state(state);
 		}
 
 		#[inline]
 		fn state(&self) -> OperationState {
-			self.operational.state()
+			self.operational().state()
 		}
 
 		#[inline]
 		fn set_state(&mut self, state: OperationState) {
-			self.operational.set_state(state);
+			self.operational_mut().set_state(state);
 		}
 	}
 }
@@ -93,9 +106,11 @@ fn operational_struct(mut item: ItemStruct) -> Result<TokenStream> {
 
 	// create headers
 	let struct_header = create_struct_header(&item);
-	let operational_header = create_impl_header(&item, "Operational")?;
+	let impl_header = create_impl_header(&item, None)?;
+	let operational_header = create_impl_header(&item, Some("Operational"))?;
 	// create blocks
-	let operational_block = operational_functions();
+	let self_impl = self_functions();
+	let operational_impl = operational_functions();
 	// create fields
 	let operational_fields = operational_fields();
 
@@ -107,9 +122,13 @@ fn operational_struct(mut item: ItemStruct) -> Result<TokenStream> {
 			#old_fields
 		}
 
-		// add the impl for block after the struct
+		// add the necessary impl for blocks after the struct
+		#impl_header {
+			#self_impl
+		}
+
 		#operational_header {
-			#operational_block
+			#operational_impl
 		}
 	};
 	Ok(out)

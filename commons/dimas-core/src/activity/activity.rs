@@ -14,13 +14,20 @@ use core::fmt::Debug;
 use crate::Operational;
 // endregion:	--- modules
 
+// region:		--- types
+/// An identifier for an [`Activity`].
+/// May be replaced with a more complex struct in future.
+#[allow(clippy::module_name_repetitions)]
+pub type ActivityId = String;
+// endregion:	--- types
+
 // region:		--- Activity
 /// Contract for an `Activity`
 pub trait Activity: Debug + Operational + Send + Sync {
 	/// Get [`Activity`]s id
-	fn id(&self) -> String;
+	fn id(&self) -> ActivityId;
 
 	/// Get [`Activity`]s id
-	fn set_id(&mut self, id: String);
+	fn set_id(&mut self, id: ActivityId);
 }
 // endregion:	--- Activity

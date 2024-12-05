@@ -10,5 +10,5 @@ mod activity_type;
 mod error;
 
 // flatten
-pub use activity::Activity;
+pub use activity::{Activity, ActivityId};
 pub use activity_type::ActivityType;

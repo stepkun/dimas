@@ -37,9 +37,29 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
+fn self_functions() -> TokenStream {
+	quote! {
+		fn activity(&self) -> &ActivityType {
+			&self.activity
+		}
+
+		fn activity_mut(&mut self) -> &mut ActivityType {
+			&mut self.activity
+		}
+
+		fn operational(&self) -> &OperationalType {
+			self.activity.operational()
+		}
+
+		fn operational_mut(&mut self) -> &mut OperationalType {
+			self.activity.operational_mut()
+		}
+	}
+}
+
 pub fn activity_fields() -> TokenStream {
 	quote! {
-		id: String,
+		activity: ActivityType,
 	}
 }
 
@@ -47,12 +67,12 @@ pub fn activity_functions() -> TokenStream {
 	quote! {
 		#[inline]
 		fn id(&self) -> String {
-			self.id.clone()
+			self.activity.id().clone()
 		}
 
 		#[inline]
 		fn set_id(&mut self, id: String){
-			self.id = id;
+			self.activity.set_id(id);
 		}
 	}
 }
@@ -84,25 +104,29 @@ fn activity_struct(mut item: ItemStruct) -> Result<TokenStream> {
 
 	// create headers
 	let struct_header = create_struct_header(&item);
-	let operational_header = create_impl_header(&item, "Operational")?;
-	let activity_header = create_impl_header(&item, "Activity")?;
+	let impl_header = create_impl_header(&item, None)?;
+	let operational_header = create_impl_header(&item, Some("Operational"))?;
+	let activity_header = create_impl_header(&item, Some("Activity"))?;
 	// create blocks
+	let self_impl = self_functions();
 	let operational_block = impl_operational::operational_functions();
 	let activity_block = activity_functions();
 	// create fields
-	let operational_fields = impl_operational::operational_fields();
 	let activity_fields = activity_fields();
 
 	let out = quote! {
 		#user_attrs
 		#[derive(#derives)]
 		#struct_header {
-			#operational_fields
 			#activity_fields
 			#old_fields
 		}
 
-		// add the impl for block after the struct
+		// add the necessary impl for blocks after the struct
+		#impl_header {
+			#self_impl
+		}
+
 		#operational_header {
 			#operational_block
 		}

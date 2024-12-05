@@ -63,6 +63,8 @@ pub fn operational(metadata: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 // some helper functions
-fn common_derives() -> Vec<proc_macro2::TokenStream> {
-	vec![quote::quote! { ::core::clone::Clone, ::core::fmt::Debug, ::core::default::Default }]
+const fn common_derives() -> Vec<proc_macro2::TokenStream> {
+	//vec![quote::quote! { ::core::clone::Clone, ::core::fmt::Debug, ::core::default::Default }]
+	//vec![quote::quote! { ::core::clone::Clone }]
+	Vec::new()
 }

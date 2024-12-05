@@ -1,6 +1,8 @@
 //! Copyright © 2024 Stephan Kunz
 
-use dimas_core::{Activity, OperationState, Operational, OperationalType, Transitions};
+use dimas_core::{
+	Activity, ActivityType, OperationState, Operational, OperationalType, Transitions,
+};
 use std::fmt::Debug;
 
 // #[dimas::activity(attr = "wrong attribute")]
@@ -14,6 +16,7 @@ use std::fmt::Debug;
 // struct Test();
 
 #[dimas_macros::activity]
+#[derive(Debug)]
 struct TestActivity1<P>
 where
 	P: Debug + Send + Sync,
@@ -24,6 +27,7 @@ where
 impl<P> Transitions for TestActivity1<P> where P: Debug + Send + Sync {}
 
 #[dimas_macros::activity]
+#[derive(Debug, Default)]
 struct TestActivity2 {
 	dummy: String,
 }

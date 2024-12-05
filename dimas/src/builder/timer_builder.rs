@@ -223,7 +223,7 @@ impl<P, S> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, S>
 where
 	P: Send + Sync + 'static,
 {
-	/// Build the [Timer]
+	/// Build the [`IntervalTimer`]
 	/// # Errors
 	///
 	pub fn build(self) -> Result<IntervalTimer<P>> {
@@ -239,11 +239,11 @@ where
 
 		Ok(IntervalTimer::new(
 			name.selector,
-			context,
-			activation_state,
-			callback.callback,
 			interval.interval,
 			delay,
+			activation_state,
+			callback.callback,
+			context,
 		))
 	}
 }

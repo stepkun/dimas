@@ -565,7 +565,7 @@ where
 		SubscriberBuilder::new(session_id, self.context.clone()).storage(self.context.responders())
 	}
 
-	/// Get a [`TimerBuilder`], the builder for a [`Timer`].
+	/// Get a [`TimerBuilder`], the builder for an [`IntervalTimer`].
 	#[must_use]
 	pub fn timer(
 		&self,
