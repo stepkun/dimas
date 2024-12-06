@@ -1,26 +1,24 @@
 // Copyright © 2023 Stephan Kunz
 
-//! Module `subscriber` provides a message `Subscriber` which can be created using the `SubscriberBuilder`.
-//! A `Subscriber` can optional subscribe on a delete message.
+//! Module `subscriber_builder`.
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{
-	traits::Responder as SubscriberTrait,
-	zenoh::subscriber::{
-		ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber,
-	},
+use dimas_com::zenoh::subscriber::{
+	ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber, SubscriberParameter,
 };
-use dimas_core::{message_types::Message, traits::Context, utils::selector_from, OperationState};
+use dimas_core::{
+	message_types::Message, traits::Context, utils::selector_from, ActivityType, OperationState,
+	System, SystemType,
+};
 use futures::future::Future;
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -193,10 +191,7 @@ where
 {
 	/// Provide agents storage for the subscriber
 	#[must_use]
-	pub fn storage(
-		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn SubscriberTrait>>>>,
-	) -> SubscriberBuilder<P, K, C, Storage<Box<dyn SubscriberTrait>>> {
+	pub fn storage(self, storage: &mut SystemType) -> SubscriberBuilder<P, K, C, StorageNew> {
 		let Self {
 			session_id,
 			context,
@@ -216,7 +211,7 @@ where
 			allowed_origin,
 			selector,
 			put_callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 			delete_callback,
 		}
 	}
@@ -242,24 +237,32 @@ where
 			delete_callback,
 			..
 		} = self;
+
 		let session = context
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
+
+		let selector = selector.selector;
+
+		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		#[cfg(not(feature = "unstable"))]
+		let parameter = SubscriberParameter::new();
+		#[cfg(feature = "unstable")]
+		let parameter = SubscriberParameter::new(self.allowed_destination);
+
 		Ok(Subscriber::new(
+			activity,
+			selector,
+			parameter,
 			session,
-			selector.selector,
 			context,
-			activation_state,
-			#[cfg(feature = "unstable")]
-			allowed_origin,
 			put_callback.callback,
 			delete_callback,
 		))
 	}
 }
 
-impl<P>
-	SubscriberBuilder<P, Selector, Callback<ArcPutCallback<P>>, Storage<Box<dyn SubscriberTrait>>>
+impl<'a, P> SubscriberBuilder<P, Selector, Callback<ArcPutCallback<P>>, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {
@@ -267,14 +270,11 @@ where
 	///
 	/// # Errors
 	/// Currently none
-	pub fn add(self) -> Result<Option<Box<dyn SubscriberTrait>>> {
-		let c = self.storage.storage.clone();
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
 		let s = self.build()?;
-
-		let r = c
-			.write()
-			.insert(s.selector().to_string(), Box::new(s));
-		Ok(r)
+		collection.add_activity(Box::new(s));
+		Ok(())
 	}
 }
 // endregion:	--- SubscriberBuilder

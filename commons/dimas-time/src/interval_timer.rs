@@ -21,7 +21,7 @@ use dimas_core::{
 use parking_lot::Mutex;
 #[cfg(feature = "std")]
 use tokio::{task::JoinHandle, time};
-use tracing::{error, info, instrument, warn, Level};
+use tracing::{error, event, info, instrument, warn, Level};
 
 use crate::IntervalTimerParameter;
 
@@ -64,6 +64,7 @@ where
 {
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn activate(&mut self) -> Result<()> {
+		event!(Level::DEBUG, "activate");
 		let key = self.id();
 		let delay = self.parameter.delay;
 		let interval = self.parameter.interval;
@@ -127,7 +128,7 @@ where
 	}
 }
 
-#[instrument(name="timer", level = Level::ERROR, skip_all)]
+#[instrument(name="timer", level = Level::TRACE, skip_all)]
 async fn run_timer<P>(interval: Duration, cb: ArcTimerCallback<P>, ctx: Context<P>)
 where
 	P: Send + Sync + 'static,

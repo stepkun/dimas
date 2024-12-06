@@ -2,7 +2,7 @@
 
 //! Tests
 
-use dimas_time::{IntervalTimer, Timer, IntervalTimerParameter, TimerVariant};
+use dimas_time::{IntervalTimer, IntervalTimerParameter, Timer, TimerVariant};
 
 #[derive(Debug)]
 struct Props {}

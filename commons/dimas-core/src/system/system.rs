@@ -15,7 +15,10 @@ use anyhow::Result;
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use tracing::{event, instrument, Level};
 
-use crate::{activity, error::Error, Activity, ActivityId, Component, ComponentId, Configuration, Connection, OperationState, Operational};
+use crate::{
+	activity, error::Error, Activity, ActivityId, Component, ComponentId, Configuration,
+	Connection, OperationState, Operational,
+};
 // endregion:	--- modules
 
 // region:		--- types
@@ -61,7 +64,7 @@ pub trait System: Operational + Send + Sync {
 	/// Write access to sub components
 	/// @TODO: should return an Iterator
 	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>>;
-	
+
 	// /// get all connections
 	// fn connections(&self) -> Vec<Box<dyn Connection>> {
 	// 	Vec::new()

@@ -38,45 +38,45 @@ fn parse_config(args: Arguments) -> Result<Config> {
 }
 
 // fn self_functions() -> TokenStream {
-	// quote! {
-		// fn parameter(&self) -> &ParameterType {
-			// &self.parameter
-		// }
-// 
-		// fn parameter_mut(&mut self) -> &mut ParameterType {
-			// &mut self.parameter
-		// }
-	// }
+// quote! {
+// fn parameter(&self) -> &ParameterType {
+// &self.parameter
 // }
-// 
+//
+// fn parameter_mut(&mut self) -> &mut ParameterType {
+// &mut self.parameter
+// }
+// }
+// }
+//
 // pub fn parameter_fields() -> TokenStream {
-	// quote! {
-		// parameter: ParameterType,
-	// }
+// quote! {
+// parameter: ParameterType,
 // }
-// 
+// }
+//
 // pub fn parameter_functions() -> TokenStream {
-	// quote! {
-		// #[inline]
-		// fn activation_state(&self) -> OperationState {
-			// self.parameter().activation_state()
-		// }
-// 
-		// #[inline]
-		// fn set_activation_state(&mut self, state: OperationState) {
-			// self.parameter_mut().set_activation_state(state);
-		// }
-// 
-		// #[inline]
-		// fn state(&self) -> OperationState {
-			// self.parameter().state()
-		// }
-// 
-		// #[inline]
-		// fn set_state(&mut self, state: OperationState) {
-			// self.parameter_mut().set_state(state);
-		// }
-	// }
+// quote! {
+// #[inline]
+// fn activation_state(&self) -> OperationState {
+// self.parameter().activation_state()
+// }
+//
+// #[inline]
+// fn set_activation_state(&mut self, state: OperationState) {
+// self.parameter_mut().set_activation_state(state);
+// }
+//
+// #[inline]
+// fn state(&self) -> OperationState {
+// self.parameter().state()
+// }
+//
+// #[inline]
+// fn set_state(&mut self, state: OperationState) {
+// self.parameter_mut().set_state(state);
+// }
+// }
 // }
 
 #[allow(clippy::explicit_iter_loop)]
@@ -137,9 +137,7 @@ pub fn parameter(args: TokenStream, input: TokenStream) -> TokenStream {
 				.and_then(parse_config);
 			match args {
 				Err(err) => err.into_compile_error(),
-				Ok(args) => {
-					parameter_struct(item_struct).unwrap_or_else(Error::into_compile_error)
-				}
+				Ok(args) => parameter_struct(item_struct).unwrap_or_else(Error::into_compile_error),
 			}
 		},
 	)

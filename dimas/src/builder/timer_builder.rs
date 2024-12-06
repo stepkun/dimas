@@ -194,10 +194,7 @@ where
 {
 	/// Provide agents storage for the timer
 	#[must_use]
-	pub fn storage(
-		self,
-		storage: &mut SystemType,
-	) -> TimerBuilder<P, K, I, C, StorageNew> {
+	pub fn storage(self, storage: &mut SystemType) -> TimerBuilder<P, K, I, C, StorageNew> {
 		let Self {
 			context,
 			activation_state,
@@ -248,8 +245,7 @@ where
 	}
 }
 
-impl<'a, P>
-	TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, StorageNew<'a>>
+impl<'a, P> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {

@@ -15,10 +15,10 @@ use quote::{quote, TokenStreamExt};
 use syn::{parse::Parser, punctuated::Punctuated, Fields, ItemFn, Meta, Result, Token};
 use syn::{parse2, parse_macro_input, AttrStyle, Error, ItemStruct, Path};
 
+use crate::impl_operational;
 use crate::utils::{
 	collect_data, convert_attrs, convert_derives, create_impl_header, create_struct_header,
 };
-use crate::impl_operational;
 
 type Arguments = Punctuated<Meta, Token![,]>;
 

@@ -2,7 +2,7 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-//! Module `timer_builder` provides a builder for the different [`TimerVariant`]s
+//! Module `interval_timer_parameter` provides a parameter struct for [`IntervalTimer`]s
 
 // region:		--- modules
 use anyhow::Result;
@@ -11,11 +11,9 @@ use dimas_core::traits::Context;
 
 #[cfg(doc)]
 use crate::IntervalTimer;
-
-use super::{ArcTimerCallback, TimerVariant};
 // endregion:   --- modules
 
-// region:      --- TimerBuilder
+// region:      --- IntervalTimerParameter
 /// Parameters for an [`IntervalTimer`]
 #[dimas_macros::parameter]
 pub struct IntervalTimerParameter {
@@ -36,14 +34,11 @@ impl Default for IntervalTimerParameter {
 }
 
 impl IntervalTimerParameter {
-	/// Create an [`IntervalTimerParameter`] set with 
+	/// Create an [`IntervalTimerParameter`] set with
 	/// an `interval` and an optional 'delay'
 	#[must_use]
 	pub const fn new(interval: Duration, delay: Option<Duration>) -> Self {
-		Self {
-			interval,
-			delay,
-		}
+		Self { interval, delay }
 	}
 }
-// endregion:   --- TimerBuilder
+// endregion:   --- IntervalTimerParameter

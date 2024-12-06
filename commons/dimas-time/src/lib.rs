@@ -10,8 +10,8 @@ extern crate alloc;
 // region:    --- modules
 mod error;
 mod interval_timer;
-mod timer;
 mod interval_timer_parameter;
+mod timer;
 mod timer_variant;
 
 use alloc::sync::Arc;
@@ -29,7 +29,7 @@ pub type ArcTimerCallback<P> =
 
 // flatten
 pub use interval_timer::IntervalTimer;
-pub use timer::Timer;
 pub use interval_timer_parameter::IntervalTimerParameter;
+pub use timer::Timer;
 pub use timer_variant::TimerVariant;
 // endregion: --- modules

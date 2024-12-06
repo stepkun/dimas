@@ -11,7 +11,7 @@ use alloc::string::String;
 use anyhow::Result;
 use tracing::{event, instrument, Level};
 
-use crate::{Operational, OperationState};
+use crate::{OperationState, Operational};
 // endregion:	--- modules
 
 // region:		--- types

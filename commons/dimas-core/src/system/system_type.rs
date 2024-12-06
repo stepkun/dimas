@@ -10,7 +10,8 @@ extern crate alloc;
 
 // region:		--- modules
 use crate::{
-	operational::Transitions, Activity, ActivityId, Component, ComponentId, OperationState, Operational, OperationalType
+	operational::Transitions, Activity, ActivityId, Component, ComponentId, OperationState,
+	Operational, OperationalType,
 };
 use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};

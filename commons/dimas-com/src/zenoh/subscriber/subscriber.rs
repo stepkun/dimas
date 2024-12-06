@@ -8,16 +8,17 @@ use crate::error::Error;
 use anyhow::Result;
 use dimas_core::Transitions;
 use dimas_core::{
-	enums::TaskSignal, message_types::Message, traits::Context, OperationState, Operational,
+	enums::TaskSignal, message_types::Message, traits::Context, Activity, ActivityType,
+	OperationState, Operational, OperationalType,
 };
 use futures::future::BoxFuture;
 use std::sync::Arc;
 use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::{error, event, info, instrument, warn, Level};
-#[cfg(feature = "unstable")]
-use zenoh::sample::Locality;
 use zenoh::sample::SampleKind;
 use zenoh::Session;
+
+use super::SubscriberParameter;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -35,22 +36,19 @@ pub type ArcDeleteCallback<P> = Arc<Mutex<DeleteCallback<P>>>;
 
 // region:		--- Subscriber
 /// Subscriber
+#[dimas_macros::activity]
 pub struct Subscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
 	/// the zenoh session this subscriber belongs to
 	session: Arc<Session>,
 	/// The subscribers key expression
 	selector: String,
+	/// Subscriber parameter
+	parameter: SubscriberParameter,
 	/// Context for the Subscriber
 	context: Context<P>,
-	/// The state from parent, at which [`OperationState::Active`] should be reached
-	activation_state: OperationState,
-	#[cfg(feature = "unstable")]
-	allowed_origin: Locality,
 	put_callback: ArcPutCallback<P>,
 	delete_callback: Option<ArcDeleteCallback<P>>,
 	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
@@ -90,8 +88,7 @@ where
 		let ctx1 = self.context.clone();
 		let ctx2 = self.context.clone();
 		let session = self.session.clone();
-		#[cfg(feature = "unstable")]
-		let allowed_origin = self.allowed_origin;
+		let parameter = self.parameter.clone();
 
 		self.handle
 			.lock()
@@ -108,16 +105,8 @@ where
 						info!("restarting subscriber!");
 					};
 				}));
-				if let Err(error) = run_subscriber(
-					session,
-					selector,
-					#[cfg(feature = "unstable")]
-					allowed_origin,
-					p_cb,
-					d_cb,
-					ctx2.clone(),
-				)
-				.await
+				if let Err(error) =
+					run_subscriber(session, selector, parameter, p_cb, d_cb, ctx2).await
 				{
 					error!("spawning subscriber failed with {error}");
 				};
@@ -133,31 +122,6 @@ where
 	}
 }
 
-impl<P> Operational for Subscriber<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
 impl<P> Subscriber<P>
 where
 	P: Send + Sync + 'static,
@@ -165,22 +129,20 @@ where
 	/// Constructor for a [`Subscriber`].
 	#[must_use]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		selector: impl Into<String>,
+		parameter: SubscriberParameter,
+		session: Arc<Session>,
 		context: Context<P>,
-		activation_state: OperationState,
-		#[cfg(feature = "unstable")] allowed_origin: Locality,
 		put_callback: ArcPutCallback<P>,
 		delete_callback: Option<ArcDeleteCallback<P>>,
 	) -> Self {
 		Self {
-			current_state: OperationState::default(),
-			session,
+			activity,
 			selector: selector.into(),
+			parameter,
+			session,
 			context,
-			activation_state,
-			#[cfg(feature = "unstable")]
-			allowed_origin,
 			put_callback,
 			delete_callback,
 			handle: parking_lot::Mutex::new(None),
@@ -188,11 +150,12 @@ where
 	}
 }
 
+#[allow(unused_variables)]
 #[instrument(name="subscriber", level = Level::ERROR, skip_all)]
 async fn run_subscriber<P>(
 	session: Arc<Session>,
 	selector: String,
-	#[cfg(feature = "unstable")] allowed_origin: Locality,
+	parameter: SubscriberParameter,
 	p_cb: ArcPutCallback<P>,
 	d_cb: Option<ArcDeleteCallback<P>>,
 	ctx: Context<P>,
@@ -203,7 +166,7 @@ where
 	let builder = session.declare_subscriber(&selector);
 
 	#[cfg(feature = "unstable")]
-	let builder = builder.allowed_origin(allowed_origin);
+	let builder = builder.allowed_origin(parameter.allowed_origin);
 
 	let subscriber = builder.await?;
 

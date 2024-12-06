@@ -1,13 +1,13 @@
 // Copyright © 2023 Stephan Kunz
 
-//! Module `publisher` provides a message sender `Publisher` which can be created using the `PublisherBuilder`.
+//! Module `publisher_builder`.
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{traits::Publisher as PublisherTrait, zenoh::publisher::Publisher};
-use dimas_core::{traits::Context, utils::selector_from, OperationState};
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use dimas_com::zenoh::publisher::{Publisher, PublisherParameter};
+use dimas_core::{
+	traits::Context, utils::selector_from, ActivityType, OperationState, System, SystemType,
+};
 use zenoh::{
 	bytes::Encoding,
 	qos::{CongestionControl, Priority},
@@ -16,7 +16,7 @@ use zenoh::{
 use zenoh::{qos::Reliability, sample::Locality};
 
 use super::{
-	builder_states::{NoSelector, NoStorage, Selector, Storage},
+	builder_states::{NoSelector, NoStorage, Selector, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -136,10 +136,7 @@ where
 {
 	/// Provide agents storage for the publisher
 	#[must_use]
-	pub fn storage(
-		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn PublisherTrait>>>>,
-	) -> PublisherBuilder<P, K, Storage<Box<dyn PublisherTrait>>> {
+	pub fn storage(self, storage: &mut SystemType) -> PublisherBuilder<P, K, StorageNew> {
 		let Self {
 			session_id,
 			context,
@@ -168,7 +165,7 @@ where
 			#[cfg(feature = "unstable")]
 			reliability,
 			selector,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 		}
 	}
 }
@@ -236,23 +233,39 @@ where
 			.context
 			.session(&self.session_id)
 			.ok_or(Error::NoZenohSession)?;
-		Ok(Publisher::new(
-			session,
-			self.selector.selector,
+
+		let activity = ActivityType::with_activation_state(
+			self.selector.selector.clone(),
 			self.activation_state,
-			#[cfg(feature = "unstable")]
-			self.allowed_destination,
+		);
+
+		let encoding = Encoding::from(self.encoding);
+		#[cfg(not(feature = "unstable"))]
+		let parameter = PublisherParameter::new(
 			self.congestion_control,
-			self.encoding,
+			encoding,
 			self.express,
 			self.priority,
-			#[cfg(feature = "unstable")]
+		);
+		#[cfg(feature = "unstable")]
+		let parameter = PublisherParameter::new(
+			self.congestion_control,
+			encoding,
+			self.express,
+			self.priority,
 			self.reliability,
+			self.allowed_destination,
+		);
+		Ok(Publisher::new(
+			activity,
+			self.selector.selector,
+			parameter,
+			session,
 		))
 	}
 }
 
-impl<P> PublisherBuilder<P, Selector, Storage<Box<dyn PublisherTrait>>>
+impl<'a, P> PublisherBuilder<P, Selector, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {
@@ -260,13 +273,11 @@ where
 	///
 	/// # Errors
 	/// Currently none
-	pub fn add(self) -> Result<Option<Box<dyn PublisherTrait>>> {
-		let collection = self.storage.storage.clone();
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
 		let p = self.build()?;
-		let r = collection
-			.write()
-			.insert(p.selector().to_string(), Box::new(p));
-		Ok(r)
+		collection.add_activity(Box::new(p));
+		Ok(())
 	}
 }
 // endregion:	--- PublisherBuilder

@@ -13,34 +13,23 @@ use crate::error::Error;
 use alloc::{string::String, sync::Arc};
 use anyhow::Result;
 use core::fmt::Debug;
-use dimas_core::{message_types::Message, OperationState, Operational, Transitions};
-use tracing::{event, instrument, Level};
-#[cfg(feature = "unstable")]
-use zenoh::{qos::Reliability, sample::Locality};
-use zenoh::{
-	qos::{CongestionControl, Priority},
-	Session, Wait,
+use dimas_core::{
+	message_types::Message, Activity, ActivityType, OperationState, Operational, OperationalType,
+	Transitions,
 };
+use tracing::{event, instrument, Level};
+use zenoh::{Session, Wait};
+
+use super::PublisherParameter;
 // endregion:	--- modules
 
 // region:		--- Publisher
 /// Publisher
+#[dimas_macros::activity]
 pub struct Publisher {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
-	/// the zenoh session this publisher belongs to
-	session: Arc<Session>,
 	selector: String,
-	/// The state from parent, at which [`OperationState::Active`] should be reached
-	activation_state: OperationState,
-	#[cfg(feature = "unstable")]
-	allowed_destination: Locality,
-	congestion_control: CongestionControl,
-	encoding: String,
-	express: bool,
-	priority: Priority,
-	#[cfg(feature = "unstable")]
-	reliability: Reliability,
+	parameter: PublisherParameter,
+	session: Arc<Session>,
 	publisher: parking_lot::Mutex<Option<zenoh::pubsub::Publisher<'static>>>,
 }
 
@@ -48,7 +37,6 @@ impl Debug for Publisher {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		f.debug_struct("Publisher")
 			.field("selector", &self.selector)
-			.field("initialized", &self.publisher)
 			.finish_non_exhaustive()
 	}
 }
@@ -62,8 +50,9 @@ impl crate::traits::Publisher for Publisher {
 	/// Send a "put" message
 	/// # Errors
 	///
-	#[instrument(name="publish", level = Level::ERROR, skip_all)]
+	#[instrument(name="publish", level = Level::TRACE, skip_all)]
 	fn put(&self, message: Message) -> Result<()> {
+		event!(Level::TRACE, "put");
 		match self
 			.publisher
 			.lock()
@@ -80,8 +69,9 @@ impl crate::traits::Publisher for Publisher {
 	/// Send a "delete" message
 	/// # Errors
 	///
-	#[instrument(level = Level::ERROR, skip_all)]
+	#[instrument(level = Level::TRACE, skip_all)]
 	fn delete(&self) -> Result<()> {
+		event!(Level::TRACE, "delete");
 		match self
 			.publisher
 			.lock()
@@ -100,19 +90,18 @@ impl Transitions for Publisher {
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn activate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "activate");
-		println!("Test");
 		let builder = self
 			.session
 			.declare_publisher(self.selector.clone())
-			.congestion_control(self.congestion_control)
-			.encoding(self.encoding.as_str())
-			.express(self.express)
-			.priority(self.priority);
+			.congestion_control(self.parameter.congestion_control)
+			.encoding(self.parameter.encoding.clone())
+			.express(self.parameter.express)
+			.priority(self.parameter.priority);
 
 		#[cfg(feature = "unstable")]
 		let builder = builder
-			.allowed_destination(self.allowed_destination)
-			.reliability(self.reliability);
+			.allowed_destination(self.parameter.allowed_destination)
+			.reliability(self.parameter.reliability);
 
 		builder.wait().map_or_else(
 			|_| Err(Error::Unexpected(file!().into(), line!()).into()),
@@ -131,56 +120,23 @@ impl Transitions for Publisher {
 	}
 }
 
-impl Operational for Publisher {
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
 impl Publisher {
 	/// Constructor for a [`Publisher`]
 	#[allow(clippy::too_many_arguments)]
 	#[must_use]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		selector: impl Into<String>,
-		activation_state: OperationState,
-		#[cfg(feature = "unstable")] allowed_destination: Locality,
-		congestion_control: CongestionControl,
-		encoding: impl Into<String>,
-		express: bool,
-		priority: Priority,
-		#[cfg(feature = "unstable")] reliability: Reliability,
+		parameter: PublisherParameter,
+		session: Arc<Session>,
 	) -> Self {
+		let selector = selector.into();
+
 		Self {
-			current_state: OperationState::default(),
+			activity,
+			parameter,
 			session,
-			selector: selector.into(),
-			activation_state,
-			#[cfg(feature = "unstable")]
-			allowed_destination,
-			congestion_control,
-			encoding: encoding.into(),
-			express,
-			priority,
-			#[cfg(feature = "unstable")]
-			reliability,
+			selector,
 			publisher: parking_lot::Mutex::new(None),
 		}
 	}
