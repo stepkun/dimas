@@ -79,11 +79,11 @@ serde = "1.0.210"
 slint = "1.2.0"
 slint-build = "1.2.0"
 parking_lot = "0.12.3"
-thiserror = "2.0.3"
+thiserror = "2.0.4"
 tokio = { version = "1.40.0", features = ["parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
-zenoh = "1.0.3"
+zenoh = "1.0.4"
 
 [profile.release]
 opt-level = 'z'   # Optimize for size.

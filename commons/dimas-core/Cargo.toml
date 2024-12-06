@@ -16,8 +16,8 @@ description = "dimas-core - core library for DiMAS"
 documentation = "https://docs.rs/dimas-core/latest/dimas-core/"
 readme = "README.md"
 exclude = [
-    "tests/**/*",
-    "examples/**/*",
+    "tests/**",
+    "examples/**",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -35,6 +35,10 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 zenoh = { workspace = true }
+
+[build-dependencies]
+
+[dev-dependencies]
 
 [features]
 default = ["std"]

@@ -14,8 +14,8 @@ description = "dimas-commands - commands library for DiMAS"
 documentation = "https://docs.rs/dimas-commmands/latest/dimas-commands/"
 readme = "README.md"
 exclude = [
-    "tests/**/*",
-    "examples/**/*",
+    "tests/**",
+    "examples/**",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -30,10 +30,15 @@ chrono = { workspace = true }
 dimas-com = { workspace = true }
 dimas-config = { workspace = true }
 dimas-core = { workspace = true }
+dimas-macros = { workspace = true }
 itertools = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true}
 zenoh = { workspace = true }
+
+[build-dependencies]
+
+[dev-dependencies]
 
 [features]
 default = ["std"]

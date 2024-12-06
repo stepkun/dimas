@@ -16,8 +16,8 @@ description = "proc-macros for dimas"
 documentation = "https://docs.rs/dimas-macros/latest/dimas-macros/"
 readme = "README.md"
 exclude = [
-    "tests/**/*",
-    "examples/**/*",
+    "tests/**",
+    "examples/**",
 ]
 
 [lib]

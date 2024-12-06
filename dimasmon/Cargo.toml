@@ -14,7 +14,7 @@ description = "dimasmon - a monitoring tool for DiMAS"
 documentation = "https://docs.rs/dimasmon/latest/dimasmon/"
 readme = "README.md"
 exclude = [
-    "tests/**/*",
+    "tests/**",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -36,7 +36,10 @@ private_intra_doc_links = "allow"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+dimas-macros = { workspace =true }
 slint = { workspace = true }
 
 [build-dependencies]
 slint-build = { workspace = true }
+
+[dev-dependencies]
