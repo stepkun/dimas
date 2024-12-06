@@ -10,9 +10,9 @@ extern crate alloc;
 // endregion:   --- modules
 
 // region:      --- TimerVariant
-/// All known timer variants
+/// All implemented timer variants
 pub enum TimerVariant {
-	/// An interval timer w/o delay
-	InteralTimer,
+	/// An interval timer without or with delay
+	IntervalTimer,
 }
 // endregion:   --- TimerVariant

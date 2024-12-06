@@ -23,6 +23,8 @@ use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time};
 use tracing::{error, info, instrument, warn, Level};
 
+use crate::IntervalTimerParameter;
+
 use super::ArcTimerCallback;
 // endregion:	--- modules
 
@@ -34,10 +36,8 @@ pub struct IntervalTimer<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The interval in which the Timer is fired
-	interval: Duration,
-	/// The optional delay
-	delay: Option<Duration>,
+	/// The timers parameter
+	parameter: IntervalTimerParameter,
 	/// Timers Callback function called, when Timer is fired
 	callback: ArcTimerCallback<P>,
 	/// Context for the Timer
@@ -52,8 +52,8 @@ where
 {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		f.debug_struct("Timer")
-			.field("interval", &self.interval)
-			.field("delay", &self.delay)
+			.field("interval", &self.parameter.interval)
+			.field("delay", &self.parameter.delay)
 			.finish_non_exhaustive()
 	}
 }
@@ -65,8 +65,8 @@ where
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn activate(&mut self) -> Result<()> {
 		let key = self.id();
-		let delay = self.delay;
-		let interval = self.interval;
+		let delay = self.parameter.delay;
+		let interval = self.parameter.interval;
 		let cb = self.callback.clone();
 		let ctx1 = self.context.clone();
 		let ctx2 = self.context.clone();
@@ -112,16 +112,14 @@ where
 	#[must_use]
 	pub fn new(
 		name: impl Into<String>,
-		interval: Duration,
-		delay: Option<Duration>,
+		parameter: IntervalTimerParameter,
 		activation_state: OperationState,
 		callback: ArcTimerCallback<P>,
 		context: Context<P>,
 	) -> Self {
 		Self {
 			activity: ActivityType::with_activation_state(name.into(), activation_state),
-			interval,
-			delay,
+			parameter,
 			callback,
 			context,
 			handle: Arc::new(Mutex::new(None)),

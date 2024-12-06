@@ -7,7 +7,7 @@
 use anyhow::Result;
 use core::time::Duration;
 use dimas_core::{traits::Context, OperationState};
-use dimas_time::{ArcTimerCallback, IntervalTimer};
+use dimas_time::{ArcTimerCallback, IntervalTimer, IntervalTimerParameter};
 use parking_lot::{Mutex, RwLock};
 use std::{collections::HashMap, sync::Arc};
 
@@ -237,10 +237,10 @@ where
 			..
 		} = self;
 
+		let parameter = IntervalTimerParameter::new(interval.interval, delay);
 		Ok(IntervalTimer::new(
 			name.selector,
-			interval.interval,
-			delay,
+			parameter,
 			activation_state,
 			callback.callback,
 			context,

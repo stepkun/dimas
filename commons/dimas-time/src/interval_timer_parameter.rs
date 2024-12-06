@@ -13,43 +13,34 @@ use super::{ArcTimerCallback, TimerVariant};
 // endregion:   --- modules
 
 // region:      --- TimerBuilder
-/// Builder for [`TimerVariant`]s
-pub struct TimerBuilder<P>
-where
-	P: Send + Sync + 'static,
-{
+/// Parameters for an [`IntervalTimer`]
+#[dimas_macros::parameter]
+pub struct IntervalTimerParameter {
 	/// The interval in which the Timer is fired
-	interval: Option<Duration>,
+	/// The default value is 1 seconds
+	pub(crate) interval: Duration,
 	/// The optional delay
-	delay: Option<Duration>,
-	/// Timers Callback function called, when Timer is fired
-	callback: Option<ArcTimerCallback<P>>,
-	/// Context for the Timer
-	context: Option<Context<P>>,
+	pub(crate) delay: Option<Duration>,
 }
 
-impl<P> Default for TimerBuilder<P>
-where
-	P: Send + Sync + 'static,
-{
+impl Default for IntervalTimerParameter {
 	fn default() -> Self {
 		Self {
-			interval: None,
+			interval: Duration::from_millis(1000),
 			delay: None,
-			callback: None,
-			context: None,
 		}
 	}
 }
 
-impl<P> TimerBuilder<P>
-where
-	P: Send + Sync + 'static,
-{
-	/// Create a [`TimerBuilder`]
+impl IntervalTimerParameter {
+	/// Create an [`IntervalTimerParameter`] set with 
+	/// an `interval` and an optional 'delay'
 	#[must_use]
-	pub fn new() -> Self {
-		Self::default()
+	pub const fn new(interval: Duration, delay: Option<Duration>) -> Self {
+		Self {
+			interval,
+			delay,
+		}
 	}
 }
 // endregion:   --- TimerBuilder
