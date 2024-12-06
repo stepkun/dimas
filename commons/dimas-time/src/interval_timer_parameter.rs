@@ -9,6 +9,9 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::traits::Context;
 
+#[cfg(doc)]
+use crate::IntervalTimer;
+
 use super::{ArcTimerCallback, TimerVariant};
 // endregion:   --- modules
 

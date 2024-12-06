@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 	let properties = AgentProps { counter: 0 };
 
 	// create an agent with the properties and the prefix 'examples'
-	let agent = Agent::new(properties)
+	let mut agent = Agent::new(properties)
 		.prefix("examples")
 		.name("queryable")
 		.config(&Config::default())?;

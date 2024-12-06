@@ -48,7 +48,7 @@
 #[cfg(feature = "unstable")]
 use crate::builder::LivelinessSubscriberBuilder;
 use crate::builder::{
-	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
+	builder_states::{NoCallback, NoInterval, NoSelector, Storage, StorageNew},
 	ObservableBuilder, ObserverBuilder, PublisherBuilder, QuerierBuilder, QueryableBuilder,
 	SubscriberBuilder, TimerBuilder,
 };
@@ -69,7 +69,6 @@ use dimas_core::{
 	traits::{Context, ContextAbstraction},
 	Activity, ActivityId, Component, ComponentId, OperationState, Operational, OperationalType, System, SystemType, Transitions,
 };
-use dimas_time::IntervalTimer;
 #[cfg(feature = "unstable")]
 use parking_lot::RwLock;
 use std::sync::Arc;
@@ -519,12 +518,12 @@ where
 		SubscriberBuilder::new(session_id, self.context.clone()).storage(self.context.responders())
 	}
 
-	/// Get a [`TimerBuilder`], the builder for an [`IntervalTimer`].
+	/// Get a [`TimerBuilder`].
 	#[must_use]
 	pub fn timer(
-		&self,
-	) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, Storage<IntervalTimer<P>>> {
-		TimerBuilder::new(self.context.clone()).storage(self.context.timers())
+		&mut self,
+	) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, StorageNew> {
+		TimerBuilder::new(self.context.clone()).storage(self.system_mut())
 	}
 
 	/// Start the agent.
@@ -533,7 +532,7 @@ where
 	///
 	/// # Errors
 	#[instrument(level = Level::INFO, skip_all)]
-	pub async fn start(self) -> Result<Self> {
+	pub async fn start(&mut self) -> Result<()> {
 		event!(Level::INFO, "start");
 		// activate sending liveliness
 		#[cfg(feature = "unstable")]
@@ -558,114 +557,19 @@ where
 			self.liveliness_token.write().replace(token);
 		};
 
-		self.context
-			.set_state_old(OperationState::Active)?;
+		// self.context
+		// 	.set_state_old(OperationState::Active)?;
 
-		RunningAgent {
-			system: self.system,
-			rx: self.rx,
-			context: self.context,
-			libmanager: self.libmanager,
-			registry: self.registry,
-			#[cfg(feature = "unstable")]
-			liveliness: self.liveliness,
-			#[cfg(feature = "unstable")]
-			liveliness_token: self.liveliness_token,
-		}
-		.run()
-		.await
+		self.manage_operation_state(OperationState::Active)?;
+
+		self
+			.run()
+			.await
 	}
-}
-// endregion:   --- Agent
 
-// region:	   --- RunningAgent
-/// A running Agent, which can't be modified while running
-#[allow(clippy::module_name_repetitions)]
-#[dimas_macros::system]
-pub struct RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
-	/// The receiver for signals from tasks
-	rx: mpsc::Receiver<TaskSignal>,
-	/// Library manager
-	libmanager: LibManager,
-	/// The agents context structure
-	context: Arc<ContextImpl<P>>,
-	/// Agents [`Component`] register
-	registry: ComponentRegistryType,
-	/// Flag to control whether sending liveliness or not
-	#[cfg(feature = "unstable")]
-	liveliness: bool,
-	/// The liveliness token - typically the uuid sent to other participants.
-	/// Is available in the [`LivelinessSubscriber`] callback
-	#[cfg(feature = "unstable")]
-	liveliness_token: RwLock<Option<LivelinessToken>>,
-}
-
-impl<P> AsMut<ComponentRegistryType> for RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn as_mut(&mut self) -> &mut ComponentRegistryType {
-		&mut self.registry
-	}
-}
-
-impl<P> AsRef<ComponentRegistryType> for RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn as_ref(&self) -> &ComponentRegistryType {
-		&self.registry
-	}
-}
-
-impl<P> AsMut<LibManager> for RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn as_mut(&mut self) -> &mut LibManager {
-		&mut self.libmanager
-	}
-}
-
-impl<P> AsRef<LibManager> for RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn as_ref(&self) -> &LibManager {
-		&self.libmanager
-	}
-}
-
-impl<P> Debug for RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("RunningAgent")
-			.field("id", &self.context.uuid())
-			.field(
-				"prefix",
-				self.context
-					.prefix()
-					.unwrap_or(&"None".to_string()),
-			)
-			.field("name", &self.context.name())
-			.finish_non_exhaustive()
-	}
-}
-
-impl<P> Transitions for RunningAgent<P> where P: Send + Sync + 'static {}
-
-impl<P> RunningAgent<P>
-where
-	P: Send + Sync + 'static,
-{
 	/// run
 	#[instrument(level = Level::DEBUG, skip_all)]
-	async fn run(mut self) -> Result<Agent<P>> {
+	async fn run(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "run");
 
 		loop {
@@ -738,7 +642,7 @@ where
 	///
 	/// # Errors
 	#[instrument(level = Level::INFO, skip_all)]
-	pub fn stop(self) -> Result<Agent<P>> {
+	pub fn stop(&mut self) -> Result<()> {
 		event!(Level::INFO, "stop");
 		self.context
 			.set_state_old(OperationState::Created)?;
@@ -748,18 +652,7 @@ where
 		if self.liveliness {
 			self.liveliness_token.write().take();
 		}
-		let r = Agent {
-			system: self.system,
-			rx: self.rx,
-			context: self.context,
-			libmanager: self.libmanager,
-			registry: self.registry,
-			#[cfg(feature = "unstable")]
-			liveliness: self.liveliness,
-			#[cfg(feature = "unstable")]
-			liveliness_token: self.liveliness_token,
-		};
-		Ok(r)
+		Ok(())
 	}
 }
 // endregion:   --- RunningAgent

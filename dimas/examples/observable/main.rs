@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
 	};
 
 	// create an agent with the properties and the prefix 'examples'
-	let agent = Agent::new(properties)
+	let mut agent = Agent::new(properties)
 		.prefix("examples")
 		.name("observable")
 		.config(&Config::default())?;

@@ -20,8 +20,7 @@ use crate::{IntervalTimer, TimerVariant};
 // endregion:   --- modules
 
 // region:      --- Timer
-/// Timer component, providing a [`TimerBuilder`] for building [`TimerVariant`]s.
-/// The timers are stored within the component and can be accessed via there ID.
+/// Timer component.
 #[dimas_macros::component]
 pub struct Timer<P>
 where

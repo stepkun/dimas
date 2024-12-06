@@ -6,13 +6,13 @@
 // region:		--- modules
 use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{traits::Context, OperationState};
+use dimas_core::{traits::Context, OperationState, System, SystemType};
 use dimas_time::{ArcTimerCallback, IntervalTimer, IntervalTimerParameter};
-use parking_lot::{Mutex, RwLock};
-use std::{collections::HashMap, sync::Arc};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 use super::builder_states::{
-	Callback, Interval, NoCallback, NoInterval, NoSelector, NoStorage, Selector, Storage,
+	Callback, Interval, NoCallback, NoInterval, NoSelector, NoStorage, Selector, StorageNew,
 };
 // endregion:	--- modules
 
@@ -196,8 +196,8 @@ where
 	#[must_use]
 	pub fn storage(
 		self,
-		storage: Arc<RwLock<HashMap<String, IntervalTimer<P>>>>,
-	) -> TimerBuilder<P, K, I, C, Storage<IntervalTimer<P>>> {
+		storage: &mut SystemType,
+	) -> TimerBuilder<P, K, I, C, StorageNew> {
 		let Self {
 			context,
 			activation_state,
@@ -213,7 +213,7 @@ where
 			selector: name,
 			interval,
 			callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 			delay,
 		}
 	}
@@ -248,21 +248,20 @@ where
 	}
 }
 
-impl<P>
-	TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, Storage<IntervalTimer<P>>>
+impl<'a, P>
+	TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {
 	/// Build and add the timer to the agents context
 	/// # Errors
 	///
-	pub fn add(self) -> Result<Option<IntervalTimer<P>>> {
-		let name = self.selector.selector.clone();
-		let collection = self.storage.storage.clone();
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
 		let t = self.build()?;
 
-		let r = collection.write().insert(name, t);
-		Ok(r)
+		collection.add_activity(Box::new(t));
+		Ok(())
 	}
 }
 // endregion:	--- TimerBuilder

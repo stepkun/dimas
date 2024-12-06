@@ -46,7 +46,7 @@ Your `Cargo.toml` should include:
 dimas = "0.4.0"
 ```
 
-It makes sense to return a `Result` in `main`, as most DiMAS `Agent`s functions return one.
+It makes sense to return a `Result` in `main`, as most DiMAS `Agent`s functions do.
 DiMAS internally uses `anyhow::Result<T>` and re-exports it for convenience.
 
 DiMAS also provides a `main` attribute macro to create the runtime environment
@@ -169,7 +169,7 @@ async fn main() -> Result<()> {
     let properties = AgentProps {};
 
     // create an agent with the properties and default configuration
-    let agent = Agent::new(properties)
+    let mut agent = Agent::new(properties)
         .config(&Config::default())?;
 
     // subscribe to "hello" messages

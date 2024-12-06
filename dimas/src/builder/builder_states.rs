@@ -4,6 +4,7 @@
 
 // region:      --- modules
 use core::time::Duration;
+use dimas_core::SystemType;
 use parking_lot::RwLock;
 use std::{collections::HashMap, sync::Arc};
 // endtregion:  --- modules
@@ -18,6 +19,12 @@ where
 {
 	/// Thread safe reference to a [`HashMap`] to store the created item of type T
 	pub storage: Arc<RwLock<HashMap<String, S>>>,
+}
+
+/// State signaling that the builder has the storage value set
+pub struct StorageNew<'a> {
+	/// Mutable reference to context stored in [`SystemType`]
+	pub storage: &'a mut SystemType,
 }
 
 /// State signaling that the builder has no selector set

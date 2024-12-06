@@ -15,9 +15,7 @@ use anyhow::Result;
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use tracing::{event, instrument, Level};
 
-#[cfg(doc)]
-use crate::Component;
-use crate::{error::Error, Activity, ActivityId, Component, ComponentId, Configuration, Connection, OperationState, Operational};
+use crate::{activity, error::Error, Activity, ActivityId, Component, ComponentId, Configuration, Connection, OperationState, Operational};
 // endregion:	--- modules
 
 // region:		--- types
@@ -103,6 +101,9 @@ pub trait System: Operational + Send + Sync {
 			for component in &mut *self.components_mut() {
 				component.manage_operation_state(next_state)?;
 			}
+			for activity in &mut *self.activities_mut() {
+				activity.manage_operation_state(next_state)?;
+			}
 			self.state_transitions(next_state)?;
 			self.set_state(next_state);
 		}
@@ -112,6 +113,9 @@ pub trait System: Operational + Send + Sync {
 			assert!(self.state() > OperationState::Created);
 			let next_state = self.state() - 1;
 			// first handle sub elements
+			for activity in &mut *self.activities_mut() {
+				activity.manage_operation_state(next_state)?;
+			}
 			for component in &mut *self.components_mut() {
 				component.manage_operation_state(next_state)?;
 			}

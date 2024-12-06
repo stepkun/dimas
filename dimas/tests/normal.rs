@@ -25,7 +25,6 @@ const fn normal_types() {
 	is_normal::<PublisherBuilder<Props, NoSelector, NoStorage>>();
 	is_normal::<QuerierBuilder<Props, NoSelector, NoCallback, NoStorage>>();
 	is_normal::<QueryableBuilder<Props, NoSelector, NoCallback, NoStorage>>();
-	is_normal::<RunningAgent<Props>>();
 	is_normal::<SubscriberBuilder<Props, NoSelector, NoCallback, NoStorage>>();
 	is_normal::<TimerBuilder<Props, NoSelector, NoInterval, NoCallback, NoStorage>>();
 	is_normal::<UnconfiguredAgent<Props>>();

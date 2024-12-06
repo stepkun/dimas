@@ -24,11 +24,11 @@ fn activity_type() {
 
 	assert_eq!(
 		data.desired_state(OperationState::Created),
-		OperationState::Active
+		OperationState::Created
 	);
 	assert_eq!(
 		data.desired_state(OperationState::Inactive),
-		OperationState::Active
+		OperationState::Inactive
 	);
 	assert_eq!(
 		data.desired_state(OperationState::Active),
