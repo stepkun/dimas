@@ -18,7 +18,6 @@ use crate::{
 };
 use alloc::{string::String, sync::Arc};
 use anyhow::Result;
-use core::fmt::Debug;
 #[cfg(feature = "std")]
 use tokio::sync::mpsc::Sender;
 use zenoh::Session;
@@ -30,7 +29,7 @@ pub type Context<P> = Arc<dyn ContextAbstraction<Props = P>>;
 
 /// Commonalities for the context
 #[allow(clippy::module_name_repetitions)]
-pub trait ContextAbstraction: Debug + Send + Sync {
+pub trait ContextAbstraction: Send + Sync {
 	/// The properties structure
 	type Props;
 

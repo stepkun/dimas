@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! [`Activity`] errors
+//! [`System`] errors
 //!
 
 #[doc(hidden)]
@@ -11,7 +11,7 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `dimas-core::Activity` error type.
+/// `dimas-core` error type.
 #[derive(Error, Debug)]
 pub enum Error {}
-// endregion:	--- Error
+// region:		--- Error

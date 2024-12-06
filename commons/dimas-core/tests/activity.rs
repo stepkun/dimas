@@ -16,15 +16,14 @@ use std::fmt::Debug;
 // struct Test();
 
 #[dimas_macros::activity]
-#[derive(Debug)]
 struct TestActivity1<P>
 where
-	P: Debug + Send + Sync,
+	P: Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestActivity1<P> where P: Debug + Send + Sync {}
+impl<P> Transitions for TestActivity1<P> where P: Send + Sync {}
 
 #[dimas_macros::activity]
 #[derive(Debug, Default)]

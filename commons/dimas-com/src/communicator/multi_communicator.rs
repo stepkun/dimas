@@ -35,7 +35,6 @@ const DEFAULT: &str = "default";
 
 // region:      --- MultiCommunicator
 /// a multi session communicator
-#[derive(Debug)]
 pub struct MultiCommunicator {
 	/// The current state for [`Operational`]
 	current_state: OperationState,

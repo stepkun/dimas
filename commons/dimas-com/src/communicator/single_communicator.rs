@@ -29,7 +29,6 @@ const INITIAL_SIZE: usize = 9;
 
 // region:		--- SingleCommunicator
 /// a multi session communicator
-#[derive(Debug)]
 pub struct SingleCommunicator {
 	/// The current state for [`Operational`]
 	current_state: OperationState,

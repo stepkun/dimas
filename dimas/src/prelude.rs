@@ -41,10 +41,11 @@ pub use dimas_config::Config;
 pub use dimas_core::message_types::{
 	Message, ObservableControlResponse, ObservableResponse, QueryMsg, QueryableMsg,
 };
-pub use dimas_core::traits::{Context, System};
+pub use dimas_core::traits::Context;
 pub use dimas_core::utils::init_tracing;
 pub use dimas_core::Activity;
 pub use dimas_core::{Component, ComponentId};
 pub use dimas_core::{OperationState, Operational, Transitions};
+pub use dimas_core::System;
 pub use dimas_macros::main;
 pub use dimas_time::IntervalTimer;

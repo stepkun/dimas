@@ -9,7 +9,7 @@ extern crate alloc;
 
 // region:      --- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
-use core::{fmt::Debug, marker::PhantomData};
+use core::marker::PhantomData;
 use dimas_core::{
 	Activity, ActivityId, Component, ComponentId, ComponentType, OperationState, Operational,
 	OperationalType, Transitions,
@@ -23,13 +23,12 @@ use crate::{IntervalTimer, TimerVariant};
 /// Timer component, providing a [`TimerBuilder`] for building [`TimerVariant`]s.
 /// The timers are stored within the component and can be accessed via there ID.
 #[dimas_macros::component]
-#[derive(Debug)]
 pub struct Timer<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	phantom: PhantomData<P>,
 }
 
-impl<P> Transitions for Timer<P> where P: Debug + Send + Sync + 'static {}
+impl<P> Transitions for Timer<P> where P: Send + Sync + 'static {}
 // endregion:   --- Timer

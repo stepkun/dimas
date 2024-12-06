@@ -11,7 +11,6 @@ extern crate std;
 
 // region:		--- modules
 use anyhow::Result;
-use core::fmt::Debug;
 use tracing::{event, instrument, Level};
 
 use super::{Error, OperationState};
@@ -19,7 +18,7 @@ use super::{Error, OperationState};
 
 // region:		--- Operational
 /// Contract for an [`Operational`]
-pub trait Operational: Transitions + Debug + Send + Sync {
+pub trait Operational: Transitions + Send + Sync {
 	/// Read the entities state when it shall be active
 	/// different from parent components [`OperationState`] can be provided.
 	/// The default is [`OperationState::Undefined`]
@@ -115,7 +114,7 @@ pub trait Operational: Transitions + Debug + Send + Sync {
 }
 
 /// Transition contract for [`Operational`]
-pub trait Transitions: Debug + Send + Sync {
+pub trait Transitions: Send + Sync {
 	/// configuration transition
 	/// The default implementation just returns Ok(())
 	/// # Errors

@@ -65,7 +65,7 @@ const INITIAL_SIZE: usize = 9;
 
 // region:		--- ContextImpl
 /// [`ContextImpl`] makes all relevant data of the [`Agent`] accessible via accessor methods.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub struct ContextImpl<P>
 where
@@ -92,7 +92,7 @@ where
 
 impl<P> ContextAbstraction for ContextImpl<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	type Props = P;
 	/// Get the name

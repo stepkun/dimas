@@ -6,7 +6,6 @@ use dimas_core::{
 };
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 
-#[derive(Debug)]
 struct TestComponent {
 	operational: OperationalType,
 	component: ComponentType,

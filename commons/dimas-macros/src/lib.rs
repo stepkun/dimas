@@ -10,6 +10,7 @@ pub(crate) mod impl_component;
 mod impl_main;
 pub(crate) mod impl_operational;
 pub(crate) mod impl_parameter;
+pub(crate) mod impl_system;
 pub(crate) mod utils;
 
 use proc_macro::TokenStream;
@@ -68,6 +69,13 @@ pub fn operational(metadata: TokenStream, input: TokenStream) -> TokenStream {
 pub fn parameter(metadata: TokenStream, input: TokenStream) -> TokenStream {
 	// call implementation with conversion to and from proc-macro2 library
 	impl_parameter::parameter(metadata.into(), input.into()).into()
+}
+
+/// System
+#[proc_macro_attribute]
+pub fn system(metadata: TokenStream, input: TokenStream) -> TokenStream {
+	// call implementation with conversion to and from proc-macro2 library
+	impl_system::system(metadata.into(), input.into()).into()
 }
 
 // some helper functions

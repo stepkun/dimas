@@ -17,6 +17,8 @@ pub mod error;
 pub mod message_types;
 /// Operational
 mod operational;
+/// System
+mod system;
 /// Traits
 pub mod traits;
 /// Utilities
@@ -27,5 +29,6 @@ pub use activity::{Activity, ActivityId, ActivityType};
 pub use component::{Component, ComponentId, ComponentType};
 pub use enums::{Signal, TaskSignal};
 pub use operational::{OperationState, Operational, OperationalType, Transitions};
-pub use traits::{Capability, CapabilityDescription, Configuration, Connection, System};
+pub use system::{System, SystemId, SystemType};
+pub use traits::{Capability, CapabilityDescription, Configuration, Connection};
 pub use traits::{Context, ContextAbstraction};

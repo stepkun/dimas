@@ -5,15 +5,14 @@ use core::fmt::Debug;
 use dimas_core::{OperationState, Operational, OperationalType, Transitions};
 
 #[dimas_macros::operational]
-#[derive(Debug)]
 struct TestOperational1<P>
 where
-	P: Debug + Send + Sync,
+	P: Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestOperational1<P> where P: Debug + Send + Sync {}
+impl<P> Transitions for TestOperational1<P> where P: Send + Sync {}
 
 #[dimas_macros::operational]
 #[derive(Debug, Default)]

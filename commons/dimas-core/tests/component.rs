@@ -4,21 +4,19 @@ use dimas_core::{
 	Activity, ActivityId, Component, ComponentId, ComponentType, OperationState, Operational,
 	OperationalType, Transitions,
 };
-use std::fmt::Debug;
 
 #[dimas_macros::component]
-#[derive(Debug)]
 struct TestComponent1<P>
 where
-	P: Debug + Send + Sync,
+	P: Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestComponent1<P> where P: Debug + Send + Sync {}
+impl<P> Transitions for TestComponent1<P> where P: Send + Sync {}
 
 #[dimas_macros::component]
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct TestComponent {}
 
 impl TestComponent {}

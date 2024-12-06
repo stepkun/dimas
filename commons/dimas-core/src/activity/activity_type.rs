@@ -1,5 +1,4 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(dead_code)]
 
 //! [`ActivityType`] implementation for `DiMAS`
 //!

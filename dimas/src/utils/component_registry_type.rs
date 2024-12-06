@@ -14,7 +14,6 @@ use super::ComponentRegistry;
 // endregion:   --- modules
 
 /// Library loader implementation
-#[derive(Debug)]
 pub struct ComponentRegistryType {
 	/// Storage for the [`Component`]s
 	pub components: HashMap<ComponentId, Box<dyn Component>>,

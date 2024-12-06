@@ -66,8 +66,8 @@ use dimas_config::Config;
 use dimas_core::{
 	enums::{Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
-	traits::{Context, ContextAbstraction, System},
-	OperationState, Operational, Transitions,
+	traits::{Context, ContextAbstraction},
+	Activity, ActivityId, Component, ComponentId, OperationState, Operational, OperationalType, System, SystemType, Transitions,
 };
 use dimas_time::IntervalTimer;
 #[cfg(feature = "unstable")]
@@ -193,10 +193,9 @@ where
 // region:	   --- UnconfiguredAgent
 /// A new Agent without the basic configuration decisions
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug)]
 pub struct UnconfiguredAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	name: Option<String>,
 	prefix: Option<String>,
@@ -205,7 +204,7 @@ where
 
 impl<P> UnconfiguredAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	/// Constructor
 	const fn new(properties: P) -> Self {
@@ -249,9 +248,7 @@ where
 		)?);
 
 		let agent = Agent {
-			current_state: OperationState::default(),
-			activation_state: OperationState::Active,
-			dummy: Vec::default(),
+			system: SystemType::default(),
 			rx,
 			context,
 			libmanager: LibManager::new(),
@@ -295,15 +292,11 @@ where
 
 // region:	   --- Agent
 /// An Agent with the basic configuration decisions fixed, but not running
+#[dimas_macros::system]
 pub struct Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
-	/// The state from parent, at which [`OperationState::Active`] should be reached
-	activation_state: OperationState,
-	dummy: Vec<Box<dyn Operational>>,
 	/// A reciever for signals from tasks
 	rx: mpsc::Receiver<TaskSignal>,
 	/// The agents context structure
@@ -323,7 +316,7 @@ where
 
 impl<P> AsMut<ComponentRegistryType> for Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_mut(&mut self) -> &mut ComponentRegistryType {
 		&mut self.registry
@@ -332,7 +325,7 @@ where
 
 impl<P> AsRef<ComponentRegistryType> for Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_ref(&self) -> &ComponentRegistryType {
 		&self.registry
@@ -341,7 +334,7 @@ where
 
 impl<P> AsMut<LibManager> for Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_mut(&mut self) -> &mut LibManager {
 		&mut self.libmanager
@@ -350,7 +343,7 @@ where
 
 impl<P> AsRef<LibManager> for Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_ref(&self) -> &LibManager {
 		&self.libmanager
@@ -359,7 +352,7 @@ where
 
 impl<P> Debug for Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("Agent")
@@ -375,50 +368,11 @@ where
 	}
 }
 
-impl<P> Transitions for Agent<P> where P: Debug + Send + Sync + 'static {}
-
-impl<P> Operational for Agent<P>
-where
-	P: Debug + Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
-impl<P> System for Agent<P>
-where
-	P: Debug + Send + Sync + 'static,
-{
-	fn load_library(&mut self, path: &str) -> Result<()> {
-		self.libmanager.load_lib(&mut self.registry, path)
-	}
-
-	fn unload_library(&mut self, path: &str) -> Result<()> {
-		self.libmanager
-			.unload_lib(&mut self.registry, path)
-	}
-}
+impl<P> Transitions for Agent<P> where P: Send + Sync + 'static {}
 
 impl<P> Agent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	/// Builder
 	#[allow(clippy::new_ret_no_self)]
@@ -608,9 +562,7 @@ where
 			.set_state_old(OperationState::Active)?;
 
 		RunningAgent {
-			current_state: self.current_state,
-			activation_state: self.activation_state,
-			dummy: self.dummy,
+			system: self.system,
 			rx: self.rx,
 			context: self.context,
 			libmanager: self.libmanager,
@@ -629,15 +581,11 @@ where
 // region:	   --- RunningAgent
 /// A running Agent, which can't be modified while running
 #[allow(clippy::module_name_repetitions)]
+#[dimas_macros::system]
 pub struct RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
-	/// The state from parent, at which [`OperationState::Active`] should be reached
-	activation_state: OperationState,
-	dummy: Vec<Box<dyn Operational>>,
 	/// The receiver for signals from tasks
 	rx: mpsc::Receiver<TaskSignal>,
 	/// Library manager
@@ -657,7 +605,7 @@ where
 
 impl<P> AsMut<ComponentRegistryType> for RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_mut(&mut self) -> &mut ComponentRegistryType {
 		&mut self.registry
@@ -666,7 +614,7 @@ where
 
 impl<P> AsRef<ComponentRegistryType> for RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_ref(&self) -> &ComponentRegistryType {
 		&self.registry
@@ -675,7 +623,7 @@ where
 
 impl<P> AsMut<LibManager> for RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_mut(&mut self) -> &mut LibManager {
 		&mut self.libmanager
@@ -684,7 +632,7 @@ where
 
 impl<P> AsRef<LibManager> for RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn as_ref(&self) -> &LibManager {
 		&self.libmanager
@@ -693,7 +641,7 @@ where
 
 impl<P> Debug for RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("RunningAgent")
@@ -709,50 +657,11 @@ where
 	}
 }
 
-impl<P> Transitions for RunningAgent<P> where P: Debug + Send + Sync + 'static {}
-
-impl<P> Operational for RunningAgent<P>
-where
-	P: Debug + Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
-impl<P> System for RunningAgent<P>
-where
-	P: Debug + Send + Sync + 'static,
-{
-	fn load_library(&mut self, path: &str) -> Result<()> {
-		self.libmanager.load_lib(&mut self.registry, path)
-	}
-
-	fn unload_library(&mut self, path: &str) -> Result<()> {
-		self.libmanager
-			.unload_lib(&mut self.registry, path)
-	}
-}
+impl<P> Transitions for RunningAgent<P> where P: Send + Sync + 'static {}
 
 impl<P> RunningAgent<P>
 where
-	P: Debug + Send + Sync + 'static,
+	P: Send + Sync + 'static,
 {
 	/// run
 	#[instrument(level = Level::DEBUG, skip_all)]
@@ -840,9 +749,7 @@ where
 			self.liveliness_token.write().take();
 		}
 		let r = Agent {
-			current_state: self.current_state,
-			activation_state: self.activation_state,
-			dummy: self.dummy,
+			system: self.system,
 			rx: self.rx,
 			context: self.context,
 			libmanager: self.libmanager,

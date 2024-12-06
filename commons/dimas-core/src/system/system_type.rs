@@ -1,4 +1,6 @@
 // Copyright © 2024 Stephan Kunz
+#![allow(unused)]
+#![allow(clippy::needless_pass_by_value)]
 
 //! Component interface for `DiMAS`
 //!
@@ -8,31 +10,30 @@ extern crate alloc;
 
 // region:		--- modules
 use crate::{
-	operational::Transitions, Activity, ActivityId, OperationState, Operational, OperationalType,
+	operational::Transitions, Activity, ActivityId, Component, ComponentId, OperationState, Operational, OperationalType
 };
 use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use super::{Component, ComponentId};
+use super::{System, SystemId};
 // endregion:	--- modules
 
 // region:		--- ComponentType
-/// Data necessary for a [`Component`].
+/// Data necessary for a [`System`].
 #[derive(Clone, Default)]
-pub struct ComponentType {
-	id: ComponentId,
+pub struct SystemType {
+	id: SystemId,
 	operational: OperationalType,
 	activities: Arc<RwLock<Vec<Box<dyn Activity>>>>,
 	components: Arc<RwLock<Vec<Box<dyn Component>>>>,
 }
 
-impl Component for ComponentType {
+impl System for SystemType {
 	#[inline]
 	fn id(&self) -> ComponentId {
 		self.id.clone()
 	}
 
-	#[inline]
 	fn set_id(&mut self, id: String) {
 		self.id = id;
 	}
@@ -76,11 +77,19 @@ impl Component for ComponentType {
 	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>> {
 		self.components.write()
 	}
+
+	// fn load_library(&mut self, path: &str) -> anyhow::Result<()> {
+	// 	todo!()
+	// }
+
+	// fn unload_library(&mut self, path: &str) -> anyhow::Result<()> {
+	// 	todo!()
+	// }
 }
 
-impl Transitions for ComponentType {}
+impl Transitions for SystemType {}
 
-impl Operational for ComponentType {
+impl Operational for SystemType {
 	#[inline]
 	fn activation_state(&self) -> OperationState {
 		self.operational.activation_state()
@@ -107,31 +116,26 @@ impl Operational for ComponentType {
 	}
 }
 
-impl AsRef<OperationalType> for ComponentType {
+impl AsRef<OperationalType> for SystemType {
 	fn as_ref(&self) -> &OperationalType {
 		&self.operational
 	}
 }
 
-impl AsMut<OperationalType> for ComponentType {
+impl AsMut<OperationalType> for SystemType {
 	fn as_mut(&mut self) -> &mut OperationalType {
 		&mut self.operational
 	}
 }
 
-impl ComponentType {
-	/// Create a [`ComponentType`] with default activation state [`OperationState::Active`].
+impl SystemType {
+	/// Create a [`SystemType`]
+	/// Activation state  is always [`OperationState::Active`].
 	#[must_use]
-	pub fn new(id: ComponentId) -> Self {
-		Self::with_activation_state(id, OperationState::Active)
-	}
-
-	/// Create a [`ComponentType`] with given activation state.
-	#[must_use]
-	pub fn with_activation_state(id: ComponentId, activation_state: OperationState) -> Self {
+	pub fn new(id: SystemId) -> Self {
 		Self {
 			id,
-			operational: OperationalType::with_activation_state(activation_state),
+			operational: OperationalType::default(),
 			activities: Arc::new(RwLock::new(Vec::default())),
 			components: Arc::new(RwLock::new(Vec::default())),
 		}

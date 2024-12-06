@@ -1,10 +1,13 @@
 // Copyright © 2024 Stephan Kunz
 
-//! Component interface for `DiMAS`
+//! Contract for every `DiMAS` agent
 //!
 
 #[doc(hidden)]
 extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
 
 // region:		--- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
@@ -12,24 +15,26 @@ use anyhow::Result;
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use tracing::{event, instrument, Level};
 
-use crate::{Activity, ActivityId, OperationState, Operational};
+#[cfg(doc)]
+use crate::Component;
+use crate::{error::Error, Activity, ActivityId, Component, ComponentId, Configuration, Connection, OperationState, Operational};
 // endregion:	--- modules
 
 // region:		--- types
-/// An identifier for a [`Component`].
+/// An identifier for a [`System`].
 /// May be replaced with a more complex struct in future.
 #[allow(clippy::module_name_repetitions)]
-pub type ComponentId = String;
+pub type SystemId = String;
 // endregion:	--- types
 
-// region:		--- Component
-/// Contract for a [`Component`]
-pub trait Component: Operational + Send + Sync {
-	/// Get the [`Component`]s unique ID
-	fn id(&self) -> ComponentId;
+// region:		--- System
+/// Contract for a `System`
+pub trait System: Operational + Send + Sync {
+	/// Get the [`System`]s unique ID
+	fn id(&self) -> SystemId;
 
-	/// Set the [`Component`]s unique ID
-	fn set_id(&mut self, id: ComponentId);
+	/// Set the [`System`]s unique ID
+	fn set_id(&mut self, id: SystemId);
 
 	/// Add a sub [`Activity`]
 	fn add_activity(&mut self, activity: Box<dyn Activity>);
@@ -58,6 +63,30 @@ pub trait Component: Operational + Send + Sync {
 	/// Write access to sub components
 	/// @TODO: should return an Iterator
 	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>>;
+	
+	// /// get all connections
+	// fn connections(&self) -> Vec<Box<dyn Connection>> {
+	// 	Vec::new()
+	// }
+
+	// /// get the [`System`]'s configuration
+	// /// # Errors
+	// /// if function is not implemented
+	// /// implementation must fail if there is no configuration set
+	// fn configuration(&self) -> Result<Box<dyn Configuration>> {
+	// 	let err = Error::NotImplemented.into();
+	// 	Err(err)
+	// }
+
+	// /// Load a library into [`System`]
+	// /// # Errors
+	// ///
+	// fn load_library(&mut self, path: &str) -> Result<()>;
+
+	// /// Unload a library from [`System`]
+	// /// # Errors
+	// ///
+	// fn unload_library(&mut self, path: &str) -> Result<()>;
 
 	/// Check wether state of [`Operational`] is appropriate for the given [`OperationState`].
 	/// If not, adjusts components state to needs considering its sub-components.
@@ -94,4 +123,4 @@ pub trait Component: Operational + Send + Sync {
 		Ok(())
 	}
 }
-// endregion:   --- Component
+// endregion:   --- System
