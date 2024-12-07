@@ -139,7 +139,7 @@ where
 		interval.tick().await;
 
 		if let Err(error) = cb.lock()(ctx) {
-			error!("callback failed with {error}");
+			error!("timer callback failed with {error}");
 		}
 	}
 }

@@ -3,7 +3,6 @@
 //! dimas-com implements the communication capabilities.
 //!
 
-// region:		--- modules
 /// zenoh communicator implementation
 pub mod communicator;
 /// the liveliness subscriber
@@ -33,4 +32,3 @@ pub use publisher::Publisher;
 pub use querier::Querier;
 pub use queryable::Queryable;
 pub use subscriber::Subscriber;
-// endregion:	--- modules

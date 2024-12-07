@@ -1,11 +1,11 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `publisher` errors
+//! `queryable` errors
 
 use thiserror::Error;
 
 // region:		--- Error
-/// `Publisher` error type
+/// `Queryable` error type
 #[derive(Error, Debug)]
 pub enum Error {}
 // region:		--- Error

@@ -135,7 +135,7 @@ where
 								tokio::spawn(async move {
 									let mut lock = ccb.lock().await;
 									if let Err(error) = lock(ctx.clone(), response).await {
-										error!("callback failed with {error}");
+										error!("observer callback failed with {error}");
 									}
 								});
 							} else {
@@ -246,7 +246,7 @@ where
 									tokio::task::spawn(async move {
 										let mut lock = ccb.lock().await;
 										if let Err(error) = lock(ctx, response).await {
-											error!("control callback failed with {error}");
+											error!("observer control callback failed with {error}");
 										}
 									});
 								},
@@ -373,7 +373,7 @@ async fn run_observation<P>(
 							let stop = !matches!(response, ObservableResponse::Feedback(_));
 							let ctx = ctx.clone();
 							if let Err(error) = rcb.lock().await(ctx, response).await {
-								error!("response callback failed with {error}");
+								error!("observer response callback failed with {error}");
 							};
 							if stop {
 								break;

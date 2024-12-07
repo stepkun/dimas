@@ -243,7 +243,6 @@ where
 			.ok_or(Error::NoZenohSession)?;
 
 		let selector = selector.selector;
-
 		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
 		#[cfg(not(feature = "unstable"))]
 		let parameter = SubscriberParameter::new();

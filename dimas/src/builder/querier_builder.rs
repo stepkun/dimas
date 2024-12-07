@@ -4,16 +4,13 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{
-	traits::Querier as QuerierTrait,
-	zenoh::querier::{ArcGetCallback, GetCallback, Querier},
-};
+use dimas_com::zenoh::querier::{ArcGetCallback, GetCallback, Querier, QuerierParameter};
 use dimas_core::{
-	message_types::QueryableMsg, traits::Context, utils::selector_from, OperationState,
+	message_types::QueryableMsg, traits::Context, utils::selector_from, ActivityType,
+	OperationState, System, SystemType,
 };
 use futures::Future;
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::{sync::Mutex, time::Duration};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
@@ -23,7 +20,7 @@ use zenoh::{
 };
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -230,10 +227,7 @@ where
 {
 	/// Provide agents storage for the query
 	#[must_use]
-	pub fn storage(
-		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn QuerierTrait>>>>,
-	) -> QuerierBuilder<P, K, C, Storage<Box<dyn QuerierTrait>>> {
+	pub fn storage(self, storage: &mut SystemType) -> QuerierBuilder<P, K, C, StorageNew> {
 		let Self {
 			session_id,
 			context,
@@ -258,7 +252,7 @@ where
 			timeout,
 			selector,
 			callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 			mode,
 			target,
 		}
@@ -287,40 +281,41 @@ where
 			target,
 			..
 		} = self;
-		let selector = selector.selector;
+
 		let session = context
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
+
+		let selector = selector.selector;
+		let encoding = Encoding::from(encoding);
+		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		#[cfg(not(feature = "unstable"))]
+		let parameter = QuerierParameter::new(mode, timeout, encoding, target);
+		#[cfg(feature = "unstable")]
+		let parameter = QuerierParameter::new(mode, timeout, encoding, target, allowed_destination);
+
 		Ok(Querier::new(
-			session,
+			activity,
 			selector,
+			parameter,
+			session,
 			context,
-			activation_state,
 			response.callback,
-			mode,
-			#[cfg(feature = "unstable")]
-			allowed_destination,
-			encoding,
-			target,
-			timeout,
 		))
 	}
 }
 
-impl<P> QuerierBuilder<P, Selector, Callback<ArcGetCallback<P>>, Storage<Box<dyn QuerierTrait>>>
+impl<'a, P> QuerierBuilder<P, Selector, Callback<ArcGetCallback<P>>, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {
 	/// Build and add the query to the agents context
 	/// # Errors
-	pub fn add(self) -> Result<Option<Box<dyn QuerierTrait>>> {
-		let collection = self.storage.storage.clone();
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
 		let q = self.build()?;
-
-		let r = collection
-			.write()
-			.insert(q.selector().to_string(), Box::new(q));
-		Ok(r)
+		collection.add_activity(Box::new(q));
+		Ok(())
 	}
 }
 // endregion:	--- QuerierBuilder

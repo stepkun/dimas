@@ -60,7 +60,7 @@ use chrono::Local;
 use core::{fmt::Debug, time::Duration};
 #[cfg(feature = "unstable")]
 use dimas_com::traits::LivelinessSubscriber;
-use dimas_com::traits::{Observer, Querier, Responder};
+use dimas_com::traits::{Observer, Responder};
 use dimas_commands::messages::{AboutEntity, PingEntity};
 use dimas_config::Config;
 use dimas_core::{
@@ -247,7 +247,7 @@ where
 			self.prefix,
 		)?);
 
-		let agent = Agent {
+		let mut agent = Agent {
 			system: SystemType::default(),
 			rx,
 			context,
@@ -455,45 +455,25 @@ where
 		ObserverBuilder::new(session_id, self.context.clone()).storage(self.context.observers())
 	}
 
-	/// Get a [`QuerierBuilder`], the builder for a `Querier`.
-	#[must_use]
-	pub fn querier(&self) -> QuerierBuilder<P, NoSelector, NoCallback, Storage<Box<dyn Querier>>> {
-		QuerierBuilder::new("default", self.context.clone()).storage(self.context.queriers())
-	}
-
-	/// Get a [`QuerierBuilder`], the builder for a `Querier`.
-	#[must_use]
-	pub fn querier_for(
-		&self,
-		session_id: impl Into<String>,
-	) -> QuerierBuilder<P, NoSelector, NoCallback, Storage<Box<dyn Querier>>> {
-		QuerierBuilder::new(session_id, self.context.clone()).storage(self.context.queriers())
-	}
-
-	/// Get a [`QueryableBuilder`], the builder for a `Queryable`.
-	#[must_use]
-	pub fn queryable(
-		&self,
-	) -> QueryableBuilder<P, NoSelector, NoCallback, Storage<Box<dyn Responder>>> {
-		QueryableBuilder::new("default", self.context.clone()).storage(self.context.responders())
-	}
-
-	/// Get a [`QueryableBuilder`], the builder for a `Queryable`.
-	#[must_use]
-	pub fn queryable_for(
-		&self,
-		session_id: impl Into<String>,
-	) -> QueryableBuilder<P, NoSelector, NoCallback, Storage<Box<dyn Responder>>> {
-		QueryableBuilder::new(session_id, self.context.clone()).storage(self.context.responders())
-	}
-
 	/// Get a [`PublisherBuilder`].
 	#[must_use]
 	pub fn publisher(&mut self) -> PublisherBuilder<P, NoSelector, StorageNew> {
 		PublisherBuilder::new("default", self.context.clone()).storage(self.system_mut())
 	}
 
-	/// Get a [`SubscriberBuilder`], the builder for a `Subscriber`.
+	/// Get a [`QuerierBuilder`].
+	#[must_use]
+	pub fn querier(&mut self) -> QuerierBuilder<P, NoSelector, NoCallback, StorageNew> {
+		QuerierBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	}
+
+	/// Get a [`QueryableBuilder`].
+	#[must_use]
+	pub fn queryable(&mut self) -> QueryableBuilder<P, NoSelector, NoCallback, StorageNew> {
+		QueryableBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	}
+
+	/// Get a [`SubscriberBuilder`].
 	#[must_use]
 	pub fn subscriber(&mut self) -> SubscriberBuilder<P, NoSelector, NoCallback, StorageNew> {
 		SubscriberBuilder::new("default", self.context.clone()).storage(self.system_mut())

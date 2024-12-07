@@ -6,10 +6,9 @@
 // region:		--- modules
 use crate::error::Error;
 use anyhow::Result;
-use dimas_core::Transitions;
 use dimas_core::{
 	enums::TaskSignal, message_types::Message, traits::Context, Activity, ActivityType,
-	OperationState, Operational, OperationalType,
+	OperationState, Operational, OperationalType, Transitions,
 };
 use futures::future::BoxFuture;
 use std::sync::Arc;

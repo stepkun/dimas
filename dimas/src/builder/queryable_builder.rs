@@ -1,23 +1,22 @@
 // Copyright © 2023 Stephan Kunz
 
-//! Module `queryable` provides an information/compute provider `Queryable` which can be created using the `QueryableBuilder`.
+//! Module `queryable_builder`.
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{
-	traits::Responder,
-	zenoh::queryable::{ArcGetCallback, GetCallback, Queryable},
+use dimas_com::zenoh::queryable::{ArcGetCallback, GetCallback, Queryable, QueryableParameter};
+use dimas_core::{
+	message_types::QueryMsg, traits::Context, utils::selector_from, ActivityType, OperationState,
+	System, SystemType,
 };
-use dimas_core::{message_types::QueryMsg, traits::Context, utils::selector_from, OperationState};
 use futures::future::Future;
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -184,10 +183,7 @@ where
 {
 	/// Provide agents storage for the queryable
 	#[must_use]
-	pub fn storage(
-		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn Responder>>>>,
-	) -> QueryableBuilder<P, K, C, Storage<Box<dyn Responder>>> {
+	pub fn storage(self, storage: &mut SystemType) -> QueryableBuilder<P, K, C, StorageNew> {
 		let Self {
 			session_id,
 			context,
@@ -208,7 +204,7 @@ where
 			allowed_origin,
 			selector,
 			callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 		}
 	}
 }
@@ -232,38 +228,41 @@ where
 			callback,
 			..
 		} = self;
-		let selector = selector.selector;
+
 		let session = context
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
+
+		let selector = selector.selector;
+		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		#[cfg(not(feature = "unstable"))]
+		let parameter = QueryableParameter::new(completeness);
+		#[cfg(feature = "unstable")]
+		let parameter = QueryableParameter::new(completeness, allowed_origin);
+
 		Ok(Queryable::new(
-			session,
+			activity,
 			selector,
+			parameter,
+			session,
 			context,
-			activation_state,
 			callback.callback,
-			completeness,
-			#[cfg(feature = "unstable")]
-			allowed_origin,
 		))
 	}
 }
 
-impl<P> QueryableBuilder<P, Selector, Callback<ArcGetCallback<P>>, Storage<Box<dyn Responder>>>
+impl<'a, P> QueryableBuilder<P, Selector, Callback<ArcGetCallback<P>>, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {
 	/// Build and add the queryable to the agents context
 	/// # Errors
 	///
-	pub fn add(self) -> Result<Option<Box<dyn Responder>>> {
-		let collection = self.storage.storage.clone();
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
 		let q = self.build()?;
-
-		let r = collection
-			.write()
-			.insert(q.selector().to_string(), Box::new(q));
-		Ok(r)
+		collection.add_activity(Box::new(q));
+		Ok(())
 	}
 }
 // endregion:	--- QueryableBuilder

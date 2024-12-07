@@ -363,7 +363,7 @@ where
 									Err(err) => error!("failed to reply with {err}"),
 								};
 							}
-							Err(error) => error!("control callback failed with {error}"),
+							Err(error) => error!("observable control callback failed with {error}"),
 						}
 					}
 				} else if p == "cancel" {

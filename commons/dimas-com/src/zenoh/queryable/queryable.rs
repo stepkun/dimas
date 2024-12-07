@@ -13,9 +13,9 @@ use alloc::sync::Arc;
 use alloc::{boxed::Box, string::String};
 use anyhow::Result;
 use core::fmt::Debug;
-use dimas_core::Transitions;
 use dimas_core::{
-	enums::TaskSignal, message_types::QueryMsg, traits::Context, OperationState, Operational,
+	enums::TaskSignal, message_types::QueryMsg, traits::Context, Activity, ActivityType,
+	OperationState, Operational, OperationalType, Transitions,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -24,6 +24,8 @@ use tracing::{error, event, info, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 use zenoh::Session;
+
+use super::QueryableParameter;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -36,22 +38,18 @@ pub type ArcGetCallback<P> = Arc<Mutex<GetCallback<P>>>;
 
 // region:		--- Queryable
 /// Queryable
+#[dimas_macros::activity]
 pub struct Queryable<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
+	selector: String,
+	parameter: QueryableParameter,
 	/// the zenoh session this queryable belongs to
 	session: Arc<Session>,
-	selector: String,
 	/// Context for the Subscriber
 	context: Context<P>,
-	activation_state: OperationState,
 	callback: ArcGetCallback<P>,
-	completeness: bool,
-	#[cfg(feature = "unstable")]
-	allowed_origin: Locality,
 	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
@@ -62,7 +60,7 @@ where
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		f.debug_struct("Queryable")
 			.field("selector", &self.selector)
-			.field("complete", &self.completeness)
+			.field("complete", &self.parameter.completeness)
 			.finish_non_exhaustive()
 	}
 }
@@ -84,14 +82,12 @@ where
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn activate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "activate");
-		let completeness = self.completeness;
-		#[cfg(feature = "unstable")]
-		let allowed_origin = self.allowed_origin;
 		let selector = self.selector.clone();
 		let cb = self.callback.clone();
 		let ctx1 = self.context.clone();
 		let ctx2 = self.context.clone();
 		let session = self.session.clone();
+		let parameter = self.parameter.clone();
 
 		self.handle
 			.lock()
@@ -108,17 +104,7 @@ where
 						info!("restarting queryable!");
 					};
 				}));
-				if let Err(error) = run_queryable(
-					session,
-					selector,
-					cb,
-					completeness,
-					#[cfg(feature = "unstable")]
-					allowed_origin,
-					ctx2,
-				)
-				.await
-				{
+				if let Err(error) = run_queryable(session, selector, parameter, cb, ctx2).await {
 					error!("queryable failed with {error}");
 				};
 			}));
@@ -133,31 +119,6 @@ where
 	}
 }
 
-impl<P> Operational for Queryable<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
 impl<P> Queryable<P>
 where
 	P: Send + Sync + 'static,
@@ -165,24 +126,20 @@ where
 	/// Constructor for a [`Queryable`]
 	#[must_use]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		selector: impl Into<String>,
+		parameter: QueryableParameter,
+		session: Arc<Session>,
 		context: Context<P>,
-		activation_state: OperationState,
 		request_callback: ArcGetCallback<P>,
-		completeness: bool,
-		#[cfg(feature = "unstable")] allowed_origin: Locality,
 	) -> Self {
 		Self {
-			current_state: OperationState::default(),
-			session,
+			activity,
 			selector: selector.into(),
+			parameter,
+			session,
 			context,
-			activation_state,
 			callback: request_callback,
-			completeness,
-			#[cfg(feature = "unstable")]
-			allowed_origin,
 			handle: parking_lot::Mutex::new(None),
 		}
 	}
@@ -192,9 +149,8 @@ where
 async fn run_queryable<P>(
 	session: Arc<Session>,
 	selector: String,
+	parameter: QueryableParameter,
 	callback: ArcGetCallback<P>,
-	completeness: bool,
-	#[cfg(feature = "unstable")] allowed_origin: Locality,
 	ctx: Context<P>,
 ) -> core::result::Result<(), Box<dyn core::error::Error + Send + Sync + 'static>>
 where
@@ -202,7 +158,7 @@ where
 {
 	let builder = session
 		.declare_queryable(&selector)
-		.complete(completeness);
+		.complete(parameter.completeness);
 	#[cfg(feature = "unstable")]
 	let builder = builder.allowed_origin(allowed_origin);
 

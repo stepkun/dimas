@@ -5,7 +5,7 @@
 use thiserror::Error;
 
 // region:		--- Error
-/// `builder` error type
+/// `Subscriber` error type
 #[derive(Error, Debug)]
 pub enum Error {}
 // region:		--- Error

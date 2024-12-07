@@ -11,11 +11,11 @@ extern crate std;
 // region:		--- modules
 use alloc::sync::Arc;
 use anyhow::Result;
-use core::{fmt::Debug, time::Duration};
+use core::fmt::Debug;
 use dimas_core::{
 	message_types::{Message, QueryableMsg},
 	traits::Context,
-	OperationState, Operational, Transitions,
+	Activity, ActivityType, OperationState, Operational, OperationalType, Transitions,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -29,13 +29,11 @@ use tokio::sync::Mutex;
 use tracing::{error, event, instrument, warn, Level};
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
-use zenoh::{
-	query::{ConsolidationMode, QueryTarget},
-	sample::SampleKind,
-	Session, Wait,
-};
+use zenoh::{sample::SampleKind, Session, Wait};
 
 use crate::error::Error;
+
+use super::QuerierParameter;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -48,26 +46,19 @@ pub type ArcGetCallback<P> = Arc<Mutex<GetCallback<P>>>;
 
 // region:		--- Querier
 /// Querier
+#[dimas_macros::activity]
 pub struct Querier<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
+	selector: String,
+	parameter: QuerierParameter,
 	/// the zenoh session this querier belongs to
 	session: Arc<Session>,
-	selector: String,
 	/// Context for the Querier
 	context: Context<P>,
-	activation_state: OperationState,
 	callback: ArcGetCallback<P>,
-	mode: ConsolidationMode,
-	#[cfg(feature = "unstable")]
-	allowed_destination: Locality,
-	encoding: String,
-	target: QueryTarget,
-	timeout: Duration,
-	key_expr: parking_lot::Mutex<Option<zenoh::key_expr::KeyExpr<'static>>>,
+	handle: parking_lot::Mutex<Option<zenoh::key_expr::KeyExpr<'static>>>,
 }
 
 impl<P> Debug for Querier<P>
@@ -75,18 +66,9 @@ where
 	P: Send + Sync + 'static,
 {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		#[cfg(feature = "unstable")]
 		let res = f
 			.debug_struct("Querier")
 			.field("selector", &self.selector)
-			.field("mode", &self.mode)
-			.field("allowed_destination", &self.allowed_destination)
-			.finish_non_exhaustive();
-		#[cfg(not(feature = "unstable"))]
-		let res = f
-			.debug_struct("Querier")
-			.field("selector", &self.selector)
-			.field("mode", &self.mode)
 			.finish_non_exhaustive();
 		res
 	}
@@ -110,7 +92,7 @@ where
 	) -> Result<()> {
 		let cb = self.callback.clone();
 		let key_expr = self
-			.key_expr
+			.handle
 			.lock()
 			.clone()
 			.ok_or(Error::InvalidSelector("querier".into()))?;
@@ -124,13 +106,13 @@ where
 						.payload(msg.value())
 				},
 			)
-			.encoding(self.encoding.as_str())
-			.target(self.target)
-			.consolidation(self.mode)
-			.timeout(self.timeout);
+			.encoding(self.parameter.encoding.clone())
+			.target(self.parameter.target)
+			.consolidation(self.parameter.mode)
+			.timeout(self.parameter.timeout);
 
 		#[cfg(feature = "unstable")]
-		let builder = builder.allowed_destination(self.allowed_destination);
+		let builder = builder.allowed_destination(self.parameter.allowed_destination);
 
 		let query = builder
 			.wait()
@@ -174,7 +156,7 @@ where
 			}
 			if unreached {
 				if retry_count < 5 {
-					std::thread::sleep(self.timeout);
+					std::thread::sleep(self.parameter.timeout);
 				} else {
 					return Err(Error::AccessingQueryable {
 						selector: key_expr.to_string(),
@@ -195,7 +177,7 @@ where
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn activate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "activate");
-		let mut key_expr = self.key_expr.lock();
+		let mut key_expr = self.handle.lock();
 		self.session
 			.declare_keyexpr(self.selector.clone())
 			.wait()
@@ -211,33 +193,8 @@ where
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn deactivate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "deactivate");
-		self.key_expr.lock().take();
+		self.handle.lock().take();
 		Ok(())
-	}
-}
-
-impl<P> Operational for Querier<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
 	}
 }
 
@@ -249,31 +206,21 @@ where
 	#[must_use]
 	#[allow(clippy::too_many_arguments)]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		selector: impl Into<String>,
+		parameter: QuerierParameter,
+		session: Arc<Session>,
 		context: Context<P>,
-		activation_state: OperationState,
-		response_callback: ArcGetCallback<P>,
-		mode: ConsolidationMode,
-		#[cfg(feature = "unstable")] allowed_destination: Locality,
-		encoding: impl Into<String>,
-		target: QueryTarget,
-		timeout: Duration,
+		callback: ArcGetCallback<P>,
 	) -> Self {
 		Self {
-			current_state: OperationState::default(),
-			session,
+			activity,
 			selector: selector.into(),
+			parameter,
+			session,
 			context,
-			activation_state,
-			callback: response_callback,
-			mode,
-			#[cfg(feature = "unstable")]
-			allowed_destination,
-			encoding: encoding.into(),
-			target,
-			timeout,
-			key_expr: parking_lot::Mutex::new(None),
+			callback,
+			handle: parking_lot::Mutex::new(None),
 		}
 	}
 }

@@ -2,7 +2,7 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-//! Module `timer_builder` provides a builder for the different [`TimerVariant`]s
+//! Module `publisher_parameter`.
 
 // region:		--- modules
 use anyhow::Result;
@@ -18,7 +18,7 @@ use zenoh::{qos::Reliability, sample::Locality};
 // endregion:   --- modules
 
 // region:      --- PublisherParameter
-/// Parameters for an [`IntervalTimer`]
+/// Parameters for a [`Publisher`]
 #[dimas_macros::parameter]
 pub struct PublisherParameter {
 	pub(crate) congestion_control: CongestionControl,
@@ -47,7 +47,7 @@ impl Default for PublisherParameter {
 }
 
 impl PublisherParameter {
-	/// Create a [`PublisherParamter`] set.
+	/// Create a [`PublisherParameter`] set.
 	#[must_use]
 	pub const fn new(
 		congestion_control: CongestionControl,
