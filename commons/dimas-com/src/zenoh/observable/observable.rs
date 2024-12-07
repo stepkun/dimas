@@ -20,7 +20,7 @@ use dimas_core::{
 	message_types::{Message, ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::feedback_selector_from,
-	OperationState, Operational, Transitions,
+	Activity, ActivityType, OperationState, Operational, OperationalType, Transitions,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -33,6 +33,8 @@ use zenoh::{
 	qos::{CongestionControl, Priority},
 	Session,
 };
+
+use super::ObservableParameter;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -58,20 +60,18 @@ pub type ArcExecutionCallback<P> = Arc<Mutex<ExecutionCallback<P>>>;
 
 // region:		--- Observable
 /// Observable
+#[dimas_macros::activity]
 pub struct Observable<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
-	/// the zenoh session this observable belongs to
-	session: Arc<Session>,
 	/// The observables key expression
 	selector: String,
+	parameter: ObservableParameter,
+	/// the zenoh session this observable belongs to
+	session: Arc<Session>,
 	/// Context for the Observable
 	context: Context<P>,
-	activation_state: OperationState,
-	feedback_interval: Duration,
 	/// callback for observation request and cancelation
 	control_callback: ArcControlCallback<P>,
 	/// callback for observation feedback
@@ -80,7 +80,7 @@ where
 	/// function for observation execution
 	execution_function: ArcExecutionCallback<P>,
 	execution_handle: Arc<Mutex<Option<JoinHandle<()>>>>,
-	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
+	control_handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
 impl<P> core::fmt::Debug for Observable<P>
@@ -111,7 +111,7 @@ where
 	fn activate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "activate");
 		let selector = self.selector.clone();
-		let interval = self.feedback_interval;
+		let interval = self.parameter.feedback_interval;
 		let ccb = self.control_callback.clone();
 		let fcb = self.feedback_callback.clone();
 		let fcbp = self.feedback_publisher.clone();
@@ -121,7 +121,7 @@ where
 		let ctx2 = self.context.clone();
 		let session = self.session.clone();
 
-		self.handle
+		self.control_handle
 			.lock()
 			.replace(tokio::task::spawn(async move {
 				let key = selector.clone();
@@ -150,7 +150,7 @@ where
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn deactivate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "deactivate");
-		let handle = self.handle.lock().take();
+		let handle = self.control_handle.lock().take();
 		if let Some(handle) = handle {
 			let feedback_publisher = self.feedback_publisher.clone();
 			let feedback_callback = self.feedback_callback.clone();
@@ -186,31 +186,6 @@ where
 	}
 }
 
-impl<P> Operational for Observable<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
 impl<P> Observable<P>
 where
 	P: Send + Sync + 'static,
@@ -219,28 +194,27 @@ where
 	#[allow(clippy::too_many_arguments)]
 	#[must_use]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		selector: impl Into<String>,
+		parameter: ObservableParameter,
+		session: Arc<Session>,
 		context: Context<P>,
-		activation_state: OperationState,
-		feedback_interval: Duration,
 		control_callback: ArcControlCallback<P>,
 		feedback_callback: ArcFeedbackCallback<P>,
 		execution_function: ArcExecutionCallback<P>,
 	) -> Self {
 		Self {
-			current_state: OperationState::default(),
-			session,
+			activity,
 			selector: selector.into(),
+			parameter,
+			session,
 			context,
-			activation_state,
-			feedback_interval,
 			control_callback,
 			feedback_callback,
-			feedback_publisher: Arc::new(Mutex::new(None)),
 			execution_function,
+			feedback_publisher: Arc::new(Mutex::new(None)),
 			execution_handle: Arc::new(Mutex::new(None)),
-			handle: parking_lot::Mutex::new(None),
+			control_handle: parking_lot::Mutex::new(None),
 		}
 	}
 }

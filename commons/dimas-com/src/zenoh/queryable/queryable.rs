@@ -21,8 +21,6 @@ use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::{error, event, info, instrument, warn, Level};
-#[cfg(feature = "unstable")]
-use zenoh::sample::Locality;
 use zenoh::Session;
 
 use super::QueryableParameter;
@@ -160,7 +158,7 @@ where
 		.declare_queryable(&selector)
 		.complete(parameter.completeness);
 	#[cfg(feature = "unstable")]
-	let builder = builder.allowed_origin(allowed_origin);
+	let builder = builder.allowed_origin(parameter.allowed_origin);
 
 	let queryable = builder.await?;
 

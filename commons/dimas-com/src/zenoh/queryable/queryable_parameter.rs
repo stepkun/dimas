@@ -9,7 +9,7 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::traits::Context;
 #[cfg(feature = "unstable")]
-use zenoh::{qos::Reliability, sample::Locality};
+use zenoh::sample::Locality;
 
 // endregion:   --- modules
 

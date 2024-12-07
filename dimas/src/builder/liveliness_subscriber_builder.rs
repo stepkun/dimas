@@ -5,18 +5,18 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{
-	traits::LivelinessSubscriber as LivelinessSubscriberTrait,
-	zenoh::liveliness::{ArcLivelinessCallback, LivelinessCallback, LivelinessSubscriber},
+use dimas_com::zenoh::liveliness::{
+	ArcLivelinessCallback, LivelinessCallback, LivelinessSubscriber, LivelinessSubscriberParameter,
 };
-use dimas_core::{traits::Context, utils::selector_from, OperationState};
+use dimas_core::{
+	traits::Context, utils::selector_from, ActivityType, OperationState, System, SystemType,
+};
 use futures::future::Future;
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use super::{
-	builder_states::{Callback, NoCallback, NoStorage, Storage},
+	builder_states::{Callback, NoCallback, NoStorage, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -206,8 +206,8 @@ where
 	#[must_use]
 	pub fn storage(
 		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn LivelinessSubscriberTrait>>>>,
-	) -> LivelinessSubscriberBuilder<P, C, Storage<Box<dyn LivelinessSubscriberTrait>>> {
+		storage: &mut SystemType,
+	) -> LivelinessSubscriberBuilder<P, C, StorageNew> {
 		let Self {
 			session_id,
 			token,
@@ -223,7 +223,7 @@ where
 			context,
 			activation_state,
 			put_callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 			delete_callback,
 		}
 	}
@@ -246,38 +246,37 @@ where
 			delete_callback,
 			..
 		} = self;
+
 		let session = context
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
+
+		let activity = ActivityType::with_activation_state(token.clone(), activation_state);
+		let parameter = LivelinessSubscriberParameter::new();
 		Ok(LivelinessSubscriber::new(
-			session,
+			activity,
 			token,
+			parameter,
+			session,
 			context,
-			activation_state,
 			put_callback.callback,
 			delete_callback,
 		))
 	}
 }
 
-impl<P>
-	LivelinessSubscriberBuilder<
-		P,
-		Callback<ArcLivelinessCallback<P>>,
-		Storage<Box<dyn LivelinessSubscriberTrait>>,
-	>
+impl<'a, P> LivelinessSubscriberBuilder<P, Callback<ArcLivelinessCallback<P>>, StorageNew<'a>>
 where
 	P: Send + Sync + 'static,
 {
 	/// Build and add the liveliness subscriber to the agent
 	/// # Errors
 	///
-	pub fn add(self) -> Result<Option<Box<dyn LivelinessSubscriberTrait>>> {
-		let c = self.storage.storage.clone();
-		let s = self.build()?;
-
-		let r = c.write().insert(s.token().into(), Box::new(s));
-		Ok(r)
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
+		let ls = self.build()?;
+		collection.add_activity(Box::new(ls));
+		Ok(())
 	}
 }
 // endregion:	--- LivelinessSubscriberBuilder

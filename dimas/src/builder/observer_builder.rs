@@ -4,25 +4,22 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{
-	traits::Observer as ObserverTrait,
-	zenoh::observer::{
-		ArcControlCallback, ArcResponseCallback, ControlCallback, Observer, ResponseCallback,
-	},
+use dimas_com::zenoh::observer::{
+	ArcControlCallback, ArcResponseCallback, ControlCallback, Observer, ObserverParameter,
+	ResponseCallback,
 };
 use dimas_core::{
 	message_types::{ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::selector_from,
-	OperationState,
+	ActivityType, OperationState, System, SystemType,
 };
 use futures::future::Future;
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::{sync::Mutex, time::Duration};
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -217,10 +214,7 @@ where
 {
 	/// Provide agents storage for the subscriber
 	#[must_use]
-	pub fn storage(
-		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn ObserverTrait>>>>,
-	) -> ObserverBuilder<P, K, CC, RC, Storage<Box<dyn ObserverTrait>>> {
+	pub fn storage(self, storage: &mut SystemType) -> ObserverBuilder<P, K, CC, RC, StorageNew> {
 		let Self {
 			session_id,
 			context,
@@ -239,7 +233,7 @@ where
 			selector,
 			control_callback,
 			response_callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 		}
 	}
 }
@@ -264,29 +258,34 @@ where
 			response_callback,
 			..
 		} = self;
-		let selector = selector.selector;
+
 		let session = context
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
+
+		let selector = selector.selector;
+		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let parameter = ObserverParameter::new(timeout);
+
 		Ok(Observer::new(
-			session,
+			activity,
 			selector,
+			parameter,
+			session,
 			context,
-			activation_state,
 			control_callback.callback,
 			response_callback.callback,
-			timeout,
 		))
 	}
 }
 
-impl<P>
+impl<'a, P>
 	ObserverBuilder<
 		P,
 		Selector,
 		Callback<ArcControlCallback<P>>,
 		Callback<ArcResponseCallback<P>>,
-		Storage<Box<dyn ObserverTrait>>,
+		StorageNew<'a>,
 	>
 where
 	P: Send + Sync + 'static,
@@ -295,14 +294,11 @@ where
 	///
 	/// # Errors
 	/// Currently none
-	pub fn add(self) -> Result<Option<Box<dyn ObserverTrait>>> {
-		let c = self.storage.storage.clone();
-		let s = self.build()?;
-
-		let r = c
-			.write()
-			.insert(s.selector().to_string(), Box::new(s));
-		Ok(r)
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
+		let o = self.build()?;
+		collection.add_activity(Box::new(o));
+		Ok(())
 	}
 }
 // endregion:	--- ObserverBuilder

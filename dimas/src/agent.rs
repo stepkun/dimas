@@ -48,7 +48,7 @@
 #[cfg(feature = "unstable")]
 use crate::builder::LivelinessSubscriberBuilder;
 use crate::builder::{
-	builder_states::{NoCallback, NoInterval, NoSelector, Storage, StorageNew},
+	builder_states::{NoCallback, NoInterval, NoSelector, StorageNew},
 	ObservableBuilder, ObserverBuilder, PublisherBuilder, QuerierBuilder, QueryableBuilder,
 	SubscriberBuilder, TimerBuilder,
 };
@@ -58,9 +58,6 @@ use crate::utils::{ComponentRegistryType, LibManager};
 use anyhow::Result;
 use chrono::Local;
 use core::{fmt::Debug, time::Duration};
-#[cfg(feature = "unstable")]
-use dimas_com::traits::LivelinessSubscriber;
-use dimas_com::traits::{Observer, Responder};
 use dimas_commands::messages::{AboutEntity, PingEntity};
 use dimas_config::Config;
 use dimas_core::{
@@ -390,69 +387,25 @@ where
 	#[cfg(feature = "unstable")]
 	#[must_use]
 	pub fn liveliness_subscriber(
-		&self,
-	) -> LivelinessSubscriberBuilder<P, NoCallback, Storage<Box<dyn LivelinessSubscriber>>> {
-		LivelinessSubscriberBuilder::new("default", self.context.clone())
-			.storage(self.context.liveliness_subscribers())
+		&mut self,
+	) -> LivelinessSubscriberBuilder<P, NoCallback, StorageNew> {
+		LivelinessSubscriberBuilder::new("default", self.context.clone()).storage(self.system_mut())
 	}
 
-	/// Get a [`LivelinessSubscriberBuilder`], the builder for a `LivelinessSubscriber`.
-	#[cfg(feature = "unstable")]
-	#[must_use]
-	pub fn liveliness_subscriber_for(
-		&self,
-		session_id: impl Into<String>,
-	) -> LivelinessSubscriberBuilder<P, NoCallback, Storage<Box<dyn LivelinessSubscriber>>> {
-		LivelinessSubscriberBuilder::new(session_id, self.context.clone())
-			.storage(self.context.liveliness_subscribers())
-	}
-
-	/// Get an [`ObservableBuilder`], the builder for an `Observable`.
+	/// Get an [`ObservableBuilder`]
 	#[must_use]
 	pub fn observable(
-		&self,
-	) -> ObservableBuilder<
-		P,
-		NoSelector,
-		NoCallback,
-		NoCallback,
-		NoCallback,
-		Storage<Box<dyn Responder>>,
-	> {
-		ObservableBuilder::new("default", self.context.clone()).storage(self.context.responders())
+		&mut self,
+	) -> ObservableBuilder<P, NoSelector, NoCallback, NoCallback, NoCallback, StorageNew> {
+		ObservableBuilder::new("default", self.context.clone()).storage(self.system_mut())
 	}
 
-	/// Get an [`ObservableBuilder`], the builder for an `Observable`.
-	#[must_use]
-	pub fn observable_for(
-		&self,
-		session_id: impl Into<String>,
-	) -> ObservableBuilder<
-		P,
-		NoSelector,
-		NoCallback,
-		NoCallback,
-		NoCallback,
-		Storage<Box<dyn Responder>>,
-	> {
-		ObservableBuilder::new(session_id, self.context.clone()).storage(self.context.responders())
-	}
-
-	/// Get an [`ObserverBuilder`], the builder for an `Observer`.
+	/// Get an [`ObserverBuilder`]
 	#[must_use]
 	pub fn observer(
-		&self,
-	) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, Storage<Box<dyn Observer>>> {
-		ObserverBuilder::new("default", self.context.clone()).storage(self.context.observers())
-	}
-
-	/// Get an [`ObserverBuilder`], the builder for an `Observer`.
-	#[must_use]
-	pub fn observer_for(
-		&self,
-		session_id: impl Into<String>,
-	) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, Storage<Box<dyn Observer>>> {
-		ObserverBuilder::new(session_id, self.context.clone()).storage(self.context.observers())
+		&mut self,
+	) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, StorageNew> {
+		ObserverBuilder::new("default", self.context.clone()).storage(self.system_mut())
 	}
 
 	/// Get a [`PublisherBuilder`].

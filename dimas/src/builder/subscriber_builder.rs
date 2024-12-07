@@ -247,7 +247,7 @@ where
 		#[cfg(not(feature = "unstable"))]
 		let parameter = SubscriberParameter::new();
 		#[cfg(feature = "unstable")]
-		let parameter = SubscriberParameter::new(self.allowed_destination);
+		let parameter = SubscriberParameter::new(allowed_origin);
 
 		Ok(Subscriber::new(
 			activity,

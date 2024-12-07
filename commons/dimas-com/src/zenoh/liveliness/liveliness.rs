@@ -1,7 +1,6 @@
 // Copyright © 2023 Stephan Kunz
 
-//! Module `liveliness` provides a `LivelinessSubscriber` which can be created using the `LivelinessSubscriberBuilder`.
-//! A `LivelinessSubscriber` can optional subscribe on a delete message.
+//! Module `liveliness` provides a `LivelinessSubscriber`.
 
 #[doc(hidden)]
 extern crate alloc;
@@ -17,7 +16,10 @@ use alloc::{
 };
 use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{enums::TaskSignal, traits::Context, OperationState, Operational, Transitions};
+use dimas_core::{
+	enums::TaskSignal, traits::Context, Activity, ActivityType, OperationState, Operational,
+	OperationalType, Transitions,
+};
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle};
@@ -27,6 +29,8 @@ use zenoh::sample::SampleKind;
 use zenoh::Session;
 
 use crate::error::Error;
+
+use super::LivelinessSubscriberParameter;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -41,17 +45,18 @@ pub type ArcLivelinessCallback<P> = Arc<Mutex<LivelinessCallback<P>>>;
 // region:		--- LivelinessSubscriber
 /// Liveliness Subscriber
 #[allow(clippy::module_name_repetitions)]
+#[dimas_macros::activity]
 pub struct LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
+	/// the liveliness token
+	token: String,
+	/// the subscribers parameter
+	parameter: LivelinessSubscriberParameter,
 	/// the zenoh session this liveliness subscriber belongs to
 	session: Arc<Session>,
-	token: String,
 	context: Context<P>,
-	activation_state: OperationState,
 	put_callback: ArcLivelinessCallback<P>,
 	delete_callback: Option<ArcLivelinessCallback<P>>,
 	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
@@ -97,6 +102,7 @@ where
 		let ctx = self.context.clone();
 		let ctx1 = self.context.clone();
 		let ctx2 = self.context.clone();
+		let parameter = self.parameter.clone();
 
 		self.handle
 			.lock()
@@ -120,7 +126,9 @@ where
 				};
 
 				// the liveliness subscriber
-				if let Err(error) = run_liveliness(session2, token2, p_cb2, d_cb, ctx2).await {
+				if let Err(error) =
+					run_liveliness(token2, parameter, session2, p_cb2, d_cb, ctx2).await
+				{
 					error!("running liveliness subscriber failed with {error}");
 				};
 			}));
@@ -135,46 +143,26 @@ where
 	}
 }
 
-impl<P> Operational for LivelinessSubscriber<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn set_activation_state(&mut self, state: OperationState) {
-		self.activation_state = state;
-	}
-
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-}
-
 impl<P> LivelinessSubscriber<P>
 where
 	P: Send + Sync + 'static,
 {
 	/// Constructor for a [`LivelinessSubscriber`]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		token: impl Into<String>,
+		parameter: LivelinessSubscriberParameter,
+		session: Arc<Session>,
 		context: Context<P>,
-		activation_state: OperationState,
 		put_callback: ArcLivelinessCallback<P>,
 		delete_callback: Option<ArcLivelinessCallback<P>>,
 	) -> Self {
 		Self {
-			current_state: OperationState::default(),
-			session,
+			activity,
 			token: token.into(),
+			parameter,
+			session,
 			context,
-			activation_state,
 			put_callback,
 			delete_callback,
 			handle: parking_lot::Mutex::new(None),
@@ -184,13 +172,13 @@ where
 
 #[instrument(name="liveliness", level = Level::ERROR, skip_all)]
 async fn run_liveliness<P>(
+	token: String,
+	_parameter: LivelinessSubscriberParameter,
 	session: Arc<Session>,
-	token: impl Into<String>,
 	p_cb: ArcLivelinessCallback<P>,
 	d_cb: Option<ArcLivelinessCallback<P>>,
 	ctx: Context<P>,
 ) -> Result<()> {
-	let token = token.into();
 	let subscriber = session
 		.liveliness()
 		.declare_subscriber(token)
@@ -235,12 +223,11 @@ async fn run_liveliness<P>(
 #[instrument(name="initial liveliness", level = Level::ERROR, skip_all)]
 async fn run_initial<P>(
 	session: Arc<Session>,
-	token: impl Into<String>,
+	token: String,
 	p_cb: ArcLivelinessCallback<P>,
 	ctx: Context<P>,
 	timeout: Duration,
 ) -> Result<()> {
-	let token = token.into();
 	let result = session
 		.liveliness()
 		.get(token)

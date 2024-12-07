@@ -35,10 +35,10 @@ impl Default for SubscriberParameter {
 impl SubscriberParameter {
 	/// Create a [`SubscriberParameter`] set.
 	#[must_use]
-	pub const fn new(#[cfg(feature = "unstable")] allowed_destination: Locality) -> Self {
+	pub const fn new(#[cfg(feature = "unstable")] allowed_origin: Locality) -> Self {
 		Self {
 			#[cfg(feature = "unstable")]
-			allowed_destination,
+			allowed_origin,
 		}
 	}
 }

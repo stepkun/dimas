@@ -16,13 +16,11 @@ use alloc::{
 };
 use anyhow::Result;
 use bitcode::decode;
-use core::time::Duration;
-use dimas_core::Transitions;
 use dimas_core::{
 	message_types::{Message, ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::{cancel_selector_from, feedback_selector_from, request_selector_from},
-	OperationState, Operational,
+	Activity, ActivityType, OperationState, Operational, OperationalType, Transitions,
 };
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
@@ -38,6 +36,8 @@ use zenoh::{
 };
 
 use crate::error::Error;
+
+use super::ObserverParameter;
 // endregion:	--- modules
 
 // region:    	--- types
@@ -58,25 +58,21 @@ pub type ArcResponseCallback<P> = Arc<Mutex<ResponseCallback<P>>>;
 
 // region:		--- Observer
 /// Observer
+#[dimas_macros::activity]
 pub struct Observer<P>
 where
 	P: Send + Sync + 'static,
 {
-	/// The current state for [`Operational`]
-	current_state: OperationState,
-	/// the zenoh session this observer belongs to
-	session: Arc<Session>,
 	/// The observers key expression
 	selector: String,
+	parameter: ObserverParameter,
+	/// the zenoh session this observer belongs to
+	session: Arc<Session>,
 	/// Context for the Observer
 	context: Context<P>,
-	activation_state: OperationState,
-	/// callback for control request results
 	control_callback: ArcControlCallback<P>,
 	/// callback for responses
 	response_callback: ArcResponseCallback<P>,
-	/// timeout value
-	timeout: Duration,
 	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
 
@@ -108,7 +104,7 @@ where
 			.get(&selector)
 			.target(QueryTarget::All)
 			.consolidation(ConsolidationMode::None)
-			.timeout(self.timeout);
+			.timeout(self.parameter.timeout);
 
 		#[cfg(feature = "unstable")]
 		let builder = builder.allowed_destination(Locality::Any);
@@ -152,7 +148,7 @@ where
 			}
 			if unreached {
 				if retry_count < 5 {
-					std::thread::sleep(self.timeout);
+					std::thread::sleep(self.parameter.timeout);
 				} else {
 					return Err(Error::AccessingObservable {
 						selector: self.selector.to_string(),
@@ -174,7 +170,7 @@ where
 			.get(&selector)
 			.target(QueryTarget::All)
 			.consolidation(ConsolidationMode::None)
-			.timeout(self.timeout);
+			.timeout(self.parameter.timeout);
 
 		if let Some(message) = message {
 			let value = message.value().to_owned();
@@ -262,7 +258,7 @@ where
 			}
 			if unreached {
 				if retry_count < 5 {
-					std::thread::sleep(self.timeout);
+					std::thread::sleep(self.parameter.timeout);
 				} else {
 					return Err(Error::AccessingObservable {
 						selector: self.selector.to_string(),
@@ -294,31 +290,6 @@ where
 	}
 }
 
-impl<P> Operational for Observer<P>
-where
-	P: Send + Sync + 'static,
-{
-	fn activation_state(&self) -> OperationState {
-		self.activation_state
-	}
-
-	fn desired_state(&self, _state: OperationState) -> OperationState {
-		todo!()
-	}
-
-	fn state(&self) -> OperationState {
-		self.current_state
-	}
-
-	fn set_state(&mut self, state: OperationState) {
-		self.current_state = state;
-	}
-
-	fn set_activation_state(&mut self, _state: OperationState) {
-		todo!()
-	}
-}
-
 impl<P> Observer<P>
 where
 	P: Send + Sync + 'static,
@@ -326,23 +297,22 @@ where
 	/// Constructor for an [`Observer`]
 	#[must_use]
 	pub fn new(
-		session: Arc<Session>,
+		activity: ActivityType,
 		selector: impl Into<String>,
+		parameter: ObserverParameter,
+		session: Arc<Session>,
 		context: Context<P>,
-		activation_state: OperationState,
 		control_callback: ArcControlCallback<P>,
 		response_callback: ArcResponseCallback<P>,
-		timeout: Duration,
 	) -> Self {
 		Self {
-			current_state: OperationState::default(),
-			session,
+			activity,
 			selector: selector.into(),
+			session,
+			parameter,
 			context,
-			activation_state,
 			control_callback,
 			response_callback,
-			timeout,
 			handle: parking_lot::Mutex::new(None),
 		}
 	}

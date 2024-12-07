@@ -27,8 +27,6 @@ use std::{
 #[cfg(feature = "std")]
 use tokio::sync::Mutex;
 use tracing::{error, event, instrument, warn, Level};
-#[cfg(feature = "unstable")]
-use zenoh::sample::Locality;
 use zenoh::{sample::SampleKind, Session, Wait};
 
 use crate::error::Error;

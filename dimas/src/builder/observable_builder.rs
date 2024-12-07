@@ -4,26 +4,22 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::{
-	traits::Responder,
-	zenoh::observable::{
-		ArcControlCallback, ArcExecutionCallback, ArcFeedbackCallback, ControlCallback,
-		ExecutionCallback, FeedbackCallback, Observable,
-	},
+use dimas_com::zenoh::observable::{
+	ArcControlCallback, ArcExecutionCallback, ArcFeedbackCallback, ControlCallback,
+	ExecutionCallback, FeedbackCallback, Observable, ObservableParameter,
 };
 use dimas_core::{
 	message_types::{Message, ObservableControlResponse},
 	traits::Context,
 	utils::selector_from,
-	OperationState,
+	ActivityType, OperationState, System, SystemType,
 };
 use futures::future::{BoxFuture, Future};
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::{sync::Mutex, time::Duration};
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
 	error::Error,
 };
 // endregion:	--- modules
@@ -266,8 +262,8 @@ where
 	#[must_use]
 	pub fn storage(
 		self,
-		storage: Arc<RwLock<HashMap<String, Box<dyn Responder>>>>,
-	) -> ObservableBuilder<P, K, CC, FC, EF, Storage<Box<dyn Responder>>> {
+		storage: &mut SystemType,
+	) -> ObservableBuilder<P, K, CC, FC, EF, StorageNew> {
 		let Self {
 			session_id,
 			context,
@@ -288,7 +284,7 @@ where
 			control_callback,
 			feedback_callback,
 			execution_callback,
-			storage: Storage { storage },
+			storage: StorageNew { storage },
 		}
 	}
 }
@@ -326,15 +322,21 @@ where
 			execution_callback,
 			..
 		} = self;
+
 		let session = context
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
+
+		let selector = selector.selector;
+		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let parameter = ObservableParameter::new(feedback_interval);
+
 		Ok(Observable::new(
+			activity,
+			selector,
+			parameter,
 			session,
-			selector.selector,
 			context,
-			activation_state,
-			feedback_interval,
 			control_callback.callback,
 			feedback_callback.callback,
 			execution_callback.callback,
@@ -342,14 +344,14 @@ where
 	}
 }
 
-impl<P>
+impl<'a, P>
 	ObservableBuilder<
 		P,
 		Selector,
 		Callback<ArcControlCallback<P>>,
 		Callback<ArcFeedbackCallback<P>>,
 		Callback<ArcExecutionCallback<P>>,
-		Storage<Box<dyn Responder>>,
+		StorageNew<'a>,
 	>
 where
 	P: Send + Sync + 'static,
@@ -357,14 +359,11 @@ where
 	/// Build and add the observable to the agents context
 	/// # Errors
 	///
-	pub fn add(self) -> Result<Option<Box<dyn Responder>>> {
-		let collection = self.storage.storage.clone();
-		let q = self.build()?;
-
-		let r = collection
-			.write()
-			.insert(q.selector().to_string(), Box::new(q));
-		Ok(r)
+	pub fn add(self) -> Result<()> {
+		let mut collection = self.storage.storage.clone();
+		let o = self.build()?;
+		collection.add_activity(Box::new(o));
+		Ok(())
 	}
 }
 // endregion:	--- ObservableBuilder
