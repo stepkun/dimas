@@ -3,7 +3,6 @@
 use dimas_core::{
 	Activity, ActivityType, OperationState, Operational, OperationalType, Transitions,
 };
-use std::fmt::Debug;
 
 // #[dimas::activity(attr = "wrong attribute")]
 // #[derive(Debug)]
@@ -26,7 +25,7 @@ where
 impl<P> Transitions for TestActivity1<P> where P: Send + Sync {}
 
 #[dimas_macros::activity]
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct TestActivity2 {
 	dummy: String,
 }

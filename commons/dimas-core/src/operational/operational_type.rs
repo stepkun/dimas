@@ -12,7 +12,6 @@ use super::{OperationState, Operational, Transitions};
 
 // region:		--- OperationalData
 /// Data necessary for an [`Operational`].
-#[derive(Clone, Debug)]
 pub struct OperationalType {
 	current: OperationState,
 	activation: OperationState,

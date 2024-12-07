@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - documented config file
 - tracing in examples
 - _breaking change_s:
-  - macros for automatic creation of (inheritance) boilerplate for
+  - macros for automatic creation of (inheritance) boilerplate
     - `operational`: to make a struct an `Operational`
     - `activity`: to make a struct an `Activity` (includes `Operational`)
     - `component`: to make a struct a `Component` (includes `Operational`)

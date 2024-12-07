@@ -53,6 +53,7 @@ use crate::builder::{
 	SubscriberBuilder, TimerBuilder,
 };
 use crate::context::ContextImpl;
+#[allow(unused_imports)]
 use crate::error::Error;
 use crate::utils::{ComponentRegistryType, LibManager};
 use anyhow::Result;
@@ -108,7 +109,7 @@ where
 		.unwrap_or_else(|| String::from("--"));
 	let mode = ctx.mode();
 	let zid = ctx.uuid();
-	let state = ctx.state_old();
+	let state = OperationState::Undefined; // @TODO:
 	let value = AboutEntity::new(name, mode, zid, state);
 	drop(ctx);
 	request.reply(value)?;
@@ -147,7 +148,7 @@ where
 		.unwrap_or_else(|| String::from("--"));
 	let mode = ctx.mode();
 	let zid = ctx.uuid();
-	let state = ctx.state_old();
+	let state = OperationState::Undefined; // @TODO:
 	let value = AboutEntity::new(name, mode, zid, state);
 	request.reply(value)?;
 
@@ -155,10 +156,11 @@ where
 	tokio::task::spawn(async move {
 		tokio::time::sleep(Duration::from_millis(10)).await;
 		// gracefully end agent
-		let _ = ctx.set_state_old(OperationState::Standby);
-		tokio::time::sleep(Duration::from_millis(100)).await;
-		let _ = ctx.set_state_old(OperationState::Created);
-		let _ = ctx.sender().send(TaskSignal::Shutdown).await;
+		// @TODO:
+		//let _ = ctx.set_state_old(OperationState::Standby);
+		//tokio::time::sleep(Duration::from_millis(100)).await;
+		//let _ = ctx.set_state_old(OperationState::Created);
+		//let _ = ctx.sender().send(TaskSignal::Shutdown).await;
 	});
 	Ok(())
 }
@@ -169,8 +171,9 @@ where
 	P: Send + Sync + 'static,
 {
 	// is a state value given?
-	if let Some(value) = state {
-		let _ = ctx.set_state_old(value);
+	if let Some(_value) = state {
+		// @TODO:
+		todo!()
 	}
 
 	// send back result
@@ -179,7 +182,7 @@ where
 		.unwrap_or_else(|| String::from("--"));
 	let mode = ctx.mode();
 	let zid = ctx.uuid();
-	let state = ctx.state_old();
+	let state = OperationState::Undefined; // @TODO:
 	let value = AboutEntity::new(name, mode, zid, state);
 	drop(ctx);
 	request.reply(value)?;
@@ -279,10 +282,7 @@ where
 		}
 
 		// set [`OperationState`] to Created
-		// This will also start the basic queryables
-		agent
-			.context
-			.set_state_old(OperationState::Created)?;
+		// @TODO: agent.manage_operation_state(OperationState::Created)?;
 
 		Ok(agent)
 	}
@@ -489,46 +489,48 @@ where
 			select! {
 				// `TaskSignal`s
 				Some(signal) = self.rx.recv() => {
+					#[allow(clippy::single_match)]
 					match signal {
-						#[cfg(feature = "unstable")]
-						TaskSignal::RestartLiveliness(selector) => {
-							self.context.liveliness_subscribers()
-								.write()
-								.get_mut(&selector)
-								.ok_or(Error::GetMut("liveliness".into()))?
-								.state_transitions(self.context.state_old())?;
-						},
-						TaskSignal::RestartQueryable(selector) => {
-							self.context.responders()
-								.write()
-								.get_mut(&selector)
-								.ok_or_else(|| Error::GetMut("queryables".into()))?
-								.state_transitions(self.context.state_old())?;
-						},
-						TaskSignal::RestartObservable(selector) => {
-							self.context.responders()
-								.write()
-								.get_mut(&selector)
-								.ok_or_else(|| Error::GetMut("observables".into()))?
-								.state_transitions(self.context.state_old())?;
-						},
-						TaskSignal::RestartSubscriber(selector) => {
-							self.context.responders()
-								.write()
-								.get_mut(&selector)
-								.ok_or_else(|| Error::GetMut("subscribers".into()))?
-								.state_transitions(self.context.state_old())?;
-						},
-						TaskSignal::RestartTimer(selector) => {
-							self.context.timers()
-								.write()
-								.get_mut(&selector)
-								.ok_or_else(|| Error::GetMut("timers".into()))?
-								.state_transitions(self.context.state_old())?;
-						},
+				// 		#[cfg(feature = "unstable")]
+				// 		TaskSignal::RestartLiveliness(selector) => {
+				// 			self.context.liveliness_subscribers()
+				// 				.write()
+				// 				.get_mut(&selector)
+				// 				.ok_or(Error::GetMut("liveliness".into()))?
+				// 				.state_transitions(self.context.state_old())?;
+				// 		},
+				// 		TaskSignal::RestartQueryable(selector) => {
+				// 			self.context.responders()
+				// 				.write()
+				// 				.get_mut(&selector)
+				// 				.ok_or_else(|| Error::GetMut("queryables".into()))?
+				// 				.state_transitions(self.context.state_old())?;
+				// 		},
+				// 		TaskSignal::RestartObservable(selector) => {
+				// 			self.context.responders()
+				// 				.write()
+				// 				.get_mut(&selector)
+				// 				.ok_or_else(|| Error::GetMut("observables".into()))?
+				// 				.state_transitions(self.context.state_old())?;
+				// 		},
+				// 		TaskSignal::RestartSubscriber(selector) => {
+				// 			self.context.responders()
+				// 				.write()
+				// 				.get_mut(&selector)
+				// 				.ok_or_else(|| Error::GetMut("subscribers".into()))?
+				// 				.state_transitions(self.context.state_old())?;
+				// 		},
+				// 		TaskSignal::RestartTimer(selector) => {
+				// 			self.context.timers()
+				// 				.write()
+				// 				.get_mut(&selector)
+				// 				.ok_or_else(|| Error::GetMut("timers".into()))?
+				// 				.state_transitions(self.context.state_old())?;
+				// 		},
 						TaskSignal::Shutdown => {
 							return self.stop();
 						}
+						_ => {}
 					};
 				}
 
@@ -556,8 +558,7 @@ where
 	#[instrument(level = Level::INFO, skip_all)]
 	pub fn stop(&mut self) -> Result<()> {
 		event!(Level::INFO, "stop");
-		self.context
-			.set_state_old(OperationState::Created)?;
+		// @TODO: self.manage_operation_state(OperationState::Created)?;
 
 		// stop liveliness
 		#[cfg(feature = "unstable")]

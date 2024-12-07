@@ -21,7 +21,7 @@ use super::{System, SystemId};
 
 // region:		--- ComponentType
 /// Data necessary for a [`System`].
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct SystemType {
 	id: SystemId,
 }

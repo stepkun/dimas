@@ -1,7 +1,6 @@
 //! Copyright © 2024 Stephan Kunz
 
 use anyhow::Result;
-use core::fmt::Debug;
 use dimas_core::{OperationState, Operational, OperationalType, Transitions};
 
 #[dimas_macros::operational]
@@ -15,7 +14,7 @@ where
 impl<P> Transitions for TestOperational1<P> where P: Send + Sync {}
 
 #[dimas_macros::operational]
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct TestOperational2 {
 	/// A value to test that all hooks have been processed
 	value: i32,

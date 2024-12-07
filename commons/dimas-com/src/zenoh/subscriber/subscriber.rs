@@ -127,6 +127,7 @@ where
 {
 	/// Constructor for a [`Subscriber`].
 	#[must_use]
+	#[allow(clippy::too_many_arguments)]
 	pub fn new(
 		activity: ActivityType,
 		operational: OperationalType,

@@ -28,7 +28,7 @@ pub mod utils;
 pub use activity::{Activity, ActivityId, ActivityType};
 pub use component::{Component, ComponentId, ComponentType};
 pub use enums::{Signal, TaskSignal};
-pub use operational::{OperationState, Operational, OperationalType, Transitions};
+pub use operational::{ManageOperationState, OperationState, Operational, OperationalType, Transitions};
 pub use system::{System, SystemId, SystemType};
 pub use traits::{Capability, CapabilityDescription, Configuration, Connection};
 pub use traits::{Context, ContextAbstraction};

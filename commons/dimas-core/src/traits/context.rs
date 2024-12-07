@@ -41,16 +41,16 @@ pub trait ContextAbstraction: Send + Sync {
 	#[must_use]
 	fn fq_name(&self) -> Option<String>;
 
-	/// Get the [`Context`]s state
-	/// # Panics
-	#[must_use]
-	fn state_old(&self) -> OperationState;
+	// /// Get the [`Context`]s state
+	// /// # Panics
+	// #[must_use]
+	// fn state_old(&self) -> OperationState;
 
-	/// Set the [`OperationState`].
-	///
-	/// Setting new state is done step by step
-	/// # Errors
-	fn set_state_old(&self, state: OperationState) -> Result<()>;
+	// /// Set the [`OperationState`].
+	// ///
+	// /// Setting new state is done step by step
+	// /// # Errors
+	// fn set_state_old(&self, state: OperationState) -> Result<()>;
 
 	/// Get the uuid
 	#[must_use]

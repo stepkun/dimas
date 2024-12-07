@@ -14,7 +14,7 @@ use crate::{Activity, ActivityId};
 
 // region:		--- ActivityType
 /// Data necessary for an [`Activity`].
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct ActivityType {
 	id: ActivityId,
 }

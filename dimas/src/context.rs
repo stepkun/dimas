@@ -79,6 +79,7 @@ where
 	/// A prefix to separate communication for different groups
 	prefix: Option<String>,
 	/// The [`Agent`]s current operational state
+	#[allow(unused)]
 	state: Arc<RwLock<OperationState>>,
 	/// A sender for sending signals to owner of context
 	sender: Sender<TaskSignal>,
@@ -112,11 +113,6 @@ where
 	}
 
 	#[must_use]
-	fn state_old(&self) -> OperationState {
-		*self.state.read()
-	}
-
-	#[must_use]
 	fn uuid(&self) -> String {
 		self.uuid.clone()
 	}
@@ -137,69 +133,6 @@ where
 
 	fn write(&self) -> parking_lot::lock_api::RwLockWriteGuard<'_, parking_lot::RawRwLock, P> {
 		self.props.write()
-	}
-
-	#[instrument(level = Level::DEBUG, skip_all)]
-	fn set_state_old(&self, state: OperationState) -> Result<()> {
-		event!(Level::DEBUG, "set_state_old");
-		let final_state = state;
-		let mut next_state;
-		// step up?
-		while self.state_old() < final_state {
-			match self.state_old() {
-				OperationState::Error => {
-					return Err(Error::ManageState.into());
-				}
-				OperationState::Undefined => {
-					next_state = OperationState::Created;
-				}
-				OperationState::Created => {
-					next_state = OperationState::Configured;
-				}
-				OperationState::Configured => {
-					next_state = OperationState::Inactive;
-				}
-				OperationState::Inactive => {
-					next_state = OperationState::Standby;
-				}
-				OperationState::Standby => {
-					next_state = OperationState::Active;
-				}
-				OperationState::Active => {
-					self.modify_state_property(OperationState::Error);
-					return Ok(());
-				}
-			}
-			self.upgrade_registered_tasks(next_state)?;
-		}
-
-		// step down?
-		while self.state_old() > final_state {
-			match self.state_old() {
-				OperationState::Active => {
-					next_state = OperationState::Standby;
-				}
-				OperationState::Standby => {
-					next_state = OperationState::Inactive;
-				}
-				OperationState::Inactive => {
-					next_state = OperationState::Configured;
-				}
-				OperationState::Configured => {
-					next_state = OperationState::Created;
-				}
-				OperationState::Created => {
-					self.modify_state_property(OperationState::Error);
-					return Ok(());
-				}
-				OperationState::Undefined | OperationState::Error => {
-					return Err(Error::ManageState.into());
-				}
-			}
-			self.downgrade_registered_tasks(next_state)?;
-		}
-
-		Ok(())
 	}
 
 	#[instrument(level = Level::ERROR, skip_all)]
