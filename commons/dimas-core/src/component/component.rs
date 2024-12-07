@@ -8,11 +8,9 @@ extern crate alloc;
 
 // region:		--- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
-use anyhow::Result;
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
-use tracing::{event, instrument, Level};
 
-use crate::{Activity, ActivityId, OperationState, Operational};
+use crate::{Activity, ActivityId};
 // endregion:	--- modules
 
 // region:		--- types
@@ -24,7 +22,7 @@ pub type ComponentId = String;
 
 // region:		--- Component
 /// Contract for a [`Component`]
-pub trait Component: Operational + Send + Sync {
+pub trait Component: Send + Sync {
 	/// Get the [`Component`]s unique ID
 	fn id(&self) -> ComponentId;
 
@@ -58,40 +56,5 @@ pub trait Component: Operational + Send + Sync {
 	/// Write access to sub components
 	/// @TODO: should return an Iterator
 	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>>;
-
-	/// Check wether state of [`Operational`] is appropriate for the given [`OperationState`].
-	/// If not, adjusts components state to needs considering its sub-components.
-	/// # Errors
-	#[instrument(level = Level::TRACE, skip_all)]
-	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
-		event!(Level::TRACE, "manage_operation_state");
-		let desired_state = self.desired_state(state);
-		// step up?
-		while self.state() < desired_state {
-			assert!(self.state() < OperationState::Active);
-			let next_state = self.state() + 1;
-			// first handle sub elements
-			for component in &mut *self.components_mut() {
-				component.manage_operation_state(next_state)?;
-			}
-			self.state_transitions(next_state)?;
-			self.set_state(next_state);
-		}
-
-		// step down?
-		while self.state() > desired_state {
-			assert!(self.state() > OperationState::Created);
-			let next_state = self.state() - 1;
-			// first handle sub elements
-			for component in &mut *self.components_mut() {
-				component.manage_operation_state(next_state)?;
-			}
-			// next do own transition
-			self.state_transitions(next_state)?;
-			self.set_state(next_state);
-		}
-
-		Ok(())
-	}
 }
 // endregion:   --- Component

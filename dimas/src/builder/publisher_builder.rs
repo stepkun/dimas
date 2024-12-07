@@ -6,7 +6,8 @@
 use anyhow::Result;
 use dimas_com::zenoh::publisher::{Publisher, PublisherParameter};
 use dimas_core::{
-	traits::Context, utils::selector_from, ActivityType, OperationState, System, SystemType,
+	traits::Context, utils::selector_from, ActivityType, Component, ComponentType, OperationState,
+	OperationalType,
 };
 use zenoh::{
 	bytes::Encoding,
@@ -16,7 +17,7 @@ use zenoh::{
 use zenoh::{qos::Reliability, sample::Locality};
 
 use super::{
-	builder_states::{NoSelector, NoStorage, Selector, StorageNew},
+	builder_states::{NoSelector, NoStorage, Selector, Storage},
 	error::Error,
 };
 // endregion:	--- modules
@@ -136,7 +137,7 @@ where
 {
 	/// Provide agents storage for the publisher
 	#[must_use]
-	pub fn storage(self, storage: &mut SystemType) -> PublisherBuilder<P, K, StorageNew> {
+	pub fn storage(self, storage: &mut ComponentType) -> PublisherBuilder<P, K, Storage> {
 		let Self {
 			session_id,
 			context,
@@ -165,7 +166,7 @@ where
 			#[cfg(feature = "unstable")]
 			reliability,
 			selector,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 		}
 	}
 }
@@ -234,11 +235,8 @@ where
 			.session(&self.session_id)
 			.ok_or(Error::NoZenohSession)?;
 
-		let activity = ActivityType::with_activation_state(
-			self.selector.selector.clone(),
-			self.activation_state,
-		);
-
+		let activity = ActivityType::new(self.selector.selector.clone());
+		let operational = OperationalType::new(self.activation_state);
 		let encoding = Encoding::from(self.encoding);
 		#[cfg(not(feature = "unstable"))]
 		let parameter = PublisherParameter::new(
@@ -258,6 +256,7 @@ where
 		);
 		Ok(Publisher::new(
 			activity,
+			operational,
 			self.selector.selector,
 			parameter,
 			session,
@@ -265,7 +264,7 @@ where
 	}
 }
 
-impl<'a, P> PublisherBuilder<P, Selector, StorageNew<'a>>
+impl<'a, P> PublisherBuilder<P, Selector, Storage<'a>>
 where
 	P: Send + Sync + 'static,
 {

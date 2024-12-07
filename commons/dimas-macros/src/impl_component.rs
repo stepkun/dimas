@@ -37,6 +37,13 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
+fn component_fields() -> TokenStream {
+	quote! {
+		component: ComponentType,
+		operational: OperationalType,
+	}
+}
+
 fn self_functions() -> TokenStream {
 	quote! {
 		fn component(&self) -> &ComponentType {
@@ -48,18 +55,12 @@ fn self_functions() -> TokenStream {
 		}
 
 		fn operational(&self) -> &OperationalType {
-			self.component.operational()
+			&self.operational
 		}
 
 		fn operational_mut(&mut self) -> &mut OperationalType {
-			self.component.operational_mut()
+			&mut self.operational
 		}
-	}
-}
-
-fn component_fields() -> TokenStream {
-	quote! {
-		component: ComponentType,
 	}
 }
 

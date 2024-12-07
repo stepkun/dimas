@@ -37,6 +37,13 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
+pub fn activity_fields() -> TokenStream {
+	quote! {
+		activity: ActivityType,
+		operational: OperationalType,
+	}
+}
+
 fn self_functions() -> TokenStream {
 	quote! {
 		fn activity(&self) -> &ActivityType {
@@ -48,18 +55,12 @@ fn self_functions() -> TokenStream {
 		}
 
 		fn operational(&self) -> &OperationalType {
-			self.activity.operational()
+			&self.operational
 		}
 
 		fn operational_mut(&mut self) -> &mut OperationalType {
-			self.activity.operational_mut()
+			&mut self.operational
 		}
-	}
-}
-
-pub fn activity_fields() -> TokenStream {
-	quote! {
-		activity: ActivityType,
 	}
 }
 

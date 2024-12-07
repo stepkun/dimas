@@ -6,8 +6,8 @@
 use anyhow::Result;
 use dimas_com::zenoh::queryable::{ArcGetCallback, GetCallback, Queryable, QueryableParameter};
 use dimas_core::{
-	message_types::QueryMsg, traits::Context, utils::selector_from, ActivityType, OperationState,
-	System, SystemType,
+	message_types::QueryMsg, traits::Context, utils::selector_from, ActivityType, Component,
+	ComponentType, OperationState, OperationalType,
 };
 use futures::future::Future;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ use tokio::sync::Mutex;
 use zenoh::sample::Locality;
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
 	error::Error,
 };
 // endregion:	--- modules
@@ -183,7 +183,7 @@ where
 {
 	/// Provide agents storage for the queryable
 	#[must_use]
-	pub fn storage(self, storage: &mut SystemType) -> QueryableBuilder<P, K, C, StorageNew> {
+	pub fn storage(self, storage: &mut ComponentType) -> QueryableBuilder<P, K, C, Storage> {
 		let Self {
 			session_id,
 			context,
@@ -204,7 +204,7 @@ where
 			allowed_origin,
 			selector,
 			callback,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 		}
 	}
 }
@@ -234,7 +234,8 @@ where
 			.ok_or(Error::NoZenohSession)?;
 
 		let selector = selector.selector;
-		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let activity = ActivityType::new(selector.clone());
+		let operational = OperationalType::new(activation_state);
 		#[cfg(not(feature = "unstable"))]
 		let parameter = QueryableParameter::new(completeness);
 		#[cfg(feature = "unstable")]
@@ -242,6 +243,7 @@ where
 
 		Ok(Queryable::new(
 			activity,
+			operational,
 			selector,
 			parameter,
 			session,
@@ -251,7 +253,7 @@ where
 	}
 }
 
-impl<'a, P> QueryableBuilder<P, Selector, Callback<ArcGetCallback<P>>, StorageNew<'a>>
+impl<'a, P> QueryableBuilder<P, Selector, Callback<ArcGetCallback<P>>, Storage<'a>>
 where
 	P: Send + Sync + 'static,
 {

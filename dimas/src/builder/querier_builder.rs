@@ -6,8 +6,8 @@
 use anyhow::Result;
 use dimas_com::zenoh::querier::{ArcGetCallback, GetCallback, Querier, QuerierParameter};
 use dimas_core::{
-	message_types::QueryableMsg, traits::Context, utils::selector_from, ActivityType,
-	OperationState, System, SystemType,
+	message_types::QueryableMsg, traits::Context, utils::selector_from, ActivityType, Component,
+	ComponentType, OperationState, OperationalType,
 };
 use futures::Future;
 use std::sync::Arc;
@@ -20,7 +20,7 @@ use zenoh::{
 };
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
 	error::Error,
 };
 // endregion:	--- modules
@@ -227,7 +227,7 @@ where
 {
 	/// Provide agents storage for the query
 	#[must_use]
-	pub fn storage(self, storage: &mut SystemType) -> QuerierBuilder<P, K, C, StorageNew> {
+	pub fn storage(self, storage: &mut ComponentType) -> QuerierBuilder<P, K, C, Storage> {
 		let Self {
 			session_id,
 			context,
@@ -252,7 +252,7 @@ where
 			timeout,
 			selector,
 			callback,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 			mode,
 			target,
 		}
@@ -288,7 +288,8 @@ where
 
 		let selector = selector.selector;
 		let encoding = Encoding::from(encoding);
-		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let activity = ActivityType::new(selector.clone());
+		let operational = OperationalType::new(activation_state);
 		#[cfg(not(feature = "unstable"))]
 		let parameter = QuerierParameter::new(mode, timeout, encoding, target);
 		#[cfg(feature = "unstable")]
@@ -296,6 +297,7 @@ where
 
 		Ok(Querier::new(
 			activity,
+			operational,
 			selector,
 			parameter,
 			session,
@@ -305,7 +307,7 @@ where
 	}
 }
 
-impl<'a, P> QuerierBuilder<P, Selector, Callback<ArcGetCallback<P>>, StorageNew<'a>>
+impl<'a, P> QuerierBuilder<P, Selector, Callback<ArcGetCallback<P>>, Storage<'a>>
 where
 	P: Send + Sync + 'static,
 {

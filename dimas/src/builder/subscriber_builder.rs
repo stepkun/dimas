@@ -8,8 +8,8 @@ use dimas_com::zenoh::subscriber::{
 	ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber, SubscriberParameter,
 };
 use dimas_core::{
-	message_types::Message, traits::Context, utils::selector_from, ActivityType, OperationState,
-	System, SystemType,
+	message_types::Message, traits::Context, utils::selector_from, ActivityType, Component,
+	ComponentType, OperationState, OperationalType,
 };
 use futures::future::Future;
 use std::sync::Arc;
@@ -18,7 +18,7 @@ use tokio::sync::Mutex;
 use zenoh::sample::Locality;
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
 	error::Error,
 };
 // endregion:	--- modules
@@ -191,7 +191,7 @@ where
 {
 	/// Provide agents storage for the subscriber
 	#[must_use]
-	pub fn storage(self, storage: &mut SystemType) -> SubscriberBuilder<P, K, C, StorageNew> {
+	pub fn storage(self, storage: &mut ComponentType) -> SubscriberBuilder<P, K, C, Storage> {
 		let Self {
 			session_id,
 			context,
@@ -211,7 +211,7 @@ where
 			allowed_origin,
 			selector,
 			put_callback,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 			delete_callback,
 		}
 	}
@@ -243,7 +243,8 @@ where
 			.ok_or(Error::NoZenohSession)?;
 
 		let selector = selector.selector;
-		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let activity = ActivityType::new(selector.clone());
+		let operational = OperationalType::new(activation_state);
 		#[cfg(not(feature = "unstable"))]
 		let parameter = SubscriberParameter::new();
 		#[cfg(feature = "unstable")]
@@ -251,6 +252,7 @@ where
 
 		Ok(Subscriber::new(
 			activity,
+			operational,
 			selector,
 			parameter,
 			session,
@@ -261,7 +263,7 @@ where
 	}
 }
 
-impl<'a, P> SubscriberBuilder<P, Selector, Callback<ArcPutCallback<P>>, StorageNew<'a>>
+impl<'a, P> SubscriberBuilder<P, Selector, Callback<ArcPutCallback<P>>, Storage<'a>>
 where
 	P: Send + Sync + 'static,
 {

@@ -48,7 +48,7 @@
 #[cfg(feature = "unstable")]
 use crate::builder::LivelinessSubscriberBuilder;
 use crate::builder::{
-	builder_states::{NoCallback, NoInterval, NoSelector, StorageNew},
+	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
 	ObservableBuilder, ObserverBuilder, PublisherBuilder, QuerierBuilder, QueryableBuilder,
 	SubscriberBuilder, TimerBuilder,
 };
@@ -64,8 +64,8 @@ use dimas_core::{
 	enums::{Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
 	traits::{Context, ContextAbstraction},
-	Activity, ActivityId, Component, ComponentId, OperationState, Operational, OperationalType,
-	System, SystemType, Transitions,
+	ComponentType, OperationState,
+	Operational, OperationalType, System, SystemType, Transitions,
 };
 #[cfg(feature = "unstable")]
 use parking_lot::RwLock;
@@ -246,6 +246,8 @@ where
 
 		let mut agent = Agent {
 			system: SystemType::default(),
+			component: ComponentType::default(),
+			operational: OperationalType::default(),
 			rx,
 			context,
 			libmanager: LibManager::new(),
@@ -288,7 +290,7 @@ where
 // endregion:   --- UnconfiguredAgent
 
 // region:	   --- Agent
-/// An Agent with the basic configuration decisions fixed, but not running
+/// An Agent with the basic configuration decisions fixed
 #[dimas_macros::system]
 pub struct Agent<P>
 where
@@ -388,7 +390,7 @@ where
 	#[must_use]
 	pub fn liveliness_subscriber(
 		&mut self,
-	) -> LivelinessSubscriberBuilder<P, NoCallback, StorageNew> {
+	) -> LivelinessSubscriberBuilder<P, NoCallback, Storage> {
 		LivelinessSubscriberBuilder::new("default", self.context.clone()).storage(self.system_mut())
 	}
 
@@ -396,46 +398,46 @@ where
 	#[must_use]
 	pub fn observable(
 		&mut self,
-	) -> ObservableBuilder<P, NoSelector, NoCallback, NoCallback, NoCallback, StorageNew> {
-		ObservableBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	) -> ObservableBuilder<P, NoSelector, NoCallback, NoCallback, NoCallback, Storage> {
+		ObservableBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Get an [`ObserverBuilder`]
 	#[must_use]
 	pub fn observer(
 		&mut self,
-	) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, StorageNew> {
-		ObserverBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, Storage> {
+		ObserverBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Get a [`PublisherBuilder`].
 	#[must_use]
-	pub fn publisher(&mut self) -> PublisherBuilder<P, NoSelector, StorageNew> {
-		PublisherBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	pub fn publisher(&mut self) -> PublisherBuilder<P, NoSelector, Storage> {
+		PublisherBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Get a [`QuerierBuilder`].
 	#[must_use]
-	pub fn querier(&mut self) -> QuerierBuilder<P, NoSelector, NoCallback, StorageNew> {
-		QuerierBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	pub fn querier(&mut self) -> QuerierBuilder<P, NoSelector, NoCallback, Storage> {
+		QuerierBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Get a [`QueryableBuilder`].
 	#[must_use]
-	pub fn queryable(&mut self) -> QueryableBuilder<P, NoSelector, NoCallback, StorageNew> {
-		QueryableBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	pub fn queryable(&mut self) -> QueryableBuilder<P, NoSelector, NoCallback, Storage> {
+		QueryableBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Get a [`SubscriberBuilder`].
 	#[must_use]
-	pub fn subscriber(&mut self) -> SubscriberBuilder<P, NoSelector, NoCallback, StorageNew> {
-		SubscriberBuilder::new("default", self.context.clone()).storage(self.system_mut())
+	pub fn subscriber(&mut self) -> SubscriberBuilder<P, NoSelector, NoCallback, Storage> {
+		SubscriberBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Get a [`TimerBuilder`].
 	#[must_use]
-	pub fn timer(&mut self) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, StorageNew> {
-		TimerBuilder::new(self.context.clone()).storage(self.system_mut())
+	pub fn timer(&mut self) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, Storage> {
+		TimerBuilder::new(self.context.clone()).storage(self.component_mut())
 	}
 
 	/// Start the agent.
@@ -472,7 +474,7 @@ where
 		// self.context
 		// 	.set_state_old(OperationState::Active)?;
 
-		self.manage_operation_state(OperationState::Active)?;
+		// @TODO: self.operational.manage_operation_state(OperationState::Active)?;
 
 		self.run().await
 	}

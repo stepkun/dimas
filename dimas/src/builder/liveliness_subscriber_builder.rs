@@ -9,7 +9,8 @@ use dimas_com::zenoh::liveliness::{
 	ArcLivelinessCallback, LivelinessCallback, LivelinessSubscriber, LivelinessSubscriberParameter,
 };
 use dimas_core::{
-	traits::Context, utils::selector_from, ActivityType, OperationState, System, SystemType,
+	traits::Context, utils::selector_from, ActivityType, Component, ComponentType, OperationState,
+	OperationalType,
 };
 use futures::future::Future;
 use std::sync::Arc;
@@ -206,7 +207,7 @@ where
 	#[must_use]
 	pub fn storage(
 		self,
-		storage: &mut SystemType,
+		storage: &mut ComponentType,
 	) -> LivelinessSubscriberBuilder<P, C, StorageNew> {
 		let Self {
 			session_id,
@@ -251,10 +252,13 @@ where
 			.session(&session_id)
 			.ok_or(Error::NoZenohSession)?;
 
-		let activity = ActivityType::with_activation_state(token.clone(), activation_state);
+		let activity = ActivityType::new(token.clone());
+		let operational = OperationalType::new(activation_state);
 		let parameter = LivelinessSubscriberParameter::new();
+
 		Ok(LivelinessSubscriber::new(
 			activity,
+			operational,
 			token,
 			parameter,
 			session,

@@ -6,13 +6,15 @@
 // region:		--- modules
 use anyhow::Result;
 use core::time::Duration;
-use dimas_core::{traits::Context, OperationState, System, SystemType};
+use dimas_core::{
+	traits::Context, ActivityType, Component, ComponentType, OperationState, OperationalType,
+};
 use dimas_time::{ArcTimerCallback, IntervalTimer, IntervalTimerParameter};
 use parking_lot::Mutex;
 use std::sync::Arc;
 
 use super::builder_states::{
-	Callback, Interval, NoCallback, NoInterval, NoSelector, NoStorage, Selector, StorageNew,
+	Callback, Interval, NoCallback, NoInterval, NoSelector, NoStorage, Selector, Storage,
 };
 // endregion:	--- modules
 
@@ -194,7 +196,7 @@ where
 {
 	/// Provide agents storage for the timer
 	#[must_use]
-	pub fn storage(self, storage: &mut SystemType) -> TimerBuilder<P, K, I, C, StorageNew> {
+	pub fn storage(self, storage: &mut ComponentType) -> TimerBuilder<P, K, I, C, Storage> {
 		let Self {
 			context,
 			activation_state,
@@ -210,7 +212,7 @@ where
 			selector: name,
 			interval,
 			callback,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 			delay,
 		}
 	}
@@ -234,18 +236,20 @@ where
 			..
 		} = self;
 
+		let activity = ActivityType::new(name.selector);
+		let operational = OperationalType::new(activation_state);
 		let parameter = IntervalTimerParameter::new(interval.interval, delay);
 		Ok(IntervalTimer::new(
-			name.selector,
+			activity,
+			operational,
 			parameter,
-			activation_state,
 			callback.callback,
 			context,
 		))
 	}
 }
 
-impl<'a, P> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, StorageNew<'a>>
+impl<'a, P> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, Storage<'a>>
 where
 	P: Send + Sync + 'static,
 {

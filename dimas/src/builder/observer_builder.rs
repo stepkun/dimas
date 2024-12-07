@@ -12,14 +12,14 @@ use dimas_core::{
 	message_types::{ObservableControlResponse, ObservableResponse},
 	traits::Context,
 	utils::selector_from,
-	ActivityType, OperationState, System, SystemType,
+	ActivityType, Component, ComponentType, OperationState, OperationalType,
 };
 use futures::future::Future;
 use std::sync::Arc;
 use tokio::{sync::Mutex, time::Duration};
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
 	error::Error,
 };
 // endregion:	--- modules
@@ -214,7 +214,7 @@ where
 {
 	/// Provide agents storage for the subscriber
 	#[must_use]
-	pub fn storage(self, storage: &mut SystemType) -> ObserverBuilder<P, K, CC, RC, StorageNew> {
+	pub fn storage(self, storage: &mut ComponentType) -> ObserverBuilder<P, K, CC, RC, Storage> {
 		let Self {
 			session_id,
 			context,
@@ -233,7 +233,7 @@ where
 			selector,
 			control_callback,
 			response_callback,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 		}
 	}
 }
@@ -264,11 +264,13 @@ where
 			.ok_or(Error::NoZenohSession)?;
 
 		let selector = selector.selector;
-		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let activity = ActivityType::new(selector.clone());
+		let operational = OperationalType::new(activation_state);
 		let parameter = ObserverParameter::new(timeout);
 
 		Ok(Observer::new(
 			activity,
+			operational,
 			selector,
 			parameter,
 			session,
@@ -285,7 +287,7 @@ impl<'a, P>
 		Selector,
 		Callback<ArcControlCallback<P>>,
 		Callback<ArcResponseCallback<P>>,
-		StorageNew<'a>,
+		Storage<'a>,
 	>
 where
 	P: Send + Sync + 'static,

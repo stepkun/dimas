@@ -112,14 +112,15 @@ where
 	/// Constructor for an [`IntervalTimer`]
 	#[must_use]
 	pub fn new(
-		name: impl Into<String>,
+		activity: ActivityType,
+		operational: OperationalType,
 		parameter: IntervalTimerParameter,
-		activation_state: OperationState,
 		callback: ArcTimerCallback<P>,
 		context: Context<P>,
 	) -> Self {
 		Self {
-			activity: ActivityType::with_activation_state(name.into(), activation_state),
+			activity,
+			operational,
 			parameter,
 			callback,
 			context,

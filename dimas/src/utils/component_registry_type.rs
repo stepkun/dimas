@@ -32,12 +32,14 @@ impl ComponentRegistry for ComponentRegistryType {
 		self.components.insert(plugin.id(), plugin);
 	}
 
+	#[allow(unused)]
+	#[allow(clippy::option_if_let_else)]
 	fn deregister(&mut self, id: &ComponentId) -> Result<Option<Box<dyn Component>>> {
 		let mut plugin = self.components.remove(id);
 		let downstate = OperationState::Configured;
 		// shutdown plugin
-		plugin = if let Some(mut plugin) = plugin {
-			plugin.manage_operation_state(downstate)?;
+		plugin = if let Some(plugin) = plugin {
+			// @TODO: plugin.manage_operation_state(downstate)?;
 			Some(plugin)
 		} else {
 			None

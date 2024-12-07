@@ -4,27 +4,17 @@
 
 // region:      --- modules
 use core::time::Duration;
-use dimas_core::SystemType;
-use parking_lot::RwLock;
-use std::{collections::HashMap, sync::Arc};
+use dimas_core::ComponentType;
 // endtregion:  --- modules
 
 // region:		--- builder_states
 /// State signaling that the builder has no storage value set
 pub struct NoStorage;
-/// State signaling that the builder has the storage value set
-pub struct Storage<S>
-where
-	S: Send + Sync + 'static,
-{
-	/// Thread safe reference to a [`HashMap`] to store the created item of type T
-	pub storage: Arc<RwLock<HashMap<String, S>>>,
-}
 
 /// State signaling that the builder has the storage value set
-pub struct StorageNew<'a> {
-	/// Mutable reference to context stored in [`SystemType`]
-	pub storage: &'a mut SystemType,
+pub struct Storage<'a> {
+	/// Mutable reference to context stored in [`ComponentType`]
+	pub storage: &'a mut ComponentType,
 }
 
 /// State signaling that the builder has no selector set

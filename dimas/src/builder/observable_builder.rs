@@ -12,14 +12,14 @@ use dimas_core::{
 	message_types::{Message, ObservableControlResponse},
 	traits::Context,
 	utils::selector_from,
-	ActivityType, OperationState, System, SystemType,
+	ActivityType, Component, ComponentType, OperationState, OperationalType,
 };
 use futures::future::{BoxFuture, Future};
 use std::sync::Arc;
 use tokio::{sync::Mutex, time::Duration};
 
 use super::{
-	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, StorageNew},
+	builder_states::{Callback, NoCallback, NoSelector, NoStorage, Selector, Storage},
 	error::Error,
 };
 // endregion:	--- modules
@@ -262,8 +262,8 @@ where
 	#[must_use]
 	pub fn storage(
 		self,
-		storage: &mut SystemType,
-	) -> ObservableBuilder<P, K, CC, FC, EF, StorageNew> {
+		storage: &mut ComponentType,
+	) -> ObservableBuilder<P, K, CC, FC, EF, Storage> {
 		let Self {
 			session_id,
 			context,
@@ -284,7 +284,7 @@ where
 			control_callback,
 			feedback_callback,
 			execution_callback,
-			storage: StorageNew { storage },
+			storage: Storage { storage },
 		}
 	}
 }
@@ -328,11 +328,13 @@ where
 			.ok_or(Error::NoZenohSession)?;
 
 		let selector = selector.selector;
-		let activity = ActivityType::with_activation_state(selector.clone(), activation_state);
+		let activity = ActivityType::new(selector.clone());
+		let operational = OperationalType::new(activation_state);
 		let parameter = ObservableParameter::new(feedback_interval);
 
 		Ok(Observable::new(
 			activity,
+			operational,
 			selector,
 			parameter,
 			session,
@@ -351,7 +353,7 @@ impl<'a, P>
 		Callback<ArcControlCallback<P>>,
 		Callback<ArcFeedbackCallback<P>>,
 		Callback<ArcExecutionCallback<P>>,
-		StorageNew<'a>,
+		Storage<'a>,
 	>
 where
 	P: Send + Sync + 'static,

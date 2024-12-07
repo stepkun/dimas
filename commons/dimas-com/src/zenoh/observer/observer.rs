@@ -296,8 +296,10 @@ where
 {
 	/// Constructor for an [`Observer`]
 	#[must_use]
+	#[allow(clippy::too_many_arguments)]
 	pub fn new(
 		activity: ActivityType,
+		operational: OperationalType,
 		selector: impl Into<String>,
 		parameter: ObserverParameter,
 		session: Arc<Session>,
@@ -307,6 +309,7 @@ where
 	) -> Self {
 		Self {
 			activity,
+			operational,
 			selector: selector.into(),
 			session,
 			parameter,

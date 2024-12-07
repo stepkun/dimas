@@ -205,6 +205,7 @@ where
 	#[allow(clippy::too_many_arguments)]
 	pub fn new(
 		activity: ActivityType,
+		operational: OperationalType,
 		selector: impl Into<String>,
 		parameter: QuerierParameter,
 		session: Arc<Session>,
@@ -213,6 +214,7 @@ where
 	) -> Self {
 		Self {
 			activity,
+			operational,
 			selector: selector.into(),
 			parameter,
 			session,

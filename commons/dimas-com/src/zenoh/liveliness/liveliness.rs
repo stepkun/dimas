@@ -150,6 +150,7 @@ where
 	/// Constructor for a [`LivelinessSubscriber`]
 	pub fn new(
 		activity: ActivityType,
+		operational: OperationalType,
 		token: impl Into<String>,
 		parameter: LivelinessSubscriberParameter,
 		session: Arc<Session>,
@@ -159,6 +160,7 @@ where
 	) -> Self {
 		Self {
 			activity,
+			operational,
 			token: token.into(),
 			parameter,
 			session,

@@ -195,6 +195,7 @@ where
 	#[must_use]
 	pub fn new(
 		activity: ActivityType,
+		operational: OperationalType,
 		selector: impl Into<String>,
 		parameter: ObservableParameter,
 		session: Arc<Session>,
@@ -205,6 +206,7 @@ where
 	) -> Self {
 		Self {
 			activity,
+			operational,
 			selector: selector.into(),
 			parameter,
 			session,

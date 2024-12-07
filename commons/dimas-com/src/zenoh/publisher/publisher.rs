@@ -126,6 +126,7 @@ impl Publisher {
 	#[must_use]
 	pub fn new(
 		activity: ActivityType,
+		operational: OperationalType,
 		selector: impl Into<String>,
 		parameter: PublisherParameter,
 		session: Arc<Session>,
@@ -134,6 +135,7 @@ impl Publisher {
 
 		Self {
 			activity,
+			operational,
 			parameter,
 			session,
 			selector,
