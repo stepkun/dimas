@@ -261,9 +261,32 @@ where
 	/// # Errors
 	///
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let q = self.build()?;
-		collection.add_activity(Box::new(q));
+		let Self {
+			session_id,
+			context,
+			activation_state,
+			completeness,
+			#[cfg(feature = "unstable")]
+			allowed_origin,
+			selector,
+			callback,
+			storage,
+		} = self;
+
+		let builder = QueryableBuilder {
+			session_id,
+			context,
+			activation_state,
+			completeness,
+			#[cfg(feature = "unstable")]
+			allowed_origin,
+			selector,
+			callback,
+			storage: NoStorage,
+		};
+
+		let q = builder.build()?;
+		storage.storage.add_activity(Box::new(q));
 		Ok(())
 	}
 }

@@ -15,6 +15,8 @@ use zenoh::{
 	query::{ConsolidationMode, QueryTarget},
 };
 
+#[cfg(doc)]
+use super::Querier;
 // endregion:   --- modules
 
 // region:      --- QuerierParameter

@@ -11,6 +11,8 @@ use dimas_core::traits::Context;
 #[cfg(feature = "unstable")]
 use zenoh::sample::Locality;
 
+#[cfg(doc)]
+use super::Queryable;
 // endregion:   --- modules
 
 // region:      --- QueryableParameter

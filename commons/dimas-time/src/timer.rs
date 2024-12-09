@@ -9,11 +9,13 @@ extern crate alloc;
 
 // region:      --- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
+use anyhow::Result;
 use core::marker::PhantomData;
 use dimas_core::{
-	Activity, ActivityId, Component, ComponentId, ComponentType, OperationState, Operational,
-	OperationalType, Transitions,
+	Activity, ActivityId, Component, ComponentId, ComponentType, ManageOperationState,
+	OperationState, Operational, OperationalType, Transitions,
 };
+use tracing::{event, instrument, Level};
 
 #[cfg(doc)]
 use crate::{IntervalTimer, TimerVariant};
@@ -30,4 +32,16 @@ where
 }
 
 impl<P> Transitions for Timer<P> where P: Send + Sync + 'static {}
+
+impl<P> ManageOperationState for Timer<P>
+where
+	P: Send + Sync + 'static,
+{
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
+		event!(Level::DEBUG, "manage_operation_state");
+		assert_ne!(state, OperationState::Undefined);
+		Ok(())
+	}
+}
 // endregion:   --- Timer

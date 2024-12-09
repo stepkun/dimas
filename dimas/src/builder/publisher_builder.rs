@@ -273,9 +273,40 @@ where
 	/// # Errors
 	/// Currently none
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let p = self.build()?;
-		collection.add_activity(Box::new(p));
+		let Self {
+			session_id,
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_destination,
+			congestion_control,
+			encoding,
+			express,
+			priority,
+			#[cfg(feature = "unstable")]
+			reliability,
+			selector,
+			storage,
+		} = self;
+
+		let builder = PublisherBuilder {
+			session_id,
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_destination,
+			congestion_control,
+			encoding,
+			express,
+			priority,
+			#[cfg(feature = "unstable")]
+			reliability,
+			selector,
+			storage: NoStorage,
+		};
+
+		let p = builder.build()?;
+		storage.storage.add_activity(Box::new(p));
 		Ok(())
 	}
 }

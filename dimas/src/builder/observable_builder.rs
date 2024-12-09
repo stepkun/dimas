@@ -9,7 +9,10 @@ use dimas_com::zenoh::observable::{
 	ExecutionCallback, FeedbackCallback, Observable, ObservableParameter,
 };
 use dimas_core::{
-	message_types::{Message, ObservableControlResponse}, traits::Context, utils::selector_from, ActivityType, Component, ComponentType, OperationState, OperationalType
+	message_types::{Message, ObservableControlResponse},
+	traits::Context,
+	utils::selector_from,
+	ActivityType, Component, ComponentType, OperationState, OperationalType,
 };
 use futures::future::{BoxFuture, Future};
 use std::sync::Arc;
@@ -359,9 +362,32 @@ where
 	/// # Errors
 	///
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let o = self.build()?;
-		collection.add_activity(Box::new(o));
+		let Self {
+			session_id,
+			context,
+			activation_state,
+			feedback_interval,
+			selector,
+			control_callback,
+			feedback_callback,
+			execution_callback,
+			storage,
+		} = self;
+
+		let builder = ObservableBuilder {
+			session_id,
+			context,
+			activation_state,
+			feedback_interval,
+			selector,
+			control_callback,
+			feedback_callback,
+			execution_callback,
+			storage: NoStorage,
+		};
+
+		let o = builder.build()?;
+		storage.storage.add_activity(Box::new(o));
 		Ok(())
 	}
 }

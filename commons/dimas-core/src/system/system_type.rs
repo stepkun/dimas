@@ -2,33 +2,45 @@
 #![allow(unused)]
 #![allow(clippy::needless_pass_by_value)]
 
-//! Component interface for `DiMAS`
+//! System interface for `DiMAS`
 //!
 
 #[doc(hidden)]
 extern crate alloc;
 
 // region:		--- modules
-use crate::{
-	operational::Transitions, Activity, ActivityId, Component, ComponentId, OperationState,
-	Operational, OperationalType,
-};
 use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
+use anyhow::Result;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tracing::{event, instrument, Level};
+
+use crate::{
+	operational::Transitions, Activity, ActivityId, Component, ComponentId, ManageOperationState,
+	OperationState, Operational, OperationalType,
+};
 
 use super::{System, SystemId};
 // endregion:	--- modules
 
-// region:		--- ComponentType
+// region:		--- SystemType
 /// Data necessary for a [`System`].
 #[derive(Default)]
 pub struct SystemType {
 	id: SystemId,
 }
 
+impl ManageOperationState for SystemType {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
+		event!(Level::DEBUG, "manage_operation_state");
+		assert_ne!(state, OperationState::Undefined);
+		Ok(())
+	}
+}
+
 impl System for SystemType {
 	#[inline]
-	fn id(&self) -> ComponentId {
+	fn id(&self) -> SystemId {
 		self.id.clone()
 	}
 
@@ -45,4 +57,4 @@ impl SystemType {
 		Self { id }
 	}
 }
-// endregion:	--- ComponentType
+// endregion:	--- SystemType

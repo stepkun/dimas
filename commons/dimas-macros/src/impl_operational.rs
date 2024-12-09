@@ -122,7 +122,6 @@ fn operational_struct(mut item: ItemStruct) -> Result<TokenStream> {
 			#old_fields
 		}
 
-		// add the necessary impl for blocks after the struct
 		#impl_header {
 			#self_impl
 		}

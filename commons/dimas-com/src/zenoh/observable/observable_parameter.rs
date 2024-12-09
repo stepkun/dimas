@@ -9,6 +9,8 @@ use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
 use dimas_core::traits::Context;
 
+#[cfg(doc)]
+use super::Observable;
 // endregion:   --- modules
 
 // region:      --- ObservableParameter

@@ -17,7 +17,7 @@ use tracing::{event, instrument, Level};
 
 use crate::{
 	activity, error::Error, Activity, ActivityId, Component, ComponentId, Configuration,
-	Connection, OperationState, Operational,
+	Connection, ManageOperationState, OperationState, Operational,
 };
 // endregion:	--- modules
 
@@ -30,7 +30,7 @@ pub type SystemId = String;
 
 // region:		--- System
 /// Contract for a `System`
-pub trait System: Send + Sync {
+pub trait System: ManageOperationState + Send + Sync {
 	/// Get the [`System`]s unique ID
 	fn id(&self) -> SystemId;
 

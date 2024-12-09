@@ -8,9 +8,8 @@ extern crate alloc;
 
 // region:		--- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
-use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 
-use crate::{Activity, ActivityId};
+use crate::{Activity, ActivityId, ManageOperationState};
 // endregion:	--- modules
 
 // region:		--- types
@@ -22,7 +21,7 @@ pub type ComponentId = String;
 
 // region:		--- Component
 /// Contract for a [`Component`]
-pub trait Component: Send + Sync {
+pub trait Component: ManageOperationState + Send + Sync {
 	/// Get the [`Component`]s unique ID
 	fn id(&self) -> ComponentId;
 
@@ -37,11 +36,11 @@ pub trait Component: Send + Sync {
 
 	/// Read access to activities
 	/// @TODO: should return an Iterator
-	fn activities(&self) -> RwLockReadGuard<Vec<Box<dyn Activity>>>;
+	fn activities(&self) -> &Vec<Box<dyn Activity>>;
 
 	/// Write access to activities
 	/// @TODO: should return an Iterator
-	fn activities_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Activity>>>;
+	fn activities_mut(&mut self) -> &mut Vec<Box<dyn Activity>>;
 
 	/// Add a sub [`Component`]
 	fn add_component(&mut self, component: Box<dyn Component>);
@@ -51,10 +50,10 @@ pub trait Component: Send + Sync {
 
 	/// Read access to sub components
 	/// @TODO: should return an Iterator
-	fn components(&self) -> RwLockReadGuard<Vec<Box<dyn Component>>>;
+	fn components(&self) -> &Vec<Box<dyn Component>>;
 
 	/// Write access to sub components
 	/// @TODO: should return an Iterator
-	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>>;
+	fn components_mut(&mut self) -> &mut Vec<Box<dyn Component>>;
 }
 // endregion:   --- Component

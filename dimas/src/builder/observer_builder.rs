@@ -297,9 +297,30 @@ where
 	/// # Errors
 	/// Currently none
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let o = self.build()?;
-		collection.add_activity(Box::new(o));
+		let Self {
+			session_id,
+			context,
+			activation_state,
+			timeout,
+			selector,
+			control_callback,
+			response_callback,
+			storage,
+		} = self;
+
+		let builder = ObserverBuilder {
+			session_id,
+			context,
+			activation_state,
+			timeout,
+			selector,
+			control_callback,
+			response_callback,
+			storage: NoStorage,
+		};
+
+		let o = builder.build()?;
+		storage.storage.add_activity(Box::new(o));
 		Ok(())
 	}
 }

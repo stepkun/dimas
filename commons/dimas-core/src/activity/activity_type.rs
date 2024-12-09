@@ -9,6 +9,8 @@ extern crate alloc;
 // region:		--- modules
 use core::fmt::Debug;
 
+#[cfg(doc)]
+use crate::OperationState;
 use crate::{Activity, ActivityId};
 // endregion:	--- modules
 

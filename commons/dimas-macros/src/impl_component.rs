@@ -87,12 +87,12 @@ fn component_functions() -> TokenStream {
 		}
 
 		#[inline]
-		fn activities(&self) -> parking_lot::RwLockReadGuard<Vec<Box<dyn Activity>>> {
+		fn activities(&self) -> &Vec<Box<dyn Activity>> {
 			self.component.activities()
 		}
 
 		#[inline]
-		fn activities_mut(&mut self) -> parking_lot::RwLockWriteGuard<Vec<Box<dyn Activity>>> {
+		fn activities_mut(&mut self) -> &mut Vec<Box<dyn Activity>> {
 			self.component.activities_mut()
 		}
 
@@ -107,12 +107,12 @@ fn component_functions() -> TokenStream {
 		}
 
 		#[inline]
-		fn components(&self) -> parking_lot::RwLockReadGuard<Vec<Box<dyn Component>>> {
+		fn components(&self) -> &Vec<Box<dyn Component>> {
 			self.component.components()
 		}
 
 		#[inline]
-		fn components_mut(&mut self) -> parking_lot::RwLockWriteGuard<Vec<Box<dyn Component>>> {
+		fn components_mut(&mut self) -> &mut Vec<Box<dyn Component>> {
 			self.component.components_mut()
 		}
 	}
@@ -163,7 +163,6 @@ fn component_struct(mut item: ItemStruct) -> Result<TokenStream> {
 			#old_fields
 		}
 
-		// add the necessary impl for blocks after the struct
 		#impl_header {
 			#self_impl
 		}

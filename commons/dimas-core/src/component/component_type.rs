@@ -7,20 +7,31 @@
 extern crate alloc;
 
 // region:		--- modules
-use crate::{Activity, ActivityId};
-use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
-use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use alloc::{boxed::Box, string::String, vec::Vec};
+use anyhow::Result;
+use tracing::{event, instrument, Level};
+
+use crate::{Activity, ActivityId, ManageOperationState, OperationState};
 
 use super::{Component, ComponentId};
 // endregion:	--- modules
 
 // region:		--- ComponentType
 /// Data necessary for a [`Component`].
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct ComponentType {
 	id: ComponentId,
-	activities: Arc<RwLock<Vec<Box<dyn Activity>>>>,
-	components: Arc<RwLock<Vec<Box<dyn Component>>>>,
+	activities: Vec<Box<dyn Activity>>,
+	components: Vec<Box<dyn Component>>,
+}
+
+impl ManageOperationState for ComponentType {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
+		event!(Level::DEBUG, "manage_operation_state");
+		assert_ne!(state, OperationState::Undefined);
+		Ok(())
+	}
 }
 
 impl Component for ComponentType {
@@ -36,7 +47,7 @@ impl Component for ComponentType {
 
 	#[inline]
 	fn add_activity(&mut self, activity: Box<dyn Activity>) {
-		self.activities.write().push(activity);
+		self.activities.push(activity);
 	}
 
 	#[inline]
@@ -45,18 +56,18 @@ impl Component for ComponentType {
 	}
 
 	#[inline]
-	fn activities(&self) -> RwLockReadGuard<Vec<Box<dyn Activity>>> {
-		self.activities.read()
+	fn activities(&self) -> &Vec<Box<dyn Activity>> {
+		&self.activities
 	}
 
 	#[inline]
-	fn activities_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Activity>>> {
-		self.activities.write()
+	fn activities_mut(&mut self) -> &mut Vec<Box<dyn Activity>> {
+		&mut self.activities
 	}
 	#[inline]
 
 	fn add_component(&mut self, component: Box<dyn Component>) {
-		self.components.write().push(component);
+		self.components.push(component);
 	}
 
 	#[inline]
@@ -65,13 +76,13 @@ impl Component for ComponentType {
 	}
 
 	#[inline]
-	fn components(&self) -> RwLockReadGuard<Vec<Box<dyn Component>>> {
-		self.components.read()
+	fn components(&self) -> &Vec<Box<dyn Component>> {
+		&self.components
 	}
 
 	#[inline]
-	fn components_mut(&mut self) -> RwLockWriteGuard<Vec<Box<dyn Component>>> {
-		self.components.write()
+	fn components_mut(&mut self) -> &mut Vec<Box<dyn Component>> {
+		&mut self.components
 	}
 }
 
@@ -81,8 +92,8 @@ impl ComponentType {
 	pub fn new(id: ComponentId) -> Self {
 		Self {
 			id,
-			activities: Arc::new(RwLock::new(Vec::default())),
-			components: Arc::new(RwLock::new(Vec::default())),
+			activities: Vec::default(),
+			components: Vec::default(),
 		}
 	}
 }

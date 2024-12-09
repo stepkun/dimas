@@ -272,9 +272,32 @@ where
 	/// # Errors
 	/// Currently none
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let s = self.build()?;
-		collection.add_activity(Box::new(s));
+		let Self {
+			session_id,
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_origin,
+			selector,
+			put_callback,
+			delete_callback,
+			storage,
+		} = self;
+
+		let builder = SubscriberBuilder {
+			session_id,
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_origin,
+			selector,
+			put_callback,
+			storage: NoStorage,
+			delete_callback,
+		};
+
+		let s = builder.build()?;
+		storage.storage.add_activity(Box::new(s));
 		Ok(())
 	}
 }

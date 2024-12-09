@@ -65,8 +65,8 @@ use dimas_core::{
 	enums::{Signal, TaskSignal},
 	message_types::{Message, QueryMsg},
 	traits::{Context, ContextAbstraction},
-	ComponentType, OperationState,
-	Operational, OperationalType, System, SystemType, Transitions,
+	ComponentType, ManageOperationState, OperationState, Operational, OperationalType, System,
+	SystemType, Transitions,
 };
 #[cfg(feature = "unstable")]
 use parking_lot::RwLock;
@@ -313,6 +313,18 @@ where
 	liveliness_token: RwLock<Option<LivelinessToken>>,
 }
 
+impl<P> ManageOperationState for Agent<P>
+where
+	P: Send + Sync + 'static,
+{
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
+		event!(Level::DEBUG, "manage_operation_state");
+		assert_ne!(state, OperationState::Undefined);
+		Ok(())
+	}
+}
+
 impl<P> AsMut<ComponentRegistryType> for Agent<P>
 where
 	P: Send + Sync + 'static,
@@ -388,9 +400,7 @@ where
 	/// Get a [`LivelinessSubscriberBuilder`], the builder for a `LivelinessSubscriber`.
 	#[cfg(feature = "unstable")]
 	#[must_use]
-	pub fn liveliness_subscriber(
-		&mut self,
-	) -> LivelinessSubscriberBuilder<P, NoCallback, Storage> {
+	pub fn liveliness_subscriber(&mut self) -> LivelinessSubscriberBuilder<P, NoCallback, Storage> {
 		LivelinessSubscriberBuilder::new("default", self.context.clone()).storage(self.system_mut())
 	}
 
@@ -404,9 +414,7 @@ where
 
 	/// Get an [`ObserverBuilder`]
 	#[must_use]
-	pub fn observer(
-		&mut self,
-	) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, Storage> {
+	pub fn observer(&mut self) -> ObserverBuilder<P, NoSelector, NoCallback, NoCallback, Storage> {
 		ObserverBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 

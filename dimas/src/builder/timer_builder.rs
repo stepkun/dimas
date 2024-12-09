@@ -257,10 +257,28 @@ where
 	/// # Errors
 	///
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let t = self.build()?;
+		let Self {
+			context,
+			activation_state,
+			selector,
+			interval,
+			callback,
+			delay,
+			storage,
+		} = self;
 
-		collection.add_activity(Box::new(t));
+		let builder = TimerBuilder {
+			context,
+			activation_state,
+			selector,
+			interval,
+			callback,
+			delay,
+			storage: NoStorage,
+		};
+
+		let t = builder.build()?;
+		storage.storage.add_activity(Box::new(t));
 		Ok(())
 	}
 }

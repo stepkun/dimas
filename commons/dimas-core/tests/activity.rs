@@ -40,6 +40,9 @@ impl Transitions for TestActivity2 {}
 
 #[test]
 fn activity() {
+	let data = ActivityType::default();
+	assert!(data.id().is_empty());
+
 	let mut activity = TestActivity2::default();
 	assert_eq!(activity.dummy(), "");
 	assert_eq!(activity.id(), "");

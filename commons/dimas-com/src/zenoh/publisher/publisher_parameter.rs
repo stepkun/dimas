@@ -15,6 +15,9 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{qos::Reliability, sample::Locality};
+
+#[cfg(doc)]
+use super::Publisher;
 // endregion:   --- modules
 
 // region:      --- PublisherParameter

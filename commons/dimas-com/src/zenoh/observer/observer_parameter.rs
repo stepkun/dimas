@@ -15,10 +15,12 @@ use zenoh::{
 	query::{ConsolidationMode, QueryTarget},
 };
 
+#[cfg(doc)]
+use super::Observer;
 // endregion:   --- modules
 
 // region:      --- ObserverParameter
-/// Parameters for a [`Querier`]
+/// Parameters for a [`Observer`]
 #[dimas_macros::parameter]
 #[derive(Clone)]
 pub struct ObserverParameter {

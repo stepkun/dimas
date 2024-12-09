@@ -42,7 +42,6 @@ fn system_fields() -> TokenStream {
 		system: SystemType,
 		component: ComponentType,
 		operational: OperationalType,
-
 	}
 }
 
@@ -133,7 +132,6 @@ fn system_struct(mut item: ItemStruct) -> Result<TokenStream> {
 			#old_fields
 		}
 
-		// add the necessary impl for blocks after the struct
 		#impl_header {
 			#self_impl
 		}

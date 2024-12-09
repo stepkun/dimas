@@ -314,9 +314,38 @@ where
 	/// Build and add the query to the agents context
 	/// # Errors
 	pub fn add(self) -> Result<()> {
-		let mut collection = self.storage.storage.clone();
-		let q = self.build()?;
-		collection.add_activity(Box::new(q));
+		let Self {
+			session_id,
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_destination,
+			encoding,
+			timeout,
+			selector,
+			callback,
+			mode,
+			target,
+			storage,
+		} = self;
+
+		let builder = QuerierBuilder {
+			session_id,
+			context,
+			activation_state,
+			#[cfg(feature = "unstable")]
+			allowed_destination,
+			encoding,
+			timeout,
+			selector,
+			callback,
+			storage: NoStorage,
+			mode,
+			target,
+		};
+
+		let q = builder.build()?;
+		storage.storage.add_activity(Box::new(q));
 		Ok(())
 	}
 }
