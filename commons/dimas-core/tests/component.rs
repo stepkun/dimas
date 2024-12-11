@@ -1,24 +1,27 @@
 //! Copyright © 2024 Stephan Kunz
 
 use anyhow::Result;
+use core::fmt::Debug;
 use dimas_core::{
 	Activity, ActivityId, Component, ComponentId, ComponentType, ManageOperationState,
 	OperationState, Operational, OperationalType, Transitions,
 };
+use uuid::Uuid;
 
-#[dimas_macros::component]
+#[dimas_macros::component_old]
+#[derive(Debug)]
 struct TestComponent1<P>
 where
-	P: Send + Sync,
+	P: Debug + Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestComponent1<P> where P: Send + Sync {}
+impl<P> Transitions for TestComponent1<P> where P: Debug + Send + Sync {}
 
 impl<P> ManageOperationState for TestComponent1<P>
 where
-	P: Send + Sync,
+	P: Debug + Send + Sync,
 {
 	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
 		assert_ne!(state, OperationState::Undefined);
@@ -26,8 +29,8 @@ where
 	}
 }
 
-#[dimas_macros::component]
-#[derive(Default)]
+#[dimas_macros::component_old]
+#[derive(Debug, Default)]
 struct TestComponent2 {}
 
 impl TestComponent2 {}
@@ -42,10 +45,8 @@ impl ManageOperationState for TestComponent2 {
 }
 
 fn component_trait() {
-	let mut component = TestComponent2::default();
+	let component = TestComponent2::default();
 	assert_eq!(component.id(), "");
-	component.set_id("new id".into());
-	assert_eq!(component.id(), "new id");
 }
 
 fn create_test_data() -> TestComponent2 {

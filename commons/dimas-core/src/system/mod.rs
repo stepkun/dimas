@@ -3,7 +3,7 @@
 #![allow(clippy::module_inception)]
 #![allow(unused)]
 
-//! Operational
+//! System traits
 //!
 
 mod error;

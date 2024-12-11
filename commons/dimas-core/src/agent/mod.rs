@@ -2,13 +2,11 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-//! Activity traits
+//! Agent traits
 //!
 
-mod activity;
-mod activity_type;
+mod agent_data;
 mod error;
 
 // flatten
-pub use activity::{Activity, ActivityId};
-pub use activity_type::ActivityType;
+pub use agent_data::AgentData;

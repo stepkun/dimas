@@ -1,21 +1,23 @@
 //! Copyright © 2024 Stephan Kunz
 
 use anyhow::Result;
+use core::fmt::Debug;
 use dimas_core::{OperationState, Operational, OperationalType, Transitions};
 use std::panic::catch_unwind;
 
 #[dimas_macros::operational]
+#[derive(Debug)]
 struct TestOperational1<P>
 where
-	P: Send + Sync,
+	P: Debug + Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestOperational1<P> where P: Send + Sync {}
+impl<P> Transitions for TestOperational1<P> where P: Debug + Send + Sync {}
 
 #[dimas_macros::operational]
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct TestOperational2 {
 	/// A value to test that all hooks have been processed
 	value: i32,

@@ -7,6 +7,8 @@
 extern crate alloc;
 
 // region:		--- modules
+use core::fmt::Debug;
+
 use alloc::string::String;
 // endregion:	--- modules
 
@@ -19,7 +21,7 @@ pub type ActivityId = String;
 
 // region:		--- Activity
 /// Contract for an `Activity`
-pub trait Activity: Send + Sync {
+pub trait Activity: Debug + Send + Sync {
 	/// Get [`Activity`]s id
 	fn id(&self) -> ActivityId;
 

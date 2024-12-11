@@ -1,5 +1,6 @@
 //! Copyright © 2024 Stephan Kunz
 
+use core::fmt::Debug;
 use dimas_core::{
 	Activity, ActivityType, OperationState, Operational, OperationalType, Transitions,
 };
@@ -15,17 +16,18 @@ use dimas_core::{
 // struct Test();
 
 #[dimas_macros::activity]
+#[derive(Debug)]
 struct TestActivity1<P>
 where
-	P: Send + Sync,
+	P: Debug + Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestActivity1<P> where P: Send + Sync {}
+impl<P> Transitions for TestActivity1<P> where P: Debug + Send + Sync {}
 
 #[dimas_macros::activity]
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct TestActivity2 {
 	dummy: String,
 }

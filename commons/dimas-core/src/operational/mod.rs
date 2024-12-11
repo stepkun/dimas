@@ -2,7 +2,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-//! Operational
+//! Operational traits
 //!
 
 mod error;

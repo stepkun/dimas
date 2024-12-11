@@ -15,15 +15,15 @@ use quote::{quote, TokenStreamExt};
 use syn::{parse::Parser, punctuated::Punctuated, Fields, ItemFn, Meta, Result, Token};
 use syn::{parse2, parse_macro_input, AttrStyle, Error, ItemStruct, Path};
 
-use crate::impl_operational;
 use crate::utils::{
 	collect_data, common_derives, convert_attrs, convert_derives, create_impl_header,
 	create_struct_header,
 };
+use crate::{impl_activity, impl_operational};
 
 type Arguments = Punctuated<Meta, Token![,]>;
 
-const ARGS_UNSUPPORTED: &str = "arguments are not supported by 'system' macro";
+const ARGS_UNSUPPORTED: &str = "arguments are not supported by 'component' macro";
 
 #[derive(Debug, Default)]
 struct Config {}
@@ -38,9 +38,8 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
-fn system_fields() -> TokenStream {
+fn component_fields() -> TokenStream {
 	quote! {
-		system: SystemType,
 		component: ComponentType,
 		operational: OperationalType,
 	}
@@ -48,14 +47,6 @@ fn system_fields() -> TokenStream {
 
 fn self_functions() -> TokenStream {
 	quote! {
-		fn system(&self) -> &SystemType {
-			&self.system
-		}
-
-		fn system_mut(&mut self) -> &mut SystemType {
-			&mut self.system
-		}
-
 		fn component(&self) -> &ComponentType {
 			&self.component
 		}
@@ -74,23 +65,47 @@ fn self_functions() -> TokenStream {
 	}
 }
 
-fn system_functions() -> TokenStream {
+fn component_functions() -> TokenStream {
 	quote! {
 		#[inline]
-		fn id(&self) -> String {
-			self.system.id()
+		fn uuid(&self) -> Uuid {
+			self.component.uuid()
 		}
 
 		#[inline]
-		fn set_id(&mut self, id: String){
-			self.system.set_id(id);
+		fn id(&self) -> String {
+			self.component.id()
+		}
+
+		#[inline]
+		fn version(&self) -> u32 {
+			self.component.version()
+		}
+		#[inline]
+		fn add_activity(&mut self, activity: Box<dyn Activity>) {
+			self.component.add_activity(activity);
+		}
+
+		#[inline]
+		fn remove_activity(&mut self, id: ActivityId) {
+			self.component.remove_activity(id);
+		}
+
+		#[inline]
+		fn add_component(&mut self, component: Box<dyn Component>) {
+			self.component.add_component(component);
+		}
+
+		#[inline]
+		fn remove_component(&mut self, id: ComponentId) {
+			self.component.remove_component(id);
 		}
 	}
 }
 
 #[allow(clippy::explicit_iter_loop)]
 #[allow(clippy::equatable_if_let)]
-fn system_struct(mut item: ItemStruct) -> Result<TokenStream> {
+fn component_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	// check for struct with named fields
 	let old_fields = match &item.fields {
 		Fields::Named(fields) => fields.named.clone(),
@@ -117,19 +132,19 @@ fn system_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	let struct_header = create_struct_header(&item);
 	let impl_header = create_impl_header(&item, None)?;
 	let operational_header = create_impl_header(&item, Some("Operational"))?;
-	let system_header = create_impl_header(&item, Some("System"))?;
+	let component_header = create_impl_header(&item, Some("Component"))?;
 	// create blocks
 	let self_impl = self_functions();
 	let operational_block = impl_operational::operational_functions();
-	let system_block = system_functions();
+	let component_block = component_functions();
 	// create fields
-	let system_fields = system_fields();
+	let component_fields = component_fields();
 
 	let out = quote! {
 		#user_attrs
 		#[derive(#derives)]
 		#struct_header {
-			#system_fields
+			#component_fields
 			#old_fields
 		}
 
@@ -141,14 +156,14 @@ fn system_struct(mut item: ItemStruct) -> Result<TokenStream> {
 			#operational_block
 		}
 
-		#system_header {
-			#system_block
+		#component_header {
+			#component_block
 		}
 	};
 	Ok(out)
 }
 
-pub fn system(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn component_old(args: TokenStream, input: TokenStream) -> TokenStream {
 	parse2::<ItemStruct>(input).map_or_else(
 		|_| {
 			Error::new(Span::call_site(), "macro must be used on a `struct` block.")
@@ -161,7 +176,7 @@ pub fn system(args: TokenStream, input: TokenStream) -> TokenStream {
 				.and_then(parse_config);
 			match args {
 				Err(err) => err.into_compile_error(),
-				Ok(args) => system_struct(item_struct).unwrap_or_else(Error::into_compile_error),
+				Ok(args) => component_struct(item_struct).unwrap_or_else(Error::into_compile_error),
 			}
 		},
 	)

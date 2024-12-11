@@ -1,24 +1,26 @@
 //! Copyright © 2024 Stephan Kunz
 
 use anyhow::Result;
+use core::fmt::Debug;
 use dimas_core::{
 	ComponentType, ManageOperationState, OperationState, Operational, OperationalType, System,
 	SystemId, SystemType, Transitions,
 };
 
 #[dimas_macros::system]
+#[derive(Debug)]
 struct TestSystem1<P>
 where
-	P: Send + Sync,
+	P: Debug + Send + Sync,
 {
 	dummy: P,
 }
 
-impl<P> Transitions for TestSystem1<P> where P: Send + Sync {}
+impl<P> Transitions for TestSystem1<P> where P: Debug + Send + Sync {}
 
 impl<P> ManageOperationState for TestSystem1<P>
 where
-	P: Send + Sync,
+	P: Debug + Send + Sync,
 {
 	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
 		assert_ne!(state, OperationState::Undefined);
@@ -27,7 +29,7 @@ where
 }
 
 #[dimas_macros::system]
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct TestSystem2 {}
 
 impl TestSystem2 {}

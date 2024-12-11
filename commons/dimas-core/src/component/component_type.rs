@@ -7,9 +7,10 @@
 extern crate alloc;
 
 // region:		--- modules
-use alloc::{boxed::Box, string::String, vec::Vec};
+use alloc::{boxed::Box, vec::Vec};
 use anyhow::Result;
 use tracing::{event, instrument, Level};
+use uuid::Uuid;
 
 use crate::{Activity, ActivityId, ManageOperationState, OperationState};
 
@@ -18,7 +19,7 @@ use super::{Component, ComponentId};
 
 // region:		--- ComponentType
 /// Data necessary for a [`Component`].
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ComponentType {
 	id: ComponentId,
 	activities: Vec<Box<dyn Activity>>,
@@ -36,13 +37,16 @@ impl ManageOperationState for ComponentType {
 
 impl Component for ComponentType {
 	#[inline]
+	fn uuid(&self) -> Uuid {
+		Uuid::new_v4()
+	}
+
 	fn id(&self) -> ComponentId {
 		self.id.clone()
 	}
 
-	#[inline]
-	fn set_id(&mut self, id: String) {
-		self.id = id;
+	fn version(&self) -> u32 {
+		0
 	}
 
 	#[inline]
@@ -56,16 +60,6 @@ impl Component for ComponentType {
 	}
 
 	#[inline]
-	fn activities(&self) -> &Vec<Box<dyn Activity>> {
-		&self.activities
-	}
-
-	#[inline]
-	fn activities_mut(&mut self) -> &mut Vec<Box<dyn Activity>> {
-		&mut self.activities
-	}
-	#[inline]
-
 	fn add_component(&mut self, component: Box<dyn Component>) {
 		self.components.push(component);
 	}
@@ -73,16 +67,6 @@ impl Component for ComponentType {
 	#[inline]
 	fn remove_component(&mut self, _id: ComponentId) {
 		todo!()
-	}
-
-	#[inline]
-	fn components(&self) -> &Vec<Box<dyn Component>> {
-		&self.components
-	}
-
-	#[inline]
-	fn components_mut(&mut self) -> &mut Vec<Box<dyn Component>> {
-		&mut self.components
 	}
 }
 

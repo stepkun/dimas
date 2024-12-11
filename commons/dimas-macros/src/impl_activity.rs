@@ -17,7 +17,8 @@ use syn::{parse2, parse_macro_input, AttrStyle, Error, ItemStruct, Path};
 
 use crate::impl_operational;
 use crate::utils::{
-	collect_data, convert_attrs, convert_derives, create_impl_header, create_struct_header,
+	collect_data, common_derives, convert_attrs, convert_derives, create_impl_header,
+	create_struct_header,
 };
 
 type Arguments = Punctuated<Meta, Token![,]>;
@@ -93,7 +94,7 @@ fn activity_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	};
 
 	// prepare variables
-	let mut derives = super::common_derives();
+	let mut derives = common_derives();
 	let mut user_attrs = Vec::new();
 
 	// collect existing data

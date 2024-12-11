@@ -66,6 +66,29 @@ pub fn convert_attrs(user_attrs: Vec<Attribute>) -> TokenStream {
 		})
 }
 
+// common derives for all modified structs
+// @TODO: verify if necessary
+pub const fn common_derives() -> Vec<proc_macro2::TokenStream> {
+	//vec![quote::quote! { ::core::clone::Clone, ::core::fmt::Debug, ::core::default::Default }]
+	//vec![quote::quote! { ::core::clone::Clone }]
+	Vec::new()
+}
+
+pub fn create_agent_type(item: &ItemStruct) -> Result<TokenStream, LexError> {
+	let mut new_ident = item.ident.to_string();
+	new_ident.push_str("Agent");
+	new_ident.parse::<TokenStream>()
+}
+
+pub fn create_agent_struct_header(item: &ItemStruct) -> Result<TokenStream, LexError> {
+	// use visibility from property struct
+	let vis = &item.vis;
+	let item_ident = create_agent_type(item)?;
+	Ok(quote! {
+		#vis struct #item_ident
+	})
+}
+
 pub fn create_struct_header(item: &ItemStruct) -> TokenStream {
 	let generics = &item.generics.params;
 	let where_clause = &item.generics.where_clause;

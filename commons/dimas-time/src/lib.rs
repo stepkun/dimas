@@ -12,6 +12,7 @@ mod error;
 mod interval_timer;
 mod interval_timer_parameter;
 mod timer;
+mod timer_lib;
 mod timer_variant;
 
 use alloc::sync::Arc;
@@ -31,5 +32,6 @@ pub type ArcTimerCallback<P> =
 pub use interval_timer::IntervalTimer;
 pub use interval_timer_parameter::IntervalTimerParameter;
 pub use timer::Timer;
+pub use timer_lib::TimerLib;
 pub use timer_variant::TimerVariant;
 // endregion: --- modules

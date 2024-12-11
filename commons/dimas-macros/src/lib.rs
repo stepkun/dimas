@@ -1,21 +1,25 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `#[main(...)]` macro for `DiMAS`
+//! Macros for `DiMAS`
+//! - `#[dimas::main(...)]`
+//! - `#[dimas::agent]`
 //!
 
 extern crate proc_macro;
 
-pub(crate) mod impl_activity;
-pub(crate) mod impl_component;
+mod impl_activity;
+mod impl_agent;
+mod impl_component;
+mod impl_component_old;
 mod impl_main;
-pub(crate) mod impl_operational;
-pub(crate) mod impl_parameter;
-pub(crate) mod impl_system;
-pub(crate) mod utils;
+mod impl_operational;
+mod impl_parameter;
+mod impl_system;
+mod utils;
 
 use proc_macro::TokenStream;
 
-/// Marks async main functions to be executed by a multi threaded tokio runtime
+/// Marks async main function to be executed by a multi threaded tokio runtime.
 ///
 /// Note: This macro can only be used on the `main` function.
 ///
@@ -43,6 +47,33 @@ pub fn main(metadata: TokenStream, input: TokenStream) -> TokenStream {
 	impl_main::main(metadata.into(), input.into()).into()
 }
 
+/// Marks a `struct` to create an agent usinge the struct as properties.
+/// The properties `struct` needs to implement `Default`!
+///
+/// Note: This macro can only be used on `struct` blocks.
+///
+/// # Usage
+/// ```no_test
+/// #[dimas::agent]
+/// #[derive(Default)]
+/// struct {
+///     // your data
+///     ...
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn agent(metadata: TokenStream, input: TokenStream) -> TokenStream {
+	// call implementation with conversion to and from proc-macro2 library
+	impl_agent::agent(metadata.into(), input.into()).into()
+}
+
+/// Component
+#[proc_macro_attribute]
+pub fn component(metadata: TokenStream, input: TokenStream) -> TokenStream {
+	// call implementation with conversion to and from proc-macro2 library
+	impl_component::component(metadata.into(), input.into()).into()
+}
+
 /// Activity
 #[proc_macro_attribute]
 pub fn activity(metadata: TokenStream, input: TokenStream) -> TokenStream {
@@ -52,9 +83,9 @@ pub fn activity(metadata: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Component
 #[proc_macro_attribute]
-pub fn component(metadata: TokenStream, input: TokenStream) -> TokenStream {
+pub fn component_old(metadata: TokenStream, input: TokenStream) -> TokenStream {
 	// call implementation with conversion to and from proc-macro2 library
-	impl_component::component(metadata.into(), input.into()).into()
+	impl_component_old::component_old(metadata.into(), input.into()).into()
 }
 
 /// Operational
@@ -76,11 +107,4 @@ pub fn parameter(metadata: TokenStream, input: TokenStream) -> TokenStream {
 pub fn system(metadata: TokenStream, input: TokenStream) -> TokenStream {
 	// call implementation with conversion to and from proc-macro2 library
 	impl_system::system(metadata.into(), input.into()).into()
-}
-
-// some helper functions
-const fn common_derives() -> Vec<proc_macro2::TokenStream> {
-	//vec![quote::quote! { ::core::clone::Clone, ::core::fmt::Debug, ::core::default::Default }]
-	//vec![quote::quote! { ::core::clone::Clone }]
-	Vec::new()
 }

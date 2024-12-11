@@ -7,9 +7,12 @@
 //! ```use dimas::prelude::*;```
 
 // to avoid adding these crates to dependencies
+pub extern crate alloc;
 pub extern crate anyhow;
 pub extern crate bitcode;
+pub extern crate parking_lot;
 pub extern crate tokio;
+pub extern crate uuid;
 
 // anyhow's Result
 pub use anyhow::Result;
@@ -21,7 +24,14 @@ pub use bitcode::{Decode, Encode};
 pub use core::time::Duration;
 
 // stuff from parking_lot
-pub use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+pub use parking_lot::RwLock;
+
+// stuff from uuid
+pub use uuid::Uuid;
+
+// stuff from standard libraries (core, alloc, std)
+// always using the deepest level
+pub use alloc::sync::Arc;
 
 // zenoh stuff
 pub use zenoh::qos::CongestionControl;
@@ -43,9 +53,8 @@ pub use dimas_core::message_types::{
 };
 pub use dimas_core::traits::Context;
 pub use dimas_core::utils::init_tracing;
-pub use dimas_core::Activity;
 pub use dimas_core::System;
+pub use dimas_core::{Activity, ActivityId};
 pub use dimas_core::{Component, ComponentId};
 pub use dimas_core::{OperationState, Operational, Transitions};
-pub use dimas_macros::main;
 pub use dimas_time::IntervalTimer;

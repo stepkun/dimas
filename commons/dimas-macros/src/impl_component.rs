@@ -16,9 +16,9 @@ use syn::{parse::Parser, punctuated::Punctuated, Fields, ItemFn, Meta, Result, T
 use syn::{parse2, parse_macro_input, AttrStyle, Error, ItemStruct, Path};
 
 use crate::utils::{
-	collect_data, convert_attrs, convert_derives, create_impl_header, create_struct_header,
+	collect_data, common_derives, convert_attrs, convert_derives, create_impl_header,
+	create_struct_header,
 };
-use crate::{impl_activity, impl_operational};
 
 type Arguments = Punctuated<Meta, Token![,]>;
 
@@ -37,83 +37,41 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
-fn component_fields() -> TokenStream {
-	quote! {
-		component: ComponentType,
-		operational: OperationalType,
-	}
-}
-
-fn self_functions() -> TokenStream {
-	quote! {
-		fn component(&self) -> &ComponentType {
-			&self.component
-		}
-
-		fn component_mut(&mut self) -> &mut ComponentType {
-			&mut self.component
-		}
-
-		fn operational(&self) -> &OperationalType {
-			&self.operational
-		}
-
-		fn operational_mut(&mut self) -> &mut OperationalType {
-			&mut self.operational
-		}
-	}
-}
-
 fn component_functions() -> TokenStream {
 	quote! {
 		#[inline]
-		fn id(&self) -> String {
-			self.component.id()
+		fn uuid(&self) -> Uuid {
+			self.data.uuid.clone()
 		}
 
 		#[inline]
-		fn set_id(&mut self, id: String){
-			self.component.set_id(id);
+		fn id(&self) -> ComponentId {
+			self.data.id.clone()
+		}
+
+		#[inline]
+		fn version(&self) -> u32 {
+			self.data.version
 		}
 
 		#[inline]
 		fn add_activity(&mut self, activity: Box<dyn Activity>) {
-			self.component.add_activity(activity);
+			self.structure.activities.push(activity);
 		}
 
 		#[inline]
-		fn remove_activity(&mut self, id: ActivityId) {
-			self.component.remove_activity(id);
-		}
-
-		#[inline]
-		fn activities(&self) -> &Vec<Box<dyn Activity>> {
-			self.component.activities()
-		}
-
-		#[inline]
-		fn activities_mut(&mut self) -> &mut Vec<Box<dyn Activity>> {
-			self.component.activities_mut()
+		fn remove_activity(&mut self, _id: ActivityId) {
+			todo!()
 		}
 
 		#[inline]
 		fn add_component(&mut self, component: Box<dyn Component>) {
-			self.component.add_component(component);
+			self.structure.components.push(component);
 		}
 
 		#[inline]
-		fn remove_component(&mut self, id: ComponentId) {
-			self.component.remove_component(id);
-		}
-
-		#[inline]
-		fn components(&self) -> &Vec<Box<dyn Component>> {
-			self.component.components()
-		}
-
-		#[inline]
-		fn components_mut(&mut self) -> &mut Vec<Box<dyn Component>> {
-			self.component.components_mut()
+		fn remove_component(&mut self, _id: ComponentId) {
+			todo!()
 		}
 	}
 }
@@ -122,7 +80,7 @@ fn component_functions() -> TokenStream {
 #[allow(clippy::equatable_if_let)]
 fn component_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	// check for struct with named fields
-	let old_fields = match &item.fields {
+	let original_fields = match &item.fields {
 		Fields::Named(fields) => fields.named.clone(),
 		_ => {
 			return Err(syn::Error::new_spanned(
@@ -132,47 +90,32 @@ fn component_struct(mut item: ItemStruct) -> Result<TokenStream> {
 		}
 	};
 
-	// prepare variables
-	let mut derives = super::common_derives();
-	let mut user_attrs = Vec::new();
-
 	// collect existing data
+	let mut derives = common_derives();
+	let mut user_attrs = Vec::new();
 	collect_data(&item, &mut derives, &mut user_attrs);
 	// Convert Vec of derive Paths into one TokenStream
 	let derives = convert_derives(derives);
 	// Convert Vec of user attribs into one TokenStream
 	let user_attrs = convert_attrs(user_attrs);
 
-	// create headers
-	let struct_header = create_struct_header(&item);
-	let impl_header = create_impl_header(&item, None)?;
-	let operational_header = create_impl_header(&item, Some("Operational"))?;
-	let component_header = create_impl_header(&item, Some("Component"))?;
-	// create blocks
-	let self_impl = self_functions();
-	let operational_block = impl_operational::operational_functions();
-	let component_block = component_functions();
-	// create fields
-	let component_fields = component_fields();
+	// create necessary variables
+	let item_struct_header = create_struct_header(&item);
+	let component_impl_header = create_impl_header(&item, Some("Component"))?;
+	let component_functions = component_functions();
 
+	// create output stream
 	let out = quote! {
 		#user_attrs
 		#[derive(#derives)]
-		#struct_header {
-			#component_fields
-			#old_fields
+		#item_struct_header {
+			data: dimas_core::ComponentData,
+			structure: dimas_core::ComponentStruct,
+			#original_fields
 		}
 
-		#impl_header {
-			#self_impl
-		}
-
-		#operational_header {
-			#operational_block
-		}
-
-		#component_header {
-			#component_block
+		#component_impl_header {
+			#component_functions
 		}
 	};
 	Ok(out)

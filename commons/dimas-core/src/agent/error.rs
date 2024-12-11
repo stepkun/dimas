@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! [`Component`] errors
+//! [`Agent`] errors
 //!
 
 #[doc(hidden)]

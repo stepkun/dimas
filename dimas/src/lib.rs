@@ -20,7 +20,7 @@ pub mod error;
 mod utils;
 
 // macro reexport
-pub use dimas_macros::main;
+pub use dimas_macros::{agent, main};
 
 // mostly needed stuff
 pub mod prelude;

@@ -7,9 +7,11 @@
 extern crate alloc;
 
 // region:		--- modules
-use alloc::{boxed::Box, string::String, vec::Vec};
+use alloc::{boxed::Box, string::String};
+use core::fmt::Debug;
+use uuid::Uuid;
 
-use crate::{Activity, ActivityId, ManageOperationState};
+use crate::{Activity, ActivityId};
 // endregion:	--- modules
 
 // region:		--- types
@@ -21,12 +23,15 @@ pub type ComponentId = String;
 
 // region:		--- Component
 /// Contract for a [`Component`]
-pub trait Component: ManageOperationState + Send + Sync {
+pub trait Component: Debug + Send + Sync {
 	/// Get the [`Component`]s unique ID
+	fn uuid(&self) -> Uuid;
+
+	/// Get the [`Component`]s id
 	fn id(&self) -> ComponentId;
 
-	/// Set the [`Component`]s unique ID
-	fn set_id(&mut self, id: ComponentId);
+	/// Get the [`Component`]s version
+	fn version(&self) -> u32;
 
 	/// Add a sub [`Activity`]
 	fn add_activity(&mut self, activity: Box<dyn Activity>);
@@ -34,26 +39,10 @@ pub trait Component: ManageOperationState + Send + Sync {
 	/// Remove the sub [`Activity`] with the given `id`
 	fn remove_activity(&mut self, id: ActivityId);
 
-	/// Read access to activities
-	/// @TODO: should return an Iterator
-	fn activities(&self) -> &Vec<Box<dyn Activity>>;
-
-	/// Write access to activities
-	/// @TODO: should return an Iterator
-	fn activities_mut(&mut self) -> &mut Vec<Box<dyn Activity>>;
-
 	/// Add a sub [`Component`]
 	fn add_component(&mut self, component: Box<dyn Component>);
 
 	/// Remove the sub [`Component`] with the given `id`
 	fn remove_component(&mut self, id: ComponentId);
-
-	/// Read access to sub components
-	/// @TODO: should return an Iterator
-	fn components(&self) -> &Vec<Box<dyn Component>>;
-
-	/// Write access to sub components
-	/// @TODO: should return an Iterator
-	fn components_mut(&mut self) -> &mut Vec<Box<dyn Component>>;
 }
 // endregion:   --- Component

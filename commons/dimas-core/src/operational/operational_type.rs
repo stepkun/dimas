@@ -7,11 +7,14 @@
 extern crate alloc;
 
 // region:		--- modules
+use core::fmt::Debug;
+
 use super::{OperationState, Operational, Transitions};
 // endregion:	--- modules
 
 // region:		--- OperationalData
 /// Data necessary for an [`Operational`].
+#[derive(Debug)]
 pub struct OperationalType {
 	current: OperationState,
 	activation: OperationState,

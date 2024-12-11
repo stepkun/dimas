@@ -2,13 +2,17 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-//! core traits
+//! Component traits
 //!
 
 mod component;
+mod component_data;
+mod component_struct;
 mod component_type;
 mod error;
 
 // flatten
 pub use component::{Component, ComponentId};
+pub use component_data::ComponentData;
+pub use component_struct::ComponentStruct;
 pub use component_type::ComponentType;

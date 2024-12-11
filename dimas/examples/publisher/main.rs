@@ -1,7 +1,15 @@
 //! `DiMAS` publisher example
 //! Copyright © 2024 Stephan Kunz
+#![allow(unused)]
 
 use dimas::prelude::*;
+use dimas_time::TimerLib;
+
+#[dimas::agent]
+#[derive(Debug, Default)]
+struct Publisher {
+	count: u128,
+}
 
 #[derive(Debug)]
 struct AgentProps {
@@ -21,6 +29,29 @@ pub struct PubSubMessage {
 async fn main() -> Result<()> {
 	// initialize tracing/logging
 	init_tracing();
+
+	// create an agent with the properties of `Publisher`
+	let agent = Publisher::agent()
+		.set_prefix("examples")
+		.set_name("publisher");
+
+	// how to access the properties
+	let current = agent.read().count;
+	agent.write().count += 1;
+	agent.write().count = current;
+
+	// add a timer component to the agent
+	let timerlib = TimerLib::default();
+	agent.add_component(Box::new(timerlib));
+
+	// create an inteval timer using the timer component
+	
+
+	dbg!(&agent);
+
+	// ==========================================================================
+	// ---------------------------- old stuff -----------------------------------
+	// ==========================================================================
 
 	// create & initialize agents properties
 	let properties = AgentProps { count: 0 };

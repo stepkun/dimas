@@ -7,6 +7,8 @@
 
 /// Activity
 mod activity;
+/// Agent
+mod agent;
 /// Component, ComponentRegistry
 mod component;
 /// Enums
@@ -26,7 +28,8 @@ pub mod utils;
 
 // flatten:
 pub use activity::{Activity, ActivityId, ActivityType};
-pub use component::{Component, ComponentId, ComponentType};
+pub use agent::AgentData;
+pub use component::{Component, ComponentData, ComponentId, ComponentStruct, ComponentType};
 pub use enums::{Signal, TaskSignal};
 pub use operational::{
 	ManageOperationState, OperationState, Operational, OperationalType, Transitions,
