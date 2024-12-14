@@ -10,7 +10,7 @@ use alloc::{boxed::Box, string::String};
 use core::fmt::Debug;
 use uuid::Uuid;
 
-use dimas_core::{Activity, ActivityId, Component, ComponentId};
+use dimas_core::{Activity, ActivityId, Agent, Component, ComponentId};
 
 //#[derive(Debug, Default)]
 struct SomeStruct {

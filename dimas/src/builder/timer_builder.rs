@@ -7,9 +7,10 @@
 use anyhow::Result;
 use core::time::Duration;
 use dimas_core::{
-	traits::Context, ActivityType, Component, ComponentType, OperationState, OperationalType,
+	traits::Context, ActivityType, Component, ComponentType, OperationState, OperationalData,
+	OperationalType,
 };
-use dimas_time::{ArcTimerCallback, IntervalTimer, IntervalTimerParameter};
+use dimas_time::{ArcTimerCallbackOld, IntervalTimerOld, IntervalTimerParameter};
 use parking_lot::Mutex;
 use std::sync::Arc;
 
@@ -164,7 +165,10 @@ where
 {
 	/// Set interval callback for timer
 	#[must_use]
-	pub fn callback<F>(self, callback: F) -> TimerBuilder<P, K, I, Callback<ArcTimerCallback<P>>, S>
+	pub fn callback<F>(
+		self,
+		callback: F,
+	) -> TimerBuilder<P, K, I, Callback<ArcTimerCallbackOld<P>>, S>
 	where
 		F: FnMut(Context<P>) -> Result<()> + Send + Sync + 'static,
 	{
@@ -177,7 +181,7 @@ where
 			delay,
 			..
 		} = self;
-		let callback: ArcTimerCallback<P> = Arc::new(Mutex::new(callback));
+		let callback: ArcTimerCallbackOld<P> = Arc::new(Mutex::new(callback));
 		TimerBuilder {
 			context,
 			activation_state,
@@ -218,14 +222,14 @@ where
 	}
 }
 
-impl<P, S> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, S>
+impl<P, S> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallbackOld<P>>, S>
 where
 	P: Send + Sync + 'static,
 {
 	/// Build the [`IntervalTimer`]
 	/// # Errors
 	///
-	pub fn build(self) -> Result<IntervalTimer<P>> {
+	pub fn build(self) -> Result<IntervalTimerOld<P>> {
 		let Self {
 			context,
 			activation_state,
@@ -238,8 +242,9 @@ where
 
 		let activity = ActivityType::new(name.selector);
 		let operational = OperationalType::new(activation_state);
-		let parameter = IntervalTimerParameter::new(interval.interval, delay);
-		Ok(IntervalTimer::new(
+		let op_data = OperationalData::default();
+		let parameter = IntervalTimerParameter::new(interval.interval, delay, op_data);
+		Ok(IntervalTimerOld::new(
 			activity,
 			operational,
 			parameter,
@@ -249,7 +254,7 @@ where
 	}
 }
 
-impl<'a, P> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallback<P>>, Storage<'a>>
+impl<'a, P> TimerBuilder<P, Selector, Interval, Callback<ArcTimerCallbackOld<P>>, Storage<'a>>
 where
 	P: Send + Sync + 'static,
 {

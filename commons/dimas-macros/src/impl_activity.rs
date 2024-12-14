@@ -71,11 +71,6 @@ pub fn activity_functions() -> TokenStream {
 		fn id(&self) -> String {
 			self.activity.id().clone()
 		}
-
-		#[inline]
-		fn set_id(&mut self, id: String){
-			self.activity.set_id(id);
-		}
 	}
 }
 

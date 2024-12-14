@@ -11,7 +11,7 @@ use alloc::{boxed::Box, string::String};
 use core::fmt::Debug;
 use uuid::Uuid;
 
-use crate::{Activity, ActivityId};
+use crate::{Activity, ActivityId, Agent};
 // endregion:	--- modules
 
 // region:		--- types
@@ -32,6 +32,9 @@ pub trait Component: Debug + Send + Sync {
 
 	/// Get the [`Component`]s version
 	fn version(&self) -> u32;
+
+	/// Set the parent [`Agent`]
+	fn set_agent(&mut self, agent: Agent);
 
 	/// Add a sub [`Activity`]
 	fn add_activity(&mut self, activity: Box<dyn Activity>);

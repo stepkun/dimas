@@ -7,6 +7,8 @@ extern crate alloc;
 use alloc::string::String;
 use uuid::Uuid;
 
+use crate::operational::{self, OperationalData};
+
 /// `AgentData`
 #[derive(Debug)]
 pub struct AgentData {
@@ -18,6 +20,8 @@ pub struct AgentData {
 	pub name: String,
 	/// agents version
 	pub version: u32,
+	/// [`Operational`] data
+	pub operational: OperationalData,
 }
 
 impl Default for AgentData {
@@ -26,7 +30,8 @@ impl Default for AgentData {
 			uuid: Uuid::new_v4(),
 			prefix: String::default(),
 			name: String::default(),
-			version: 0,
+			version: 1,
+			operational: OperationalData::default(),
 		}
 	}
 }

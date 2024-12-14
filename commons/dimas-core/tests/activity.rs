@@ -45,9 +45,7 @@ fn activity() {
 	let data = ActivityType::default();
 	assert!(data.id().is_empty());
 
-	let mut activity = TestActivity2::default();
+	let activity = TestActivity2::default();
 	assert_eq!(activity.dummy(), "");
 	assert_eq!(activity.id(), "");
-	activity.set_id("new id".into());
-	assert_eq!(activity.id(), "new id");
 }

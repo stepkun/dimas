@@ -12,7 +12,7 @@ use anyhow::Result;
 use tracing::{event, instrument, Level};
 use uuid::Uuid;
 
-use crate::{Activity, ActivityId, ManageOperationState, OperationState};
+use crate::{Activity, ActivityId, Agent, ManageOperationState, OperationState};
 
 use super::{Component, ComponentId};
 // endregion:	--- modules
@@ -24,6 +24,7 @@ pub struct ComponentType {
 	id: ComponentId,
 	activities: Vec<Box<dyn Activity>>,
 	components: Vec<Box<dyn Component>>,
+	agent: Option<Agent>,
 }
 
 impl ManageOperationState for ComponentType {
@@ -41,12 +42,19 @@ impl Component for ComponentType {
 		Uuid::new_v4()
 	}
 
+	#[inline]
 	fn id(&self) -> ComponentId {
 		self.id.clone()
 	}
 
+	#[inline]
 	fn version(&self) -> u32 {
 		0
+	}
+
+	#[inline]
+	fn set_agent(&mut self, agent: Agent) {
+		self.agent = Some(agent);
 	}
 
 	#[inline]
@@ -78,6 +86,7 @@ impl ComponentType {
 			id,
 			activities: Vec::default(),
 			components: Vec::default(),
+			agent: None,
 		}
 	}
 }

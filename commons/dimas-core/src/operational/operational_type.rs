@@ -36,8 +36,8 @@ impl Operational for OperationalType {
 	}
 
 	#[inline]
-	fn set_activation_state(&mut self, state: OperationState) {
-		self.activation = state;
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!();
 	}
 
 	#[inline]
@@ -46,8 +46,8 @@ impl Operational for OperationalType {
 	}
 
 	#[inline]
-	fn set_state(&mut self, state: OperationState) {
-		self.current = state;
+	fn set_state(&mut self, _state: OperationState) {
+		todo!();
 	}
 }
 

@@ -5,8 +5,9 @@
 //! Agent traits
 //!
 
+mod agent;
 mod agent_data;
 mod error;
 
 // flatten
-pub use agent_data::AgentData;
+pub use agent::Agent;

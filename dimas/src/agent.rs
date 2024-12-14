@@ -30,7 +30,7 @@
 //!   let properties = AgentProps {};
 //!
 //!   // create an agent with the properties and a default configuration
-//!   let mut agent = Agent::new(properties).config(&Config::default())?;
+//!   let mut agent = AgentOld::new(properties).config(&Config::default())?;
 //!
 //!   // configuration of the agent
 //!   // ...
@@ -236,7 +236,7 @@ where
 	/// # Errors
 	///
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub fn config(self, config: &Config) -> Result<Agent<P>> {
+	pub fn config(self, config: &Config) -> Result<AgentOld<P>> {
 		// we need an mpsc channel with a receiver behind a mutex guard
 		let (tx, rx) = mpsc::channel(32);
 		let context: Arc<ContextImpl<P>> = Arc::new(ContextImpl::new(
@@ -247,7 +247,7 @@ where
 			self.prefix,
 		)?);
 
-		let mut agent = Agent {
+		let mut agent = AgentOld {
 			system: SystemType::default(),
 			component: ComponentType::default(),
 			operational: OperationalType::default(),
@@ -292,7 +292,7 @@ where
 // region:	   --- Agent
 /// An Agent with the basic configuration decisions fixed
 #[dimas_macros::system]
-pub struct Agent<P>
+pub struct AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -313,7 +313,7 @@ where
 	liveliness_token: RwLock<Option<LivelinessToken>>,
 }
 
-impl<P> ManageOperationState for Agent<P>
+impl<P> ManageOperationState for AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -325,7 +325,7 @@ where
 	}
 }
 
-impl<P> AsMut<ComponentRegistryType> for Agent<P>
+impl<P> AsMut<ComponentRegistryType> for AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -334,7 +334,7 @@ where
 	}
 }
 
-impl<P> AsRef<ComponentRegistryType> for Agent<P>
+impl<P> AsRef<ComponentRegistryType> for AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -343,7 +343,7 @@ where
 	}
 }
 
-impl<P> AsMut<LibManager> for Agent<P>
+impl<P> AsMut<LibManager> for AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -352,7 +352,7 @@ where
 	}
 }
 
-impl<P> AsRef<LibManager> for Agent<P>
+impl<P> AsRef<LibManager> for AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -361,7 +361,7 @@ where
 	}
 }
 
-impl<P> Debug for Agent<P>
+impl<P> Debug for AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -379,9 +379,9 @@ where
 	}
 }
 
-impl<P> Transitions for Agent<P> where P: Send + Sync + 'static {}
+impl<P> Transitions for AgentOld<P> where P: Send + Sync + 'static {}
 
-impl<P> Agent<P>
+impl<P> AgentOld<P>
 where
 	P: Send + Sync + 'static,
 {

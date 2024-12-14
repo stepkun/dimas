@@ -3,12 +3,12 @@
 use anyhow::Result;
 use core::fmt::Debug;
 use dimas_core::{
-	Activity, ActivityId, Component, ComponentId, ComponentType, ManageOperationState,
-	OperationState, Operational, OperationalType, Transitions,
+	Activity, ActivityId, Agent, Component, ComponentId, ComponentType, ManageOperationState,
+	OperationState, Transitions,
 };
 use uuid::Uuid;
 
-#[dimas_macros::component_old]
+#[dimas_macros::component]
 #[derive(Debug)]
 struct TestComponent1<P>
 where
@@ -29,7 +29,7 @@ where
 	}
 }
 
-#[dimas_macros::component_old]
+#[dimas_macros::component]
 #[derive(Debug, Default)]
 struct TestComponent2 {}
 
@@ -49,44 +49,8 @@ fn component_trait() {
 	assert_eq!(component.id(), "");
 }
 
-fn create_test_data() -> TestComponent2 {
-	let mut component = TestComponent2 {
-		operational: OperationalType::default(),
-		component: ComponentType::new("component".into()),
-	};
-
-	let mut component1 = TestComponent2 {
-		operational: OperationalType::with_activation_state(OperationState::Standby),
-		component: ComponentType::new("component1".into()),
-	};
-
-	let mut component2 = TestComponent2 {
-		operational: OperationalType::with_activation_state(OperationState::Inactive),
-		component: ComponentType::new("component2".into()),
-	};
-
-	let component3 = TestComponent2 {
-		operational: OperationalType::with_activation_state(OperationState::Created),
-		component: ComponentType::new("component3".into()),
-	};
-
-	// create structure
-	component2
-		.component
-		.add_component(Box::new(component3));
-	component1
-		.component
-		.add_component(Box::new(component2));
-	component
-		.component
-		.add_component(Box::new(component1));
-
-	component
-}
-
 fn component_type() {
 	let _ = ComponentType::new(ComponentId::from("test"));
-	let _ = create_test_data();
 }
 
 #[test]

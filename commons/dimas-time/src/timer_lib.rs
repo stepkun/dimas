@@ -1,6 +1,5 @@
 // Copyright © 2024 Stephan Kunz
 #![allow(unused)]
-#![allow(missing_docs)]
 
 //! Module `timer` implements a component which provides a set of timer-variants.
 //! Currently there are:
@@ -12,40 +11,49 @@ extern crate alloc;
 // region:      --- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
 use anyhow::Result;
+use core::future::Future;
 use dimas_core::{
-	Activity, ActivityId, Component, ComponentData, ComponentId, ComponentStruct, ComponentType,
-	ManageOperationState, OperationState, Operational, OperationalType, Transitions,
+	Activity, ActivityId, Agent, Component, ComponentData, ComponentId, ComponentStruct,
+	ComponentType, ManageOperationState, OperationState, Operational, OperationalType, Transitions,
 };
 use tracing::{event, instrument, Level};
 use uuid::Uuid;
 
+use crate::{timer::TimerFactory, IntervalTimer, IntervalTimerOld, Timer, TimerVariant};
 #[cfg(doc)]
-use crate::{IntervalTimer, TimerVariant};
+use crate::{IntervalTimerOld, TimerVariant};
 // endregion:   --- modules
 
-// region:      --- Timer
-/// Timer component.
-#[dimas_macros::component]
+// region:      --- TimerLib
+/// Timer library.
 #[derive(Debug)]
-pub struct TimerLib {}
+pub struct TimerLib {
+	id: String,
+	agent: Agent,
+}
 
-impl Default for TimerLib {
-	fn default() -> Self {
+impl TimerLib {
+	/// Create a [`TimerLib`] with an [`Agent`] as context
+	#[must_use]
+	pub fn new(agent: Agent) -> Self {
 		Self {
-			data: ComponentData::new(Uuid::new_v4(), "Timer", 1),
-			structure: ComponentStruct::default(),
+			id: String::from("TimerLib"),
+			agent,
+		}
+	}
+
+	/// Create a [`Timer`]
+	pub fn create_timer<CB, F>(&self, variant: TimerVariant, callback: CB) -> Box<dyn Activity>
+	where
+		CB: FnMut(Agent) -> F + Send + Sync + 'static,
+		F: Future<Output = Result<()>> + Send + Sync + 'static,
+	{
+		let agent = self.agent.clone();
+		match variant {
+			TimerVariant::Interval(parameter) => {
+				Box::new(IntervalTimer::new(parameter, callback, agent))
+			}
 		}
 	}
 }
-
-impl Transitions for TimerLib {}
-
-impl ManageOperationState for TimerLib {
-	#[instrument(level = Level::DEBUG, skip_all)]
-	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {
-		event!(Level::DEBUG, "manage_operation_state");
-		assert_ne!(state, OperationState::Undefined);
-		Ok(())
-	}
-}
-// endregion:   --- Timer
+// endregion:   --- TimerLib

@@ -9,7 +9,7 @@ extern crate alloc;
 // region:		--- modules
 #[cfg(doc)]
 use crate::OperationState;
-use crate::{Activity, ActivityId};
+use crate::{Activity, ActivityId, OperationState, Operational, Transitions};
 // endregion:	--- modules
 
 // region:		--- ActivityType
@@ -24,12 +24,27 @@ impl Activity for ActivityType {
 	fn id(&self) -> ActivityId {
 		self.id.clone()
 	}
+}
 
-	#[inline]
-	fn set_id(&mut self, id: ActivityId) {
-		self.id = id;
+impl Operational for ActivityType {
+	fn activation_state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_state(&mut self, _state: OperationState) {
+		todo!()
 	}
 }
+
+impl Transitions for ActivityType {}
 
 impl ActivityType {
 	/// Create an [`ActivityType`] with default activation state [`OperationState::Active`].

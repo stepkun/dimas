@@ -21,13 +21,13 @@ use super::{Error, OperationState};
 /// Contract for an [`Operational`]
 pub trait Operational: Transitions + Debug + Send + Sync {
 	/// Read the entities state when it shall be active
-	/// different from parent components [`OperationState`] can be provided.
+	/// different from parents [`OperationState`].
 	/// The default is [`OperationState::Undefined`]
 	#[must_use]
 	fn activation_state(&self) -> OperationState;
 
 	/// Write the entities state when it shall be active
-	fn set_activation_state(&mut self, _state: OperationState);
+	fn set_activation_state(&mut self, state: OperationState);
 
 	/// Calculate the desired [`OperationState`] from a given [`OperationState`].
 	#[must_use]
@@ -44,12 +44,12 @@ pub trait Operational: Transitions + Debug + Send + Sync {
 			.unwrap_or_else(|_| panic!("should be infallible"))
 	}
 
-	/// Read the entities current [`OperationState`] must be provided
+	/// Get the entities current [`OperationState`]. Must be implemented.
 	#[must_use]
 	fn state(&self) -> OperationState;
 
-	/// Write the entities current [`OperationState`] must be provided
-	fn set_state(&mut self, _state: OperationState);
+	/// Set the entities current [`OperationState`]. Must be implemented.
+	fn set_state(&mut self, state: OperationState);
 
 	/// Call the appropriate transitions and return the reached state.
 	/// # Errors

@@ -3,6 +3,8 @@
 
 //! Module `timer_variant` defines the known/implemented timer variants.
 
+use crate::IntervalTimerParameter;
+
 #[doc(hidden)]
 extern crate alloc;
 
@@ -13,6 +15,6 @@ extern crate alloc;
 /// All implemented timer variants
 pub enum TimerVariant {
 	/// An interval timer without or with delay
-	IntervalTimer,
+	Interval(IntervalTimerParameter),
 }
 // endregion:   --- TimerVariant

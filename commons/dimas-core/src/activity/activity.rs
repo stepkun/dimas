@@ -1,4 +1,5 @@
 // Copyright © 2024 Stephan Kunz
+#![allow(dead_code)]
 
 //! Activity interface for `DiMAS`
 //!
@@ -9,7 +10,9 @@ extern crate alloc;
 // region:		--- modules
 use core::fmt::Debug;
 
-use alloc::string::String;
+use alloc::{boxed::Box, string::String};
+
+use crate::Operational;
 // endregion:	--- modules
 
 // region:		--- types
@@ -21,11 +24,16 @@ pub type ActivityId = String;
 
 // region:		--- Activity
 /// Contract for an `Activity`
-pub trait Activity: Debug + Send + Sync {
+pub trait Activity: Operational + Debug + Send + Sync {
 	/// Get [`Activity`]s id
 	fn id(&self) -> ActivityId;
-
-	/// Get [`Activity`]s id
-	fn set_id(&mut self, id: ActivityId);
 }
 // endregion:	--- Activity
+
+// region:		--- ActivityFactory
+/// Contract for [`Activity`] factories
+pub trait ActivityFactory {
+	/// Factory method for [`Activity`] factories
+	fn create_activity(id: ActivityId) -> Box<dyn Activity>;
+}
+// endregion:	---	ActivityFactory

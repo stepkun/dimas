@@ -44,7 +44,7 @@ pub use zenoh::query::QueryTarget;
 pub use zenoh::sample::Locality;
 
 // dimas stuff
-pub use crate::agent::Agent;
+pub use crate::agent::AgentOld;
 pub use crate::utils::ComponentRegistry;
 pub use crate::utils::LibManager;
 pub use dimas_config::Config;
@@ -57,4 +57,7 @@ pub use dimas_core::System;
 pub use dimas_core::{Activity, ActivityId};
 pub use dimas_core::{Component, ComponentId};
 pub use dimas_core::{OperationState, Operational, Transitions};
-pub use dimas_time::IntervalTimer;
+pub use dimas_time::IntervalTimerOld;
+
+pub use dimas_core::Agent;
+pub use dimas_time::{TimerFactory, TimerLib, TimerVariant};

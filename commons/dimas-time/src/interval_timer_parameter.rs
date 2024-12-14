@@ -7,10 +7,10 @@
 // region:		--- modules
 use anyhow::Result;
 use core::{fmt::Debug, time::Duration};
-use dimas_core::traits::Context;
+use dimas_core::{traits::Context, OperationState, OperationalData};
 
 #[cfg(doc)]
-use crate::IntervalTimer;
+use crate::IntervalTimerOld;
 // endregion:   --- modules
 
 // region:      --- IntervalTimerParameter
@@ -22,23 +22,36 @@ pub struct IntervalTimerParameter {
 	pub(crate) interval: Duration,
 	/// The optional delay
 	pub(crate) delay: Option<Duration>,
+	/// The [`OperationalData`]
+	pub(crate) operational: OperationalData,
 }
 
 impl Default for IntervalTimerParameter {
+	#[inline]
 	fn default() -> Self {
-		Self {
-			interval: Duration::from_millis(1000),
-			delay: None,
-		}
+		Self::new(
+			Duration::from_millis(1000),
+			None,
+			OperationalData::default(),
+		)
 	}
 }
 
 impl IntervalTimerParameter {
 	/// Create an [`IntervalTimerParameter`] set with
 	/// an `interval` and an optional 'delay'
+	#[inline]
 	#[must_use]
-	pub const fn new(interval: Duration, delay: Option<Duration>) -> Self {
-		Self { interval, delay }
+	pub const fn new(
+		interval: Duration,
+		delay: Option<Duration>,
+		operational: OperationalData,
+	) -> Self {
+		Self {
+			interval,
+			delay,
+			operational,
+		}
 	}
 }
 // endregion:   --- IntervalTimerParameter

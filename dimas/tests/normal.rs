@@ -15,7 +15,7 @@ const fn is_normal<T: Sized + Send + Sync>() {}
 
 #[test]
 const fn normal_types() {
-	is_normal::<Agent<Props>>();
+	is_normal::<AgentOld<Props>>();
 	is_normal::<ContextImpl<Props>>();
 	#[cfg(feature = "unstable")]
 	is_normal::<LivelinessSubscriberBuilder<Props, NoCallback, NoStorage>>();

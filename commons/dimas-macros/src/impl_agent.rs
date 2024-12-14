@@ -40,84 +40,14 @@ fn parse_config(args: Arguments) -> Result<Config> {
 }
 
 /// Additional functions for the properties struct:
-/// - `pub fn agent()`: a function to create an agent with these properties
-/// # Errors
-/// - Parsing errors during macro expansion.
-/// - Missing `Default` implementations for property struct. Can be derived!
-fn additional_item_functions(item: &ItemStruct) -> Result<TokenStream> {
-	let agent_type = create_agent_type(item)?;
-	Ok(quote! {
+/// - `pub fn agent(self)`: a self consuming function to create an [`Agent`] with these properties
+fn additional_item_functions(item: &ItemStruct) -> TokenStream {
+	quote! {
 		#[inline]
-		pub fn agent() -> #agent_type {
-			#agent_type::default()
+		pub fn agent(self) -> Agent {
+			Agent::new(Box::new(self))
 		}
-	})
-}
-
-fn agent_impl_block(item: &ItemStruct) -> Result<TokenStream> {
-	let properties_ident = &item.ident;
-	let agent_ident = create_agent_type(item)?;
-
-	Ok(quote! {
-		impl #agent_ident {
-			#[inline]
-			pub fn uuid(&self) -> Uuid {
-				self.data.read().uuid.clone()
-			}
-
-			#[inline]
-			pub fn name(&self) -> String {
-				self.data.read().name.clone()
-			}
-
-			#[inline]
-			pub fn set_name(self, name: &str) -> #agent_ident {
-				self.data.write().name = name.into();
-				self
-			}
-
-			#[inline]
-			pub fn prefix(&self) -> String {
-				self.data.read().prefix.clone()
-			}
-
-			#[inline]
-			pub fn set_prefix(self, prefix: &str) -> #agent_ident {
-				self.data.write().prefix = prefix.into();
-				self
-			}
-
-			#[inline]
-			pub fn read(&self) -> parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, #properties_ident> {
-				self.properties.read()
-			}
-
-			#[inline]
-			fn write(&self) -> parking_lot::lock_api::RwLockWriteGuard<'_, parking_lot::RawRwLock, #properties_ident> {
-				self.properties.write()
-			}
-
-			#[inline]
-			fn add_activity(&self, activity: Box<dyn Activity>) {
-				self.structure.write().activities.push(activity);
-			}
-
-			#[inline]
-			fn remove_activity(&self, _id: ActivityId) {
-				todo!()
-			}
-
-			#[inline]
-			fn add_component(&self, component: Box<dyn Component>) {
-				self.structure.write().components.push(component);
-			}
-
-			#[inline]
-			fn remove_component(&self, _id: ComponentId) {
-				todo!()
-			}
-		}
-	})
+	}
 }
 
 fn agent_struct(mut item: ItemStruct) -> Result<TokenStream> {
@@ -133,12 +63,8 @@ fn agent_struct(mut item: ItemStruct) -> Result<TokenStream> {
 	};
 
 	// create necessary variables
-	let agent_struct_header = create_agent_struct_header(&item)?;
-	let agent_impl_block = agent_impl_block(&item)?;
 	let item_impl_header = create_impl_header(&item, None)?;
-	let additional_item_functions = additional_item_functions(&item)?;
-	let property_data = &item.ident;
-	let agent_ident = create_agent_type(&item)?;
+	let additional_item_functions = additional_item_functions(&item);
 
 	// create output stream
 	let out = quote! {
@@ -147,15 +73,6 @@ fn agent_struct(mut item: ItemStruct) -> Result<TokenStream> {
 		#item_impl_header {
 			#additional_item_functions
 		}
-
-		#[derive(Clone, Debug, Default)]
-		#agent_struct_header {
-			data: alloc::sync::Arc<parking_lot::RwLock<dimas_core::AgentData>>,
-			structure: alloc::sync::Arc<parking_lot::RwLock<dimas_core::ComponentStruct>>,
-			properties: alloc::sync::Arc<parking_lot::RwLock<#property_data>>,
-		}
-
-		#agent_impl_block
 	};
 	Ok(out)
 }

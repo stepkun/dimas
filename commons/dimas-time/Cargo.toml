@@ -29,6 +29,7 @@ workspace = true
 anyhow = { workspace = true}
 dimas-core = { workspace = true}
 dimas-macros = { workspace = true }
+futures = { workspace = true }
 parking_lot = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true}

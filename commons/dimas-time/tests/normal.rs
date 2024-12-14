@@ -2,7 +2,7 @@
 
 //! Tests
 
-use dimas_time::{IntervalTimer, IntervalTimerParameter, Timer, TimerVariant};
+use dimas_time::{IntervalTimerOld, IntervalTimerParameter, TimerOld, TimerVariant};
 
 #[derive(Debug)]
 struct Props {}
@@ -12,8 +12,8 @@ const fn is_normal<T: Sized + Send + Sync>() {}
 
 #[test]
 const fn normal_types() {
-	is_normal::<Timer<Props>>();
+	is_normal::<TimerOld<Props>>();
 	is_normal::<IntervalTimerParameter>();
 	is_normal::<TimerVariant>();
-	is_normal::<IntervalTimer<Props>>();
+	is_normal::<IntervalTimerOld<Props>>();
 }

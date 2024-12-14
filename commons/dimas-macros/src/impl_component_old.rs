@@ -42,6 +42,7 @@ fn component_fields() -> TokenStream {
 	quote! {
 		component: ComponentType,
 		operational: OperationalType,
+		agent: Option<Agent>,
 	}
 }
 
@@ -81,6 +82,12 @@ fn component_functions() -> TokenStream {
 		fn version(&self) -> u32 {
 			self.component.version()
 		}
+
+		#[inline]
+		fn set_agent(&mut self, agent: Agent) {
+			self.agent = Some(agent);
+		}
+
 		#[inline]
 		fn add_activity(&mut self, activity: Box<dyn Activity>) {
 			self.component.add_activity(activity);

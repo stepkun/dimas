@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
 	let properties = AgentProps { count: 0 };
 
 	// create an agent with the properties and the prefix 'examples'
-	let mut agent = Agent::new(properties)
+	let mut agent = AgentOld::new(properties)
 		.prefix("examples")
 		.name("subscriber")
 		.config(&Config::default())?;

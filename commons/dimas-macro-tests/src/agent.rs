@@ -1,5 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 #![allow(dead_code)]
+#![allow(unused)]
 
 //! Test macro `agent`
 
@@ -7,7 +8,7 @@
 extern crate alloc;
 
 use alloc::{boxed::Box, string::String};
-use dimas_core::{Activity, ActivityId, Component, ComponentId};
+use dimas_core::{Activity, ActivityId, Agent, Component, ComponentId};
 use uuid::Uuid;
 
 #[derive(Debug, Default)]
