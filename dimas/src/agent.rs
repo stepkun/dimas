@@ -48,9 +48,9 @@
 #[cfg(feature = "unstable")]
 use crate::builder::LivelinessSubscriberBuilder;
 use crate::builder::{
-	builder_states::{NoCallback, NoInterval, NoSelector, Storage},
+	builder_states::{NoCallback, NoSelector, Storage},
 	ObservableBuilder, ObserverBuilder, PublisherBuilder, QuerierBuilder, QueryableBuilder,
-	SubscriberBuilder, TimerBuilder,
+	SubscriberBuilder,
 };
 use crate::context::ContextImpl;
 #[allow(unused_imports)]
@@ -442,11 +442,11 @@ where
 		SubscriberBuilder::new("default", self.context.clone()).storage(self.component_mut())
 	}
 
-	/// Get a [`TimerBuilder`].
-	#[must_use]
-	pub fn timer(&mut self) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, Storage> {
-		TimerBuilder::new(self.context.clone()).storage(self.component_mut())
-	}
+	// /// Get a [`TimerBuilder`].
+	// #[must_use]
+	// pub fn timer(&mut self) -> TimerBuilder<P, NoSelector, NoInterval, NoCallback, Storage> {
+	// 	TimerBuilder::new(self.context.clone()).storage(self.component_mut())
+	// }
 
 	/// Start the agent.
 	///

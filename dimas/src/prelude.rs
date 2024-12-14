@@ -57,7 +57,9 @@ pub use dimas_core::System;
 pub use dimas_core::{Activity, ActivityId};
 pub use dimas_core::{Component, ComponentId};
 pub use dimas_core::{OperationState, Operational, Transitions};
-pub use dimas_time::IntervalTimerOld;
 
 pub use dimas_core::Agent;
 pub use dimas_time::{TimerFactory, TimerLib, TimerVariant};
+pub use dimas_core::ManageOperationState;
+pub use dimas_time::IntervalTimerParameter;
+

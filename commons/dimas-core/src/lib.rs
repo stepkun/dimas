@@ -29,7 +29,7 @@ pub mod utils;
 // flatten:
 pub use activity::{Activity, ActivityId, ActivityType};
 pub use agent::Agent;
-pub use component::{Component, ComponentData, ComponentId, ComponentStruct, ComponentType};
+pub use component::{Component, ComponentData, ComponentId, ComponentType};
 pub use enums::{Signal, TaskSignal};
 pub use operational::{
 	ManageOperationState, OperationState, Operational, OperationalData, OperationalType,

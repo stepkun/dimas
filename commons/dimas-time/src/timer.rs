@@ -17,7 +17,7 @@ use crate::TimerVariant;
 
 // region:      --- Timer
 /// `Timer` trait.
-pub trait Timer {}
+pub trait Timer: Send + Sync {}
 // endregion:   --- Timer
 
 // region:      --- TimerFactory

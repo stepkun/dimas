@@ -1,13 +1,28 @@
 //! `DiMAS` observation example
 //! Copyright © 2024 Stephan Kunz
+#![allow(unused)]
+#![allow(clippy::unwrap_used)]
 
 use dimas::prelude::*;
 
+#[dimas::agent]
 #[derive(Debug)]
-struct AgentProps {
+struct Observer {
+	counter: u128,
 	limit: u128,
 	new_limit: u128,
 	occupied_counter: u8,
+}
+
+impl Default for Observer {
+    fn default() -> Self {
+        Self {
+			counter: 0,
+			limit: 5,
+			new_limit: 5,
+			occupied_counter: 3,
+		}
+    }
 }
 
 /// request structure for observer and observable
@@ -17,6 +32,25 @@ pub struct FibonacciRequest {
 	pub limit: u128,
 }
 
+async fn timer_callback(ctx: Agent) -> Result<()> {
+	let counter = ctx.read().downcast_ref::<Observer>().unwrap().counter;
+	let limit = ctx.read().downcast_ref::<Observer>().unwrap().new_limit;
+	println!("Request [{counter}] for fibonacci up to {limit}");
+	let msg = FibonacciRequest { limit };
+	let message = Message::encode(&msg);
+	//ctx.observe("fibonacci", Some(message))?;
+	ctx.write().downcast_mut::<Observer>().unwrap().counter += 1;
+	Ok(())
+}
+
+#[derive(Debug)]
+struct AgentProps {
+	limit: u128,
+	new_limit: u128,
+	occupied_counter: u8,
+}
+
+#[allow(clippy::unused_async)]
 async fn control_response(
 	ctx: Context<AgentProps>,
 	response: ObservableControlResponse,
@@ -26,6 +60,7 @@ async fn control_response(
 			let limit = ctx.read().new_limit;
 			println!("Accepted fibonacci up to {limit}");
 			ctx.write().limit = limit;
+			
 			ctx.write().new_limit += 1;
 		}
 		ObservableControlResponse::Declined => {
@@ -51,6 +86,7 @@ async fn control_response(
 	Ok(())
 }
 
+#[allow(clippy::unused_async)]
 async fn response(ctx: Context<AgentProps>, response: ObservableResponse) -> Result<()> {
 	match response {
 		ObservableResponse::Canceled(value) => {
@@ -88,45 +124,27 @@ async fn main() -> Result<()> {
 	// initialize tracing/logging
 	init_tracing();
 
-	// create & initialize agents properties
-	let properties = AgentProps {
-		limit: 0u128,
-		new_limit: 5u128,
-		occupied_counter: 0u8,
-	};
+	// create an agent with the properties of `Observer`
+	let mut agent = Observer::default()
+		.into_agent()
+		.set_prefix("examples")
+		.set_name("publisher");
 
-	// create an agent with the properties and the prefix 'examples'
-	let mut agent = AgentOld::new(properties)
-		.prefix("examples")
-		.name("observer")
-		.config(&Config::default())?;
+	// add wanted components
+	// @TODO: change to load library
+	let timerlib = TimerLib::new(agent.clone());
 
-	// create the observer for fibonacci
-	agent
-		.observer()
-		.topic("fibonacci")
-		.control_callback(control_response)
-		.result_callback(response)
-		.add()?;
+	// create an interval timer using the timer library
+	let parameter = IntervalTimerParameter::default();
+	let timer = timerlib.create_timer(TimerVariant::Interval(parameter), timer_callback);
+	agent.add_activity(timer);
 
-	// timer for next observation
-	let interval = Duration::from_secs(5);
-	agent
-		.timer()
-		.name("timer")
-		.interval(interval)
-		.callback(move |ctx| -> Result<()> {
-			let limit = ctx.read().new_limit;
-			println!("request fibonacci up to {limit}");
-			let msg = FibonacciRequest { limit };
-			let message = Message::encode(&msg);
-			ctx.observe("fibonacci", Some(message))?;
-			Ok(())
-		})
-		.add()?;
+	// drop factories to reduce memory footprint
+	drop(timerlib);
 
-	// run agent
-	agent.start().await?;
+	/// start agent in wanted operation state
+	agent.manage_operation_state(OperationState::Active);
+	agent.start().await;
 
 	Ok(())
 }

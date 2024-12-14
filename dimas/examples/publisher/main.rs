@@ -4,8 +4,6 @@
 #![allow(clippy::unwrap_used)]
 
 use dimas::prelude::*;
-use dimas_core::ManageOperationState;
-use dimas_time::IntervalTimerParameter;
 
 #[dimas::agent]
 #[derive(Debug, Default)]
@@ -57,7 +55,7 @@ async fn main() -> Result<()> {
 
 	// create an agent with the properties of `Publisher`
 	let mut agent = Publisher::default()
-		.agent()
+		.into_agent()
 		.set_prefix("examples")
 		.set_name("publisher");
 

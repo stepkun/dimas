@@ -13,15 +13,13 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 use anyhow::Result;
 use core::future::Future;
 use dimas_core::{
-	Activity, ActivityId, Agent, Component, ComponentData, ComponentId, ComponentStruct,
+	Activity, ActivityId, Agent, Component, ComponentData, ComponentId,
 	ComponentType, ManageOperationState, OperationState, Operational, OperationalType, Transitions,
 };
 use tracing::{event, instrument, Level};
 use uuid::Uuid;
 
-use crate::{timer::TimerFactory, IntervalTimer, IntervalTimerOld, Timer, TimerVariant};
-#[cfg(doc)]
-use crate::{IntervalTimerOld, TimerVariant};
+use crate::{timer::TimerFactory, IntervalTimer, Timer, TimerVariant};
 // endregion:   --- modules
 
 // region:      --- TimerLib

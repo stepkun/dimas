@@ -40,11 +40,11 @@ fn parse_config(args: Arguments) -> Result<Config> {
 }
 
 /// Additional functions for the properties struct:
-/// - `pub fn agent(self)`: a self consuming function to create an [`Agent`] with these properties
+/// - `pub fn into_agent(self)`: a self consuming function to create an [`Agent`] with these properties
 fn additional_item_functions(item: &ItemStruct) -> TokenStream {
 	quote! {
 		#[inline]
-		pub fn agent(self) -> Agent {
+		pub fn into_agent(self) -> Agent {
 			Agent::new(Box::new(self))
 		}
 	}

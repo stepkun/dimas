@@ -61,7 +61,7 @@ fn component_functions() -> TokenStream {
 
 		#[inline]
 		fn add_activity(&mut self, activity: Box<dyn Activity>) {
-			self.structure.activities.push(activity);
+			self.data.activities.push(activity);
 		}
 
 		#[inline]
@@ -71,7 +71,7 @@ fn component_functions() -> TokenStream {
 
 		#[inline]
 		fn add_component(&mut self, component: Box<dyn Component>) {
-			self.structure.components.push(component);
+			self.data.components.push(component);
 		}
 
 		#[inline]
@@ -115,7 +115,6 @@ fn component_struct(mut item: ItemStruct) -> Result<TokenStream> {
 		#[derive(#derives)]
 		#item_struct_header {
 			data: dimas_core::ComponentData,
-			structure: dimas_core::ComponentStruct,
 			#original_fields
 		}
 

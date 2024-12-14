@@ -23,7 +23,7 @@ use tracing::{error, event, info, instrument, warn, Level};
 use uuid::Uuid;
 
 use crate::{
-	Activity, ActivityId, Component, ComponentId, ComponentStruct, ManageOperationState,
+	Activity, ActivityId, Component, ComponentData, ComponentId, ManageOperationState,
 	OperationState, Operational, Transitions,
 };
 
@@ -38,7 +38,6 @@ struct DummyProperties {}
 #[derive(Clone, Debug)]
 pub struct Agent {
 	data: Arc<RwLock<AgentData>>,
-	structure: Arc<RwLock<ComponentStruct>>,
 	properties: Arc<RwLock<Box<dyn Any + Send + Sync>>>,
 }
 
@@ -58,9 +57,10 @@ impl ManageOperationState for Agent {
 			assert!(self.state() < OperationState::Active);
 			let next_state = self.state() + 1;
 			// first handle sub elements
-			for component in &mut *self.structure.write().components { //component.state_transition(next_state)?;
+			for component in &mut *self.data.write().component.components { 
+				;//component.state_transition(next_state)?;
 			}
-			for activity in &mut *self.structure.write().activities {
+			for activity in &mut *self.data.write().component.activities {
 				activity.state_transitions(next_state)?;
 			}
 			self.state_transitions(next_state)?;
@@ -71,10 +71,11 @@ impl ManageOperationState for Agent {
 			assert!(self.state() > OperationState::Created);
 			let next_state = self.state() - 1;
 			// first handle sub elements
-			for activity in &mut *self.structure.write().activities {
+			for activity in &mut *self.data.write().component.activities {
 				activity.state_transitions(next_state)?;
 			}
-			for component in &mut *self.structure.write().components { //component.state_transition(next_state)?;
+			for component in &mut *self.data.write().component.components { 
+				;//component.state_transition(next_state)?;
 			}
 			// next do own transition
 			self.state_transitions(next_state)?;
@@ -110,7 +111,6 @@ impl Agent {
 	pub fn new(properties: Box<dyn Any + Send + Sync>) -> Self {
 		Self {
 			data: Arc::new(RwLock::new(AgentData::default())),
-			structure: Arc::new(RwLock::new(ComponentStruct::default())),
 			properties: Arc::new(RwLock::new(properties)),
 		}
 	}
@@ -119,21 +119,21 @@ impl Agent {
 	#[inline]
 	#[must_use]
 	pub fn uuid(&self) -> Uuid {
-		self.data.read().uuid
+		self.data.read().component.uuid
 	}
 
 	/// Get [`Agent`]s name
 	#[inline]
 	#[must_use]
 	pub fn name(&self) -> String {
-		self.data.read().name.clone()
+		self.data.read().component.id.clone()
 	}
 
 	/// Set [`Agent`]s name
 	#[inline]
 	#[must_use]
 	pub fn set_name(self, name: &str) -> Self {
-		self.data.write().name = name.into();
+		self.data.write().component.id = name.into();
 		self
 	}
 
@@ -155,7 +155,7 @@ impl Agent {
 	/// Add an [`Activity`] to the [`Agent`]
 	#[inline]
 	pub fn add_activity(&self, activity: Box<dyn Activity>) {
-		self.structure.write().activities.push(activity);
+		self.data.write().component.activities.push(activity);
 	}
 
 	/// Remove an [`Activity`] from the [`Agent`]
@@ -169,7 +169,7 @@ impl Agent {
 	#[inline]
 	pub fn add_component(&self, mut component: Box<dyn Component>) {
 		component.set_agent(self.clone());
-		self.structure.write().components.push(component);
+		self.data.write().component.components.push(component);
 	}
 
 	/// Remove a [`Component`] from the [`Agent`]

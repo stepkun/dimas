@@ -10,28 +10,20 @@ extern crate alloc;
 // region:    --- modules
 mod error;
 mod interval_timer;
-mod interval_timer_old;
 mod interval_timer_parameter;
 mod timer;
 mod timer_lib;
-mod timer_old;
 mod timer_variant;
 
 use alloc::{boxed::Box, sync::Arc};
 use anyhow::Result;
-use dimas_core::{traits::Context, Agent};
+use dimas_core::Agent;
 use futures::future::BoxFuture;
 #[cfg(feature = "std")]
 use tokio::sync::Mutex;
 // endregion:   --- modules
 
 // region:		--- types
-
-/// type definition for the functions called by a timer
-/// @ TODO: remove when possible
-pub type ArcTimerCallbackOld<P> =
-	Arc<parking_lot::Mutex<dyn FnMut(Context<P>) -> Result<()> + Send + Sync + 'static>>;
-
 /// Type definition for the functions called by a timer
 pub type TimerCallback =
 	Box<dyn FnMut(Agent) -> BoxFuture<'static, Result<()>> + Send + Sync + 'static>;
@@ -44,10 +36,10 @@ pub type ArcTimerCallback = Arc<Mutex<TimerCallback>>;
 
 // flatten
 pub use interval_timer::IntervalTimer;
-pub use interval_timer_old::IntervalTimerOld;
+//pub use interval_timer_old::IntervalTimerOld;
 pub use interval_timer_parameter::IntervalTimerParameter;
 pub use timer::{Timer, TimerFactory};
 pub use timer_lib::TimerLib;
-pub use timer_old::TimerOld;
+//pub use timer_old::TimerOld;
 pub use timer_variant::TimerVariant;
 // endregion: --- modules

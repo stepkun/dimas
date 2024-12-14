@@ -1,13 +1,33 @@
 //! `DiMAS` query example
 //! Copyright © 2024 Stephan Kunz
+#![allow(unused)]
+#![allow(clippy::unwrap_used)]
 
 use dimas::prelude::*;
+
+#[dimas::agent]
+#[derive(Debug, Default)]
+struct Querier {
+	counter: u128,
+}
 
 #[derive(Debug)]
 struct AgentProps {
 	counter: u128,
 }
 
+async fn timer_callback(ctx: Agent) -> Result<()> {
+	let counter = ctx.read().downcast_ref::<Querier>()
+	.unwrap().counter;
+	println!("Querying [{counter}]");
+	let _message = Message::encode(&counter);
+	// querying with stored query
+	//ctx.get("query", Some(message), None)?;
+	ctx.write().downcast_mut::<Querier>().unwrap().counter = counter + 1;
+	Ok(())
+}
+
+#[allow(clippy::unused_async)]
 async fn query_callback(ctx: Context<AgentProps>, response: QueryableMsg) -> Result<()> {
 	let message: u128 = response.decode()?;
 	println!("Response [{}] is '{message}'", ctx.read().counter);
@@ -20,40 +40,27 @@ async fn main() -> Result<()> {
 	// initialize tracing/logging
 	init_tracing();
 
-	// create & initialize agents properties
-	let properties = AgentProps { counter: 0 };
+	// create an agent with the properties of `Querier`
+	let mut agent = Querier::default()
+		.into_agent()
+		.set_prefix("examples")
+		.set_name("publisher");
 
-	// create an agent with the properties and the prefix 'examples'
-	let mut agent = AgentOld::new(properties)
-		.prefix("examples")
-		.name("querier")
-		.config(&Config::default())?;
+	// add wanted components
+	// @TODO: change to load library
+	let timerlib = TimerLib::new(agent.clone());
 
-	// create querier for topic "query"
-	agent
-		.querier()
-		.topic("query")
-		.callback(query_callback)
-		.add()?;
+	// create an interval timer using the timer library
+	let parameter = IntervalTimerParameter::default();
+	let timer = timerlib.create_timer(TimerVariant::Interval(parameter), timer_callback);
+	agent.add_activity(timer);
 
-	// timer for regular querying
-	let interval = Duration::from_secs(1);
-	agent
-		.timer()
-		.name("timer")
-		.interval(interval)
-		.callback(move |ctx| -> Result<()> {
-			let counter = ctx.read().counter;
-			println!("Querying [{counter}]");
-			let message = Message::encode(&counter);
-			// querying with stored query
-			ctx.get("query", Some(message), None)?;
-			Ok(())
-		})
-		.add()?;
+	// drop factories to reduce memory footprint
+	drop(timerlib);
 
-	// run agent
-	agent.start().await?;
+	/// start agent in wanted operation state
+	agent.manage_operation_state(OperationState::Active);
+	agent.start().await;
 
 	Ok(())
 }
