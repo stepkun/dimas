@@ -4,7 +4,7 @@
 
 // region:		--- modules
 #[cfg(doc)]
-use crate::zenoh::{Communicator, Observable, Observer, Publisher, Querier, Queryable, Subscriber};
+use crate::zenoh::{CommunicatorOld, Observable, Observer, Publisher, Querier, Queryable, Subscriber};
 #[cfg(doc)]
 use dimas_core::message_types::Message;
 use thiserror::Error;

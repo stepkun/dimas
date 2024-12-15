@@ -9,7 +9,7 @@ extern crate alloc;
 extern crate std;
 
 // region:		--- modules
-use crate::error::Error;
+use crate::error_old::Error;
 use alloc::{string::String, sync::Arc};
 use anyhow::Result;
 use core::fmt::Debug;
@@ -41,7 +41,7 @@ impl Debug for Publisher {
 	}
 }
 
-impl crate::traits::Publisher for Publisher {
+impl crate::traits_old::Publisher for Publisher {
 	/// Get `selector`
 	fn selector(&self) -> &str {
 		&self.selector

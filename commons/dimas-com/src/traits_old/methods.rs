@@ -4,7 +4,7 @@
 //!
 
 // region:      --- modules
-use crate::error::Error;
+use crate::error_old::Error;
 use anyhow::Result;
 use dimas_core::message_types::{Message, QueryableMsg};
 // endregion:   --- modules

@@ -3,7 +3,7 @@
 #![allow(clippy::module_inception)]
 #![allow(unused)]
 
-//! System traits
+//! System traits & structs
 //!
 
 mod error;

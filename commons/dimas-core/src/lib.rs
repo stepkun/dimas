@@ -9,6 +9,8 @@
 mod activity;
 /// Agent
 mod agent;
+/// Communication pattern
+mod com_pattern;
 /// Component, ComponentRegistry
 mod component;
 /// Enums

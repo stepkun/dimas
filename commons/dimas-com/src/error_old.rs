@@ -10,7 +10,7 @@ extern crate std;
 
 // region:		--- modules
 #[cfg(doc)]
-use crate::zenoh::{Communicator, Observable, Observer, Publisher, Querier, Queryable, Subscriber};
+use crate::zenoh_old::{CommunicatorOld, Observable, Observer, Publisher, Querier, Queryable, Subscriber};
 use alloc::{boxed::Box, string::String};
 #[cfg(doc)]
 use dimas_core::message_types::Message;

@@ -4,7 +4,7 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::zenoh::subscriber::{
+use dimas_com::zenoh_old::subscriber_old::{
 	ArcDeleteCallback, ArcPutCallback, DeleteCallback, PutCallback, Subscriber, SubscriberParameter,
 };
 use dimas_core::{

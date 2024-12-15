@@ -18,8 +18,8 @@ use zenoh::{config::ZenohId, Session};
 
 use super::error::Error;
 use crate::{
-	enums::CommunicatorImplementation,
-	traits::{
+	enums_old::CommunicatorImplementation,
+	traits_old::{
 		Communicator, CommunicatorImplementationMethods, CommunicatorMethods, Observer, Publisher,
 		Querier, Responder,
 	},
@@ -279,7 +279,7 @@ impl MultiCommunicator {
 	/// Constructor
 	/// # Errors
 	pub fn new(config: &Config) -> Result<Self> {
-		let zenoh = crate::zenoh::Communicator::new(config.zenoh_config())?;
+		let zenoh = crate::zenoh_old::CommunicatorOld::new(config.zenoh_config())?;
 		let uuid = zenoh.session().zid();
 		let mode = zenoh.mode().to_string();
 		let com = Self {
@@ -305,7 +305,7 @@ impl MultiCommunicator {
 			for session in sessions {
 				match session.protocol.as_str() {
 					"zenoh" => {
-						let zenoh = crate::zenoh::Communicator::new(config.zenoh_config())?;
+						let zenoh = crate::zenoh_old::CommunicatorOld::new(config.zenoh_config())?;
 						com.communicators.write().insert(
 							session.name.clone(),
 							Arc::new(CommunicatorImplementation::Zenoh(zenoh)),

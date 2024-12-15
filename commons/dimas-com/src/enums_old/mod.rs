@@ -3,13 +3,13 @@
 use std::sync::Arc;
 use zenoh::Session;
 
-use crate::traits::CommunicatorImplementationMethods;
+use crate::traits_old::CommunicatorImplementationMethods;
 
 /// the known implementations of communicators
 #[derive(Debug)]
 pub enum CommunicatorImplementation {
 	/// zenoh
-	Zenoh(crate::zenoh::Communicator),
+	Zenoh(crate::zenoh_old::CommunicatorOld),
 }
 
 impl CommunicatorImplementationMethods for CommunicatorImplementation {}

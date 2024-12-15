@@ -4,7 +4,7 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::zenoh::publisher::{Publisher, PublisherParameter};
+use dimas_com::zenoh_old::publisher_old::{Publisher, PublisherParameter};
 use dimas_core::{
 	traits::Context, utils::selector_from, ActivityType, Component, ComponentType, OperationState,
 	OperationalType,

@@ -63,7 +63,7 @@ where
 	}
 }
 
-impl<P> crate::traits::Responder for Queryable<P>
+impl<P> crate::traits_old::Responder for Queryable<P>
 where
 	P: Send + Sync + 'static,
 {

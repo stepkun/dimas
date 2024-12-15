@@ -14,8 +14,8 @@ use std::{collections::HashMap, sync::Arc};
 use zenoh::{config::ZenohId, Session};
 
 use crate::{
-	enums::CommunicatorImplementation,
-	traits::{
+	enums_old::CommunicatorImplementation,
+	traits_old::{
 		Communicator, CommunicatorImplementationMethods, CommunicatorMethods, Observer, Publisher,
 		Querier, Responder,
 	},
@@ -193,12 +193,12 @@ impl CommunicatorMethods for SingleCommunicator {
 		#[allow(clippy::option_if_let_else)]
 		match observers.get(selector) {
 			Some(observer) => observer.request(message),
-			None => Err(crate::error::Error::NotImplemented.into()),
+			None => Err(crate::error_old::Error::NotImplemented.into()),
 		}
 	}
 
 	fn watch(&self, _selector: &str, _message: dimas_core::message_types::Message) -> Result<()> {
-		Err(crate::error::Error::NotImplemented.into())
+		Err(crate::error_old::Error::NotImplemented.into())
 	}
 }
 
@@ -206,7 +206,7 @@ impl SingleCommunicator {
 	/// Constructor
 	/// # Errors
 	pub fn new(config: &Config) -> Result<Self> {
-		let zenoh = crate::zenoh::Communicator::new(config.zenoh_config())?;
+		let zenoh = crate::zenoh_old::CommunicatorOld::new(config.zenoh_config())?;
 		let uuid = zenoh.session().zid();
 		let mode = zenoh.mode().to_string();
 		let com = Self {

@@ -5,9 +5,8 @@
 extern crate alloc;
 
 use alloc::string::String;
-use uuid::Uuid;
 
-use crate::{operational::{self, OperationalData}, ComponentData};
+use crate::{Operational, OperationalData, ComponentData};
 
 /// `AgentData`
 #[derive(Debug, Default)]

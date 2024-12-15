@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
 	let mut agent = Querier::default()
 		.into_agent()
 		.set_prefix("examples")
-		.set_name("publisher");
+		.set_name("querier");
 
 	// add wanted components
 	// @TODO: change to load library

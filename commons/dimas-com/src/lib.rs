@@ -4,15 +4,15 @@
 //!
 
 /// Communicator
-pub mod communicator;
+pub mod communicator_old;
 /// Enums
-pub mod enums;
+pub mod enums_old;
 /// Modules errors
-pub mod error;
+pub mod error_old;
 /// `Communicator` trait
-pub mod traits;
+pub mod traits_old;
 /// zenoh implementation
-pub mod zenoh;
+pub mod zenoh_old;
 
 // flatten
-pub use communicator::*;
+pub use communicator_old::*;

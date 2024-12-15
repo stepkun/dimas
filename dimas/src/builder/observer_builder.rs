@@ -4,7 +4,7 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::zenoh::observer::{
+use dimas_com::zenoh_old::observer_old::{
 	ArcControlCallback, ArcResponseCallback, ControlCallback, Observer, ObserverParameter,
 	ResponseCallback,
 };

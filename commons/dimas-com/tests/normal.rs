@@ -2,10 +2,10 @@
 
 //! Tests
 #[cfg(feature = "unstable")]
-use dimas_com::zenoh::LivelinessSubscriber;
+use dimas_com::zenoh_old::LivelinessSubscriber;
 use dimas_com::{
-	enums::CommunicatorImplementation,
-	zenoh::{Communicator, Observable, Observer, Publisher, Querier, Queryable, Subscriber},
+	enums_old::CommunicatorImplementation,
+	zenoh_old::{CommunicatorOld, Observable, Observer, Publisher, Querier, Queryable, Subscriber},
 	MultiCommunicator, SingleCommunicator,
 };
 
@@ -17,7 +17,7 @@ const fn is_normal<T: Sized + Send + Sync>() {}
 
 #[test]
 const fn normal_types() {
-	is_normal::<Communicator>();
+	is_normal::<CommunicatorOld>();
 	is_normal::<CommunicatorImplementation>();
 	#[cfg(feature = "unstable")]
 	is_normal::<LivelinessSubscriber<Props>>();

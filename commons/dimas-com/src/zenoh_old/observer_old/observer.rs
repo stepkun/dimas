@@ -35,7 +35,7 @@ use zenoh::{
 	Wait,
 };
 
-use crate::error::Error;
+use crate::error_old::Error;
 
 use super::ObserverParameter;
 // endregion:	--- modules
@@ -85,7 +85,7 @@ where
 	}
 }
 
-impl<P> crate::traits::Observer for Observer<P>
+impl<P> crate::traits_old::Observer for Observer<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -284,7 +284,7 @@ where
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn deactivate(&mut self) -> Result<()> {
 		event!(Level::DEBUG, "deactivate");
-		let _ = crate::traits::Observer::cancel(self);
+		let _ = crate::traits_old::Observer::cancel(self);
 		self.handle.lock().take();
 		Ok(())
 	}

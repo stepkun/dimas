@@ -93,7 +93,7 @@ where
 	}
 }
 
-impl<P> crate::traits::Responder for Observable<P>
+impl<P> crate::traits_old::Responder for Observable<P>
 where
 	P: Send + Sync + 'static,
 {

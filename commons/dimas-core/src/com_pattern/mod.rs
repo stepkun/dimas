@@ -2,13 +2,15 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-//! Activity traits & structs
+//! Communication pattern traits & structs
 //!
 
-mod activity;
-mod activity_type;
 mod error;
+mod observable;
+mod observer;
+mod publisher;
+mod querier;
+mod queryable;
+mod subscriber;
 
 // flatten
-pub use activity::{Activity, ActivityId};
-pub use activity_type::ActivityType;

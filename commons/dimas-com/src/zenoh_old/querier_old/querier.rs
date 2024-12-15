@@ -29,7 +29,7 @@ use tokio::sync::Mutex;
 use tracing::{error, event, instrument, warn, Level};
 use zenoh::{sample::SampleKind, Session, Wait};
 
-use crate::error::Error;
+use crate::error_old::Error;
 
 use super::QuerierParameter;
 // endregion:	--- modules
@@ -72,7 +72,7 @@ where
 	}
 }
 
-impl<P> crate::traits::Querier for Querier<P>
+impl<P> crate::traits_old::Querier for Querier<P>
 where
 	P: Send + Sync + 'static,
 {

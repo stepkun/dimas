@@ -4,7 +4,7 @@
 //! A `Subscriber` can optional subscribe on a delete message.
 
 // region:		--- modules
-use crate::error::Error;
+use crate::error_old::Error;
 use anyhow::Result;
 use dimas_core::{
 	enums::TaskSignal, message_types::Message, traits::Context, Activity, ActivityType,
@@ -64,7 +64,7 @@ where
 	}
 }
 
-impl<P> crate::traits::Responder for Subscriber<P>
+impl<P> crate::traits_old::Responder for Subscriber<P>
 where
 	P: Send + Sync + 'static,
 {

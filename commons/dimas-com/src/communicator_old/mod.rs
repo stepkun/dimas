@@ -21,7 +21,7 @@ use dimas_config::Config;
 use parking_lot::RwLock;
 use std::sync::Arc;
 
-use crate::traits::Communicator;
+use crate::traits_old::Communicator;
 // endregion:	--- modules
 
 // region:      --- factory method

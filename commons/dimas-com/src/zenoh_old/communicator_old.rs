@@ -11,7 +11,7 @@ extern crate alloc;
 extern crate std;
 
 // region:		--- modules
-use crate::{error::Error, traits::CommunicatorImplementationMethods};
+use crate::{error_old::Error, traits_old::CommunicatorImplementationMethods};
 use alloc::{
 	borrow::ToOwned,
 	boxed::Box,
@@ -39,7 +39,7 @@ use zenoh::{
 /// [`Communicator`] handles all communication aspects
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
-pub struct Communicator {
+pub struct CommunicatorOld {
 	/// The current state for [`Operational`]
 	current_state: OperationState,
 	session: Arc<Session>,
@@ -49,9 +49,9 @@ pub struct Communicator {
 	activation_state: OperationState,
 }
 
-impl Transitions for Communicator {}
+impl Transitions for CommunicatorOld {}
 
-impl Operational for Communicator {
+impl Operational for CommunicatorOld {
 	fn activation_state(&self) -> OperationState {
 		self.activation_state
 	}
@@ -73,7 +73,7 @@ impl Operational for Communicator {
 	}
 }
 
-impl CommunicatorImplementationMethods for Communicator {
+impl CommunicatorImplementationMethods for CommunicatorOld {
 	/// Send a put message [`Message`] using the given `selector`
 	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
@@ -164,7 +164,7 @@ impl CommunicatorImplementationMethods for Communicator {
 	}
 }
 
-impl Communicator {
+impl CommunicatorOld {
 	/// Constructor
 	/// # Errors
 	pub fn new(config: &zenoh::Config) -> Result<Self> {
@@ -215,14 +215,14 @@ mod tests {
 
 	#[test]
 	const fn normal_types() {
-		is_normal::<Communicator>();
+		is_normal::<CommunicatorOld>();
 	}
 
 	#[tokio::test(flavor = "multi_thread")]
 	//#[serial]
 	async fn communicator_create() -> Result<()> {
 		let cfg = dimas_config::Config::default();
-		let _peer = Communicator::new(cfg.zenoh_config())?;
+		let _peer = CommunicatorOld::new(cfg.zenoh_config())?;
 		Ok(())
 	}
 }

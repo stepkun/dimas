@@ -2,7 +2,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-//! Agent traits
+//! Agent traits & structs
 //!
 
 mod agent;

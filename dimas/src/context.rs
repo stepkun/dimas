@@ -37,8 +37,8 @@ use crate::error::Error;
 use anyhow::Result;
 use core::fmt::Debug;
 #[cfg(feature = "unstable")]
-use dimas_com::traits::LivelinessSubscriber;
-use dimas_com::traits::{
+use dimas_com::traits_old::LivelinessSubscriber;
+use dimas_com::traits_old::{
 	Communicator, CommunicatorMethods, Observer, Publisher, Querier, Responder,
 };
 use dimas_config::Config;
@@ -234,7 +234,7 @@ where
 		sender: Sender<TaskSignal>,
 		prefix: Option<String>,
 	) -> Result<Self> {
-		let communicator = dimas_com::communicator::from(config)?;
+		let communicator = dimas_com::communicator_old::from(config)?;
 		let uuid = communicator.read().uuid();
 		Ok(Self {
 			uuid,

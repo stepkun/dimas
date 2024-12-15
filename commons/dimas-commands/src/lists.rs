@@ -18,7 +18,7 @@ use alloc::{
 use anyhow::Result;
 use chrono::Local;
 use core::time::Duration;
-use dimas_com::{traits::CommunicatorImplementationMethods, zenoh::Communicator};
+use dimas_com::{traits_old::CommunicatorImplementationMethods, zenoh_old::CommunicatorOld};
 use dimas_config::Config;
 use dimas_core::{enums::Signal, message_types::Message, utils::selector_from};
 #[cfg(feature = "std")]
@@ -35,7 +35,7 @@ use crate::error::Error;
 /// Fetch a list of about messages from all reachable `DiMAS` entities
 /// # Errors
 #[cfg(feature = "std")]
-pub fn about_list(com: &Communicator, base_selector: &String) -> Result<Vec<AboutEntity>> {
+pub fn about_list(com: &CommunicatorOld, base_selector: &String) -> Result<Vec<AboutEntity>> {
 	let mut map: HashMap<String, AboutEntity> = HashMap::new();
 
 	let selector = selector_from("signal", Some(base_selector));
@@ -62,7 +62,7 @@ pub fn about_list(com: &Communicator, base_selector: &String) -> Result<Vec<Abou
 /// Ping all reachable `DiMAS` entities
 /// # Errors
 #[cfg(feature = "std")]
-pub fn ping_list(com: &Communicator, base_selector: &String) -> Result<Vec<(PingEntity, i64)>> {
+pub fn ping_list(com: &CommunicatorOld, base_selector: &String) -> Result<Vec<(PingEntity, i64)>> {
 	let mut map: HashMap<String, (PingEntity, i64)> = HashMap::new();
 
 	let selector = selector_from("signal", Some(base_selector));

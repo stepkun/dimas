@@ -15,7 +15,7 @@ use alloc::{
 	vec::Vec,
 };
 use anyhow::Result;
-use dimas_com::{traits::CommunicatorImplementationMethods, zenoh::Communicator};
+use dimas_com::{traits_old::CommunicatorImplementationMethods, zenoh_old::CommunicatorOld};
 use dimas_core::{enums::Signal, message_types::Message, utils::selector_from, OperationState};
 #[cfg(feature = "std")]
 use std::collections::HashMap;
@@ -28,7 +28,7 @@ use tracing::{event, instrument, Level};
 #[cfg(feature = "std")]
 #[instrument(level = Level::DEBUG, skip_all)]
 pub fn set_state(
-	com: &Communicator,
+	com: &CommunicatorOld,
 	base_selector: &String,
 	state: Option<OperationState>,
 ) -> Result<Vec<AboutEntity>> {
@@ -60,7 +60,7 @@ pub fn set_state(
 /// # Errors
 #[cfg(feature = "std")]
 #[instrument(level = Level::DEBUG, skip_all)]
-pub fn shutdown(com: &Communicator, base_selector: &String) -> Result<Vec<AboutEntity>> {
+pub fn shutdown(com: &CommunicatorOld, base_selector: &String) -> Result<Vec<AboutEntity>> {
 	event!(Level::DEBUG, "shutdown");
 	let mut map: HashMap<String, AboutEntity> = HashMap::new();
 

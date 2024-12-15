@@ -128,7 +128,7 @@ async fn main() -> Result<()> {
 	let mut agent = Observer::default()
 		.into_agent()
 		.set_prefix("examples")
-		.set_name("publisher");
+		.set_name("observer");
 
 	// add wanted components
 	// @TODO: change to load library
