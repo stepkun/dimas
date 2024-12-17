@@ -29,7 +29,7 @@ pub mod traits;
 pub mod utils;
 
 // flatten:
-pub use activity::{Activity, ActivityId, ActivityType};
+pub use activity::{Activity, ActivityData, ActivityId, ActivityType};
 pub use agent::Agent;
 pub use component::{Component, ComponentData, ComponentId, ComponentType};
 pub use enums::{Signal, TaskSignal};
@@ -40,3 +40,4 @@ pub use operational::{
 pub use system::{System, SystemId, SystemType};
 pub use traits::{Capability, CapabilityDescription, Configuration, Connection};
 pub use traits::{Context, ContextAbstraction};
+pub use com_pattern::CommunicatorFactory;

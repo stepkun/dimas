@@ -11,7 +11,7 @@ use alloc::{boxed::Box, string::String};
 use core::fmt::Debug;
 use uuid::Uuid;
 
-use crate::{Activity, ActivityId, Agent};
+use crate::{Activity, ActivityId, ManageOperationState, Operational};
 // endregion:	--- modules
 
 // region:		--- types
@@ -23,7 +23,7 @@ pub type ComponentId = String;
 
 // region:		--- Component
 /// Contract for a [`Component`]
-pub trait Component: Debug + Send + Sync {
+pub trait Component: Operational + ManageOperationState + Debug + Send + Sync {
 	/// Get the [`Component`]s unique ID
 	fn uuid(&self) -> Uuid;
 
@@ -32,9 +32,6 @@ pub trait Component: Debug + Send + Sync {
 
 	/// Get the [`Component`]s version
 	fn version(&self) -> u32;
-
-	/// Set the parent [`Agent`]
-	fn set_agent(&mut self, agent: Agent);
 
 	/// Add a sub [`Activity`]
 	fn add_activity(&mut self, activity: Box<dyn Activity>);

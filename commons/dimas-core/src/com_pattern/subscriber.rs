@@ -7,5 +7,5 @@
 use anyhow::Result;
 
 pub trait Subscriber {
-    fn subscribe() -> Result<()>;
+	fn subscribe() -> Result<()>;
 }

@@ -4,7 +4,9 @@
 
 // region:		--- modules
 use anyhow::Result;
-use dimas_com::zenoh_old::queryable_old::{ArcGetCallback, GetCallback, Queryable, QueryableParameter};
+use dimas_com::zenoh_old::queryable_old::{
+	ArcGetCallback, GetCallback, Queryable, QueryableParameter,
+};
 use dimas_core::{
 	message_types::QueryMsg, traits::Context, utils::selector_from, ActivityType, Component,
 	ComponentType, OperationState, OperationalType,

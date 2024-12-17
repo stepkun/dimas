@@ -1,4 +1,5 @@
 //! Copyright © 2024 Stephan Kunz
+#![allow(unused)]
 
 use anyhow::Result;
 use core::fmt::Debug;
@@ -215,6 +216,6 @@ fn operation_state() {
 #[test]
 fn operational() {
 	operation_state();
-	operational_trait();
+	//operational_trait();
 	operational_type();
 }

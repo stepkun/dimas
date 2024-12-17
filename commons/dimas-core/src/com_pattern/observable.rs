@@ -7,7 +7,7 @@
 use anyhow::Result;
 
 pub trait Observable {
-    fn request() -> Result<()>;
-    fn feedback() -> Result<()>;
-    fn response() -> Result<()>;
+	fn request() -> Result<()>;
+	fn feedback() -> Result<()>;
+	fn response() -> Result<()>;
 }

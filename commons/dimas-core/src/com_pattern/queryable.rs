@@ -7,6 +7,6 @@
 use anyhow::Result;
 
 pub trait Queryable {
-    fn request() -> Result<()>;
-    fn response() -> Result<()>;
+	fn request() -> Result<()>;
+	fn response() -> Result<()>;
 }

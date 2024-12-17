@@ -7,5 +7,5 @@
 use anyhow::Result;
 
 pub trait Observer {
-    fn observe() -> Result<()>;
+	fn observe() -> Result<()>;
 }

@@ -7,5 +7,5 @@
 use anyhow::Result;
 
 pub trait Querier {
-    fn query() -> Result<()>;
+	fn query() -> Result<()>;
 }

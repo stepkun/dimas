@@ -13,8 +13,8 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 use anyhow::Result;
 use core::future::Future;
 use dimas_core::{
-	Activity, ActivityId, Agent, Component, ComponentData, ComponentId,
-	ComponentType, ManageOperationState, OperationState, Operational, OperationalType, Transitions,
+	Activity, ActivityId, Agent, Component, ComponentData, ComponentId, ComponentType,
+	ManageOperationState, OperationState, Operational, OperationalType, Transitions,
 };
 use tracing::{event, instrument, Level};
 use uuid::Uuid;
@@ -27,29 +27,27 @@ use crate::{timer::TimerFactory, IntervalTimer, Timer, TimerVariant};
 #[derive(Debug)]
 pub struct TimerLib {
 	id: String,
-	agent: Agent,
+}
+
+impl Default for TimerLib {
+	/// Create a [`TimerLib`]
+	fn default() -> Self {
+		Self {
+			id: String::from("TimerLib"),
+		}
+	}
 }
 
 impl TimerLib {
-	/// Create a [`TimerLib`] with an [`Agent`] as context
-	#[must_use]
-	pub fn new(agent: Agent) -> Self {
-		Self {
-			id: String::from("TimerLib"),
-			agent,
-		}
-	}
-
 	/// Create a [`Timer`]
 	pub fn create_timer<CB, F>(&self, variant: TimerVariant, callback: CB) -> Box<dyn Activity>
 	where
 		CB: FnMut(Agent) -> F + Send + Sync + 'static,
 		F: Future<Output = Result<()>> + Send + Sync + 'static,
 	{
-		let agent = self.agent.clone();
 		match variant {
 			TimerVariant::Interval(parameter) => {
-				Box::new(IntervalTimer::new(parameter, callback, agent))
+				Box::new(IntervalTimer::new(parameter, callback))
 			}
 		}
 	}

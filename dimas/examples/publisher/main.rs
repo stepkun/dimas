@@ -56,15 +56,15 @@ async fn main() -> Result<()> {
 	// create an agent with the properties of `Publisher`
 	let mut agent = Publisher::default()
 		.into_agent()
-		.set_prefix("examples")
 		.set_name("publisher");
 
 	// add wanted components
 	// @TODO: change to load library
-	let timerlib = TimerLib::new(agent.clone());
+	let timerlib = TimerLib::default();
 
 	// create an interval timer using the timer library
-	let parameter = IntervalTimerParameter::default();
+	let activity = ActivityData::new("timer", agent.clone());
+	let parameter = IntervalTimerParameter::new(Duration::from_secs(1), None, activity);
 	let timer = timerlib.create_timer(TimerVariant::Interval(parameter), timer_callback);
 	agent.add_activity(timer);
 
@@ -73,6 +73,7 @@ async fn main() -> Result<()> {
 
 	/// start agent in wanted operation state
 	agent.manage_operation_state(OperationState::Active);
+	dbg!(&agent);
 	agent.start().await;
 
 	Ok(())

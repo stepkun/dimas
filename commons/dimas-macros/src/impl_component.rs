@@ -55,11 +55,6 @@ fn component_functions() -> TokenStream {
 		}
 
 		#[inline]
-		fn set_agent(&mut self, agent: Agent) {
-			todo!();
-		}
-
-		#[inline]
 		fn add_activity(&mut self, activity: Box<dyn Activity>) {
 			self.data.activities.push(activity);
 		}

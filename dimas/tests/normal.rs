@@ -2,7 +2,7 @@
 
 //! Tests
 
-use dimas::agent::*;
+use dimas::agent_old::*;
 use dimas::builder::builder_states::*;
 use dimas::builder::*;
 use dimas::context::ContextImpl;
@@ -26,5 +26,5 @@ const fn normal_types() {
 	is_normal::<QuerierBuilder<Props, NoSelector, NoCallback, NoStorage>>();
 	is_normal::<QueryableBuilder<Props, NoSelector, NoCallback, NoStorage>>();
 	is_normal::<SubscriberBuilder<Props, NoSelector, NoCallback, NoStorage>>();
-	is_normal::<UnconfiguredAgent<Props>>();
+	is_normal::<UnconfiguredAgentOld<Props>>();
 }

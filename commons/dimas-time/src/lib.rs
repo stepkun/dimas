@@ -7,7 +7,6 @@
 #[doc(hidden)]
 extern crate alloc;
 
-// region:    --- modules
 mod error;
 mod interval_timer;
 mod interval_timer_parameter;
@@ -15,6 +14,7 @@ mod timer;
 mod timer_lib;
 mod timer_variant;
 
+// region:    --- modules
 use alloc::{boxed::Box, sync::Arc};
 use anyhow::Result;
 use dimas_core::Agent;
@@ -27,7 +27,6 @@ use tokio::sync::Mutex;
 /// Type definition for the functions called by a timer
 pub type TimerCallback =
 	Box<dyn FnMut(Agent) -> BoxFuture<'static, Result<()>> + Send + Sync + 'static>;
-// pub type TimerCallback = FnMut(Agent) -> Future<Output = Result<()>> + Send + Sync + 'static;
 
 /// Type definition for a timers atomic reference counted callback
 /// @ TODO: remove pub if possible

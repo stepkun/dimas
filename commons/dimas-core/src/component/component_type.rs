@@ -12,7 +12,9 @@ use anyhow::Result;
 use tracing::{event, instrument, Level};
 use uuid::Uuid;
 
-use crate::{Activity, ActivityId, Agent, ManageOperationState, OperationState};
+use crate::{
+	Activity, ActivityId, ManageOperationState, OperationState, Operational, Transitions,
+};
 
 use super::{Component, ComponentId};
 // endregion:	--- modules
@@ -24,7 +26,6 @@ pub struct ComponentType {
 	id: ComponentId,
 	activities: Vec<Box<dyn Activity>>,
 	components: Vec<Box<dyn Component>>,
-	agent: Option<Agent>,
 }
 
 impl ManageOperationState for ComponentType {
@@ -33,6 +34,26 @@ impl ManageOperationState for ComponentType {
 		event!(Level::DEBUG, "manage_operation_state");
 		assert_ne!(state, OperationState::Undefined);
 		Ok(())
+	}
+}
+
+impl Transitions for ComponentType {}
+
+impl Operational for ComponentType {
+	fn activation_state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_state(&mut self, _state: OperationState) {
+		todo!()
 	}
 }
 
@@ -50,11 +71,6 @@ impl Component for ComponentType {
 	#[inline]
 	fn version(&self) -> u32 {
 		0
-	}
-
-	#[inline]
-	fn set_agent(&mut self, agent: Agent) {
-		self.agent = Some(agent);
 	}
 
 	#[inline]
@@ -86,7 +102,6 @@ impl ComponentType {
 			id,
 			activities: Vec::default(),
 			components: Vec::default(),
-			agent: None,
 		}
 	}
 }

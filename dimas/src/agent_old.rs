@@ -193,7 +193,7 @@ where
 // region:	   --- UnconfiguredAgent
 /// A new Agent without the basic configuration decisions
 #[allow(clippy::module_name_repetitions)]
-pub struct UnconfiguredAgent<P>
+pub struct UnconfiguredAgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -202,7 +202,7 @@ where
 	props: P,
 }
 
-impl<P> UnconfiguredAgent<P>
+impl<P> UnconfiguredAgentOld<P>
 where
 	P: Send + Sync + 'static,
 {
@@ -387,8 +387,8 @@ where
 {
 	/// Builder
 	#[allow(clippy::new_ret_no_self)]
-	pub const fn new(properties: P) -> UnconfiguredAgent<P> {
-		UnconfiguredAgent::new(properties)
+	pub const fn new(properties: P) -> UnconfiguredAgentOld<P> {
+		UnconfiguredAgentOld::new(properties)
 	}
 
 	/// Activate sending liveliness information

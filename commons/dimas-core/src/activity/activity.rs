@@ -12,7 +12,7 @@ use core::fmt::Debug;
 
 use alloc::{boxed::Box, string::String};
 
-use crate::Operational;
+use crate::{Agent, Operational};
 // endregion:	--- modules
 
 // region:		--- types
@@ -34,6 +34,6 @@ pub trait Activity: Operational + Debug + Send + Sync {
 /// Contract for [`Activity`] factories
 pub trait ActivityFactory {
 	/// Factory method for [`Activity`] factories
-	fn create_activity(id: ActivityId) -> Box<dyn Activity>;
+	fn create_activity(id: ActivityId, ctx: Agent) -> Box<dyn Activity>;
 }
 // endregion:	---	ActivityFactory

@@ -7,5 +7,5 @@
 use anyhow::Result;
 
 pub trait Publisher {
-    fn publish() -> Result<()>;
+	fn publish() -> Result<()>;
 }

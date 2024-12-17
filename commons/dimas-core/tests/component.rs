@@ -3,8 +3,8 @@
 use anyhow::Result;
 use core::fmt::Debug;
 use dimas_core::{
-	Activity, ActivityId, Agent, Component, ComponentId, ComponentType, ManageOperationState,
-	OperationState, Transitions,
+	Activity, ActivityId, Component, ComponentId, ComponentType, ManageOperationState,
+	OperationState, Operational, Transitions,
 };
 use uuid::Uuid;
 
@@ -18,6 +18,27 @@ where
 }
 
 impl<P> Transitions for TestComponent1<P> where P: Debug + Send + Sync {}
+
+impl<P> Operational for TestComponent1<P>
+where
+	P: Debug + Send + Sync,
+{
+	fn activation_state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+}
 
 impl<P> ManageOperationState for TestComponent1<P>
 where
@@ -36,6 +57,24 @@ struct TestComponent2 {}
 impl TestComponent2 {}
 
 impl Transitions for TestComponent2 {}
+
+impl Operational for TestComponent2 {
+	fn activation_state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_activation_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+
+	fn state(&self) -> OperationState {
+		todo!()
+	}
+
+	fn set_state(&mut self, _state: OperationState) {
+		todo!()
+	}
+}
 
 impl ManageOperationState for TestComponent2 {
 	fn manage_operation_state(&mut self, state: OperationState) -> Result<()> {

@@ -17,13 +17,19 @@ struct AgentProps {
 }
 
 async fn timer_callback(ctx: Agent) -> Result<()> {
-	let counter = ctx.read().downcast_ref::<Querier>()
-	.unwrap().counter;
+	let counter = ctx
+		.read()
+		.downcast_ref::<Querier>()
+		.unwrap()
+		.counter;
 	println!("Querying [{counter}]");
 	let _message = Message::encode(&counter);
 	// querying with stored query
 	//ctx.get("query", Some(message), None)?;
-	ctx.write().downcast_mut::<Querier>().unwrap().counter = counter + 1;
+	ctx.write()
+		.downcast_mut::<Querier>()
+		.unwrap()
+		.counter = counter + 1;
 	Ok(())
 }
 
@@ -43,15 +49,15 @@ async fn main() -> Result<()> {
 	// create an agent with the properties of `Querier`
 	let mut agent = Querier::default()
 		.into_agent()
-		.set_prefix("examples")
 		.set_name("querier");
 
 	// add wanted components
 	// @TODO: change to load library
-	let timerlib = TimerLib::new(agent.clone());
+	let timerlib = TimerLib::default();
 
 	// create an interval timer using the timer library
-	let parameter = IntervalTimerParameter::default();
+	let activity = ActivityData::new("timer", agent.clone());
+	let parameter = IntervalTimerParameter::new(Duration::from_secs(1), None, activity);
 	let timer = timerlib.create_timer(TimerVariant::Interval(parameter), timer_callback);
 	agent.add_activity(timer);
 

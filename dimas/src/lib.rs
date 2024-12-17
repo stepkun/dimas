@@ -13,7 +13,7 @@
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");
 
-pub mod agent;
+pub mod agent_old;
 pub mod builder;
 pub mod context;
 pub mod error;

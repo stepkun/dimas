@@ -3,6 +3,9 @@
 //! dimas-com implements the communication capabilities.
 //!
 
+/// Zenoh based communication component
+mod zenoh;
+
 /// Communicator
 pub mod communicator_old;
 /// Enums
@@ -16,3 +19,4 @@ pub mod zenoh_old;
 
 // flatten
 pub use communicator_old::*;
+pub use zenoh::Zenoh;

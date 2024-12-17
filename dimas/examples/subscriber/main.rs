@@ -1,10 +1,14 @@
 //! `DiMAS` subscriber example
 //! Copyright © 2024 Stephan Kunz
+#![allow(unused)]
+#![allow(clippy::unwrap_used)]
 
 use dimas::prelude::*;
+use dimas_com::Zenoh;
 
-#[derive(Debug)]
-struct AgentProps {
+#[dimas::agent]
+#[derive(Debug, Default)]
+struct Subscriber {
 	count: u128,
 }
 
@@ -17,21 +21,26 @@ pub struct PubSubMessage {
 	pub text: String,
 }
 
-async fn hello_publishing(ctx: Context<AgentProps>, message: Message) -> Result<()> {
+#[allow(clippy::unused_async)]
+async fn subscriber_callback(ctx: Agent, message: Message) -> Result<()> {
 	let message: PubSubMessage = message.decode()?;
-	let count = ctx.read().count;
+	let count = ctx
+		.read()
+		.downcast_ref::<Subscriber>()
+		.unwrap()
+		.count;
 	if message.count > count {
 		println!("missed {} messages", message.count - count);
-		ctx.write().count = message.count;
+		ctx.write()
+			.downcast_mut::<Subscriber>()
+			.unwrap()
+			.count = message.count;
 	}
 	println!("Received {} [{}]", message.text, message.count);
-	ctx.write().count += 1;
-	Ok(())
-}
-
-async fn hello_deletion(ctx: Context<AgentProps>) -> Result<()> {
-	let _value = ctx.read().count;
-	println!("Shall delete 'hello' message");
+	ctx.write()
+		.downcast_mut::<Subscriber>()
+		.unwrap()
+		.count += 1;
 	Ok(())
 }
 
@@ -40,24 +49,20 @@ async fn main() -> Result<()> {
 	// initialize tracing/logging
 	init_tracing();
 
-	// create & initialize agents properties
-	let properties = AgentProps { count: 0 };
+	// create an agent with the properties of `Subscriber`
+	let mut agent = Subscriber::default()
+		.into_agent()
+		.set_name("subscriber");
 
-	// create an agent with the properties and the prefix 'examples'
-	let mut agent = AgentOld::new(properties)
-		.prefix("examples")
-		.name("subscriber")
-		.config(&Config::default())?;
+	// create communication component with subscriber activity
+	let mut communicator = Box::new(Zenoh::new("examples", agent.clone()));
+	communicator.create_subscriber("hello", subscriber_callback)?;
 
-	// listen for 'hello' messages
-	agent
-		.subscriber()
-		.topic("hello")
-		.put_callback(hello_publishing)
-		.delete_callback(hello_deletion)
-		.add()?;
+	agent.add_component(communicator);
 
-	// run agent
+	/// start agent in wanted operation state
+	agent.manage_operation_state(OperationState::Active);
+	dbg!(&agent);
 	agent.start().await?;
 
 	Ok(())

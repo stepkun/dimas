@@ -84,7 +84,7 @@ fn component_functions() -> TokenStream {
 		}
 
 		#[inline]
-		fn set_agent(&mut self, agent: Agent) {
+		fn set_context(&mut self, agent: Agent) {
 			self.agent = Some(agent);
 		}
 

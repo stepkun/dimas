@@ -16,8 +16,7 @@ use alloc::{boxed::Box, string::String, sync::Arc};
 use anyhow::Result;
 use core::{fmt::Debug, future::Future, time::Duration};
 use dimas_core::{
-	enums::TaskSignal, traits::Context, Activity, ActivityId, ActivityType, Agent, OperationState,
-	Operational, OperationalType, Transitions,
+	enums::TaskSignal, traits::Context, Activity, ActivityData, ActivityId, ActivityType, Agent, OperationState, Operational, OperationalType, Transitions
 };
 #[cfg(feature = "std")]
 use tokio::{sync::Mutex, task::JoinHandle, time};
@@ -37,8 +36,6 @@ pub struct IntervalTimer {
 	parameter: IntervalTimerParameter,
 	/// Timers Callback function called, when Timer is fired
 	callback: ArcTimerCallback,
-	/// [`Agent`] context for the Timer
-	context: Agent,
 	/// The handle to stop the Timer
 	handle: parking_lot::Mutex<Option<JoinHandle<()>>>,
 }
@@ -60,19 +57,19 @@ impl Debug for IntervalTimer {
 
 impl Operational for IntervalTimer {
 	fn activation_state(&self) -> OperationState {
-		self.parameter.operational.activation
+		self.parameter.activity.operational.activation
 	}
 
 	fn set_activation_state(&mut self, state: OperationState) {
-		self.parameter.operational.activation = state;
+		self.parameter.activity.operational.activation = state;
 	}
 
 	fn state(&self) -> OperationState {
-		self.parameter.operational.current
+		self.parameter.activity.operational.current
 	}
 
 	fn set_state(&mut self, state: OperationState) {
-		self.parameter.operational.current = state;
+		self.parameter.activity.operational.current = state;
 	}
 }
 
@@ -86,7 +83,7 @@ impl Transitions for IntervalTimer {
 		let delay = self.parameter.delay;
 		let interval = self.parameter.interval;
 		let cb = self.callback.clone();
-		let ctx = self.context.clone();
+		let ctx = self.parameter.activity.ctx.clone().expect("snh");
 		//let ctx1 = self.context.clone();
 
 		self.handle
@@ -114,7 +111,7 @@ impl Transitions for IntervalTimer {
 impl IntervalTimer {
 	/// Constructor for an [`IntervalTimer`]
 	#[must_use]
-	pub fn new<CB, F>(parameter: IntervalTimerParameter, mut callback: CB, context: Agent) -> Self
+	pub fn new<CB, F>(parameter: IntervalTimerParameter, mut callback: CB) -> Self
 	where
 		CB: FnMut(Agent) -> F + Send + Sync + 'static,
 		F: Future<Output = Result<()>> + Send + Sync + 'static,
@@ -126,7 +123,6 @@ impl IntervalTimer {
 		Self {
 			parameter,
 			callback,
-			context,
 			handle: parking_lot::Mutex::new(None),
 		}
 	}

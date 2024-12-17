@@ -15,14 +15,14 @@ struct Observer {
 }
 
 impl Default for Observer {
-    fn default() -> Self {
-        Self {
+	fn default() -> Self {
+		Self {
 			counter: 0,
 			limit: 5,
 			new_limit: 5,
 			occupied_counter: 3,
 		}
-    }
+	}
 }
 
 /// request structure for observer and observable
@@ -33,13 +33,24 @@ pub struct FibonacciRequest {
 }
 
 async fn timer_callback(ctx: Agent) -> Result<()> {
-	let counter = ctx.read().downcast_ref::<Observer>().unwrap().counter;
-	let limit = ctx.read().downcast_ref::<Observer>().unwrap().new_limit;
+	let counter = ctx
+		.read()
+		.downcast_ref::<Observer>()
+		.unwrap()
+		.counter;
+	let limit = ctx
+		.read()
+		.downcast_ref::<Observer>()
+		.unwrap()
+		.new_limit;
 	println!("Request [{counter}] for fibonacci up to {limit}");
 	let msg = FibonacciRequest { limit };
 	let message = Message::encode(&msg);
 	//ctx.observe("fibonacci", Some(message))?;
-	ctx.write().downcast_mut::<Observer>().unwrap().counter += 1;
+	ctx.write()
+		.downcast_mut::<Observer>()
+		.unwrap()
+		.counter += 1;
 	Ok(())
 }
 
@@ -60,7 +71,7 @@ async fn control_response(
 			let limit = ctx.read().new_limit;
 			println!("Accepted fibonacci up to {limit}");
 			ctx.write().limit = limit;
-			
+
 			ctx.write().new_limit += 1;
 		}
 		ObservableControlResponse::Declined => {
@@ -127,15 +138,15 @@ async fn main() -> Result<()> {
 	// create an agent with the properties of `Observer`
 	let mut agent = Observer::default()
 		.into_agent()
-		.set_prefix("examples")
 		.set_name("observer");
 
 	// add wanted components
 	// @TODO: change to load library
-	let timerlib = TimerLib::new(agent.clone());
+	let timerlib = TimerLib::default();
 
 	// create an interval timer using the timer library
-	let parameter = IntervalTimerParameter::default();
+	let activity = ActivityData::new("timer", agent.clone());
+	let parameter = IntervalTimerParameter::new(Duration::from_secs(1), None, activity);
 	let timer = timerlib.create_timer(TimerVariant::Interval(parameter), timer_callback);
 	agent.add_activity(timer);
 

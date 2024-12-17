@@ -6,13 +6,11 @@ extern crate alloc;
 
 use alloc::string::String;
 
-use crate::{Operational, OperationalData, ComponentData};
+use crate::{ComponentData, Operational, OperationalData};
 
 /// `AgentData`
 #[derive(Debug, Default)]
 pub struct AgentData {
-	/// domain prefix
-	pub prefix: String,
 	/// [`Operational`] data
 	pub operational: OperationalData,
 	/// [`ComponentData`] data
