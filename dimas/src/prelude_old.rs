@@ -45,8 +45,8 @@ pub use zenoh::sample::Locality;
 
 // dimas stuff
 pub use crate::agent_old::AgentOld;
-pub use crate::utils::ComponentRegistry;
-pub use crate::utils::LibManager;
+pub use crate::utils_old::ComponentRegistry;
+pub use crate::utils_old::LibManager;
 pub use dimas_config::Config;
 pub use dimas_core::message_types::{
 	Message, ObservableControlResponse, ObservableResponse, QueryMsg, QueryableMsg,

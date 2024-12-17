@@ -3,7 +3,7 @@
 #![allow(unused)]
 #![allow(clippy::unwrap_used)]
 
-use dimas::prelude::*;
+use dimas::prelude_old::*;
 use dimas_com::Zenoh;
 
 #[dimas::agent]

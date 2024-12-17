@@ -7,7 +7,7 @@ extern crate std;
 
 // region:      --- modules
 use super::error::Error;
-use crate::utils::ComponentRegistry;
+use crate::utils_old::ComponentRegistry;
 use anyhow::Result;
 use libloading::Library;
 use std::collections::HashMap;

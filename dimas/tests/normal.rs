@@ -3,9 +3,9 @@
 //! Tests
 
 use dimas::agent_old::*;
-use dimas::builder::builder_states::*;
-use dimas::builder::*;
-use dimas::context::ContextImpl;
+use dimas::builder_old::builder_states::*;
+use dimas::builder_old::*;
+use dimas::context_old::ContextImpl;
 
 #[derive(Debug)]
 struct Props {}

@@ -1,7 +1,7 @@
 //! `DiMAS` queryable example
 //! Copyright © 2024 Stephan Kunz
 
-use dimas::prelude::*;
+use dimas::prelude_old::*;
 
 #[derive(Debug)]
 struct AgentProps {

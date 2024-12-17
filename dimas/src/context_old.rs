@@ -33,7 +33,7 @@
 // only for doc needed
 #[cfg(doc)]
 use crate::agent_old::AgentOld;
-use crate::error::Error;
+use crate::error_old::Error;
 use anyhow::Result;
 use core::fmt::Debug;
 #[cfg(feature = "unstable")]

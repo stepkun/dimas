@@ -13,14 +13,18 @@
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");
 
+// ---------------------------------------------------
+
 pub mod agent_old;
-pub mod builder;
-pub mod context;
-pub mod error;
-mod utils;
+pub mod builder_old;
+pub mod context_old;
+pub mod error_old;
+mod utils_old;
 
 // macro reexport
 pub use dimas_macros::{agent, main};
 
 // mostly needed stuff
-pub mod prelude;
+pub mod prelude_old;
+
+// ---------------------------------------------------
