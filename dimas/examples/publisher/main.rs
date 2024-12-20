@@ -3,78 +3,32 @@
 #![allow(unused)]
 #![allow(clippy::unwrap_used)]
 
-use dimas::prelude_old::*;
+use dimas::prelude::*;
 
-#[dimas::agent]
-#[derive(Debug, Default)]
-struct Publisher {
-	count: u128,
-}
-
-/// common message structure for publisher and subscriber
-#[derive(Debug, Encode, Decode)]
-pub struct PubSubMessage {
-	/// counter
-	pub count: u128,
-	/// text
-	pub text: String,
-}
-
-async fn timer_callback(ctx: Agent) -> Result<()> {
-	// read properties
-	// @TODO: improve to easier access
-	let count = ctx
-		.read()
-		.downcast_ref::<Publisher>()
-		.unwrap()
-		.count;
-	// create structure to send
-	let msg = PubSubMessage {
-		count,
-		text: String::from("hello world!"),
-	};
-	let message = Message::encode(&msg);
-	println!("Sending {} [{}]", msg.text, msg.count);
-
-	// publishing with stored publisher
-	//let _ = ctx.put("hello", message);
-
-	// update properties
-	// @TODO: improve to easier access
-	ctx.write()
-		.downcast_mut::<Publisher>()
-		.unwrap()
-		.count += 1;
-	Ok(())
-}
+const XML: &str = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="AgentBehavior">
+        <IntervalTimer>
+			<Publisher/>
+        </IntervalTimer>
+    </BehaviorTree>
+</root>
+"#;
 
 #[dimas::main]
 async fn main() -> Result<()> {
 	// initialize tracing/logging
 	init_tracing();
 
-	// create an agent with the properties of `Publisher`
-	let mut agent = Publisher::default()
-		.into_agent()
-		.set_name("publisher");
+	let mut agent = Agent::create()?;
 
-	// add wanted components
-	// @TODO: change to load library
-	let timerlib = TimerLib::default();
+	// nodes must be registered before they are addressed in a behavior tree
+	agent.register_nodes(IntervalTimer::register);
+	agent.register_nodes(Publisher::register);
 
-	// create an interval timer using the timer library
-	let activity = ActivityData::new("timer", agent.clone());
-	let parameter = IntervalTimerParameter::new(Duration::from_secs(1), None, activity);
-	let timer = timerlib.create_timer(TimerVariant::Interval(parameter), timer_callback);
-	agent.add_activity(timer);
+	agent.set_behavior(XML);
 
-	// drop factories to reduce memory footprint
-	drop(timerlib);
-
-	/// start agent in wanted operation state
-	agent.manage_operation_state(OperationState::Active);
-	dbg!(&agent);
-	agent.start().await;
-
+	agent.start().await?;
 	Ok(())
 }

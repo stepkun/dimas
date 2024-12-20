@@ -10,7 +10,6 @@ extern crate alloc;
 extern crate std;
 
 // region:		--- modules
-use alloc::string::{String, ToString};
 #[cfg(feature = "std")]
 use tracing_subscriber::EnvFilter;
 // endregion:	--- modules
@@ -47,41 +46,3 @@ pub fn init_tracing() {
 	let _ = tracing::subscriber::set_global_default(subscriber);
 }
 // endregion: --- tracing
-
-// region:    --- helper
-/// create selector
-#[must_use]
-pub fn selector_from(topic: &str, mut prefix: Option<&String>) -> String {
-	prefix.take().map_or(topic.to_string(), |prefix| {
-		let mut result = String::from(prefix);
-		result.push('/');
-		result.push_str(topic);
-		result
-	})
-}
-
-/// create request selector
-#[must_use]
-pub fn request_selector_from(selector: &str) -> String {
-	let mut result = String::from(selector);
-	result.push_str("?request");
-	result
-}
-
-/// create cancel selector
-#[must_use]
-pub fn cancel_selector_from(selector: &str) -> String {
-	let mut result = String::from(selector);
-	result.push_str("?cancel");
-	result
-}
-
-/// create feedback selector
-#[must_use]
-pub fn feedback_selector_from(selector: &str, id: &str) -> String {
-	let mut result = String::from(selector);
-	result.push_str("/feedback/");
-	result.push_str(id);
-	result
-}
-// endregion: --- helper

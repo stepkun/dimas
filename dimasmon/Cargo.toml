@@ -26,7 +26,7 @@ nursery = "deny"
 unwrap_used = "deny"
 
 [lints.rust]
-unsafe_code = "allow"
+#unsafe_code = "allow"
 #missing_docs = "warn"
 #unused="allow" # for dev only
 
@@ -37,9 +37,7 @@ private_intra_doc_links = "allow"
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 dimas-macros = { workspace =true }
-slint = { workspace = true }
 
 [build-dependencies]
-slint-build = { workspace = true }
 
 [dev-dependencies]

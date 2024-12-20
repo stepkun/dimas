@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Decorator ID="IntervalTimer"
+            editable="true">
+      <input_port name="interval"
+                  default="1000">The timers firing interval in milliseconds</input_port>
+    </Decorator>
+  </TreeNodesModel>
+
+</root>

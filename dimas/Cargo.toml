@@ -35,10 +35,7 @@ unwrap_used = "deny"
 
 [dependencies]
 anyhow = { workspace = true }
-bitcode = { workspace = true }
-chrono = { workspace = true }
-#derive_more = { workspace = true, features = ["from"] }
-dirs = { workspace = true }
+behaviortree-rs = { workspace = true }
 dimas-com = { workspace = true }
 dimas-commands = { workspace = true }
 dimas-config = { workspace = true }
@@ -46,14 +43,10 @@ dimas-core = { workspace = true }
 dimas-macros = { workspace = true }
 dimas-time = { workspace = true }
 futures = { workspace = true }
-libloading = { workspace = true }
-parking_lot = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal", "sync", "time"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-uuid = { workspace = true }
-zenoh = { workspace = true }
 
 [build-dependencies]
 
@@ -63,4 +56,4 @@ doc-comment = { workspace = true }
 [features]
 default = ["std"]
 std = []
-unstable = ["zenoh/unstable", "dimas-com/unstable", "dimas-core/unstable"]
+unstable = ["dimas-com/unstable"]

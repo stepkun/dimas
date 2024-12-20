@@ -27,14 +27,8 @@ workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-#derive_more = { workspace = true, features = ["from"] }
-dimas-macros = { workspace = true }
-dirs = { workspace = true}
-json5 = { workspace = true}
-serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true}
-zenoh = { workspace = true}
 
 [build-dependencies]
 

@@ -7,15 +7,7 @@
 
 extern crate proc_macro;
 
-mod impl_activity;
-mod impl_agent;
-mod impl_component;
-mod impl_component_old;
 mod impl_main;
-mod impl_operational;
-mod impl_parameter;
-mod impl_system;
-mod utils;
 
 use proc_macro::TokenStream;
 
@@ -45,66 +37,4 @@ use proc_macro::TokenStream;
 pub fn main(metadata: TokenStream, input: TokenStream) -> TokenStream {
 	// call implementation with conversion to and from proc-macro2 library
 	impl_main::main(metadata.into(), input.into()).into()
-}
-
-/// Marks a `struct` to create an agent usinge the struct as properties.
-/// The properties `struct` needs to implement `Default`!
-///
-/// Note: This macro can only be used on `struct` blocks.
-///
-/// # Usage
-/// ```no_test
-/// #[dimas::agent]
-/// #[derive(Default)]
-/// struct {
-///     // your data
-///     ...
-/// }
-/// ```
-#[proc_macro_attribute]
-pub fn agent(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_agent::agent(metadata.into(), input.into()).into()
-}
-
-/// Component
-#[proc_macro_attribute]
-pub fn component(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_component::component(metadata.into(), input.into()).into()
-}
-
-/// Activity
-#[proc_macro_attribute]
-pub fn activity(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_activity::activity(metadata.into(), input.into()).into()
-}
-
-/// Component
-#[proc_macro_attribute]
-pub fn component_old(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_component_old::component_old(metadata.into(), input.into()).into()
-}
-
-/// Operational
-#[proc_macro_attribute]
-pub fn operational(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_operational::operational(metadata.into(), input.into()).into()
-}
-
-/// Parameter
-#[proc_macro_attribute]
-pub fn parameter(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_parameter::parameter(metadata.into(), input.into()).into()
-}
-
-/// System
-#[proc_macro_attribute]
-pub fn system(metadata: TokenStream, input: TokenStream) -> TokenStream {
-	// call implementation with conversion to and from proc-macro2 library
-	impl_system::system(metadata.into(), input.into()).into()
 }

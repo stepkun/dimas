@@ -1,25 +1,22 @@
 // Copyright © 2024 Stephan Kunz
+#![allow(unused)]
 
-//! `dimas-time` errors
+//! `dimas-config` errors
 
 #[doc(hidden)]
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
-
+// region		--- modules
 use alloc::string::String;
 use thiserror::Error;
+// endregion:	--- modules
 
 // region:		--- Error
-/// `dimas-time` error type.
+/// `dimas-config` error type
 #[derive(Error, Debug)]
 pub enum Error {
-	/// invalid #include directive
-	#[error("invalid '#include' in file {0}")]
-	InvalidInclude(String),
-	/// file not found
-	#[error("file {0} not found")]
-	FileNotFound(String),
+	/// Should not happen
+	#[error("this should not have happened in file {0} at line {1}")]
+	Unexpected(String, u32),
 }
 // region:		--- Error

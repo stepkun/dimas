@@ -25,16 +25,8 @@ workspace = true
 
 [dependencies]
 anyhow = { workspace = true}
-bitcode = { workspace = true}
-chrono = { workspace = true }
-dimas-com = { workspace = true }
-dimas-config = { workspace = true }
-dimas-core = { workspace = true }
-dimas-macros = { workspace = true }
-itertools = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true}
-zenoh = { workspace = true }
 
 [build-dependencies]
 
@@ -43,4 +35,4 @@ zenoh = { workspace = true }
 [features]
 default = ["std"]
 std = []
-unstable = ["zenoh/unstable", "dimas-com/unstable", "dimas-core/unstable"]
+unstable = []

@@ -3,12 +3,7 @@
 
 //! Commands for `DiMAS` control & monitoring
 
-mod control;
+// modules
 mod error;
-mod lists;
-/// the command messages
-pub mod messages;
 
 // flatten
-pub use control::*;
-pub use lists::*;

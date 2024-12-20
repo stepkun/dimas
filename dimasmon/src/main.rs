@@ -1,9 +1,10 @@
 // Copyright © 2024 Stephan Kunz
+#![allow(clippy::unnecessary_wraps)]
 
 //! Monitoring tool for `DiMAS`
 
 // region:		--- modules
-slint::include_modules!();
+use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 // endregion:	--- modules
@@ -22,15 +23,17 @@ struct Cli {
 
 // endregion:	--- Cli
 
-fn main() -> Result<(), slint::PlatformError> {
+fn main() -> Result<()> {
 	// parse args
 	let _cli = Cli::parse();
 
 	// create window
-	let ui = MainWindow::new()?;
+	// let ui = MainWindow::new()?;
 
 	// implement handlers/callbacks
 
 	// show & run window
-	ui.run()
+	// ui.run()
+
+	Ok(())
 }

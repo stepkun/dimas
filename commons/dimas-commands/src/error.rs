@@ -1,4 +1,5 @@
 // Copyright © 2024 Stephan Kunz
+#![allow(unused)]
 
 //! `dimas-commands` errors
 
@@ -11,7 +12,7 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `dimasctl` error type
+/// `dimas-command` error type
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Should not happen

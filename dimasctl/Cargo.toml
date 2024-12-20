@@ -24,7 +24,6 @@ workspace = true
 
 [dependencies]
 anyhow = { workspace = true}
-chrono = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 dimas-com = { workspace = true }
 dimas-commands = { workspace = true }

@@ -27,15 +27,9 @@ workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-bitcode = { workspace = true }
-dimas-macros = { workspace = true }
-parking_lot = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-uuid = { workspace = true }
-zenoh = { workspace = true }
 
 [build-dependencies]
 
@@ -44,4 +38,4 @@ zenoh = { workspace = true }
 [features]
 default = ["std"]
 std = []
-unstable = ["zenoh/unstable"]
+unstable = []

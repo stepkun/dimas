@@ -1,50 +1,31 @@
 //! `DiMAS` queryable example
 //! Copyright © 2024 Stephan Kunz
+#![allow(unused)]
+#![allow(clippy::unwrap_used)]
 
-use dimas::prelude_old::*;
+use dimas::prelude::*;
 
-#[derive(Debug)]
-struct AgentProps {
-	counter: u128,
-}
+const XML: &str = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="AgentBehavior">
+		<AlwaysRunning/>
+    </BehaviorTree>
+</root>
+"#;
 
-async fn queryable(ctx: Context<AgentProps>, request: QueryMsg) -> Result<()> {
-	let received: u128 = request.decode()?;
-	let value = ctx.read().counter;
-	let query = request.key_expr();
-	println!(
-		"Received query for {} with {}, responding with {}",
-		&query, &received, &value
-	);
-	request.reply(value)?;
-
-	ctx.write().counter += 1;
-	Ok(())
-}
 
 #[dimas::main]
 async fn main() -> Result<()> {
 	// initialize tracing/logging
 	init_tracing();
 
-	// create & initialize agents properties
-	let properties = AgentProps { counter: 0 };
+	let mut agent = Agent::create()?;
 
-	// create an agent with the properties and the prefix 'examples'
-	let mut agent = AgentOld::new(properties)
-		.prefix("examples")
-		.name("queryable")
-		.config(&Config::default())?;
+	// nodes must be registered before they are addressed in a behavior tree
 
-	// add a queryable
-	agent
-		.queryable()
-		.topic("query")
-		.callback(queryable)
-		.add()?;
+	agent.set_behavior(XML);
 
-	// run agent
 	agent.start().await?;
-
 	Ok(())
 }

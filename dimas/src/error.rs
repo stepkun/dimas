@@ -1,7 +1,7 @@
 // Copyright © 2024 Stephan Kunz
 #![allow(unused)]
 
-//! `dimas-time` errors
+//! `dimas` errors
 
 #[doc(hidden)]
 extern crate alloc;
@@ -12,7 +12,7 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `dimas-time` error type
+/// `dimas` error type
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Should not happen

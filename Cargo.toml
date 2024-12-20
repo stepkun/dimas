@@ -8,7 +8,6 @@ members = [
 	"commons/dimas-commands", 
 	"commons/dimas-config", 
 	"commons/dimas-core",
-	"commons/dimas-macro-tests",
 	"commons/dimas-macros",
 	"commons/dimas-time",
 	"dimas",
@@ -51,10 +50,9 @@ repository = "https://github.com/dimas-fw/dimas/"
 
 [workspace.dependencies]
 anyhow = "1.0.93"
-bitcode = "0.6.0"
-clap = "4.5.21"
-chrono = "0.4.34"
-#derive_more = { version="1.0.0" }
+#behaviortree-rs = "0.2.5-alpha3"
+behaviortree-rs = {git = "https://github.com/ncrothers/behaviortree-rs.git", branch = "v3"}
+clap = "4.5.23"
 dimas = { path = "dimas" }
 #dimas = "0.5.0"
 dimas-com = { path = "commons/dimas-com" }
@@ -69,22 +67,12 @@ dimas-macros = { path = "commons/dimas-macros" }
 #dimas-macros = "0.5.0"
 dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.5.0"
-dirs = "5.0.0"
 doc-comment = "0.3.0"
-futures = "0.3.30"
-hostname = "0.4.0"
-itertools = "0.13.0"
-json5 = "0.4.1"
-libloading = "0.8.6"
-serde = "1.0.210"
-slint = "1.2.0"
-slint-build = "1.2.0"
-parking_lot = "0.12.3"
-thiserror = "2.0.7"
+futures = "0.3.31"
+thiserror = "2.0.8"
 tokio = { version = "1.40.0", features = ["parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
-uuid = "1.11.0"
 zenoh = "1.1.0"
 
 [profile.release]
