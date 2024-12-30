@@ -1,32 +1,31 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
-#![allow(dead_code)]
-#![allow(missing_docs)]
 
 //! Publisher
 
 // region:      --- modules
-use behaviortree_rs::{
-	bt_node, macros::register_action_node, basic_types::NodeStatus, Factory, nodes::NodeResult,
-};
+use anyhow::Result;
+use dimas_config::factory::BTFactory;
+use dimas_core::behavior::{BehaviorCategory, BehaviorResult, BehaviorStatus};
+use dimas_macros::{behavior, register_action};
 // endregion:   --- modules
 
 // region:      --- behavior
-/// ActionNode "Publisher"
-#[bt_node(SyncActionNode)]
+/// SyncAction "Publisher"
+#[behavior(SyncAction)]
 pub struct Publisher {}
 
 #[allow(clippy::use_self)]
-#[bt_node(SyncActionNode)]
+#[behavior(SyncAction)]
 impl Publisher {
-	async fn tick(&mut self) -> NodeResult {
+	/// @TODO:
+	async fn tick(&self) -> BehaviorResult {
 		println!("ticking Publisher");
-		Ok(NodeStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 
 	/// Registration function
-	pub fn register(bt_factory: &mut Factory) {
-		register_action_node!(bt_factory, "Publisher", Publisher);
+	pub fn register(factory: &mut BTFactory) {
+		register_action!(factory, "Publisher", Publisher);
 	}
 }
 // endregion:   --- behavior

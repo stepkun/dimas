@@ -43,7 +43,7 @@ Your `Cargo.toml` should include:
 
 ```toml
 [dependencies]
-dimas = "0.4.0"
+dimas = "0.5.0"
 ```
 
 It makes sense to return a `Result` in `main`, as most DiMAS `Agent`s functions do.
@@ -85,64 +85,33 @@ The `publisher.rs` should look like this:
 
 ```rust,no_run
 use dimas::prelude::*;
-use core::time::Duration;
 
-/// The Agent's properties
-#[derive(Debug)]
-struct AgentProps {
-    counter: u128,
-}
+const XML: &str = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="AgentBehavior">
+        <IntervalTimer>
+			<Publisher/>
+        </IntervalTimer>
+    </BehaviorTree>
+</root>
+"#;
 
 #[dimas::main]
 async fn main() -> Result<()> {
-    // create & initialize agents properties
-    let properties = AgentProps { counter: 0 };
+	// initialize tracing/logging
+	init_tracing();
 
-    // create an agent with the properties and default configuration
-    let mut agent = AgentOld::new(properties)
-       .config(&Config::default())?;
+	let mut agent = Agent::create()?;
 
-    // create publisher for topic "hello"
-    agent
-        .publisher()
-        .topic("hello")
-        .add()?;
+	// nodes must be registered before they are addressed in a behavior tree
+	agent.register_nodes(IntervalTimer::register);
+	agent.register_nodes(Publisher::register);
 
-    // use a timer for regular publishing of "hello" topic
-    agent
-        // get the TimerBuilder from the agent
-        .timer()
-        // set a name for the timer
-        .name("timer")
-        // every second
-        .interval(Duration::from_secs(1))
-        // the timers callback function as a closure
-        .callback(
-            |ctx| -> Result<()> {
-                let counter = ctx
-                    .read()
-                    .counter;
-                // the message to send
-                let text = format!("Hello World! [{counter}]");
-                // just to see what will be sent
-                println!("Sending '{}'", &text);
-                // publishing with stored publisher for topic "hello"
-                let message = Message::encode(&text);
-                ctx.put("hello", message)?;
-                // modify counter in properties
-                ctx
-                    .write()
-                    .counter += 1;
-                Ok(())
-            }
-        )
-        // finally add the timer to the agent
-        // errors will be propagated to main
-        .add()?;
+	agent.set_behavior(XML);
 
-    // start the agent
-    agent.start().await?;
-    Ok(())
+	agent.start().await?;
+	Ok(())
 }
 ```
 
@@ -153,40 +122,30 @@ The `subscriber.rs` should look like this:
 ```rust,no_run
 use dimas::prelude::*;
 
-/// The Agent's properties
-#[derive(Debug)]
-pub struct AgentProps {}
+const XML: &str = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="AgentBehavior">
+        <Subscriber/>
+    </BehaviorTree>
+</root>
+"#;
 
-async fn callback(_ctx: Context<AgentProps>, message: Message) -> Result<()> {
-    let message: String = message.decode()?;
-    println!("Received '{message}'");
-    Ok(())
-}
 
 #[dimas::main]
 async fn main() -> Result<()> {
-    // create & initialize agents properties
-    let properties = AgentProps {};
+	// initialize tracing/logging
+	init_tracing();
 
-    // create an agent with the properties and default configuration
-    let mut agent = AgentOld::new(properties)
-        .config(&Config::default())?;
+	let mut agent = Agent::create()?;
 
-    // subscribe to "hello" messages
-    agent
-        // get the SubscriberBuilder from the agent
-        .subscriber()
-        //set wanted message topic (corresponding to publishers topic!)
-        .topic("hello")
-        // set the callback function for put messages
-        .put_callback(callback)
-        // finally add the subscriber to the agent
-        // errors will be propagated to main
-        .add()?;
+	// nodes must be registered before they are addressed in a behavior tree
+	agent.register_nodes(Subscriber::register);
 
-    // start the agent
-    agent.start().await?;
-    Ok(())
+	agent.set_behavior(XML);
+
+	agent.start().await?;
+	Ok(())
 }
 ```
 

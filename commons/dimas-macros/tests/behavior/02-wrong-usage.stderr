@@ -1,0 +1,54 @@
+error[E0412]: cannot find type `BehaviorResult` in this scope
+  --> tests/behavior/02-wrong-usage.rs:28:33
+   |
+28 |     async fn tick(&mut self) -> BehaviorResult {
+   |                                 ^^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this type alias
+   |
+5  + use dimas_core::behavior::BehaviorResult;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `BehaviorStatus`
+  --> tests/behavior/02-wrong-usage.rs:29:12
+   |
+29 |         Ok(BehaviorStatus::Success)
+   |            ^^^^^^^^^^^^^^ use of undeclared type `BehaviorStatus`
+   |
+help: consider importing this enum
+   |
+5  + use dimas_core::behavior::BehaviorStatus;
+   |
+
+error[E0599]: no associated item named `_on_running` found for struct `S1` in the current scope
+ --> tests/behavior/02-wrong-usage.rs:7:1
+  |
+7 | #[dimas_macros::behavior(Action)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  | |
+  | associated item not found in `S1`
+  | associated item `_on_running` not found for this struct
+  |
+  = note: this error originates in the attribute macro `dimas_macros::behavior` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no associated item named `_on_start` found for struct `S1` in the current scope
+ --> tests/behavior/02-wrong-usage.rs:7:1
+  |
+7 | #[dimas_macros::behavior(Action)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  | |
+  | associated item not found in `S1`
+  | associated item `_on_start` not found for this struct
+  |
+  = note: this error originates in the attribute macro `dimas_macros::behavior` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no associated item named `_tick` found for struct `S2` in the current scope
+  --> tests/behavior/02-wrong-usage.rs:14:1
+   |
+14 | #[dimas_macros::behavior(SyncAction)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   | |
+   | associated item not found in `S2`
+   | associated item `_tick` not found for this struct
+   |
+   = note: this error originates in the attribute macro `dimas_macros::behavior` (in Nightly builds, run with -Z macro-backtrace for more info)

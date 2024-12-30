@@ -3,7 +3,7 @@
 [workspace]
 resolver="2"
 
-members = [ 
+members = [
 	"commons/dimas-com", 
 	"commons/dimas-commands", 
 	"commons/dimas-config", 
@@ -49,8 +49,7 @@ homepage = "https://dimas-fw.github.io/"
 repository = "https://github.com/dimas-fw/dimas/"
 
 [workspace.dependencies]
-anyhow = "1.0.93"
-#behaviortree-rs = "0.2.5-alpha3"
+anyhow = "1.0.95"
 behaviortree-rs = {git = "https://github.com/ncrothers/behaviortree-rs.git", branch = "v3"}
 clap = "4.5.23"
 dimas = { path = "dimas" }
@@ -68,11 +67,17 @@ dimas-macros = { path = "commons/dimas-macros" }
 dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.5.0"
 doc-comment = "0.3.0"
+evalexpr = "12.0.1"
 futures = "0.3.31"
-thiserror = "2.0.8"
+hashbrown = "0.15.2"
+parking_lot = "0.12.3"
+rand = "0.8.5"
+roxmltree = "0.20.0"
+thiserror = "2.0.9"
 tokio = { version = "1.40.0", features = ["parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
+trybuild = { version = "1.0.101", features = ["diff"] }
 zenoh = "1.1.0"
 
 [profile.release]

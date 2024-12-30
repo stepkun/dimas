@@ -1,16 +1,15 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
-#![allow(dead_code)]
-#![allow(clippy::unwrap_used)]
 
 // region:      --- modules
 use anyhow::Result;
-use behaviortree_rs::{
-	bt_node, macros::register_action_node, nodes::NodeStatus, tree::AsyncTree, Blackboard, Factory,
-	NodeResult,
+use dimas_config::factory::{Error, BTFactory};
+use dimas_core::{
+	behavior::tree::BehaviorTree,
+	behavior::{BehaviorResult, BehaviorStatus},
 };
-use std::{fs::File, io::Read, path::PathBuf, sync::Arc, time::Duration};
-use tracing::{error, event, info, instrument, warn, Level};
+use dimas_macros::{behavior, register_action, register_condition};
+use std::time::Duration;
+use tracing::{event, instrument, Level};
 // endregion:   --- modules
 
 // region:      --- behavior
@@ -35,64 +34,60 @@ const XML: &str = r#"
             <Shutdown/>
         </WhileDoElse>
     </BehaviorTree>
+
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+		<Action ID="AlwaysRunning"
+				editable="true"/>
+		<Action ID="Shutdown"
+				editable="true"/>
+		<Condition ID="NotInterrupted"
+				editable="true"/>
+    </TreeNodesModel>
 </root>
 "#;
 
-/// ConditionNode "NotInterrupted"
-// @TODO: NotInterrupted should be a condition node
-#[bt_node(SyncActionNode)]
+/// Condition "NotInterrupted"
+#[behavior(SyncCondition)]
 struct NotInterrupted {}
 
 #[allow(clippy::use_self)]
-#[bt_node(SyncActionNode)]
+#[behavior(SyncCondition)]
 impl NotInterrupted {
-	async fn tick(&mut self) -> NodeResult {
+	async fn tick(&self) -> BehaviorResult {
 		//println!("ticking NotInterrupted");
-		Ok(NodeStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 }
 
-/// ActionNode "AlwaysSuccess"
-#[bt_node(SyncActionNode)]
-struct AlwaysSuccess {}
-
-#[allow(clippy::use_self)]
-#[bt_node(SyncActionNode)]
-impl AlwaysSuccess {
-	async fn tick(&mut self) -> NodeResult {
-		println!("ticking AlwaysSuccess");
-		Ok(NodeStatus::Success)
-	}
-}
-
-/// ActionNode "AlwaysRunning"
-#[bt_node(StatefulActionNode)]
+/// Action "AlwaysRunning"
+#[behavior(Action)]
 struct AlwaysRunning {}
 
 #[allow(clippy::use_self)]
-#[bt_node(StatefulActionNode)]
+#[behavior(Action)]
 impl AlwaysRunning {
-	async fn on_start(&mut self) -> NodeResult {
+	async fn on_start(&self) -> BehaviorResult {
 		//println!("starting AlwaysRunning");
-		Ok(NodeStatus::Running)
+		Ok(BehaviorStatus::Running)
 	}
 
-	async fn on_running(&mut self) -> NodeResult {
+	async fn on_running(&self) -> BehaviorResult {
 		//println!("ticking AlwaysRunning");
-		Ok(NodeStatus::Running)
+		Ok(BehaviorStatus::Running)
 	}
 }
 
-/// ActionNode "Shutdown"
-#[bt_node(SyncActionNode)]
+/// SyncAction "Shutdown"
+#[behavior(SyncAction)]
 struct Shutdown {}
 
 #[allow(clippy::use_self)]
-#[bt_node(SyncActionNode)]
+#[behavior(SyncAction)]
 impl Shutdown {
-	async fn tick(&mut self) -> NodeResult {
+	async fn tick(&self) -> BehaviorResult {
 		println!("ticking Shutdown");
-		Ok(NodeStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 }
 // endregion:   --- behavior
@@ -100,12 +95,10 @@ impl Shutdown {
 // region:      --- Agent
 /// Agent structure for std environment
 pub struct Agent {
-	/// A [`Blackboard`] to store information
-	world: Blackboard,
 	/// The factory to create & register behavior
-	bt_factory: Factory,
+	bt_factory: BTFactory,
 	/// The behavior tree
-	tree: Option<AsyncTree>,
+	tree: Option<BehaviorTree>,
 }
 
 impl Agent {
@@ -116,24 +109,21 @@ impl Agent {
 	/// - if detection of program directory fails
 	pub fn create() -> Result<Self> {
 		// install core behavior
-		let world = Blackboard::create();
-		let mut bt_factory = Factory::new();
+		let mut bt_factory = BTFactory::default();
+
 		// register core nodes
-		// @TODO: NotInterrupted should be a condition node
-		register_action_node!(bt_factory, "NotInterrupted", NotInterrupted);
-		register_action_node!(bt_factory, "AlwaysRunning", AlwaysRunning);
-		register_action_node!(bt_factory, "AlwaysSuccess", AlwaysSuccess);
-		register_action_node!(bt_factory, "Shutdown", Shutdown);
+		register_condition!(bt_factory, "NotInterrupted", NotInterrupted,);
+		register_action!(bt_factory, "AlwaysRunning", AlwaysRunning,);
+		register_action!(bt_factory, "Shutdown", Shutdown,);
 
 		Ok(Self {
-			world,
 			bt_factory,
 			tree: None,
 		})
 	}
 
 	/// Register nodes
-	pub fn register_nodes(&mut self, reg_fn: impl Fn(&mut Factory)) {
+	pub fn register_nodes(&mut self, reg_fn: impl Fn(&mut BTFactory)) {
 		reg_fn(&mut self.bt_factory);
 	}
 
@@ -142,8 +132,8 @@ impl Agent {
 	/// - ???
 	/// # Panics
 	/// - ???
-	pub fn set_behavior(&mut self, xml: &str) {
-        self.bt_factory.register_bt_from_text(xml.to_string());
+	pub fn set_behavior(&mut self, xml: &str) -> Result<(), Error> {
+		self.bt_factory.register_subtree(xml)
 	}
 
 	/// Start the [`Agent`]
@@ -153,20 +143,27 @@ impl Agent {
 	pub async fn start(&mut self) -> Result<()> {
 		event!(Level::INFO, "starting agent {}", "todo");
 
-        // create the tree
-		let mut tree = self
-            .bt_factory
-            .create_async_tree_from_text(XML.to_string(), &self.world)
-            .await?;
+		// create the tree
+		let tree = self.bt_factory.create_tree(XML)?;
 
-        self.tree = Some(tree);
+		self.tree = Some(tree);
 
 		// this will check the tree by running it once
-		let mut result = self.tree.as_mut().unwrap().tick_once().await?;
+		let mut result = self
+			.tree
+			.as_mut()
+			.unwrap_or_else(|| todo!())
+			.tick_once()
+			.await?;
 		// run the BT using own loop with sleep to avoid busy loop
-		while result == NodeStatus::Running {
+		while result == BehaviorStatus::Running {
 			let () = tokio::time::sleep(Duration::from_millis(2000)).await;
-			result = self.tree.as_mut().unwrap().tick_once().await?;
+			result = self
+				.tree
+				.as_mut()
+				.unwrap_or_else(|| todo!())
+				.tick_once()
+				.await?;
 		}
 		Ok(())
 	}

@@ -8,5 +8,5 @@ const fn is_normal<T: Sized + Send + Sync>() {}
 
 #[test]
 const fn normal_types() {
-//	is_normal::<CommunicatorOld>();
+	//	is_normal::<CommunicatorOld>();
 }

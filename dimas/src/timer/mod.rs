@@ -4,5 +4,8 @@
 
 //! Timer
 
+#[doc(hidden)]
+extern crate alloc;
+
 pub mod interval_timer;
 mod timer_lib;

@@ -15,36 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-## [0.5.0] - 2024-??-?? _Has breaking changes!!_
-
-### Added
-
-- documented config file
-- tracing in examples
-- _breaking change_s:
-  - macros for automatic creation of (inheritance) boilerplate
-    - `operational`: to make a struct an `Operational`
-    - `activity`: to make a struct an `Activity` (includes `Operational`)
-    - `component`: to make a struct a `Component` (includes `Operational`)
-    - `parameter`: to make a struct a `Parameter` set
-    - `system`: to make a struct a `System`
+## [0.5.0] - 2024-??-?? _Is breaking change!!_
 
 ### Changed
 
-- improved tracing:
-  - default level is "warn", also for zenoh
-  - now uses `RUST_LOG=<level definitions>`
-- replaced own Result type with `anyhow::Result`
-- _breaking change_s:
-  - changed name of Trait `Capability` to `Operational`
-  - restructured crates `dimas_com`, `dimas_core` & `dimas_time`,
-    moving builders that require `std` from `dimas_com` to `dimas`
-  - replaced std::sync::Mutex and std::sync::RwLock with parking_lot::Mutex and parking_lot::RwLock
-    read() and write() on context no longer return a Result, but the properties directly
-
-### Fixed
-
-### Removed
+Version 0.5.0 is a fully new design, based on a behavior tree.
 
 ## [0.4.1] - 2024-11-13
 

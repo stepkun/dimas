@@ -35,7 +35,6 @@ unwrap_used = "deny"
 
 [dependencies]
 anyhow = { workspace = true }
-behaviortree-rs = { workspace = true }
 dimas-com = { workspace = true }
 dimas-commands = { workspace = true }
 dimas-config = { workspace = true }

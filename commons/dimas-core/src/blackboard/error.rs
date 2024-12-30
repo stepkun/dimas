@@ -1,7 +1,7 @@
 // Copyright © 2024 Stephan Kunz
 #![allow(unused)]
 
-//! `dimas-core` errors
+//! `dimas-blackboard` errors
 
 #[doc(hidden)]
 extern crate alloc;
@@ -12,11 +12,11 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `dimas-core` error type
+/// `dimas-blackboard` error type
 #[derive(Error, Debug)]
 pub enum Error {
-	/// Should not happen
-	#[error("this should not have happened in file {0} at line {1}")]
-	Unexpected(String, u32),
+	/// @TODO:
+	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
+	Unexpected(String, String, u32),
 }
 // region:		--- Error

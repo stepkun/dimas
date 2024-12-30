@@ -26,13 +26,21 @@ exclude = [
 workspace = true
 
 [dependencies]
-anyhow = { workspace = true }
+dimas-core = { workspace = true }
+dimas-macros = { workspace = true }
+evalexpr = { workspace = true }
+futures = { workspace = true }
+hashbrown = { workspace = true }
+roxmltree = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true}
 
 [build-dependencies]
 
 [dev-dependencies]
+anyhow = { workspace = true }
+rand = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "time"] }
 
 [features]
 default = ["std"]

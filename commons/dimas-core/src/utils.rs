@@ -30,6 +30,7 @@ pub fn init_tracing() {
 			}
 		},
 	);
+	//@TODO: set tracing values to ("dimas=warn,zenoh=warn")
 	#[cfg(not(feature = "std"))]
 	let subscriber = tracing_subscriber::fmt();
 

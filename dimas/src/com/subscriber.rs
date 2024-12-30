@@ -1,37 +1,35 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
-#![allow(dead_code)]
-#![allow(missing_docs)]
 
 //! Subscriber
 
 // region:      --- modules
-use behaviortree_rs::{
-	bt_node, macros::register_action_node, basic_types::NodeStatus, Factory, nodes::NodeResult,
-};
+use anyhow::Result;
+use dimas_config::factory::BTFactory;
+use dimas_core::behavior::{BehaviorCategory, BehaviorResult, BehaviorStatus};
+use dimas_macros::{behavior, register_action};
 // endregion:   --- modules
 
 // region:      --- behavior
-/// ActionNode "Subscriber"
-#[bt_node(StatefulActionNode)]
+/// Action "Subscriber"
+#[behavior(Action)]
 pub struct Subscriber {}
 
 #[allow(clippy::use_self)]
-#[bt_node(StatefulActionNode)]
+#[behavior(Action)]
 impl Subscriber {
-	async fn on_start(&mut self) -> NodeResult {
+	async fn on_start(&self) -> BehaviorResult {
 		println!("starting Subscriber");
-		Ok(NodeStatus::Running)
+		Ok(BehaviorStatus::Running)
 	}
 
-	async fn on_running(&mut self) -> NodeResult {
+	async fn on_running(&self) -> BehaviorResult {
 		println!("ticking Subscriber");
-		Ok(NodeStatus::Running)
+		Ok(BehaviorStatus::Running)
 	}
 
 	/// Registration function
-	pub fn register(bt_factory: &mut Factory) {
-		register_action_node!(bt_factory, "Subscriber", Subscriber);
+	pub fn register(factory: &mut BTFactory) {
+		register_action!(factory, "Subscriber", Subscriber,);
 	}
 }
 // endregion:   --- behavior

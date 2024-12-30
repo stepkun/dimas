@@ -14,7 +14,6 @@ const XML: &str = r#"
 </root>
 "#;
 
-
 #[dimas::main]
 async fn main() -> Result<()> {
 	// initialize tracing/logging

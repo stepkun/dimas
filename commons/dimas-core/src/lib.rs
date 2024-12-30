@@ -3,11 +3,17 @@
 
 //! Core of `DiMAS`
 
+// we need alloc
+#[doc(hidden)]
+extern crate alloc;
+
 // see: https://robmosys.eu/wiki/start
 
 // modules
-mod error;
-mod utils;
+pub mod behavior;
+pub mod blackboard;
+pub mod macros;
+pub mod port;
+pub mod utils;
 
 // flatten:
-pub use utils::init_tracing;

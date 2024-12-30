@@ -3,5 +3,8 @@
 
 //! Communication
 
+#[doc(hidden)]
+extern crate alloc;
+
 pub mod publisher;
 pub mod subscriber;

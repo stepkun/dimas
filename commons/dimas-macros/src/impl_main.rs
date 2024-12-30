@@ -2,7 +2,7 @@
 #![allow(unused)]
 #![allow(clippy::needless_pass_by_value)]
 
-//! Macro implementations
+//! Macro `main` implementation
 //!
 
 use proc_macro2::TokenStream;

@@ -1,0 +1,17 @@
+error: expected `fn`
+ --> tests/main/03-wrong-usage.rs:6:5
+  |
+6 | pub struct Test {}
+  |     ^^^^^^
+
+error: macro can only be used for main function
+ --> tests/main/03-wrong-usage.rs:9:4
+  |
+9 | fn not_main() {}
+  |    ^^^^^^^^
+
+error: missing `async` keyword in function declaration
+  --> tests/main/03-wrong-usage.rs:12:1
+   |
+12 | fn main() {}
+   | ^^

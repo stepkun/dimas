@@ -9,6 +9,10 @@
 //! Typically it is sufficient to include the prelude with
 //!
 //! ```use dimas::prelude::*;```
+//!
+
+#[doc(hidden)]
+extern crate alloc;
 
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");

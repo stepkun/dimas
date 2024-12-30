@@ -42,18 +42,12 @@ enum DimasctlCommand {
 fn main() -> Result<()> {
 	let args = DimasctlArgs::parse();
 
-
 	match &args.command {
-		DimasctlCommand::List => {
-		}
-		DimasctlCommand::Ping => {
-		}
-		DimasctlCommand::Scout => {
-		}
-		DimasctlCommand::SetState => {
-		}
-		DimasctlCommand::Shutdown => {
-		}
+		DimasctlCommand::List => {}
+		DimasctlCommand::Ping => {}
+		DimasctlCommand::Scout => {}
+		DimasctlCommand::SetState => {}
+		DimasctlCommand::Shutdown => {}
 	}
 	Ok(())
 }
