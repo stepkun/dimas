@@ -11,7 +11,7 @@ use dimas_core::{
 	build_bhvr_ptr,
 };
 use hashbrown::HashMap;
-use roxmltree::{Document, NodeType, ParsingOptions};
+use roxmltree::{Document, Node, NodeType, ParsingOptions};
 use tracing::{instrument, Level};
 
 use crate::builtin::{
@@ -24,7 +24,7 @@ use super::{error::Error, xml_parser::XmlParser};
 
 // region:      --- types
 /// @TODO:
-type BehaviorCreateFn = dyn Fn(BehaviorConfig, Vec<Behavior>) -> Behavior + Send + Sync;
+pub type BehaviorCreateFn = dyn Fn(BehaviorConfig, Vec<Behavior>) -> Behavior + Send + Sync;
 // endregion:   --- types
 
 // region:      --- FactoryData
@@ -32,7 +32,7 @@ type BehaviorCreateFn = dyn Fn(BehaviorConfig, Vec<Behavior>) -> Behavior + Send
 pub struct FactoryData {
 	pub main_tree_id: Option<String>,
 	pub bhvr_map: HashMap<String, (BehaviorCategory, Arc<BehaviorCreateFn>)>,
-	tree_roots: HashMap<String, Behavior>,
+	pub tree_definitions: HashMap<String, String>,
 }
 
 impl FactoryData {
@@ -41,9 +41,9 @@ impl FactoryData {
 
 		// Fallback
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut node = build_bhvr_ptr!(config, "Fallback", Fallback);
-			node.data.children = children;
-			node
+			let mut bhvr = build_bhvr_ptr!(config, "Fallback", Fallback);
+			bhvr.data.children = children;
+			bhvr
 		};
 		map.insert(
 			"Fallback".into(),
@@ -52,9 +52,9 @@ impl FactoryData {
 
 		// Inverter
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut node = build_bhvr_ptr!(config, "Inverter", Inverter);
-			node.data.children = children;
-			node
+			let mut bhvr = build_bhvr_ptr!(config, "Inverter", Inverter);
+			bhvr.data.children = children;
+			bhvr
 		};
 		map.insert(
 			"Inverter".into(),
@@ -63,9 +63,9 @@ impl FactoryData {
 
 		// Retry
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut node = build_bhvr_ptr!(config, "Retry", Retry);
-			node.data.children = children;
-			node
+			let mut bhvr = build_bhvr_ptr!(config, "Retry", Retry);
+			bhvr.data.children = children;
+			bhvr
 		};
 		map.insert(
 			"Retry".into(),
@@ -74,9 +74,9 @@ impl FactoryData {
 
 		// Sequence
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut node = build_bhvr_ptr!(config, "Sequence", Sequence);
-			node.data.children = children;
-			node
+			let mut bhvr = build_bhvr_ptr!(config, "Sequence", Sequence);
+			bhvr.data.children = children;
+			bhvr
 		};
 		map.insert(
 			"Sequence".into(),
@@ -85,6 +85,19 @@ impl FactoryData {
 
 		map
 	}
+
+	#[instrument(level = Level::DEBUG, skip_all)]
+	pub fn register_behavior<F>(
+		&mut self,
+		name: impl Into<String>,
+		bhvr_fn: F,
+		bhvr_type: BehaviorCategory,
+	) where
+		F: Fn(BehaviorConfig, Vec<Behavior>) -> Behavior + Send + Sync + 'static,
+	{
+		self.bhvr_map
+			.insert(name.into(), (bhvr_type, Arc::new(bhvr_fn)));
+	}
 }
 
 impl Default for FactoryData {
@@ -92,7 +105,7 @@ impl Default for FactoryData {
 		Self {
 			main_tree_id: None,
 			bhvr_map: Self::create_fundamentals(),
-			tree_roots: HashMap::new(),
+			tree_definitions: HashMap::new(),
 		}
 	}
 }
@@ -128,13 +141,13 @@ impl BTFactory {
 	pub fn create_tree(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
 		// remove leading linebreaks, as those lead to an error
 		let xml = xml.trim_start_matches('\n');
-		let parser = XmlParser::default();
 
-		let root_node = parser.parse_root(&self.root_blackboard, &mut self.data, xml)?;
-		Ok(BehaviorTree::new(root_node))
+		let root_bhvr = XmlParser::parse_main_xml(&self.root_blackboard, &mut self.data, xml)?;
+		Ok(BehaviorTree::new(root_bhvr))
 	}
 
 	/// @TODO:
+	#[inline]
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub fn register_behavior<F>(
 		&mut self,
@@ -145,8 +158,7 @@ impl BTFactory {
 		F: Fn(BehaviorConfig, Vec<Behavior>) -> Behavior + Send + Sync + 'static,
 	{
 		self.data
-			.bhvr_map
-			.insert(name.into(), (bhvr_type, Arc::new(bhvr_fn)));
+			.register_behavior(name.into(), bhvr_fn, bhvr_type);
 	}
 
 	/// @TODO:
@@ -155,9 +167,8 @@ impl BTFactory {
 	pub fn register_subtree(&mut self, xml: &str) -> Result<(), Error> {
 		// remove leading linebreaks, as those lead to an error
 		let xml = xml.trim_start_matches('\n');
-		let parser = XmlParser::default();
 
-		parser.parse_subtree(&self.root_blackboard, &mut self.data, xml)
+		XmlParser::parse_sub_xml(&self.root_blackboard, &mut self.data, xml)
 	}
 }
 

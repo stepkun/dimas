@@ -23,9 +23,9 @@ async fn main() -> Result<()> {
 
 	let mut agent = Agent::create()?;
 
-	// nodes must be registered before they are addressed in a behavior tree
-	agent.register_nodes(IntervalTimer::register);
-	agent.register_nodes(Publisher::register);
+	// behaviors must be registered before they are addressed in a behavior tree
+	agent.register_behavior(IntervalTimer::register);
+	agent.register_behavior(Publisher::register);
 
 	agent.set_behavior(XML);
 

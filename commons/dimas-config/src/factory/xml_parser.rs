@@ -9,19 +9,25 @@ use std::dbg;
 // region:      --- modules
 use alloc::{
 	borrow::ToOwned,
+	format,
 	string::{String, ToString},
+	sync::Arc,
 	vec::Vec,
 };
 use dimas_core::{
 	behavior::{Behavior, BehaviorCategory, BehaviorConfig},
-	blackboard::Blackboard,
-	port::PortRemapping,
+	blackboard::{Blackboard, BlackboardString},
+	build_bhvr_ptr,
+	port::{PortChecks, PortRemapping},
 };
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType, ParsingOptions};
 use tracing::{instrument, Level};
 
-use super::{error::Error, factory::FactoryData};
+use super::{
+	error::Error,
+	factory::{BehaviorCreateFn, FactoryData},
+};
 // endregion:   --- modules
 
 // region:      --- helper
@@ -52,10 +58,7 @@ impl AttrsToMap for Attributes<'_, '_> {
 // endregion:   --- helper
 
 // region:      --- XmlParser
-#[derive(Debug, Default)]
-pub struct XmlParser {
-	options: ParsingOptions,
-}
+pub struct XmlParser {}
 
 impl XmlParser {
 	/// @TODO:
@@ -125,29 +128,49 @@ impl XmlParser {
 		Ok(())
 	}
 
+	fn find_in_map(
+		element: Node,
+		data: &FactoryData,
+	) -> Result<(BehaviorCategory, Arc<BehaviorCreateFn>), Error> {
+		let bhvr_name = element.tag_name().name();
+		if let Some(id) = element.attribute("ID") {
+			Ok(data
+				.bhvr_map
+				.get(id)
+				.ok_or_else(|| Error::UnknownBehavior(bhvr_name.into()))?
+				.clone())
+		} else {
+			Ok(data
+				.bhvr_map
+				.get(bhvr_name)
+				.ok_or_else(|| Error::UnknownBehavior(bhvr_name.into()))?
+				.clone())
+		}
+	}
+
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn build_child(
-		&self,
 		element: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
 		tree_name: &str,
 		path: &str,
 	) -> Result<Behavior, Error> {
-		let bhvr_name = element.tag_name().name();
-		let (bhvr_category, bhvr_fn) = data
-			.bhvr_map
-			.get(bhvr_name)
-			.ok_or_else(|| Error::UnknownBehavior(bhvr_name.into()))?
-			.clone();
+		// lookup behavior in registered behaviors and subtree definitions
+		// sub trees must have been parsed before their usage
+		let res = Self::find_in_map(element, data);
+		let Ok((bhvr_category, bhvr_fn)) = res else {
+			return Self::build_subtree(element, data, blackboard, path);
+		};
 
+		let bhvr_name = element.tag_name().name();
 		let attributes = element.attributes();
 		let mut config = BehaviorConfig::new(blackboard.clone());
 		config.path = path.to_owned() + bhvr_name;
 
-		let node = match bhvr_category {
+		let bhvr = match bhvr_category {
 			BehaviorCategory::Action | BehaviorCategory::Condition => {
 				if element.has_children() {
 					return Err(Error::ChildrenNotAllowed(bhvr_category.to_string()));
@@ -157,13 +180,13 @@ impl XmlParser {
 				behavior
 			}
 			BehaviorCategory::Control => {
-				let children = self.build_children(element, data, blackboard, tree_name, path)?;
+				let children = Self::build_children(element, data, blackboard, tree_name, path)?;
 				let mut behavior = bhvr_fn(config, children);
 				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
 				behavior
 			}
 			BehaviorCategory::Decorator => {
-				let children = self.build_children(element, data, blackboard, tree_name, path)?;
+				let children = Self::build_children(element, data, blackboard, tree_name, path)?;
 				if children.len() != 1 {
 					return Err(Error::DecoratorChildren(element.tag_name().name().into()));
 				}
@@ -171,17 +194,15 @@ impl XmlParser {
 				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
 				behavior
 			}
-			BehaviorCategory::SubTree => todo!(),
 		};
 
-		Ok(node)
+		Ok(bhvr)
 	}
 
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn build_children(
-		&self,
 		element: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
@@ -195,7 +216,7 @@ impl XmlParser {
 				NodeType::Comment | NodeType::Text => {} // ignore
 				NodeType::Root => todo!(),               // this should not happen
 				NodeType::Element => {
-					let behavior = self.build_child(child, data, blackboard, tree_name, path)?;
+					let behavior = Self::build_child(child, data, blackboard, tree_name, path)?;
 					children.push(behavior);
 				}
 				NodeType::PI => {
@@ -207,25 +228,93 @@ impl XmlParser {
 		Ok(children)
 	}
 
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn build_subtree(
+		element: Node,
+		data: &mut FactoryData,
+		blackboard: &Blackboard,
+		path: &str,
+	) -> Result<Behavior, Error> {
+		if let Some(id) = element.attribute("ID") {
+			let definition = match data.tree_definitions.get(id) {
+				Some(def) => def.to_owned(),
+				None => return Err(Error::UnknownBehavior(id.into())),
+			};
+			let doc = Document::parse(&definition)?;
+			let root = doc.root_element();
+
+			let attributes = element.attributes();
+			let path = path.to_owned() + "->" + id;
+
+			let attributes = attributes.to_map()?;
+			let mut subtree_blackboard = Blackboard::new(blackboard);
+
+			// Process attributes (Ports, special fields, etc)
+			for (attr, value) in attributes {
+				// Set autoremapping to true or false
+				if attr == "_autoremap" {
+					let val = value.parse::<bool>()?;
+
+					subtree_blackboard.enable_auto_remapping(val);
+					continue;
+				} else if !attr.is_allowed_port_name() {
+					continue;
+				}
+
+				if let Some(port_name) = value.strip_bb_pointer() {
+					// Add remapping if `value` is a Blackboard pointer
+					subtree_blackboard.add_subtree_remapping(attr.clone(), port_name);
+				} else {
+					// Set string value into Blackboard
+					subtree_blackboard.set(attr, value.clone());
+				}
+			}
+
+			Self::build_child(root, data, &subtree_blackboard, id, &path)
+		} else {
+			let bhvr_name = element.tag_name().name();
+			Err(Error::UnknownBehavior(bhvr_name.into()))
+		}
+	}
+
+	/// @TODO:
+	/// # Errors
+	fn get_build_instructions(element: Node, id: &str) -> Result<String, Error> {
+		let source = element.document().input_text();
+		let pattern = format!("\"{id}\"");
+		let start = pattern.len()
+			+ 1 + source
+			.find(&pattern)
+			.ok_or_else(|| Error::MissingId(id.into()))?;
+		let end = start
+			+ source[start..]
+				.find("</BehaviorTree")
+				.ok_or_else(|| Error::MissingId(id.into()))?;
+		Ok(source[start..end]
+			.replace(['\n', '\t'], "")
+			.trim()
+			.replace("   ", " ")
+			.replace("  ", " "))
+	}
+
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn parse_behavior(
-		&self,
 		element: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
 		tree_id: &str,
 		path: &str,
 	) -> Result<Behavior, Error> {
-		// lookup behavior in registered behaviors
+		// lookup behavior in registered behaviors and subtree definitions
 		// sub trees must have been parsed before their usage
+		let res = Self::find_in_map(element, data);
+		let Ok((bhvr_category, bhvr_fn)) = res else {
+			return Self::build_subtree(element, data, blackboard, path);
+		};
+
 		let bhvr_name = element.tag_name().name();
-		let (bhvr_category, bhvr_fn) = data
-			.bhvr_map
-			.get(bhvr_name)
-			.ok_or_else(|| Error::UnknownBehavior(bhvr_name.into()))?
-			.clone();
 
 		let attributes = element.attributes();
 		let mut config = BehaviorConfig::new(blackboard.clone());
@@ -241,13 +330,13 @@ impl XmlParser {
 				Ok(behavior)
 			}
 			BehaviorCategory::Control => {
-				let children = self.build_children(element, data, blackboard, tree_id, path)?;
+				let children = Self::build_children(element, data, blackboard, tree_id, path)?;
 				let mut behavior = bhvr_fn(config, children);
 				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
 				Ok(behavior)
 			}
 			BehaviorCategory::Decorator => {
-				let children = self.build_children(element, data, blackboard, tree_id, path)?;
+				let children = Self::build_children(element, data, blackboard, tree_id, path)?;
 				if children.len() != 1 {
 					return Err(Error::DecoratorChildren(element.tag_name().name().into()));
 				}
@@ -255,7 +344,6 @@ impl XmlParser {
 				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
 				Ok(behavior)
 			}
-			BehaviorCategory::SubTree => todo!(),
 		}
 	}
 
@@ -263,7 +351,6 @@ impl XmlParser {
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
 	fn parse_behavior_tree(
-		&self,
 		bt: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
@@ -275,21 +362,20 @@ impl XmlParser {
 				NodeType::Comment | NodeType::Text => {} // ignore
 				NodeType::Root => todo!(),               // this should not happen
 				NodeType::Element => {
-					return self.parse_behavior(element, data, blackboard, tree_id, &path);
+					return Self::parse_behavior(element, data, blackboard, tree_id, &path);
 				}
 				NodeType::PI => {
-					return Err(Error::UnkownProcessingInstruction);
+					todo!(); //return Err(Error::UnkownProcessingInstruction);
 				}
 			}
 		}
-		todo!()
+		Err(Error::NoTreeContent)
 	}
 
 	/// @TODO:
 	/// # Errors
-	#[instrument(level = Level::DEBUG, skip_all)]
+	//#[instrument(level = Level::DEBUG, skip_all)]
 	fn parse_document(
-		&self,
 		doc: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
@@ -307,27 +393,27 @@ impl XmlParser {
 						"BehaviorTree" => {
 							// check for root tree ID
 							if let Some(id) = element.attribute("ID") {
-								let behavior = self.parse_behavior_tree(
-									element,
-									data,
-									blackboard,
-									id,
-									String::new(),
-								)?;
-
-								// root behavior?
-                                if let Some(main_id) = &data.main_tree_id {
-                                    if main_id == id {
-                                        root_behavior = Some(behavior);
+								// 'main_behavior_to_execute' known?
+								if let Some(main_id) = &data.main_tree_id {
+									// is it 'main_behavior_to_execute'?
+									if main_id == id {
+										let behavior = Self::parse_behavior_tree(
+											element,
+											data,
+											blackboard,
+											id,
+											String::from(id),
+										)?;
+										root_behavior = Some(behavior);
 									} else {
 										// SubTree definition
-										dbg!(&element);
-										todo!();
+										let bi = Self::get_build_instructions(element, id)?;
+										data.tree_definitions.insert(id.into(), bi);
 									}
 								} else {
 									// SubTree definition
-									dbg!(&element);
-									todo!();
+									let bi = Self::get_build_instructions(element, id)?;
+									data.tree_definitions.insert(id.into(), bi);
 								}
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
@@ -349,16 +435,15 @@ impl XmlParser {
 		Ok(root_behavior)
 	}
 
-	/// @TODO:
+ 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub fn parse_root(
-		&self,
+	pub fn parse_main_xml(
 		blackboard: &Blackboard,
 		data: &mut FactoryData,
 		xml: &str,
 	) -> Result<Behavior, Error> {
-		let doc = Document::parse_with_options(xml, self.options)?;
+		let doc = Document::parse(xml)?;
 		let root = doc.root_element();
 		if root.tag_name().name() != "root" {
 			return Err(Error::RootName);
@@ -372,7 +457,7 @@ impl XmlParser {
 
 		if let Some(id) = root.attribute("main_tree_to_execute") {
 			data.main_tree_id = Some(id.into());
-            let root_behavior = self.parse_document(root, data, blackboard)?;
+			let root_behavior = Self::parse_document(root, data, blackboard)?;
 			root_behavior.map_or_else(
 				|| {
 					Err(Error::Unexpected(
@@ -383,21 +468,20 @@ impl XmlParser {
 				},
 				Ok,
 			)
-			} else {
-            Err(Error::NoTreeToExecute)
-        }
+		} else {
+			todo!() // Err(Error::NoTreeToExecute)
+		}
 	}
 
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub fn parse_subtree(
-		&self,
+	pub fn parse_sub_xml(
 		blackboard: &Blackboard,
 		data: &mut FactoryData,
 		xml: &str,
 	) -> Result<(), Error> {
-		let doc = Document::parse_with_options(xml, self.options)?;
+		let doc = Document::parse(xml)?;
 		let root = doc.root_element();
 		if root.tag_name().name() != "root" {
 			return Err(Error::RootName);
@@ -411,9 +495,9 @@ impl XmlParser {
 
 		if let Some(id) = root.attribute("main_tree_to_execute") {
 			return Err(Error::MainTreeNotAllowed);
-		}
+		};
 
-		let _ = self.parse_document(root, data, blackboard)?;
+		let _res = Self::parse_document(root, data, blackboard)?;
 
 		Ok(())
 	}

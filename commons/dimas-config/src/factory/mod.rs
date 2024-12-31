@@ -13,6 +13,6 @@ mod factory;
 mod xml_parser;
 
 // flatten:
+pub use error::Error;
 #[allow(clippy::module_name_repetitions)]
 pub use factory::BTFactory;
-pub use error::Error;

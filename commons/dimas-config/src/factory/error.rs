@@ -6,6 +6,8 @@
 #[doc(hidden)]
 extern crate alloc;
 
+use core::str::ParseBoolError;
+
 // region		--- modules
 use alloc::{
 	string::{FromUtf8Error, String},
@@ -52,8 +54,16 @@ pub enum Error {
 	NoMainTree,
 
 	/// @TODO:
+	#[error("no behavior content found")]
+	NoTreeContent,
+
+	/// @TODO:
 	#[error("no 'main_tree_to_execute' provided")]
 	NoTreeToExecute,
+
+	/// @TODO:
+	#[error("{0}")]
+	ParseBool(#[from] ParseBoolError),
 
 	/// @TODO:
 	#[error("Error parsing expression in port value: {0}")]

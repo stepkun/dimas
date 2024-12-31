@@ -285,8 +285,6 @@ pub enum BehaviorCategory {
 	Control,
 	/// Node with one child that modifies the execution or result of the node.
 	Decorator,
-	/// Node without children? is a reference to behavior sub-tree.
-	SubTree,
 }
 
 impl Display for BehaviorCategory {
@@ -296,7 +294,6 @@ impl Display for BehaviorCategory {
 			Self::Condition => "Condition",
 			Self::Control => "Control",
 			Self::Decorator => "Decorator",
-			Self::SubTree => "SubTree",
 		};
 
 		write!(f, "{text}")

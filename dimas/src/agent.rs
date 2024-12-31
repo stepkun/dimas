@@ -2,12 +2,12 @@
 
 // region:      --- modules
 use anyhow::Result;
-use dimas_config::factory::{Error, BTFactory};
+use dimas_config::factory::{BTFactory, Error};
 use dimas_core::{
 	behavior::tree::BehaviorTree,
 	behavior::{BehaviorResult, BehaviorStatus},
 };
-use dimas_macros::{behavior, register_action, register_condition};
+use dimas_macros::{behavior, register_action, register_condition, register_control};
 use std::time::Duration;
 use tracing::{event, instrument, Level};
 // endregion:   --- modules
@@ -122,8 +122,8 @@ impl Agent {
 		})
 	}
 
-	/// Register nodes
-	pub fn register_nodes(&mut self, reg_fn: impl Fn(&mut BTFactory)) {
+	/// Register behavior
+	pub fn register_behavior(&mut self, reg_fn: impl Fn(&mut BTFactory)) {
 		reg_fn(&mut self.bt_factory);
 	}
 
