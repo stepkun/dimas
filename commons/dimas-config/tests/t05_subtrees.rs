@@ -60,6 +60,58 @@ const XML: &str = r#"
 </root>
 "#;
 
+const XML1: &str = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+        main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <Fallback>
+            <Inverter>
+                <IsDoorClosed/>
+            </Inverter>
+            <SubTree ID="DoorClosed"
+                _autoremap="false"/>
+          </Fallback>
+            <PassThroughDoor/>
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Condition ID="IsDoorClosed"
+            editable="true"/>
+        <Action ID="PassThroughDoor"
+            editable="true"/>
+    </TreeNodesModel>
+</root>
+"#;
+
+const XML2: &str = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="DoorClosed">
+        <Fallback>
+            <OpenDoor/>
+            <Retry num_attempts="5">
+                <PickLock/>
+            </Retry>
+            <SmashDoor/>
+        </Fallback>
+    </BehaviorTree>
+
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="OpenDoor"
+            editable="true"/>
+        <Action ID="PickLock"
+            editable="true"/>
+        <Action ID="SmashDoor"
+            editable="true"/>
+    </TreeNodesModel>
+</root>
+"#;
+
 /// Condition "IsDoorClosed"
 #[behavior(SyncCondition)]
 struct IsDoorClosed {}
@@ -97,7 +149,7 @@ impl PassThroughDoor {
 #[tokio::test]
 async fn main() -> anyhow::Result<()> {
 	// create BT environment
-	let mut factory = BTFactory::default();
+	let mut factory = BTFactory::extended();
 
 	// register main tree nodes
 	register_condition!(factory, "IsDoorClosed", IsDoorClosed);
@@ -115,8 +167,31 @@ async fn main() -> anyhow::Result<()> {
 	Ok(())
 }
 
+#[tokio::test]
+async fn alternate() -> anyhow::Result<()> {
+	// create BT environment
+	let mut factory = BTFactory::extended();
+
+	// register main tree nodes
+	register_condition!(factory, "IsDoorClosed", IsDoorClosed);
+	register_action!(factory, "PassThroughDoor", PassThroughDoor);
+	// register subtree
+	subtree::register(&mut factory)?;
+
+	// create the BT
+	let mut tree = factory.create_tree(XML1)?;
+
+	// run the BT
+	let result = tree.tick_while_running().await?;
+	println!("tree result is {result}");
+
+	Ok(())
+}
+
 /// Implementation of the subtree
 mod subtree {
+	use dimas_config::factory::Error;
+
 	use super::*;
 
 	/// SyncAction "OpenDoor"
@@ -178,5 +253,10 @@ mod subtree {
 		register_action!(factory, "OpenDoor", OpenDoor);
 		register_action!(factory, "PickLock", PickLock);
 		register_action!(factory, "SmashDoor", SmashDoor);
+	}
+
+	pub fn register(factory: &mut BTFactory) -> Result<(), Error> {
+		register_nodes(factory);
+		factory.register_subtree(XML2)
 	}
 }

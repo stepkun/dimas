@@ -42,12 +42,28 @@ pub enum Error {
 	ElementNotSupported(String),
 
 	/// @TODO:
+	#[error("loop in tree detected: [{0}] -> [{1}]")]
+	LoopDetected(String, String),
+
+	/// @TODO:
 	#[error("attribute 'main_tree_to_execute' not allowed in subtree definition")]
 	MainTreeNotAllowed,
 
 	/// @TODO:
-	#[error("missig attribute 'ID' in tag [{0}]")]
+	#[error("missing attribute [{0}]")]
+	MissingAttribute(String),
+
+	/// @TODO:
+	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(String),
+
+	/// @TODO:
+	#[error("missing end tag for [{0}]")]
+	MissingEndTag(String),
+
+	/// @TODO:
+	#[error("missing tag [{0}]")]
+	MissingTag(String),
 
 	/// @TODO:
 	#[error("no main tree provided")]

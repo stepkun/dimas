@@ -7,7 +7,7 @@ use dimas_core::{
 	behavior::tree::BehaviorTree,
 	behavior::{BehaviorResult, BehaviorStatus},
 };
-use dimas_macros::{behavior, register_action, register_condition, register_control};
+use dimas_macros::{behavior, register_action, register_condition};
 use std::time::Duration;
 use tracing::{event, instrument, Level};
 // endregion:   --- modules

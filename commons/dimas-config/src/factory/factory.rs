@@ -2,8 +2,15 @@
 
 //! [`BehaviorTree`] factory of `DiMAS`
 
+extern crate std;
+use std::dbg;
+
 // region:      --- modules
-use alloc::{string::String, sync::Arc, vec::Vec};
+use alloc::{
+	string::{String, ToString},
+	sync::Arc,
+	vec::Vec,
+};
 use core::fmt::Debug;
 use dimas_core::{
 	behavior::{tree::BehaviorTree, Behavior, BehaviorCategory, BehaviorConfig},
@@ -15,8 +22,13 @@ use roxmltree::{Document, Node, NodeType, ParsingOptions};
 use tracing::{instrument, Level};
 
 use crate::builtin::{
-	control::{Fallback, Sequence},
-	decorator::{Inverter, Retry},
+	control::{
+		Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
+		SequenceStar,
+	},
+	decorator::{
+		ForceFailure, ForceSuccess, Inverter, KeepRunningUntilFailure, Repeat, Retry, RunOnce,
+	},
 };
 
 use super::{error::Error, xml_parser::XmlParser};
@@ -36,6 +48,142 @@ pub struct FactoryData {
 }
 
 impl FactoryData {
+	#[allow(clippy::too_many_lines)]
+	fn add_extensions(&mut self) {
+		// ForceFailure
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "ForceFailure", ForceFailure);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"ForceFailure".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// ForceSuccess
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "ForceSuccess", ForceSuccess);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"ForceSuccess".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// IfThenElse
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "IfThenElse", IfThenElse);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"IfThenElse".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
+		);
+
+		// Inverter
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "Inverter", Inverter);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"Inverter".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// KeepRunningUntilFailure
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr =
+				build_bhvr_ptr!(config, "KeepRunningUntilFailure", KeepRunningUntilFailure);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"KeepRunningUntilFailure".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// ParallelAll
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "ParallelAll", ParallelAll);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"ParallelAll".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
+		);
+
+		// ReactiveFallback
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "ReactiveFallback", ReactiveFallback);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"ReactiveFallback".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
+		);
+
+		// ReactiveSequence
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "ReactiveSequence", ReactiveSequence);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"ReactiveSequence".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
+		);
+
+		// Repeat
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "Repeat", Repeat);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"Repeat".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// Retry
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "Retry", Retry);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"Retry".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// RunOnce
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "RunOnce", RunOnce);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"RunOnce".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// SequenceStar
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "SequenceStar", SequenceStar);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"SequenceStar".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
+		);
+	}
+
 	fn create_fundamentals() -> HashMap<String, (BehaviorCategory, Arc<BehaviorCreateFn>)> {
 		let mut map: HashMap<String, (BehaviorCategory, Arc<BehaviorCreateFn>)> = HashMap::new();
 
@@ -50,26 +198,15 @@ impl FactoryData {
 			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
 		);
 
-		// Inverter
+		// Parallel
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut bhvr = build_bhvr_ptr!(config, "Inverter", Inverter);
+			let mut bhvr = build_bhvr_ptr!(config, "Parallel", Parallel);
 			bhvr.data.children = children;
 			bhvr
 		};
 		map.insert(
-			"Inverter".into(),
-			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
-		);
-
-		// Retry
-		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut bhvr = build_bhvr_ptr!(config, "Retry", Retry);
-			bhvr.data.children = children;
-			bhvr
-		};
-		map.insert(
-			"Retry".into(),
-			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+			"Parallel".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
 		);
 
 		// Sequence
@@ -115,34 +252,37 @@ impl Default for FactoryData {
 /// @TODO:
 #[allow(clippy::module_name_repetitions)]
 pub struct BTFactory {
-	root_blackboard: Blackboard,
+	blackboard: Blackboard,
 	data: FactoryData,
 }
 
 impl BTFactory {
 	/// Create an empty behavior factory using the given [`Blackboard`].
 	#[must_use]
-	pub fn new(blackboard: Blackboard) -> Self {
-		Self {
-			root_blackboard: blackboard,
-			data: FactoryData::default(),
-		}
+	pub fn extended() -> Self {
+		let mut data = FactoryData::default();
+		data.add_extensions();
+		Self::new(Blackboard::default(), data)
+	}
+
+	/// Create an empty behavior factory using the given [`Blackboard`].
+	#[must_use]
+	pub const fn new(blackboard: Blackboard, data: FactoryData) -> Self {
+		Self { blackboard, data }
 	}
 
 	/// @TODO:
 	#[must_use]
 	pub const fn blackboard(&self) -> &Blackboard {
-		&self.root_blackboard
+		&self.blackboard
 	}
 
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub fn create_tree(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
-		// remove leading linebreaks, as those lead to an error
-		let xml = xml.trim_start_matches('\n');
-
-		let root_bhvr = XmlParser::parse_main_xml(&self.root_blackboard, &mut self.data, xml)?;
+		let xml = Self::shrink_xml(xml);
+		let root_bhvr = XmlParser::parse_main_xml(&self.blackboard, &mut self.data, &xml)?;
 		Ok(BehaviorTree::new(root_bhvr))
 	}
 
@@ -162,20 +302,76 @@ impl BTFactory {
 	}
 
 	/// @TODO:
-	/// # Errors
+	/// # Errors;
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub fn register_subtree(&mut self, xml: &str) -> Result<(), Error> {
-		// remove leading linebreaks, as those lead to an error
-		let xml = xml.trim_start_matches('\n');
+		let xml = Self::shrink_xml(xml);
+		XmlParser::parse_sub_xml(&self.blackboard, &mut self.data, &xml)
+	}
 
-		XmlParser::parse_sub_xml(&self.root_blackboard, &mut self.data, xml)
+	/// Reduce the input XML by eliminating everything
+	/// that is not information but only formatting
+	fn shrink_xml(input: &str) -> String {
+		let mut res = String::with_capacity(input.len());
+		let mut in_whitespaces = false;
+		let mut in_tag = false;
+		let mut in_literal = false;
+		let mut in_assignment = false;
+		for char in input.chars() {
+			match char {
+				// eliminate line breaks
+				'\n' => continue,
+				'<' => {
+					in_tag = true;
+					in_whitespaces = false;
+					in_assignment = false;
+				}
+				'>' => {
+					in_tag = false;
+					in_whitespaces = false;
+					in_assignment = false;
+				}
+				'"' => {
+					in_literal = !in_literal;
+					in_whitespaces = false;
+					in_assignment = false;
+				}
+				' ' | '\t' => {
+					if !in_tag {
+						continue;
+					}
+					if !in_literal {
+						if in_whitespaces || in_assignment {
+							continue;
+						}
+						in_whitespaces = true;
+					};
+				}
+				'=' => {
+					if in_whitespaces {
+						res.pop();
+					};
+					in_whitespaces = false;
+					in_assignment = true;
+				}
+				_ => {
+					in_whitespaces = false;
+					in_assignment = false;
+				}
+			};
+			res.push(char);
+		}
+
+		res.shrink_to_fit();
+		//dbg!(&res);
+		res
 	}
 }
 
 impl Debug for BTFactory {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		f.debug_struct("BTFactory")
-			.field("blackboard", &self.root_blackboard)
+			.field("blackboard", &self.blackboard)
 			//.field("bhvr_map", &self.bhvr_map)
 			.finish_non_exhaustive()
 	}
@@ -183,7 +379,7 @@ impl Debug for BTFactory {
 
 impl Default for BTFactory {
 	fn default() -> Self {
-		Self::new(Blackboard::default())
+		Self::new(Blackboard::default(), FactoryData::default())
 	}
 }
 // endregion:   --- BTFactory

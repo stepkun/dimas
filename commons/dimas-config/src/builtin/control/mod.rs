@@ -2,21 +2,21 @@
 
 //! Built in control nodes of `DiMAS`
 
-// mod if_then_else;
-// pub use if_then_else::*;
+mod if_then_else;
+pub use if_then_else::*;
 mod fallback;
 pub use fallback::*;
-// mod reactive_fallback;
-// pub use reactive_fallback::*;
-// mod parallel;
-// pub use parallel::*;
-// mod parallel_all;
-// pub use parallel_all::*;
+mod reactive_fallback;
+pub use reactive_fallback::*;
+mod parallel;
+pub use parallel::*;
+mod parallel_all;
+pub use parallel_all::*;
 mod sequence;
 pub use sequence::*;
-// mod sequence_star;
-// pub use sequence_star::*;
-// mod reactive_sequence;
-// pub use reactive_sequence::*;
-// mod while_do_else;
-// pub use while_do_else::*;
+mod sequence_star;
+pub use sequence_star::*;
+mod reactive_sequence;
+pub use reactive_sequence::*;
+mod while_do_else;
+pub use while_do_else::*;

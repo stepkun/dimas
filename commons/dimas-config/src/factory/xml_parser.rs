@@ -3,7 +3,6 @@
 //! XML parser for the [`BehaviorTree`] factory [`BTFactory`] of `DiMAS`
 
 extern crate std;
-use core::borrow::{Borrow, BorrowMut};
 use std::dbg;
 
 // region:      --- modules
@@ -244,6 +243,9 @@ impl XmlParser {
 			let root = doc.root_element();
 
 			let attributes = element.attributes();
+			if path.contains(id) {
+				return Err(Error::LoopDetected(path.into(), id.into()));
+			}
 			let path = path.to_owned() + "->" + id;
 
 			let attributes = attributes.to_map()?;
@@ -281,7 +283,8 @@ impl XmlParser {
 	/// # Errors
 	fn get_build_instructions(element: Node, id: &str) -> Result<String, Error> {
 		let source = element.document().input_text();
-		let pattern = format!("\"{id}\"");
+		let pattern = format!("BehaviorTree ID=\"{id}\"");
+
 		let start = pattern.len()
 			+ 1 + source
 			.find(&pattern)
@@ -289,12 +292,11 @@ impl XmlParser {
 		let end = start
 			+ source[start..]
 				.find("</BehaviorTree")
-				.ok_or_else(|| Error::MissingId(id.into()))?;
-		Ok(source[start..end]
-			.replace(['\n', '\t'], "")
-			.trim()
-			.replace("   ", " ")
-			.replace("  ", " "))
+				.ok_or_else(|| Error::MissingEndTag("BehaviorTree".into()))?;
+
+		let res = source[start..end].to_string();
+
+		Ok(res)
 	}
 
 	/// @TODO:
@@ -379,7 +381,7 @@ impl XmlParser {
 		doc: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
-	) -> Result<Option<Behavior>, Error> {
+	) -> Result<(), Error> {
 		let mut root_behavior: Option<Behavior> = None;
 
 		for element in doc.children() {
@@ -391,30 +393,11 @@ impl XmlParser {
 					match element.tag_name().name() {
 						"TreeNodesModel" => {} // ignore
 						"BehaviorTree" => {
-							// check for root tree ID
+							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
-								// 'main_behavior_to_execute' known?
-								if let Some(main_id) = &data.main_tree_id {
-									// is it 'main_behavior_to_execute'?
-									if main_id == id {
-										let behavior = Self::parse_behavior_tree(
-											element,
-											data,
-											blackboard,
-											id,
-											String::from(id),
-										)?;
-										root_behavior = Some(behavior);
-									} else {
-										// SubTree definition
-										let bi = Self::get_build_instructions(element, id)?;
-										data.tree_definitions.insert(id.into(), bi);
-									}
-								} else {
-									// SubTree definition
-									let bi = Self::get_build_instructions(element, id)?;
-									data.tree_definitions.insert(id.into(), bi);
-								}
+								// store tree definition
+								let bi = Self::get_build_instructions(element, id)?;
+								data.tree_definitions.insert(id.into(), bi);
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
 							};
@@ -432,10 +415,10 @@ impl XmlParser {
 			}
 		}
 
-		Ok(root_behavior)
+		Ok(())
 	}
 
- 	/// @TODO:
+	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub fn parse_main_xml(
@@ -457,17 +440,17 @@ impl XmlParser {
 
 		if let Some(id) = root.attribute("main_tree_to_execute") {
 			data.main_tree_id = Some(id.into());
-			let root_behavior = Self::parse_document(root, data, blackboard)?;
-			root_behavior.map_or_else(
-				|| {
-					Err(Error::Unexpected(
-						"no tree created".into(),
-						file!().into(),
-						line!(),
-					))
-				},
-				Ok,
-			)
+
+			// first register all build instructions,
+			// than create the main tree
+			Self::parse_document(root, data, blackboard)?;
+			let definition = match data.tree_definitions.get(id) {
+				Some(def) => def.to_owned(),
+				None => return Err(Error::UnknownBehavior(id.into())),
+			};
+			let doc = Document::parse(&definition)?;
+			let main_tree = doc.root_element();
+			Self::parse_behavior_tree(main_tree, data, blackboard, id, String::from(id))
 		} else {
 			todo!() // Err(Error::NoTreeToExecute)
 		}
@@ -497,9 +480,7 @@ impl XmlParser {
 			return Err(Error::MainTreeNotAllowed);
 		};
 
-		let _res = Self::parse_document(root, data, blackboard)?;
-
-		Ok(())
+		Self::parse_document(root, data, blackboard)
 	}
 }
 // endregion:   --- XmlParser
