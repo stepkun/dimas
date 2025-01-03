@@ -21,16 +21,6 @@ const XML: &str = r#"
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
-    <BehaviorTree ID="DoorClosed">
-        <Fallback>
-            <OpenDoor/>
-            <Retry num_attempts="5">
-                <PickLock/>
-            </Retry>
-            <SmashDoor/>
-        </Fallback>
-    </BehaviorTree>
-
     <BehaviorTree ID="MainTree">
         <Sequence>
             <Fallback>
@@ -42,6 +32,16 @@ const XML: &str = r#"
           </Fallback>
             <PassThroughDoor/>
         </Sequence>
+    </BehaviorTree>
+
+    <BehaviorTree ID="DoorClosed">
+        <Fallback>
+            <OpenDoor/>
+            <Retry num_attempts="5">
+                <PickLock/>
+            </Retry>
+            <SmashDoor/>
+        </Fallback>
     </BehaviorTree>
 
     <!-- Description of Node Models (used by Groot) -->

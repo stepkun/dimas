@@ -25,7 +25,7 @@ pub fn get_remapped_key(
 	port_name: impl AsRef<str>,
 	remapped_port: impl AsRef<str>,
 ) -> Option<String> {
-	if port_name.as_ref() == "=" {
+	if port_name.as_ref() == "{=}" || remapped_port.as_ref() == "{=}" {
 		Some(port_name.as_ref().to_string())
 	} else {
 		remapped_port.as_ref().strip_bb_pointer()

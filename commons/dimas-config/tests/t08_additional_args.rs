@@ -126,6 +126,7 @@ impl ActionC {
 	}
 }
 
+#[tokio::test]
 async fn main() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();

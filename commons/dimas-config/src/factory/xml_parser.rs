@@ -2,9 +2,6 @@
 
 //! XML parser for the [`BehaviorTree`] factory [`BTFactory`] of `DiMAS`
 
-extern crate std;
-use std::dbg;
-
 // region:      --- modules
 use alloc::{
 	borrow::ToOwned,
@@ -17,11 +14,11 @@ use dimas_core::{
 	behavior::{Behavior, BehaviorCategory, BehaviorConfig},
 	blackboard::{Blackboard, BlackboardString},
 	build_bhvr_ptr,
-	port::{PortChecks, PortRemapping},
+	port::{PortChecks, PortDirection, PortRemapping},
 };
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType, ParsingOptions};
-use tracing::{instrument, Level};
+use tracing::{event, instrument, Level};
 
 use super::{
 	error::Error,
@@ -72,6 +69,7 @@ impl XmlParser {
 
 		let mut remap = PortRemapping::new();
 
+		// build remapping table from attributes
 		for (port_name, port_value) in attributes.to_map()? {
 			remap.insert(port_name, port_value);
 		}
@@ -124,6 +122,22 @@ impl XmlParser {
 			}
 		}
 
+		// Use defaults for unspecified port values
+		for (port_name, port_info) in &manifest.ports {
+			let direction = port_info.direction();
+
+			if !matches!(direction, PortDirection::Output)
+				&& !config.has_port(direction, port_name)
+				&& port_info.default_value().is_some()
+			{
+				let value = port_info.default_value_str().ok_or_else(|| {
+					Error::PortWithoutDefault(port_name.clone(), config.path.clone())
+				})?;
+
+				config.add_port(&PortDirection::Input, port_name.clone(), value);
+			}
+		}
+
 		Ok(())
 	}
 
@@ -157,6 +171,7 @@ impl XmlParser {
 		tree_name: &str,
 		path: &str,
 	) -> Result<Behavior, Error> {
+		event!(Level::TRACE, "build_child");
 		// lookup behavior in registered behaviors and subtree definitions
 		// sub trees must have been parsed before their usage
 		let res = Self::find_in_map(element, data);
@@ -166,8 +181,8 @@ impl XmlParser {
 
 		let bhvr_name = element.tag_name().name();
 		let attributes = element.attributes();
-		let mut config = BehaviorConfig::new(blackboard.clone());
-		config.path = path.to_owned() + bhvr_name;
+		let mut config =
+			BehaviorConfig::new(blackboard.clone(), path.to_owned() + "->" + bhvr_name);
 
 		let bhvr = match bhvr_category {
 			BehaviorCategory::Action | BehaviorCategory::Condition => {
@@ -208,6 +223,7 @@ impl XmlParser {
 		tree_name: &str,
 		path: &str,
 	) -> Result<Vec<Behavior>, Error> {
+		event!(Level::TRACE, "build_children");
 		let mut children: Vec<Behavior> = Vec::new();
 
 		for child in element.children() {
@@ -234,6 +250,7 @@ impl XmlParser {
 		blackboard: &Blackboard,
 		path: &str,
 	) -> Result<Behavior, Error> {
+		event!(Level::TRACE, "build_subtree");
 		if let Some(id) = element.attribute("ID") {
 			let definition = match data.tree_definitions.get(id) {
 				Some(def) => def.to_owned(),
@@ -302,86 +319,12 @@ impl XmlParser {
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
-	fn parse_behavior(
-		element: Node,
-		data: &mut FactoryData,
-		blackboard: &Blackboard,
-		tree_id: &str,
-		path: &str,
-	) -> Result<Behavior, Error> {
-		// lookup behavior in registered behaviors and subtree definitions
-		// sub trees must have been parsed before their usage
-		let res = Self::find_in_map(element, data);
-		let Ok((bhvr_category, bhvr_fn)) = res else {
-			return Self::build_subtree(element, data, blackboard, path);
-		};
-
-		let bhvr_name = element.tag_name().name();
-
-		let attributes = element.attributes();
-		let mut config = BehaviorConfig::new(blackboard.clone());
-		config.path = path.to_owned() + bhvr_name;
-
-		match bhvr_category {
-			BehaviorCategory::Action | BehaviorCategory::Condition => {
-				if element.has_children() {
-					return Err(Error::ChildrenNotAllowed(bhvr_category.to_string()));
-				}
-				let mut behavior = bhvr_fn(config, Vec::new());
-				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
-				Ok(behavior)
-			}
-			BehaviorCategory::Control => {
-				let children = Self::build_children(element, data, blackboard, tree_id, path)?;
-				let mut behavior = bhvr_fn(config, children);
-				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
-				Ok(behavior)
-			}
-			BehaviorCategory::Decorator => {
-				let children = Self::build_children(element, data, blackboard, tree_id, path)?;
-				if children.len() != 1 {
-					return Err(Error::DecoratorChildren(element.tag_name().name().into()));
-				}
-				let mut behavior = bhvr_fn(config, children);
-				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
-				Ok(behavior)
-			}
-		}
-	}
-
-	/// @TODO:
-	/// # Errors
-	#[instrument(level = Level::DEBUG, skip_all)]
-	fn parse_behavior_tree(
-		bt: Node,
-		data: &mut FactoryData,
-		blackboard: &Blackboard,
-		tree_id: &str,
-		path: String,
-	) -> Result<Behavior, Error> {
-		for element in bt.children() {
-			match element.node_type() {
-				NodeType::Comment | NodeType::Text => {} // ignore
-				NodeType::Root => todo!(),               // this should not happen
-				NodeType::Element => {
-					return Self::parse_behavior(element, data, blackboard, tree_id, &path);
-				}
-				NodeType::PI => {
-					todo!(); //return Err(Error::UnkownProcessingInstruction);
-				}
-			}
-		}
-		Err(Error::NoTreeContent)
-	}
-
-	/// @TODO:
-	/// # Errors
-	//#[instrument(level = Level::DEBUG, skip_all)]
 	fn parse_document(
 		doc: Node,
 		data: &mut FactoryData,
 		blackboard: &Blackboard,
 	) -> Result<(), Error> {
+		event!(Level::TRACE, "parse_document");
 		let mut root_behavior: Option<Behavior> = None;
 
 		for element in doc.children() {
@@ -426,6 +369,7 @@ impl XmlParser {
 		data: &mut FactoryData,
 		xml: &str,
 	) -> Result<Behavior, Error> {
+		event!(Level::TRACE, "parse_main_xml");
 		let doc = Document::parse(xml)?;
 		let root = doc.root_element();
 		if root.tag_name().name() != "root" {
@@ -450,7 +394,8 @@ impl XmlParser {
 			};
 			let doc = Document::parse(&definition)?;
 			let main_tree = doc.root_element();
-			Self::parse_behavior_tree(main_tree, data, blackboard, id, String::from(id))
+			Self::build_child(main_tree, data, blackboard, id, id)
+			//Self::parse_behavior_definition(main_tree, data, blackboard, id, String::from(id))
 		} else {
 			todo!() // Err(Error::NoTreeToExecute)
 		}
@@ -464,6 +409,7 @@ impl XmlParser {
 		data: &mut FactoryData,
 		xml: &str,
 	) -> Result<(), Error> {
+		event!(Level::TRACE, "parse_sub_xml");
 		let doc = Document::parse(xml)?;
 		let root = doc.root_element();
 		if root.tag_name().name() != "root" {

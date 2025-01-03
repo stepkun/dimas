@@ -3,9 +3,12 @@
 
 //! Core of `DiMAS`
 
-// we need alloc
 #[doc(hidden)]
 extern crate alloc;
+
+#[doc(hidden)]
+#[cfg(feature = "std")]
+extern crate std;
 
 // see: https://robmosys.eu/wiki/start
 

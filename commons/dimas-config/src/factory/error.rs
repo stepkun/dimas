@@ -98,6 +98,10 @@ pub enum Error {
 	PortInvalid(String, String, Vec<String>),
 
 	/// @TODO:
+	#[error("port [{0}] in [{1}]has no default value")]
+	PortWithoutDefault(String, String),
+
+	/// @TODO:
 	#[error("root element must be named 'root'")]
 	RootName,
 

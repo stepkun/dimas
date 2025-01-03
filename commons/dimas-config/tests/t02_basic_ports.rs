@@ -54,7 +54,7 @@ impl SaySomething {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("message")?;
+		let msg = bhvr_.config.get_input::<String>("message")?;
 
 		println!("Robot says: {msg}");
 
@@ -94,6 +94,7 @@ async fn main() -> anyhow::Result<()> {
 
 	// create the BT
 	let mut tree = factory.create_tree(XML)?;
+	//std::dbg!(&tree);
 
 	// run the BT
 	let result = tree.tick_while_running().await?;

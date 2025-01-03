@@ -2,9 +2,6 @@
 
 //! `dimas-core` functional macros
 
-#[doc(hidden)]
-extern crate alloc;
-
 #[macro_export]
 /// Macro
 macro_rules! build_bhvr_ptr {
@@ -17,6 +14,7 @@ macro_rules! build_bhvr_ptr {
             behavior
         }
     };
+	(_) => { todo!(); };
 }
 
 /// Macro
@@ -33,6 +31,7 @@ macro_rules! define_ports {
             ports
         }
     };
+	(_) => { todo!(); };
 }
 
 /// Macro
@@ -65,6 +64,9 @@ macro_rules! input_port {
 
 		($n, port_info)
 	}};
+	(_) => {
+		todo!();
+	};
 }
 
 /// Macro
@@ -75,4 +77,7 @@ macro_rules! output_port {
 
 		($n, port_info)
 	}};
+	(_) => {
+		todo!();
+	};
 }

@@ -16,6 +16,14 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum BehaviorError {
 	/// @TODO:
+	#[error("{0}")]
+	Blackboard(#[from] crate::blackboard::error::Error),
+
+	/// @TODO:
+	#[error("{0}")]
+	BlackboardParse(#[from] core::num::ParseFloatError),
+
+	/// @TODO:
 	#[error("evaluating expression [{0}] failed")]
 	ExpressionEvaluation(String),
 
@@ -34,6 +42,10 @@ pub enum BehaviorError {
 	/// @TODO:
 	#[error("could not find entry [{0}] in blackboard")]
 	NotInBlackboard(String),
+
+	/// @TODO:
+	#[error("port [{0}] is not declared in behavior [{1}]")]
+	PortNotDeclared(String, String),
 
 	/// @TODO:
 	#[error("could not parse value for port [{0}] into specified type [{1}]")]

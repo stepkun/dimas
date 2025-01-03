@@ -18,10 +18,11 @@ use alloc::{
 };
 use core::{
 	any::{Any, TypeId},
-	fmt::{Display, Formatter},
+	fmt::{Debug, Display, Formatter},
 };
 use futures::future::BoxFuture;
 use hashbrown::HashMap;
+use tracing::debug;
 
 use crate::{
 	behavior::error::BehaviorError,
@@ -50,49 +51,6 @@ type BehaviorHaltFn =
 /// @TODO:
 type PortsFn = fn() -> PortList;
 // endregion:   --- types
-
-// region:		--- helper
-/// @TODO: Not currently used
-#[derive(Clone, Debug)]
-pub enum PreCond {
-	/// @TODO:
-	FailureIf,
-	/// @TODO:
-	SuccessIf,
-	/// @TODO:
-	SkipIf,
-	/// @TODO:
-	WhileTrue,
-	/// @TODO:
-	Count,
-}
-
-/// @TODO: Not currently used
-#[derive(Clone, Debug)]
-pub enum PostCond {
-	/// @TODO:
-	OnHalted,
-	/// @TODO:
-	OnFailure,
-	/// @TODO:
-	OnSuccess,
-	/// @TODO:
-	Always,
-	/// @TODO:
-	Count,
-}
-
-/// @TODO: ???
-#[derive(Clone, Debug)]
-pub enum NodeRuntime {
-	/// @TODO:
-	Async,
-	/// @TODO:
-	Sync,
-	/// @TODO:
-	All,
-}
-// endregion:	--- helper
 
 // region:      --- Behavior
 /// A behavior node within the behavior tree
@@ -147,10 +105,10 @@ impl Behavior {
 						new_status
 					}
 					BehaviorStatus::Running => {
-						/* @TODO: ::log::debug!(
+						debug!(
 							"[behaviortree_rs]: {}::on_running()",
 							&self.data.config.path
-						); */
+						);
 						let new_status = (self.tick_fn)(&mut self.data, &mut self.context).await?;
 						if matches!(new_status, BehaviorStatus::Idle) {
 							return Err(BehaviorError::Status(
@@ -316,27 +274,21 @@ pub struct BehaviorConfig {
 	pub manifest: Option<Arc<BehaviorManifest>>,
 	/// Unique id of the node within the tree
 	pub uid: u16,
-	/// TODO: doesn't show actual path yet
+	/// Full path to this behavior
 	pub path: String,
-	/// TODO:
-	_pre_conditions: HashMap<PreCond, String>,
-	/// TODO:
-	_post_conditions: HashMap<PostCond, String>,
 }
 
 impl BehaviorConfig {
 	/// @TODO:
 	#[must_use]
-	pub fn new(blackboard: Blackboard) -> Self {
+	pub fn new(blackboard: Blackboard, path: String) -> Self {
 		Self {
 			blackboard,
 			input_ports: HashMap::new(),
 			output_ports: HashMap::new(),
 			manifest: None,
 			uid: 1,
-			path: String::from("TODO"),
-			_pre_conditions: HashMap::new(),
-			_post_conditions: HashMap::new(),
+			path,
 		}
 	}
 
@@ -406,7 +358,7 @@ impl BehaviorConfig {
 	/// @TODO:
 	pub fn get_input<T>(&mut self, port: &str) -> Result<T, BehaviorError>
 	where
-		T: FromString + Clone + Send + Sync + 'static,
+		T: FromString + Clone + Debug + Send + Sync + 'static,
 	{
 		match self.input_ports.get(port) {
 			Some(val) => {
@@ -415,7 +367,7 @@ impl BehaviorConfig {
 					self.manifest().map_or_else(
 						|_| {
 							Err(BehaviorError::FindPort(
-								String::from(port),
+								port.into(),
 								"no manifest found".into(),
 							))
 						},
@@ -427,7 +379,7 @@ impl BehaviorConfig {
 							port_info.default_value().map_or_else(
 								|| {
 									Err(BehaviorError::FindPort(
-										String::from(port),
+										port.into(),
 										"no default found".into(),
 									))
 								},
@@ -435,7 +387,7 @@ impl BehaviorConfig {
 									default.parse_str().map_or_else(
 										|_| {
 											Err(BehaviorError::FindPort(
-												String::from(port),
+												port.into(),
 												"could not parse value".into(),
 											))
 										},
@@ -448,13 +400,12 @@ impl BehaviorConfig {
 				} else {
 					match get_remapped_key(port, val) {
 						// Value is a Blackboard pointer
-						Some(key) => self
-							.blackboard
-							.get_stringy::<T>(&key)
-							.map_or_else(
+						Some(key) => {
+							self.blackboard.get_stringy::<T>(&key).map_or_else(
 								|| Err(BehaviorError::NotInBlackboard(key)),
 								|val| Ok(val),
-							),
+							)
+						}
 						// Value is just a normal string
 						None => <T as FromString>::from_string(val).map_or_else(
 							|_| {
@@ -468,10 +419,10 @@ impl BehaviorConfig {
 					}
 				}
 			}
-			// Port not found
-			None => Err(BehaviorError::FindPort(
+			// Port not found in behaviors port list
+			None => Err(BehaviorError::PortNotDeclared(
 				String::from(port),
-				"not in BB".into(),
+				String::from(&self.path),
 			)),
 		}
 	}
@@ -490,7 +441,7 @@ impl BehaviorConfig {
 	/// @TODO:
 	pub fn set_output<T>(&mut self, port: &str, value: T) -> Result<(), BehaviorError>
 	where
-		T: Clone + Send + Sync + 'static,
+		T: Clone + Debug + Send + Sync + 'static,
 	{
 		match self.output_ports.get(port) {
 			Some(port_value) => {

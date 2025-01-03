@@ -90,6 +90,7 @@ enum TickOption {
 
 /// The behavior node tree
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub struct BehaviorTree {
 	root: Behavior,
 }

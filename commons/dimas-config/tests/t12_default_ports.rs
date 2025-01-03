@@ -97,11 +97,11 @@ struct NodeWithDefaultPoints {}
 impl NodeWithDefaultPoints {
 	fn ports() -> PortList {
 		define_ports!(
-			input_port!("input"),                              // no default value
-			input_port!("pointA", Point2D { x: 1, y: 2 }),     // default value is [1,2]
-			input_port!("pointB", "{pointB}"),                 // default value inside blackboard {pointB}
-			input_port!("pointC", "5,6"),                      // default value is [5,6],
-			input_port!("pointD", "{=}"),                      // default value inside blackboard {pointD}
+			input_port!("input"), // no default value, input is [-1,-2]
+			input_port!("pointA", Point2D { x: 1, y: 2 }), // default value is [1,2]
+			input_port!("pointB", "{point}"), // default value inside blackboard {pointB}
+			input_port!("pointC", "5,6"), // default value is [5,6],
+			input_port!("pointD", "{=}"), // default value inside blackboard {pointD}
 			input_port!("pointE", r#"(json:{"x':9,"y":10})"#)  // default value is [9,10]
 		)
 	}
@@ -112,26 +112,23 @@ impl NodeWithDefaultPoints {
 			.map_err(|_| BehaviorError::ParsePortValue("input".into(), msg))?;
 		println!("input:  [{},{}]", point.x, point.y);
 
-		// let msg: String = bhvr_.config.get_input("pointA")?;
-		// let point = Point2D::from_string(&msg)
-		// 	.map_err(|_| BehaviorError::ParsePortValue("pointA".into(), msg))?;
-		// println!("pointA:  [{},{}]", point.x, point.y);
+		let point: Point2D = bhvr_.config.get_input("pointA")?;
+		println!("pointA:  [{},{}]", point.x, point.y);
 
-		// let msg: String = bhvr_.config.get_input("pointB")?;
-		// let point = Point2D::from_string(&msg).map_err(|_| NodeError::PortValueParseError("pointB".into(), msg))?;
-		// println!("pointB:  [{},{}]", point.x, point.y);
+		let point: Point2D = bhvr_.config.get_input("pointB")?;
+		println!("pointB:  [{},{}]", point.x, point.y);
 
-		// let msg: String = bhvr_.config.get_input("pointC")?;
-		// let point = Point2D::from_string(&msg)
-		// 	.map_err(|_| BehaviorError::ParsePortValue("pointC".into(), msg))?;
-		// println!("pointC:  [{},{}]", point.x, point.y);
+		let msg: String = bhvr_.config.get_input("pointC")?;
+		let point = Point2D::from_string(&msg)
+			.map_err(|_| BehaviorError::ParsePortValue("pointC".into(), msg))?;
+		println!("pointC:  [{},{}]", point.x, point.y);
 
-		// let msg: String = bhvr_.config.get_input("pointD")?;
-		// let point = Point2D::from_string(&msg).map_err(|_| NodeError::PortValueParseError("pointD".into(), msg))?;
-		// println!("pointD:  [{},{}]", point.x, point.y);
+		let point: Point2D = bhvr_.config.get_input("pointD")?;
+		println!("pointD:  [{},{}]", point.x, point.y);
 
 		// let msg: String = bhvr_.config.get_input("pointE")?;
-		// let point = Point2D::from_string(&msg).map_err(|_| NodeError::PortValueParseError("pointE".into(), msg))?;
+		// dbg!(&msg);
+		// let point: Point2D = bhvr_.config.get_input("pointE")?;
 		// println!("pointE:  [{},{}]", point.x, point.y);
 
 		Ok(BehaviorStatus::Success)
@@ -151,10 +148,11 @@ async fn main() -> anyhow::Result<()> {
 
 	// initialize blackboard values
 	tree.root_blackboard()
-		.set("pointB", Point2D { x: 3, y: 4 });
+		.set("point", Point2D { x: 3, y: 4 });
 	tree.root_blackboard()
 		.set("pointD", Point2D { x: 7, y: 8 });
 
+	//std::dbg!(factory.blackboard());
 	// run the BT
 	let result = tree.tick_while_running().await?;
 	println!("tree result is {result}");

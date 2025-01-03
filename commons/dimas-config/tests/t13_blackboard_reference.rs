@@ -7,6 +7,7 @@
 //! - example at behaviorTree.CPP is inconsistent, does not match code in github repo
 //! - could not get the `get_exact::<wanted_type>()` access to work
 //!
+
 #[doc(hidden)]
 extern crate alloc;
 

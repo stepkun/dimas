@@ -8,6 +8,10 @@
 #[doc(hidden)]
 extern crate alloc;
 
+#[doc(hidden)]
+#[cfg(feature = "std")]
+extern crate std;
+
 pub mod builtin;
 pub mod factory;
 

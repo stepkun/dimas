@@ -67,6 +67,11 @@ impl Blackboard {
 	where
 		T: Any + Clone + FromString + Send + Sync,
 	{
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
+			return self.root().get(key_stripped);
+		};
+
 		// Try without parsing string first, then try with parsing string
 		self.__get_no_string(key.as_ref())
 			.or_else(|| self.__get_allow_string(key.as_ref()))
@@ -82,11 +87,28 @@ impl Blackboard {
 	where
 		T: Any + Clone + Send + Sync,
 	{
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
+			return self.root().get(key_stripped);
+		};
 		self.__get_no_string(key.as_ref())
+	}
+
+	/// function to get access to the root blackboard
+	/// of a blackboard tree in a recursive way
+	fn root(&self) -> Self {
+		self.parent
+			.clone()
+			.map_or_else(|| self.clone(), |bb| bb.root())
 	}
 
 	/// @ TODO:
 	pub fn set<T: Any + Send + Sync + 'static>(&mut self, key: impl AsRef<str>, value: T) {
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
+			return self.root().set(key_stripped, value);
+		};
+
 		let key = key.as_ref().to_string();
 
 		let blackboard = self.data.write();

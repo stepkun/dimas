@@ -79,8 +79,7 @@ fn single_file() {
 	assert_eq!(
 		factory
 			.create_tree(XML)
-			.err()
-			.expect("snh")
+			.expect_err("should error")
 			.to_string(),
 		"loop in tree detected: [MainTree->Level1->Level2] -> [Level1]"
 	);
@@ -97,8 +96,7 @@ fn multiple_files() {
 	assert_eq!(
 		factory
 			.create_tree(XML1)
-			.err()
-			.expect("snh")
+			.expect_err("should error")
 			.to_string(),
 		"loop in tree detected: [MainTree->Level1->Level2] -> [Level1]"
 	);
