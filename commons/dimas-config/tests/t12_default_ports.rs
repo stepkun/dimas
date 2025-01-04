@@ -136,7 +136,7 @@ impl NodeWithDefaultPoints {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn default_ports() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -155,7 +155,7 @@ async fn main() -> anyhow::Result<()> {
 	//std::dbg!(factory.blackboard());
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

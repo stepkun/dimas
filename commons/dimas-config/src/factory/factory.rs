@@ -274,7 +274,10 @@ impl BTFactory {
 	/// Create an empty behavior factory using the given [`Blackboard`].
 	#[must_use]
 	pub fn with_blackboard(blackboard: Blackboard) -> Self {
-		Self { blackboard, data: FactoryData::default() }
+		Self {
+			blackboard,
+			data: FactoryData::default(),
+		}
 	}
 
 	/// @TODO:

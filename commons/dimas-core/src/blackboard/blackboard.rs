@@ -83,7 +83,7 @@ impl Blackboard {
 	/// types that don't need it or it's impossible to represent the data
 	/// type as a string.
 	/// @ TODO:
-	pub fn get<T>(&mut self, key: impl AsRef<str>) -> Option<T>
+	pub fn get<T>(&self, key: impl AsRef<str>) -> Option<T>
 	where
 		T: Any + Clone + Send + Sync,
 	{
@@ -131,7 +131,7 @@ impl Blackboard {
 
 	/// Get an Rc to the Entry
 	#[allow(clippy::significant_drop_tightening)]
-	fn get_entry<'a>(&'a mut self, key: &'a str) -> Option<EntryPtr> {
+	fn get_entry<'a>(&'a self, key: &'a str) -> Option<EntryPtr> {
 		let mut blackboard = self.data.write();
 
 		// Try to get the key
@@ -139,7 +139,7 @@ impl Blackboard {
 			return Some(Arc::clone(entry));
 		}
 		// Couldn't find key. Try remapping if we have a parent
-		else if let Some(parent_bb) = self.parent.as_mut() {
+		else if let Some(parent_bb) = self.parent.as_ref() {
 			if let Some(new_key) = blackboard.internal_to_external.get(key) {
 				// Return the value of the parent's `get()`
 				let parent_entry = parent_bb.get_entry(new_key);
@@ -210,7 +210,7 @@ impl Blackboard {
 
 	/// Internal method that just tries to get value at key. If the stored
 	/// type is not T, return None
-	fn __get_no_string<T>(&mut self, key: &str) -> Option<T>
+	fn __get_no_string<T>(&self, key: &str) -> Option<T>
 	where
 		T: Any + Clone,
 	{
@@ -235,7 +235,7 @@ impl Blackboard {
 	/// Internal method that tries to get the value at key, but only works
 	/// if it's a String/&str, then tries [`FromString`] to convert it to T.
 	/// Treats the [`Entry`] as [`Entry::Generic`]
-	fn __get_allow_string<T>(&mut self, key: &str) -> Option<T>
+	fn __get_allow_string<T>(&self, key: &str) -> Option<T>
 	where
 		T: Any + Clone + FromString + Send,
 	{
@@ -259,7 +259,7 @@ impl Blackboard {
 
 	/// Internal method that tries to get the value at key as a
 	/// `String` or `&str`, returning an owned type
-	fn __get_string(&mut self, key: &str) -> Option<String> {
+	fn __get_string(&self, key: &str) -> Option<String> {
 		self.get_entry(key).and_then(|entry| {
 			let entry_lock = entry.lock();
 			// If value is a String or &str, try to call `FromString` to convert to T

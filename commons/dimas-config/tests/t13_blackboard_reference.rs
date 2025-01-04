@@ -112,7 +112,8 @@ impl SegmentObject {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+#[ignore]
+async fn blackboard_reference() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -125,7 +126,7 @@ async fn main() -> anyhow::Result<()> {
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

@@ -95,7 +95,7 @@ impl CloseGripper {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn first_tree() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -110,7 +110,7 @@ async fn main() -> anyhow::Result<()> {
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

@@ -155,7 +155,7 @@ impl MoveBase {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn sequence() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -175,8 +175,7 @@ async fn main() -> anyhow::Result<()> {
 		println!("--- ticking");
 		result = tree.tick_once().await?;
 	}
-
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

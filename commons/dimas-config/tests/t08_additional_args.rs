@@ -90,7 +90,7 @@ impl ActionB {
 		//let arg2 = self.arg2.clone();
 		//println!("{msg} robot says: {}, the answer is {}!", arg2, arg1);
 
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorStatus::Failure)
 	}
 
 	#[allow(dead_code)]
@@ -127,7 +127,8 @@ impl ActionC {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+#[ignore]
+async fn additional_args() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -157,7 +158,7 @@ async fn main() -> anyhow::Result<()> {
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

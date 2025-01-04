@@ -51,7 +51,7 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct Position2D {
 	x: f64,
 	y: f64,
@@ -147,7 +147,7 @@ impl Script {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn generic_ports() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -161,7 +161,17 @@ async fn main() -> anyhow::Result<()> {
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
+	let pos: Position2D = factory
+		.blackboard()
+		.get("GoalPosition")
+		.expect("GoalPosition not found");
+	assert_eq!(pos, Position2D { x: 1.1, y: 2.3 });
+	let pos: Position2D = factory
+		.blackboard()
+		.get("OtherGoal")
+		.expect("OtherGoal not found");
+	assert_eq!(pos, Position2D { x: -1.0, y: 3.0 });
 
 	Ok(())
 }

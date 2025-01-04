@@ -400,12 +400,13 @@ impl BehaviorConfig {
 				} else {
 					match get_remapped_key(port, val) {
 						// Value is a Blackboard pointer
-						Some(key) => {
-							self.blackboard.get_stringy::<T>(&key).map_or_else(
+						Some(key) => self
+							.blackboard
+							.get_stringy::<T>(&key)
+							.map_or_else(
 								|| Err(BehaviorError::NotInBlackboard(key)),
 								|val| Ok(val),
-							)
-						}
+							),
 						// Value is just a normal string
 						None => <T as FromString>::from_string(val).map_or_else(
 							|_| {

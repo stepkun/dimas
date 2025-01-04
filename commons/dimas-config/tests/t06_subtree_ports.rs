@@ -123,7 +123,7 @@ impl SaySomething {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn subtree_ports() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::extended();
 
@@ -138,7 +138,7 @@ async fn main() -> anyhow::Result<()> {
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	// visualize some information about the final state of the blackboards
 	println!("{:?}", tree.root_blackboard());

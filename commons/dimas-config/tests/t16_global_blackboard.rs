@@ -15,7 +15,8 @@ use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus},
 	blackboard::{error::Error, Blackboard},
 	define_ports, input_port,
-	port::PortList, utils::init_tracing,
+	port::PortList,
+	utils::init_tracing,
 };
 use dimas_macros::{behavior, register_action};
 
@@ -123,9 +124,9 @@ impl Script {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
-    init_tracing();
-    
+async fn global_blackboard() -> anyhow::Result<()> {
+	init_tracing();
+
 	// create an external blackboard which will survive the tree
 	let mut global_blackboard = Blackboard::default();
 	// BT-Trees blackboard has global blackboard as parent
@@ -137,19 +138,18 @@ async fn main() -> anyhow::Result<()> {
 	// register all needed nodes
 	register_action!(factory, "PrintNumber", PrintNumber);
 	register_action!(factory, "Script", Script);
-    // dbg!(&factory);
 
 	// create the BT
 	let mut tree = factory.create_tree(XML)?;
-    //dbg!(&tree);
+	//dbg!(&tree);
 
 	// direct interaction with the global blackboard
 	for value in 1..=3 {
 		global_blackboard.set("value", value);
-		tree.tick_once().await?;
-        //dbg!(&global_blackboard);
+		let result = tree.tick_once().await?;
+		assert_eq!(result, BehaviorStatus::Success);
 
-        let value_sqr = global_blackboard
+		let value_sqr = global_blackboard
 			.get::<i32>("@value_sqr")
 			.ok_or_else(|| Error::PortError("value_sqr".into()))?;
 		let value_pow3 = global_blackboard
@@ -159,7 +159,9 @@ async fn main() -> anyhow::Result<()> {
 			.get::<i32>("@value_pow4")
 			.ok_or_else(|| Error::PortError("value_pow3".into()))?;
 
-        println!("[While loop] value: {value} value_sqr: {value_sqr} value_pow3: {value_pow3} value_pow4: {value_pow4}");
+		assert_eq!(value_sqr, value * value);
+		assert_eq!(value_pow3, value * value * value);
+		assert_eq!(value_pow4, value * value * value * value);
 	}
 
 	Ok(())

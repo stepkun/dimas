@@ -147,7 +147,7 @@ impl PassThroughDoor {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn subtrees() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::extended();
 
@@ -168,7 +168,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn alternate() -> anyhow::Result<()> {
+async fn subtrees_alternate() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::extended();
 
@@ -183,7 +183,7 @@ async fn alternate() -> anyhow::Result<()> {
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

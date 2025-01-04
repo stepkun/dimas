@@ -84,7 +84,7 @@ impl ThinkWhatToSay {
 }
 
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn basic_ports() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
 
@@ -94,11 +94,14 @@ async fn main() -> anyhow::Result<()> {
 
 	// create the BT
 	let mut tree = factory.create_tree(XML)?;
-	//std::dbg!(&tree);
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
-	println!("tree result is {result}");
-
+	assert_eq!(result, BehaviorStatus::Success);
+	let answer: String = factory
+		.blackboard()
+		.get("the_answer")
+		.expect("the_answer not found");
+	assert_eq!(answer, "The answer is 42.");
 	Ok(())
 }
