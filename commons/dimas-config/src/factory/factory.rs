@@ -24,7 +24,7 @@ use tracing::{instrument, Level};
 use crate::builtin::{
 	control::{
 		Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
-		SequenceStar,
+		SequenceWithMemory, WhileDoElse,
 	},
 	decorator::{
 		ForceFailure, ForceSuccess, Inverter, KeepRunningUntilFailure, Repeat, Retry, RunOnce,
@@ -172,14 +172,25 @@ impl FactoryData {
 			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
 		);
 
-		// SequenceStar
+		// SequenceWithMemory
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
-			let mut bhvr = build_bhvr_ptr!(config, "SequenceStar", SequenceStar);
+			let mut bhvr = build_bhvr_ptr!(config, "SequenceWithMemory", SequenceWithMemory);
 			bhvr.data.children = children;
 			bhvr
 		};
 		self.bhvr_map.insert(
-			"SequenceStar".into(),
+			"SequenceWithMemory".into(),
+			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
+		);
+
+		// WhileDoElse
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "WhileDoElse", WhileDoElse);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"WhileDoElse".into(),
 			(BehaviorCategory::Control, Arc::new(bhvr_fn)),
 		);
 	}
@@ -281,6 +292,11 @@ impl BTFactory {
 	}
 
 	/// @TODO:
+	pub fn add_extensions(&mut self) {
+		self.data.add_extensions();
+	}
+
+	/// @TODO:
 	#[must_use]
 	pub const fn blackboard(&self) -> &Blackboard {
 		&self.blackboard
@@ -289,7 +305,21 @@ impl BTFactory {
 	/// @TODO:
 	/// # Errors
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub fn create_tree(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
+	pub fn create_tree_from_xml(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
+		// first validate original xml
+		let doc = Document::parse(xml)?;
+		let root = doc.root_element();
+		if root.tag_name().name() != "root" {
+			return Err(Error::RootName);
+		}
+
+		if let Some(format) = root.attribute("BTCPP_format") {
+			if format != "4" {
+				return Err(Error::BtCppFormat);
+			}
+		};
+
+		// shrink and create tree from validated xml
 		let xml = Self::shrink_xml(xml);
 		let root_bhvr = XmlParser::parse_main_xml(&self.blackboard, &mut self.data, &xml)?;
 		Ok(BehaviorTree::new(root_bhvr))

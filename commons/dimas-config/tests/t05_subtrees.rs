@@ -17,8 +17,7 @@ use dimas_core::behavior::{BehaviorResult, BehaviorStatus};
 use dimas_macros::{behavior, register_action, register_condition};
 use rand::Rng;
 
-const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
@@ -60,8 +59,7 @@ const XML: &str = r#"
 </root>
 "#;
 
-const XML1: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML1: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
@@ -158,7 +156,7 @@ async fn subtrees() -> anyhow::Result<()> {
 	subtree::register_nodes(&mut factory);
 
 	// create the BT
-	let mut tree = factory.create_tree(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
@@ -179,7 +177,7 @@ async fn subtrees_alternate() -> anyhow::Result<()> {
 	subtree::register(&mut factory)?;
 
 	// create the BT
-	let mut tree = factory.create_tree(XML1)?;
+	let mut tree = factory.create_tree_from_xml(XML1)?;
 
 	// run the BT
 	let result = tree.tick_while_running().await?;

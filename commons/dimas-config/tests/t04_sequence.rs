@@ -165,7 +165,7 @@ async fn sequence() -> anyhow::Result<()> {
 	register_action!(factory, "MoveBase", MoveBase);
 
 	// create the BT
-	let mut tree = factory.create_tree(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
 	// run the BT using own loop with sleep to avoid busy loop
 	println!("--- ticking");

@@ -23,8 +23,7 @@ use dimas_core::{
 };
 use dimas_macros::{behavior, register_action};
 
-const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
       main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
@@ -134,7 +133,7 @@ async fn subtree_ports() -> anyhow::Result<()> {
 	move_robot::register_nodes(&mut factory);
 
 	// create the BT
-	let mut tree = factory.create_tree(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
 	// run the BT
 	let result = tree.tick_while_running().await?;

@@ -13,8 +13,7 @@ use tracing::{event, instrument, Level};
 // endregion:   --- modules
 
 // region:      --- behavior
-const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
         main_tree_to_execute="CoreTree">
 
@@ -110,6 +109,7 @@ impl Agent {
 	pub fn create() -> Result<Self> {
 		// install core behavior
 		let mut bt_factory = BTFactory::default();
+		bt_factory.add_extensions();
 
 		// register core nodes
 		register_condition!(bt_factory, "NotInterrupted", NotInterrupted,);
@@ -144,7 +144,7 @@ impl Agent {
 		event!(Level::INFO, "starting agent {}", "todo");
 
 		// create the tree
-		let tree = self.bt_factory.create_tree(XML)?;
+		let tree = self.bt_factory.create_tree_from_xml(XML)?;
 
 		self.tree = Some(tree);
 

@@ -122,7 +122,7 @@ async fn blackboard_reference() -> anyhow::Result<()> {
 	register_action!(factory, "SegmentObject", SegmentObject);
 
 	// create the BT
-	let mut tree = factory.create_tree(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
 	// run the BT
 	let result = tree.tick_while_running().await?;

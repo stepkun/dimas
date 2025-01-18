@@ -7,8 +7,7 @@ extern crate alloc;
 
 use dimas_config::factory::BTFactory;
 
-const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
     <BehaviorTree ID = "MainTree">
@@ -35,8 +34,7 @@ const XML: &str = r#"
 </root>
 "#;
 
-const XML1: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML1: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
     <BehaviorTree ID = "MainTree">
@@ -57,8 +55,7 @@ const XML1: &str = r#"
 </root>
 "#;
 
-const XML2: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML2: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
     <BehaviorTree   ID="Level2">
         <Sequence>
@@ -78,7 +75,7 @@ fn single_file() {
 
 	assert_eq!(
 		factory
-			.create_tree(XML)
+			.create_tree_from_xml(XML)
 			.expect_err("should error")
 			.to_string(),
 		"loop in tree detected: [MainTree->Level1->Level2] -> [Level1]"
@@ -95,7 +92,7 @@ fn multiple_files() {
 
 	assert_eq!(
 		factory
-			.create_tree(XML1)
+			.create_tree_from_xml(XML1)
 			.expect_err("should error")
 			.to_string(),
 		"loop in tree detected: [MainTree->Level1->Level2] -> [Level1]"

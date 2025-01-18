@@ -91,7 +91,7 @@ async fn observer() -> anyhow::Result<()> {
 	register_action!(factory, "AlwaysSuccess", AlwaysSuccess);
 
     // create the BT
-    let mut tree = factory.create_tree(XML)?;
+    let mut tree = factory.create_tree_from_xml(XML)?;
 
     // run the BT
     let _result = tree.tick_while_running().await?;

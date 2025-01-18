@@ -143,7 +143,7 @@ async fn additional_args() -> anyhow::Result<()> {
 	register_action!(factory, "ActionC", ActionC);
 
 	// create the BT
-	let mut tree = factory.create_tree(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
 	// initialize ActionB with the help of a visitor
 	/*

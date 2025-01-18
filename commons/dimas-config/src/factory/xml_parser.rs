@@ -372,16 +372,6 @@ impl XmlParser {
 		event!(Level::TRACE, "parse_main_xml");
 		let doc = Document::parse(xml)?;
 		let root = doc.root_element();
-		if root.tag_name().name() != "root" {
-			return Err(Error::RootName);
-		}
-
-		if let Some(format) = root.attribute("BTCPP_format") {
-			if format != "4" {
-				return Err(Error::BtCppFormat);
-			}
-		};
-
 		if let Some(id) = root.attribute("main_tree_to_execute") {
 			data.main_tree_id = Some(id.into());
 
@@ -395,9 +385,8 @@ impl XmlParser {
 			let doc = Document::parse(&definition)?;
 			let main_tree = doc.root_element();
 			Self::build_child(main_tree, data, blackboard, id, id)
-			//Self::parse_behavior_definition(main_tree, data, blackboard, id, String::from(id))
 		} else {
-			todo!() // Err(Error::NoTreeToExecute)
+			Err(Error::NoTreeToExecute)
 		}
 	}
 

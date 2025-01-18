@@ -10,7 +10,7 @@ use dimas_core::behavior::{BehaviorResult, BehaviorStatus};
 use dimas_macros::behavior;
 //endregion:    --- modules
 
-/// The SequenceStarNode is used to tick children in an ordered sequence.
+/// The SequenceWithMemory is used to tick children in an ordered sequence.
 /// If any child returns RUNNING, previous children are not ticked again.
 ///
 /// - If all the children return SUCCESS, this node returns SUCCESS.
@@ -21,7 +21,7 @@ use dimas_macros::behavior;
 /// - If a child returns FAILURE, stop the loop and return FAILURE.
 ///   Loop is NOT restarted, the same running child will be ticked again.
 #[behavior(SyncControl)]
-pub struct SequenceStar {
+pub struct SequenceWithMemory {
 	#[bhvr(default = "0")]
 	child_idx: usize,
 	#[bhvr(default = "false")]
@@ -29,7 +29,7 @@ pub struct SequenceStar {
 }
 
 #[behavior(SyncControl)]
-impl SequenceStar {
+impl SequenceWithMemory {
 	async fn tick(&mut self) -> BehaviorResult {
 		if bhvr_.status == BehaviorStatus::Idle {
 			self.all_skipped = true;

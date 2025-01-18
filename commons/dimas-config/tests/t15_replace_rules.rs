@@ -12,5 +12,6 @@ async fn replace_rules() -> anyhow::Result<()> {
     let result = BehaviorStatus::Failure;
     println!("not yet implemented");
 	assert_eq!(result, BehaviorStatus::Success);
+    
     Ok(())
 }

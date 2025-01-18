@@ -144,7 +144,7 @@ async fn default_ports() -> anyhow::Result<()> {
 	register_action!(factory, "NodeWithDefaultPoints", NodeWithDefaultPoints);
 
 	// create the BT
-	let mut tree = factory.create_tree(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
 	// initialize blackboard values
 	tree.root_blackboard()
@@ -152,7 +152,6 @@ async fn default_ports() -> anyhow::Result<()> {
 	tree.root_blackboard()
 		.set("pointD", Point2D { x: 7, y: 8 });
 
-	//std::dbg!(factory.blackboard());
 	// run the BT
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

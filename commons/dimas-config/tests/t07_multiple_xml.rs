@@ -80,7 +80,7 @@ async fn via_include() -> anyhow::Result<()> {
 	register_action!(factory, "SaySomething", SaySomething);
 
 	// create tree
-	let tree = factory.create_tree(XML_INCLUDE);
+	let tree = factory.create_tree_from_xml(XML_INCLUDE);
 	match tree {
 		Ok(mut tree) => {
 			// run the BT
@@ -135,7 +135,7 @@ async fn manually() -> anyhow::Result<()> {
 	//let tree = factory.instantiate_sync_tree(&blackboard, "MainTree");
 
 	// create the BT
-	let mut tree = factory.create_tree(XML_MANUALLY)?;
+	let mut tree = factory.create_tree_from_xml(XML_MANUALLY)?;
 	// run the BT
 	let result = tree.tick_while_running().await?;
 	println!("tree result is {result}");
