@@ -50,8 +50,7 @@ repository = "https://github.com/dimas-fw/dimas/"
 
 [workspace.dependencies]
 anyhow = "1.0.95"
-behaviortree-rs = {git = "https://github.com/ncrothers/behaviortree-rs.git", branch = "v3"}
-clap = "4.5.23"
+clap = "4.5.27"
 dimas = { path = "dimas" }
 #dimas = "0.5.0"
 dimas-com = { path = "commons/dimas-com" }
@@ -66,19 +65,19 @@ dimas-macros = { path = "commons/dimas-macros" }
 #dimas-macros = "0.5.0"
 dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.5.0"
-doc-comment = "0.3.0"
-evalexpr = "12.0.1"
+doc-comment = "0.3.3"
+evalexpr = "12.0.2"
 futures = "0.3.31"
 hashbrown = "0.15.2"
 parking_lot = "0.12.3"
 rand = "0.8.5"
 roxmltree = "0.20.0"
-thiserror = "2.0.9"
-tokio = { version = "1.40.0", features = ["parking_lot"]}
+thiserror = "2.0.11"
+tokio = { version = "1.43.0", features = ["parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
-trybuild = { version = "1.0.101", features = ["diff"] }
-zenoh = "1.1.0"
+trybuild = { version = "1.0.103", features = ["diff"] }
+zenoh = "1.1.1"
 
 [profile.release]
 opt-level = 'z'   # Optimize for size.

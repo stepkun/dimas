@@ -91,9 +91,9 @@ const XML2: &str = r#"
     <BehaviorTree ID="DoorClosed">
         <Fallback>
             <OpenDoor/>
-            <Retry num_attempts="5">
+            <RetryUntilSuccessful num_attempts="5">
                 <PickLock/>
-            </Retry>
+            </RetryUntilSuccessful>
             <SmashDoor/>
         </Fallback>
     </BehaviorTree>

@@ -1,9 +1,4 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
-#![allow(dead_code)]
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::unused_async)]
-#![allow(missing_docs)]
 
 //! Interval timer
 
@@ -16,20 +11,20 @@ use dimas_core::{
 	define_ports, input_port,
 	port::PortList,
 };
-use dimas_macros::{behavior, register_decorator};
+use dimas_macros::{behavior, register_control};
 use tokio::{task::JoinHandle, time};
 // endregion:   --- modules
 
 // region:      --- behavior
 /// An [`IntervalTimer`]
-#[behavior(SyncDecorator)]
+#[behavior(SyncControl)]
 pub struct IntervalTimer {
 	/// The handle to stop the Timer
 	#[bhvr(default = "None")]
 	handle: Option<JoinHandle<()>>,
 }
 
-#[behavior(SyncDecorator)]
+#[behavior(SyncControl)]
 impl IntervalTimer {
 	async fn tick(&self) -> BehaviorResult {
 		println!("IntervalTimer");
@@ -82,7 +77,7 @@ impl IntervalTimer {
 
 	/// Registration function
 	pub fn register(factory: &mut BTFactory) {
-		register_decorator!(factory, "IntervalTimer", IntervalTimer,);
+		register_control!(factory, "IntervalTimer", IntervalTimer,);
 	}
 }
 // endregion:   --- behavior

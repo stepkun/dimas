@@ -14,5 +14,7 @@ mod repeat;
 pub use repeat::*;
 mod retry;
 pub use retry::*;
+mod retry_until_successful;
+pub use retry_until_successful::*;
 mod run_once;
 pub use run_once::*;

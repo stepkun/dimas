@@ -1,7 +1,7 @@
 // Copyright © 2024 Stephan Kunz
 #![allow(clippy::module_name_repetitions)]
 
-//! Built in retry node of `DiMAS`
+//! Built in `Retry` decorator of `DiMAS`
 
 // region:      --- modules
 use alloc::string::ToString;
@@ -12,20 +12,23 @@ use dimas_core::{define_ports, input_port};
 use dimas_macros::behavior;
 //endregion:    --- modules
 
-// The RetryNode is used to execute a child several times if it fails.
+/// The `Retry` decorator is used to execute a child several times if it fails.
 ///
 /// If the child returns SUCCESS, the loop is stopped and this node
 /// returns SUCCESS.
 ///
-/// If the child returns FAILURE, this node will try again up to N times
+/// If the child returns FAILURE, this behavior will try again up to N times
 /// (N is read from port "num_attempts").
+/// If N times is not enough to succeed, this decorator will return FAILURE.
 ///
+/// In contrast to the `RetryUntilSuccessful` decorator, this decorator is reactive and uses multiple ticks.
+/// 
 /// Example:
 ///
 /// ```xml
-/// <RetryUntilSuccessful num_attempts="3">
+/// <Retry num_attempts="3">
 ///     <OpenDoor/>
-/// </RetryUntilSuccessful>
+/// </Retry>
 /// ```
 #[behavior(SyncDecorator)]
 pub struct Retry {
@@ -51,7 +54,7 @@ impl Retry {
 
 		bhvr_.status = BehaviorStatus::Running;
 
-		while do_loop {
+		if do_loop {
 			let child_status = bhvr_
 				.child()
 				.unwrap_or_else(|| todo!())
@@ -69,10 +72,7 @@ impl Retry {
 				}
 				BehaviorStatus::Failure => {
 					self.try_count += 1;
-					do_loop =
-						(self.try_count as i32) < self.max_attempts || self.max_attempts == -1;
-
-					bhvr_.reset_child().await;
+					return Ok(BehaviorStatus::Running);
 				}
 				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
 				BehaviorStatus::Skipped => {
@@ -82,13 +82,14 @@ impl Retry {
 				}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"InverterNode".to_string(),
+						"Retry Decorator".to_string(),
 						"Idle".to_string(),
 					))
 				}
 			}
 		}
 
+		// reset try counter
 		self.try_count = 0;
 
 		if self.all_skipped {

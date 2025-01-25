@@ -36,7 +36,7 @@ impl Inverter {
 			}
 			status @ (BehaviorStatus::Running | BehaviorStatus::Skipped) => Ok(status),
 			BehaviorStatus::Idle => Err(BehaviorError::Status(
-				"InverterNode".to_string(),
+				"Inverter Decorator".to_string(),
 				"Idle".to_string(),
 			)),
 		}

@@ -27,7 +27,7 @@ use crate::builtin::{
 		SequenceWithMemory, WhileDoElse,
 	},
 	decorator::{
-		ForceFailure, ForceSuccess, Inverter, KeepRunningUntilFailure, Repeat, Retry, RunOnce,
+		ForceFailure, ForceSuccess, Inverter, KeepRunningUntilFailure, Repeat, Retry, RetryUntilSuccessful, RunOnce
 	},
 };
 
@@ -158,6 +158,17 @@ impl FactoryData {
 		};
 		self.bhvr_map.insert(
 			"Retry".into(),
+			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
+		);
+
+		// RetryUntilSuccessful
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "RetryUntilSuccessful", RetryUntilSuccessful);
+			bhvr.data.children = children;
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"RetryUntilSuccessful".into(),
 			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
 		);
 

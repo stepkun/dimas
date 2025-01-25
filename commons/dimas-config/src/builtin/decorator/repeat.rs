@@ -12,7 +12,7 @@ use dimas_core::{define_ports, input_port};
 use dimas_macros::behavior;
 //endregion:    --- modules
 
-/// /// The RetryNode is used to execute a child several times, as long
+/// The Retry decorator is used to execute a child several times, as long
 /// as it succeed.
 ///
 /// To succeed, the child must return SUCCESS N times (port "num_cycles").
@@ -51,7 +51,7 @@ impl Repeat {
 
 		bhvr_.status = BehaviorStatus::Running;
 
-		while do_loop {
+		if do_loop {
 			let child_status = bhvr_
 				.child()
 				.unwrap_or_else(|| todo!())
@@ -63,9 +63,9 @@ impl Repeat {
 			match child_status {
 				BehaviorStatus::Success => {
 					self.repeat_count += 1;
-					do_loop = (self.repeat_count as i32) < self.num_cycles || self.num_cycles == -1;
-
 					bhvr_.reset_child().await;
+					
+					return Ok(BehaviorStatus::Running);
 				}
 				BehaviorStatus::Failure => {
 					self.repeat_count = 0;
@@ -81,13 +81,14 @@ impl Repeat {
 				}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"InverterNode".to_string(),
+						"Repeat Decorator".to_string(),
 						"Idle".to_string(),
 					))
 				}
 			}
 		}
 
+		// reset try counter
 		self.repeat_count = 0;
 
 		if self.all_skipped {
