@@ -63,7 +63,7 @@ pub struct Behavior {
 	pub context: Box<dyn Any + Send + Sync>,
 	/// Function pointer to tick
 	pub tick_fn: BehaviorTickFn,
-	/// Function pointer to `on_start` function (if Action)
+	/// Function pointer to `on_start` function (if non Sync)
 	/// Otherwise points to `tick_fn`
 	pub start_fn: BehaviorTickFn,
 	/// Function pointer to halt
@@ -87,10 +87,11 @@ impl Behavior {
 		self.data.status = status;
 	}
 
-	/// Internal-only call to the action-type-specific tick
-	async fn action_tick(&mut self) -> BehaviorResult {
+	/// Tick the behavior
+	/// # Errors
+	pub async fn execute_tick(&mut self) -> BehaviorResult {
 		match self.data.bhvr_type {
-			BehaviorType::Action => {
+			BehaviorType::Action | BehaviorType::Condition | BehaviorType::Control | BehaviorType::Decorator => {
 				let prev_status = self.data.status;
 
 				let new_status = match prev_status {
@@ -125,6 +126,7 @@ impl Behavior {
 
 				Ok(new_status)
 			}
+			// SyncAction, SyncCondition may only return Success or Failure
 			BehaviorType::SyncAction | BehaviorType::SyncCondition => {
 				match (self.tick_fn)(&mut self.data, &mut self.context).await? {
 					status @ (BehaviorStatus::Running | BehaviorStatus::Idle) => Err(
@@ -133,24 +135,10 @@ impl Behavior {
 					status => Ok(status),
 				}
 			}
-			_ => panic!(
-				"This should not be possible, action_tick() was called for a non-action node"
-			),
-		}
-	}
-
-	/// Tick the node
-	/// # Errors
-	pub async fn execute_tick(&mut self) -> BehaviorResult {
-		match self.data.bhvr_type {
-			BehaviorType::Control
-			| BehaviorType::Decorator
-			| BehaviorType::SyncControl
-			| BehaviorType::SyncDecorator => (self.tick_fn)(&mut self.data, &mut self.context).await,
-			BehaviorType::Action
-			| BehaviorType::Condition
-			| BehaviorType::SyncAction
-			| BehaviorType::SyncCondition => self.action_tick().await,
+			// SyncControl, SyncDecorator may return any status
+			BehaviorType::SyncControl | BehaviorType::SyncDecorator => {
+				(self.tick_fn)(&mut self.data, &mut self.context).await
+			}
 		}
 	}
 

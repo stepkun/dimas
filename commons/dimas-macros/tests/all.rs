@@ -1,3 +1,7 @@
+// Copyright © 2024 Stephan Kunz
+
+//! Run all tests for dimas-macros
+
 #[test]
 fn tests() {
 	let t = trybuild::TestCases::new();

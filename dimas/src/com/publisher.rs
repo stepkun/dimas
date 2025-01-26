@@ -10,7 +10,7 @@ use dimas_macros::{behavior, register_action};
 // endregion:   --- modules
 
 // region:      --- behavior
-/// SyncAction "Publisher"
+/// A [`Publisher`]
 #[behavior(SyncAction)]
 pub struct Publisher {}
 

@@ -17,17 +17,17 @@ use tokio::{task::JoinHandle, time};
 
 // region:      --- behavior
 /// An [`IntervalTimer`]
-#[behavior(SyncControl)]
+#[behavior(Control)]
 pub struct IntervalTimer {
 	/// The handle to stop the Timer
 	#[bhvr(default = "None")]
 	handle: Option<JoinHandle<()>>,
 }
 
-#[behavior(SyncControl)]
+#[behavior(Control)]
 impl IntervalTimer {
-	async fn tick(&self) -> BehaviorResult {
-		println!("IntervalTimer");
+	async fn on_start(&self) -> BehaviorResult {
+		println!("start IntervalTimer");
 
 		// timer already started?
 		if self.handle.is_none() {
@@ -54,10 +54,18 @@ impl IntervalTimer {
 						}
 					}
 				}));
+		} else {
+			println!("already started IntervalTimer");
+			bhvr_.set_status(BehaviorStatus::Failure);
 		}
 
 		Ok(bhvr_.status)
 		// Ok(BehaviorStatus::Running)
+	}
+
+	async fn on_running(&self) -> BehaviorResult {
+		println!("ticking IntervalTimer");
+		Ok(BehaviorStatus::Running)
 	}
 
 	async fn halt(&self) {
