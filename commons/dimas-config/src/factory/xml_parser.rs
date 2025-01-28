@@ -64,8 +64,8 @@ impl XmlParser {
 		bhvr_name: &str,
 		attributes: Attributes,
 	) -> Result<(), Error> {
-		let config = bhvr_ptr.config_mut();
-		let manifest = config.manifest()?;
+		let data = bhvr_ptr.data_mut();
+		let manifest = data.config.manifest()?;
 
 		let mut remap = PortRemapping::new();
 
@@ -76,7 +76,7 @@ impl XmlParser {
 
 		// Check if all ports from XML match ports in manifest
 		for port_name in remap.keys() {
-			if !manifest.ports.contains_key(port_name) {
+			if port_name != "name" && !manifest.ports.contains_key(port_name) {
 				return Err(Error::PortInvalid(
 					port_name.clone(),
 					bhvr_name.to_owned(),
@@ -87,7 +87,10 @@ impl XmlParser {
 
 		// Add ports to BehaviorConfig
 		for (remap_name, remap_val) in remap {
-			if let Some(port) = manifest.ports.get(&remap_name) {
+			// attribute 'name' gets special treatment
+			if remap_name == "name" {
+				data.name = remap_val.to_string();
+			} else if let Some(port) = manifest.ports.get(&remap_name) {
 				// Validate that any expr-enabled ports contain valid expressions,
 				// and the provided types for blackboard pointers are one of the valid ones
 				if port.parse_expr() {
@@ -118,7 +121,8 @@ impl XmlParser {
 					}
 				}
 
-				config.add_port(port.direction(), remap_name, remap_val);
+				data.config
+					.add_port(port.direction(), remap_name, remap_val);
 			}
 		}
 
@@ -127,14 +131,15 @@ impl XmlParser {
 			let direction = port_info.direction();
 
 			if !matches!(direction, PortDirection::Output)
-				&& !config.has_port(direction, port_name)
+				&& !data.config.has_port(direction, port_name)
 				&& port_info.default_value().is_some()
 			{
 				let value = port_info.default_value_str().ok_or_else(|| {
-					Error::PortWithoutDefault(port_name.clone(), config.path.clone())
+					Error::PortWithoutDefault(port_name.clone(), data.config.path.clone())
 				})?;
 
-				config.add_port(&PortDirection::Input, port_name.clone(), value);
+				data.config
+					.add_port(&PortDirection::Input, port_name.clone(), value);
 			}
 		}
 

@@ -25,16 +25,46 @@ use dimas_core::{
 };
 use dimas_macros::{behavior, register_action, register_condition};
 
-const XML: &str = r#"
+const XML1: &str = r#"
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
 		<Sequence>
 			<BatteryOK/>
 			<SaySomething   message="mission started..." />
-			<MoveBase          goal="1;2;3"/>
+			<MoveBase       goal="1;2;3"/>
 			<SaySomething   message="mission completed!" />
 		</Sequence>
+    </BehaviorTree>
+
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+		<Condition ID="BatteryOK"
+				editable="true"/>
+        <Action ID="SaySomething"
+                editable="true">
+            <input_port name="message"/>
+        </Action>
+        <Action ID="MoveBase"
+                editable="true">
+            <input_port name="goal"/>
+        </Action>
+    </TreeNodesModel>
+</root>
+"#;
+
+const XML2: &str = r#"
+<root BTCPP_format="4"
+        main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+		<ReactiveSequence>
+			<BatteryOK/>
+			<Sequence>
+				<SaySomething   message="mission2 started..." />
+				<MoveBase       goal="4;5;6"/>
+				<SaySomething   message="mission2 completed!" />
+			</Sequence>
+		</ReactiveSequence>
     </BehaviorTree>
 
     <!-- Description of Node Models (used by Groot) -->
@@ -109,6 +139,7 @@ impl SaySomething {
 	fn ports() -> PortList {
 		define_ports!(input_port!("message", "hello"))
 	}
+
 	async fn tick(&mut self) -> BehaviorResult {
 		let msg: String = bhvr_.config.get_input("message")?;
 
@@ -165,7 +196,34 @@ async fn sequence() -> anyhow::Result<()> {
 	register_action!(factory, "MoveBase", MoveBase);
 
 	// create the BT
-	let mut tree = factory.create_tree_from_xml(XML)?;
+	let mut tree = factory.create_tree_from_xml(XML1)?;
+
+	// run the BT using own loop with sleep to avoid busy loop
+	println!("--- ticking");
+	let mut result = tree.tick_once().await?;
+	while result == BehaviorStatus::Running {
+		tokio::time::sleep(Duration::from_millis(100)).await;
+		println!("--- ticking");
+		result = tree.tick_once().await?;
+	}
+	assert_eq!(result, BehaviorStatus::Success);
+
+	Ok(())
+}
+
+#[tokio::test]
+async fn reactive_sequence() -> anyhow::Result<()> {
+	// create BT environment
+	let mut factory = BTFactory::default();
+	factory.add_extensions();
+
+	// register all needed nodes
+	register_condition!(factory, "BatteryOK", BatteryOK);
+	register_action!(factory, "SaySomething", SaySomething);
+	register_action!(factory, "MoveBase", MoveBase);
+
+	// create the BT
+	let mut tree = factory.create_tree_from_xml(XML2)?;
 
 	// run the BT using own loop with sleep to avoid busy loop
 	println!("--- ticking");

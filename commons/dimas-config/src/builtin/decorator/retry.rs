@@ -22,7 +22,7 @@ use dimas_macros::behavior;
 /// If N times is not enough to succeed, this decorator will return FAILURE.
 ///
 /// In contrast to the `RetryUntilSuccessful` decorator, this decorator is reactive and uses multiple ticks.
-/// 
+///
 /// Example:
 ///
 /// ```xml

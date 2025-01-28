@@ -9,9 +9,9 @@ use dimas_core::behavior::BehaviorStatus;
 #[tokio::test]
 #[ignore]
 async fn scripting() -> anyhow::Result<()> {
-    let result = BehaviorStatus::Failure;
-    println!("not yet implemented");
+	let result = BehaviorStatus::Failure;
+	println!("not yet implemented");
 	assert_eq!(result, BehaviorStatus::Success);
 
-    Ok(())
+	Ok(())
 }

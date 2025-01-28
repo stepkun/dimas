@@ -117,8 +117,7 @@ struct IsDoorClosed {}
 #[behavior(SyncCondition)]
 impl IsDoorClosed {
 	async fn tick(&mut self) -> BehaviorResult {
-		let mut rng = rand::thread_rng();
-		let state = rng.gen::<bool>();
+		let state = rand::rng().random::<bool>();
 		if state {
 			println!("door is closed");
 
@@ -199,8 +198,7 @@ mod subtree {
 	#[behavior(SyncAction)]
 	impl OpenDoor {
 		async fn tick(&mut self) -> BehaviorResult {
-			let mut rng = rand::thread_rng();
-			let state = rng.gen::<bool>();
+			let state = rand::rng().random::<bool>();
 			if state {
 				println!("opened door");
 
@@ -220,8 +218,7 @@ mod subtree {
 	#[behavior(SyncAction)]
 	impl PickLock {
 		async fn tick(&mut self) -> BehaviorResult {
-			let mut rng = rand::thread_rng();
-			let state = rng.gen::<i32>();
+			let state = rand::rng().random::<i32>();
 			if state % 5 == 0 {
 				println!("picked lock");
 

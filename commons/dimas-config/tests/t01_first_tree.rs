@@ -4,8 +4,7 @@
 //! [see:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_01_first_tree)
 //!
 //! Differences to BehaviorTree.CPP:
-//! - we cannot register functions/methods of a struct/class
-//! - port `name` is not available by default
+//! - we cannot register functions or methods of a struct/class
 //!
 
 #[doc(hidden)]
@@ -19,11 +18,11 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<Sequence>
-			<CheckBattery/>
-			<OpenGripper/>
-			<ApproachObject/>
-			<CloseGripper/>
+		<Sequence name="root_sequence">
+			<CheckBattery	name="check_battery"/>
+			<OpenGripper	name="open_gripper"/>
+			<ApproachObject	name="approach_object"/>
+			<CloseGripper	name="close_gripper"/>
 		</Sequence>
 	</BehaviorTree>
 

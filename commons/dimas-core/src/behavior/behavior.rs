@@ -91,7 +91,10 @@ impl Behavior {
 	/// # Errors
 	pub async fn execute_tick(&mut self) -> BehaviorResult {
 		match self.data.bhvr_type {
-			BehaviorType::Action | BehaviorType::Condition | BehaviorType::Control | BehaviorType::Decorator => {
+			BehaviorType::Action
+			| BehaviorType::Condition
+			| BehaviorType::Control
+			| BehaviorType::Decorator => {
 				let prev_status = self.data.status;
 
 				let new_status = match prev_status {
@@ -162,6 +165,16 @@ impl Behavior {
 	#[must_use]
 	pub const fn config(&self) -> &BehaviorConfig {
 		&self.data.config
+	}
+
+	/// Get a mutable reference to the [`BehaviorData`]
+	pub fn data_mut(&mut self) -> &mut BehaviorData {
+		&mut self.data
+	}
+
+	/// Get a reference to the [`BehaviorData`]
+	pub fn data(&self) -> &BehaviorData {
+		&self.data
 	}
 
 	/// Get the [`BehaviorType`], which is one of:

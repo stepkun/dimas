@@ -9,7 +9,11 @@
 extern crate alloc;
 
 use dimas_config::factory::BTFactory;
-use dimas_core::{behavior::{BehaviorResult, BehaviorStatus}, define_ports, input_port, port::PortList};
+use dimas_core::{
+	behavior::{BehaviorResult, BehaviorStatus},
+	define_ports, input_port,
+	port::PortList,
+};
 use dimas_macros::{behavior, register_action};
 
 const XML: &str = r#"
@@ -59,7 +63,6 @@ impl AlwaysSuccess {
 	}
 }
 
-
 /// Action "AlwaysFailure"
 #[behavior(Action)]
 struct AlwaysFailure {}
@@ -79,25 +82,24 @@ impl AlwaysFailure {
 	}
 }
 
-
 #[tokio::test]
 #[ignore]
 async fn observer() -> anyhow::Result<()> {
-    // create BT environment
-    let mut factory = BTFactory::default();
+	// create BT environment
+	let mut factory = BTFactory::default();
 
-    // register actons
-    register_action!(factory, "AlwaysFailure", AlwaysFailure);
+	// register actons
+	register_action!(factory, "AlwaysFailure", AlwaysFailure);
 	register_action!(factory, "AlwaysSuccess", AlwaysSuccess);
 
-    // create the BT
-    let mut tree = factory.create_tree_from_xml(XML)?;
+	// create the BT
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
-    // run the BT
-    let _result = tree.tick_while_running().await?;
-    let result = BehaviorStatus::Failure;
-    println!("not yet implemented");
+	// run the BT
+	let _result = tree.tick_while_running().await?;
+	let result = BehaviorStatus::Failure;
+	println!("not yet implemented");
 	assert_eq!(result, BehaviorStatus::Success);
 
-    Ok(())
+	Ok(())
 }

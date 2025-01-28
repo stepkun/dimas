@@ -27,7 +27,8 @@ use crate::builtin::{
 		SequenceWithMemory, WhileDoElse,
 	},
 	decorator::{
-		ForceFailure, ForceSuccess, Inverter, KeepRunningUntilFailure, Repeat, Retry, RetryUntilSuccessful, RunOnce
+		ForceFailure, ForceSuccess, Inverter, KeepRunningUntilFailure, Repeat, Retry,
+		RetryUntilSuccessful, RunOnce,
 	},
 };
 

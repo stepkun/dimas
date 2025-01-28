@@ -19,7 +19,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
       main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
-        <Sequence>
+        <Sequence  name="root_sequence">
             <SaySomething message="Hello."/>
             <ThinkWhatToSay text="{the_answer}"/>
             <SaySomething message="{the_answer}"/>

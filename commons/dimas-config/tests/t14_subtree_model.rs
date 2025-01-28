@@ -13,7 +13,12 @@
 extern crate alloc;
 
 use dimas_config::factory::BTFactory;
-use dimas_core::{behavior::{error::BehaviorError, BehaviorResult, BehaviorStatus}, blackboard::FromString, define_ports, input_port, port::PortList};
+use dimas_core::{
+	behavior::{error::BehaviorError, BehaviorResult, BehaviorStatus},
+	blackboard::FromString,
+	define_ports, input_port,
+	port::PortList,
+};
 use dimas_macros::{behavior, register_action};
 
 const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -62,37 +67,37 @@ struct Script {}
 
 #[behavior(SyncAction)]
 impl Script {
-    async fn tick(&mut self) -> BehaviorResult {
-        let script: String = bhvr_.config.get_input("code")?;
-        let elements: Vec<&str> = script.split(":=").collect();
-        if elements[1].contains('{') {
-            let pos = move_robot::Position2D::from_string(elements[1].trim()).map_err(|_| {
-                BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
-            })?;
-            bhvr_
-                .config
-                .blackboard()
-                .to_owned()
-                .set(elements[0].trim(), pos);
-        } else {
-            let mut content = elements[1].to_string();
-            // remove redundant ' from string
-            content = content.replace('\'', "").trim().to_string();
-            // remove redundant &apos; from string
-            content = content.replace("&apos;", "").trim().to_string();
-            bhvr_
-                .config
-                .blackboard()
-                .to_owned()
-                .set(elements[0].trim(), content);
-        }
+	async fn tick(&mut self) -> BehaviorResult {
+		let script: String = bhvr_.config.get_input("code")?;
+		let elements: Vec<&str> = script.split(":=").collect();
+		if elements[1].contains('{') {
+			let pos = move_robot::Position2D::from_string(elements[1].trim()).map_err(|_| {
+				BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
+			})?;
+			bhvr_
+				.config
+				.blackboard()
+				.to_owned()
+				.set(elements[0].trim(), pos);
+		} else {
+			let mut content = elements[1].to_string();
+			// remove redundant ' from string
+			content = content.replace('\'', "").trim().to_string();
+			// remove redundant &apos; from string
+			content = content.replace("&apos;", "").trim().to_string();
+			bhvr_
+				.config
+				.blackboard()
+				.to_owned()
+				.set(elements[0].trim(), content);
+		}
 
-        Ok(BehaviorStatus::Success)
-    }
+		Ok(BehaviorStatus::Success)
+	}
 
-    fn ports() -> PortList {
-        define_ports!(input_port!("code"))
-    }
+	fn ports() -> PortList {
+		define_ports!(input_port!("code"))
+	}
 }
 
 /// SyncAction "SaySomething"
@@ -101,47 +106,47 @@ struct SaySomething {}
 
 #[behavior(SyncAction)]
 impl SaySomething {
-    async fn tick(&mut self) -> BehaviorResult {
-        let msg: String = bhvr_.config.get_input("msg")?;
+	async fn tick(&mut self) -> BehaviorResult {
+		let msg: String = bhvr_.config.get_input("msg")?;
 
-        println!("Robot says: {msg}");
+		println!("Robot says: {msg}");
 
-        Ok(BehaviorStatus::Success)
-    }
+		Ok(BehaviorStatus::Success)
+	}
 
-    fn ports() -> PortList {
-        define_ports!(input_port!("msg", "hello"))
-    }
+	fn ports() -> PortList {
+		define_ports!(input_port!("msg", "hello"))
+	}
 }
 
 #[tokio::test]
 async fn subtree_model() -> anyhow::Result<()> {
-    // create BT environment
-    let mut factory = BTFactory::extended();
+	// create BT environment
+	let mut factory = BTFactory::extended();
 
-    // register main tree nodes
-    register_action!(factory, "Script", Script);
-    register_action!(factory, "SaySomething", SaySomething);
-    // register subtrees nodes
-    move_robot::register_nodes(&mut factory);
+	// register main tree nodes
+	register_action!(factory, "Script", Script);
+	register_action!(factory, "SaySomething", SaySomething);
+	// register subtrees nodes
+	move_robot::register_nodes(&mut factory);
 
-    // create the BT
-    let mut tree = factory.create_tree_from_xml(XML)?;
+	// create the BT
+	let mut tree = factory.create_tree_from_xml(XML)?;
 
-    // run the BT
-    let result = tree.tick_while_running().await?;
+	// run the BT
+	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 
-    Ok(())
+	Ok(())
 }
 
 /// Implementation of `MoveRobot` tree
 mod move_robot {
 	use std::{num::ParseFloatError, str::FromStr};
 
-use dimas_core::blackboard::FromString;
+	use dimas_core::blackboard::FromString;
 
-use super::*;
+	use super::*;
 
 	#[derive(Clone, Copy, Debug)]
 	pub struct Position2D {

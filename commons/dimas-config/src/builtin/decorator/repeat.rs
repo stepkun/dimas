@@ -12,8 +12,8 @@ use dimas_core::{define_ports, input_port};
 use dimas_macros::behavior;
 //endregion:    --- modules
 
-/// The Retry decorator is used to execute a child several times, as long
-/// as it succeed.
+/// The Repeat decorator is used to execute a child several times, as long
+/// as it succeeds.
 ///
 /// To succeed, the child must return SUCCESS N times (port "num_cycles").
 ///
@@ -64,7 +64,7 @@ impl Repeat {
 				BehaviorStatus::Success => {
 					self.repeat_count += 1;
 					bhvr_.reset_child().await;
-					
+
 					return Ok(BehaviorStatus::Running);
 				}
 				BehaviorStatus::Failure => {

@@ -4,7 +4,7 @@
 //! [see:](https://www.behaviortree.dev/docs/tutorial-advanced/tutorial_16_global_blackboard)
 //!
 //! Differences to BehaviorTree.CPP
-//! - currently not working due to missing functionality
+//! - currently only working with scripting cheat due to missing scripting functionality
 //!
 
 #[doc(hidden)]
@@ -61,15 +61,14 @@ struct PrintNumber {}
 #[behavior(SyncAction)]
 impl PrintNumber {
 	async fn tick(&mut self) -> BehaviorResult {
-		let name: String = bhvr_.config.get_input("name")?;
 		let value: i32 = bhvr_.config.get_input("val")?;
-		println!("PrintNumber [{name}] has val: {value}");
+		println!("PrintNumber [{}] has val: {value}", &bhvr_.name);
 
 		Ok(BehaviorStatus::Success)
 	}
 
 	fn ports() -> PortList {
-		define_ports!(input_port!("name"), input_port!("val"))
+		define_ports!(input_port!("val"))
 	}
 }
 

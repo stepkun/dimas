@@ -25,7 +25,7 @@ const XML: &str = r#"
 <root BTCPP_format="4"
         main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
-       <Sequence>
+       <Sequence  name="root">
            <CalculateGoal goal="{GoalPosition}" />
            <PrintTarget   target="{GoalPosition}" />
            <Script        code=" OtherGoal:=&apos;-1;3&apos; " />
@@ -92,6 +92,7 @@ impl CalculateGoal {
 	fn ports() -> PortList {
 		define_ports!(output_port!("goal"))
 	}
+
 	async fn tick(&mut self) -> BehaviorResult {
 		// initialize GoalPosition
 		let pos = Position2D { x: 1.1, y: 2.3 };
