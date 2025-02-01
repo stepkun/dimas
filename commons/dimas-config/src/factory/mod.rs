@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! [`BehaviorTree`] factory of `DiMAS`
+//! `BehaviorTree` factory of `DiMAS`
 
 // we need alloc
 #[doc(hidden)]

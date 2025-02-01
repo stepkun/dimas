@@ -13,13 +13,13 @@ use alloc::{
 };
 use core::fmt::Debug;
 use dimas_core::{
-	behavior::{tree::BehaviorTree, Behavior, BehaviorCategory, BehaviorConfig},
+	behavior::{Behavior, BehaviorCategory, BehaviorConfig, tree::BehaviorTree},
 	blackboard::Blackboard,
 	build_bhvr_ptr,
 };
 use hashbrown::HashMap;
 use roxmltree::{Document, Node, NodeType, ParsingOptions};
-use tracing::{instrument, Level};
+use tracing::{Level, instrument};
 
 use crate::builtin::{
 	control::{

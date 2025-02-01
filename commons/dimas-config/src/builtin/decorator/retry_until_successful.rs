@@ -86,7 +86,7 @@ impl RetryUntilSuccessful {
 					return Err(BehaviorError::Status(
 						"RetryUntilSuccesssful Decorator".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 			}
 		}

@@ -8,8 +8,8 @@
 use proc_macro2::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse::Parser, punctuated::Punctuated, ItemFn, Meta, Token};
-use syn::{parse_macro_input, ItemStruct};
+use syn::{ItemFn, Meta, Token, parse::Parser, punctuated::Punctuated};
+use syn::{ItemStruct, parse_macro_input};
 
 type Arguments = Punctuated<Meta, Token![,]>;
 
@@ -61,14 +61,14 @@ fn parse_config(args: Arguments) -> Result<Config, syn::Error> {
 									return Err(syn::Error::new(
 										syn::spanned::Spanned::span(lit),
 										format!("value `{ident}` is no positive integer: {err}"),
-									))
+									));
 								}
 							},
 							_ => {
 								return Err(syn::Error::new(
 									syn::spanned::Spanned::span(lit),
 									format!("value `{ident}` is no positive integer"),
-								))
+								));
 							}
 						};
 					}

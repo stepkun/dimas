@@ -1,17 +1,16 @@
 // Copyright © 2024 Stephan Kunz
 #![allow(clippy::needless_pass_by_value)]
-#![allow(clippy::match_same_arms)]
 
 //! Macro `register_behavior` implementation
 //!
 
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::parse::Parse;
 use syn::parse_macro_input;
 use syn::token::Comma;
-use syn::{punctuated::Punctuated, Token};
+use syn::{Token, punctuated::Punctuated};
 
 pub enum BehaviorTypeInternal {
 	Action,

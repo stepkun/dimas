@@ -14,8 +14,8 @@ pub extern crate tokio;
 pub use anyhow::Result;
 
 // DiMAS
+pub use crate::Agent;
 pub use crate::com::publisher::Publisher;
 pub use crate::com::subscriber::Subscriber;
 pub use crate::timer::interval_timer::IntervalTimer;
-pub use crate::Agent;
 pub use dimas_core::utils::init_tracing;

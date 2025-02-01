@@ -95,7 +95,9 @@ where
 	}
 }
 
-impl_from_string!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+impl_from_string!(
+	u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64
+);
 
 impl FromString for String {
 	type Err = Infallible;

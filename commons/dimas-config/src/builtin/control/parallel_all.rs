@@ -20,8 +20,7 @@ use hashbrown::HashSet;
 /// and halt other children if a certain number of SUCCESS/FAILURES is reached,
 /// whilst this one will always complete the execution of ALL its children.
 ///
-/// Note that threshold indexes work as in Python:
-/// https://www.i2tutorials.com/what-are-negative-indexes-and-why-are-they-used/
+/// Note that threshold indexes work as in Python: [see](https://www.i2tutorials.com/what-are-negative-indexes-and-why-are-they-used/)
 ///
 /// Therefore -1 is equivalent to the number of children.
 #[behavior(SyncControl)]
@@ -82,7 +81,7 @@ impl ParallelAll {
 					return Err(BehaviorError::Status(
 						"ParallelAllNode".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 			}
 		}

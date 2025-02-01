@@ -4,13 +4,13 @@
 //!
 
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote, ToTokens};
+use quote::{ToTokens, format_ident, quote};
 use syn::token::Comma;
-use syn::{parse::Parser, punctuated::Punctuated, Fields, Meta, Result};
 use syn::{Error, ItemStruct, LitStr};
+use syn::{Fields, Meta, Result, parse::Parser, punctuated::Punctuated};
 
 use crate::utils::{
-	collect_data, determine_type_category, ArgListToMap, Arguments, ConcatTokenStream,
+	ArgListToMap, Arguments, ConcatTokenStream, collect_data, determine_type_category,
 };
 
 const UNSUPPORTED: &str = "not supported by macro";
@@ -52,7 +52,7 @@ fn parse_config(args: Arguments) -> Result<Config> {
 
 				ident.clone_into(&mut config.bhvr_type);
 			}
-		};
+		}
 	}
 
 	Ok(config)
@@ -140,9 +140,10 @@ fn behavior_struct(config: &Config, mut item: ItemStruct) -> Result<TokenStream>
 			return Err(Error::new_spanned(
 				item,
 				"expecting a struct with named fields",
-			))
+			));
 		}
-	};
+	}
+
 	let extra_fields = TokenStream::new()
 		.concat_list(default_fields)
 		.concat_list(manual_fields);

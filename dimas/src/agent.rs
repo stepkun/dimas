@@ -9,7 +9,7 @@ use dimas_core::{
 };
 use dimas_macros::{behavior, register_action, register_condition};
 use std::time::Duration;
-use tracing::{event, instrument, Level};
+use tracing::{Level, event, instrument};
 // endregion:   --- modules
 
 // region:      --- behavior

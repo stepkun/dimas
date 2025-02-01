@@ -61,7 +61,7 @@ impl SequenceWithMemory {
 					return Err(BehaviorError::Status(
 						"SequenceStarNode".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 			};
 		}

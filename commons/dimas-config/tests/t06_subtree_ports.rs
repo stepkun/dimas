@@ -16,7 +16,7 @@ use core::{num::ParseFloatError, str::FromStr};
 
 use dimas_config::factory::BTFactory;
 use dimas_core::{
-	behavior::{error::BehaviorError, BehaviorResult, BehaviorStatus},
+	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
 	blackboard::FromString,
 	define_ports, input_port,
 	port::PortList,

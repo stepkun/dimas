@@ -70,7 +70,7 @@ impl Blackboard {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
 			return self.root().get(key_stripped);
-		};
+		}
 
 		// Try without parsing string first, then try with parsing string
 		self.__get_no_string(key.as_ref())
@@ -90,7 +90,7 @@ impl Blackboard {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
 			return self.root().get(key_stripped);
-		};
+		}
 		self.__get_no_string(key.as_ref())
 	}
 
@@ -107,7 +107,7 @@ impl Blackboard {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
 			return self.root().set(key_stripped, value);
-		};
+		}
 
 		let key = key.as_ref().to_string();
 

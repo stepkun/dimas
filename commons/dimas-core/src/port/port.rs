@@ -188,7 +188,7 @@ impl Port {
 	}
 
 	/// @TODO:
-	pub fn set_expr(&mut self, parse_expr: bool) {
+	pub const fn set_expr(&mut self, parse_expr: bool) {
 		self.parse_expr = parse_expr;
 	}
 }

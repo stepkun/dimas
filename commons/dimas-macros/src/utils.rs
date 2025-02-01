@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-	parse2, punctuated::Punctuated, token::Comma, AttrStyle, Attribute, Error, Expr, ExprCall,
-	Ident, ItemStruct, Lit, Meta, Path, Result, Token,
+	AttrStyle, Attribute, Error, Expr, ExprCall, Ident, ItemStruct, Lit, Meta, Path, Result, Token,
+	parse2, punctuated::Punctuated, token::Comma,
 };
 
 /// helper type for handling of argument lists
@@ -124,14 +124,14 @@ impl ArgListToMap<Self, Ident, Option<TokenStream>> for Punctuated<Meta, Comma> 
 	/// Convert a list of attribute arguments to a `HashMap`
 	fn arglist_to_map(&self) -> Result<HashMap<Ident, Option<TokenStream>>> {
 		self.iter()
-            .map(|m| {
-                match m {
-                    Meta::NameValue(arg) => {
-                        // convert `Expr` to one of the valid types:
-                        if let Expr::Lit(lit) = &arg.value {
+			.map(|m| {
+				match m {
+					Meta::NameValue(arg) => {
+						// convert `Expr` to one of the valid types:
+						if let Expr::Lit(lit) = &arg.value {
 							// extract the literal
 							if let Lit::Str(arg_str) = &lit.lit {
-                                let value = {
+								let value = {
 									// function call
 									if let Ok(call) = arg_str.parse::<ExprCall>() {
 										quote! { #call }
@@ -147,34 +147,39 @@ impl ArgListToMap<Self, Ident, Option<TokenStream>> for Punctuated<Meta, Comma> 
 									// variable type
 									else if let Ok(path) = arg_str.parse::<Path>() {
 										quote! { #path }
-									}
-									else {
-										return Err(Error::new_spanned(&arg.value, "invalid argument, should be: variable, literal, path, function call"))
+									} else {
+										return Err(Error::new_spanned(
+											&arg.value,
+											"invalid argument, should be: variable, literal, path, function call",
+										));
 									}
 								};
-								let v = arg.path.get_ident().unwrap_or_else(
-									|| todo!(),
-								);
-                                Ok((v.clone(), Some(value)))
-                            }
-							else {
-                                Err(Error::new_spanned(&arg.value, "value should be a string literal"))
-                            }
-                        }
-                        else {
-                            Err(Error::new_spanned(&arg.value, "value should be a string literal"))
-                        }
-                    }
-                    Meta::Path(arg) => {
-						let v = arg.get_ident().unwrap_or_else(
-							|| todo!(),
-						);
-                        Ok((v.clone(), None))
-                    }
-                    Meta::List(_) => Err(Error::new_spanned(m,"attribute should be `#[bhvr(default)]` or `#[bhvr(default = \"String::new()\")]`"))
-                }
-            })
-            .collect()
+								let v = arg.path.get_ident().unwrap_or_else(|| todo!());
+								Ok((v.clone(), Some(value)))
+							} else {
+								Err(Error::new_spanned(
+									&arg.value,
+									"value should be a string literal",
+								))
+							}
+						} else {
+							Err(Error::new_spanned(
+								&arg.value,
+								"value should be a string literal",
+							))
+						}
+					}
+					Meta::Path(arg) => {
+						let v = arg.get_ident().unwrap_or_else(|| todo!());
+						Ok((v.clone(), None))
+					}
+					Meta::List(_) => Err(Error::new_spanned(
+						m,
+						"attribute should be `#[bhvr(default)]` or `#[bhvr(default = \"String::new()\")]`",
+					)),
+				}
+			})
+			.collect()
 	}
 }
 

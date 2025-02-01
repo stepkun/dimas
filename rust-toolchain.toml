@@ -1,4 +1,5 @@
 [toolchain] 
 #channel = "1.81.0"
 #channel = "stable"
-channel = "nightly"
+channel = "beta"
+#channel = "nightly"

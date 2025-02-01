@@ -19,7 +19,7 @@ use core::num::ParseIntError;
 use dimas_config::factory::BTFactory;
 
 use dimas_core::{
-	behavior::{error::BehaviorError, BTToString, BehaviorResult, BehaviorStatus},
+	behavior::{BTToString, BehaviorResult, BehaviorStatus, error::BehaviorError},
 	blackboard::FromString,
 	define_ports, input_port,
 	port::PortList,

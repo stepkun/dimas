@@ -84,7 +84,7 @@ impl Retry {
 					return Err(BehaviorError::Status(
 						"Retry Decorator".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 			}
 		}

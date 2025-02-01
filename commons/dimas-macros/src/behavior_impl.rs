@@ -6,8 +6,8 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::visit_mut::{self, VisitMut};
-use syn::{parse::Parser, punctuated::Punctuated, Meta, Result, Token};
-use syn::{parse2, Error, FnArg, GenericParam, ImplItem, ImplItemFn, ItemImpl, ReturnType};
+use syn::{Error, FnArg, GenericParam, ImplItem, ImplItemFn, ItemImpl, ReturnType, parse2};
+use syn::{Meta, Result, Token, parse::Parser, punctuated::Punctuated};
 
 type Arguments = Punctuated<Meta, Token![,]>;
 
@@ -52,7 +52,7 @@ fn parse_config(args: Arguments) -> Result<Config> {
 				if !bhvr_type_str.starts_with("Sync") {
 					tick_fn = Ident::new("on_running", Span::call_site());
 					start_fn = Some(Ident::new("on_start", Span::call_site()));
-				};
+				}
 			}
 		}
 	}

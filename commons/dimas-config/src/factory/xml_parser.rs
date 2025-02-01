@@ -18,7 +18,7 @@ use dimas_core::{
 };
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType, ParsingOptions};
-use tracing::{event, instrument, Level};
+use tracing::{Level, event, instrument};
 
 use super::{
 	error::Error,
@@ -114,7 +114,7 @@ impl XmlParser {
 									return Err(Error::PortExpressionInvalidType(
 										var_type.to_owned(),
 										name.to_owned(),
-									))
+									));
 								}
 							};
 						}

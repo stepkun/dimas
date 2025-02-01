@@ -58,7 +58,7 @@ impl IfThenElse {
 					return Err(BehaviorError::Status(
 						"Node name here".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 				_ => warn!("Condition node of IfThenElseNode returned Skipped"),
 			}

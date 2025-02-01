@@ -13,7 +13,7 @@ extern crate alloc;
 use dimas_config::factory::BTFactory;
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus},
-	blackboard::{error::Error, Blackboard},
+	blackboard::{Blackboard, error::Error},
 	define_ports, input_port,
 	port::PortList,
 	utils::init_tracing,

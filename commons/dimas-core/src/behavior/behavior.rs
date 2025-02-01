@@ -27,7 +27,7 @@ use tracing::debug;
 use crate::{
 	behavior::error::BehaviorError,
 	blackboard::{Blackboard, BlackboardString, FromString, ParseStr},
-	port::{get_remapped_key, PortDirection, PortList, PortRemapping},
+	port::{PortDirection, PortList, PortRemapping, get_remapped_key},
 };
 
 use super::string::BTToString;
@@ -78,12 +78,12 @@ impl Behavior {
 	}
 
 	/// Resets the status back to [`BehaviorStatus::Idle`]
-	pub fn reset_status(&mut self) {
+	pub const fn reset_status(&mut self) {
 		self.data.status = BehaviorStatus::Idle;
 	}
 
 	/// Update the node's status
-	pub fn set_status(&mut self, status: BehaviorStatus) {
+	pub const fn set_status(&mut self, status: BehaviorStatus) {
 		self.data.status = status;
 	}
 
@@ -157,7 +157,7 @@ impl Behavior {
 	}
 
 	/// Get a mutable reference to the [`BehaviorConfig`]
-	pub fn config_mut(&mut self) -> &mut BehaviorConfig {
+	pub const fn config_mut(&mut self) -> &mut BehaviorConfig {
 		&mut self.data.config
 	}
 
@@ -168,12 +168,13 @@ impl Behavior {
 	}
 
 	/// Get a mutable reference to the [`BehaviorData`]
-	pub fn data_mut(&mut self) -> &mut BehaviorData {
+	pub const fn data_mut(&mut self) -> &mut BehaviorData {
 		&mut self.data
 	}
 
 	/// Get a reference to the [`BehaviorData`]
-	pub fn data(&self) -> &BehaviorData {
+	#[must_use]
+	pub const fn data(&self) -> &BehaviorData {
 		&self.data
 	}
 
@@ -196,7 +197,6 @@ impl Behavior {
 	/// - [`BehaviorCategory::Condition`],
 	/// - [`BehaviorCategory::Control`],
 	/// - [`BehaviorCategory::Decorator`],
-	/// - [`BehaviorCategory::SubTree`].
 	#[must_use]
 	pub const fn bhvr_category(&self) -> BehaviorCategory {
 		self.data.bhvr_category
@@ -311,7 +311,7 @@ impl BehaviorConfig {
 			PortDirection::InOut => {
 				todo!();
 			}
-		};
+		}
 	}
 
 	/// @TODO:
@@ -353,7 +353,7 @@ impl BehaviorConfig {
 	/// - `T` doesn't match the type of the stored value
 	/// - If a default value is needed (value is empty), couldn't parse default value
 	/// - If a remapped key (e.g. a port value of `"{foo}"` references the blackboard
-	///     key `"foo"`), blackboard entry wasn't found or couldn't be read as `T`
+	///   key `"foo"`), blackboard entry wasn't found or couldn't be read as `T`
 	/// - If port value is a string, couldn't convert it to `T` using `parse_str()`.
 	/// # Panics
 	/// @TODO:
@@ -541,7 +541,7 @@ impl BehaviorData {
 	}
 
 	/// Sets the status of this node
-	pub fn set_status(&mut self, status: BehaviorStatus) {
+	pub const fn set_status(&mut self, status: BehaviorStatus) {
 		self.status = status;
 	}
 

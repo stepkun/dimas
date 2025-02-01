@@ -58,7 +58,7 @@ impl Sequence {
 					return Err(BehaviorError::Status(
 						"SequenceNode".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 			};
 		}

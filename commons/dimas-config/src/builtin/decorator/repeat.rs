@@ -83,7 +83,7 @@ impl Repeat {
 					return Err(BehaviorError::Status(
 						"Repeat Decorator".to_string(),
 						"Idle".to_string(),
-					))
+					));
 				}
 			}
 		}

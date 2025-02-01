@@ -26,8 +26,7 @@ use hashbrown::HashSet;
 /// If any of the thresholds is reached, and other children are still running,
 /// they will be halted.
 ///
-/// Note that threshold indexes work as in Python:
-/// https://www.i2tutorials.com/what-are-negative-indexes-and-why-are-they-used/
+/// Note that threshold indexes work as in Python: [see](https://www.i2tutorials.com/what-are-negative-indexes-and-why-are-they-used/)
 ///
 /// Therefore -1 is equivalent to the number of children.
 #[behavior(SyncControl)]
