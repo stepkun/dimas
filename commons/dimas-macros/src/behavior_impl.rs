@@ -18,7 +18,7 @@ const MISSING_BEHAVIOR_TYPE: &str = "missing behavior type";
 struct Config {
 	bhvr_type: Ident,
 	start_fn: Option<Ident>,
-	tick_fn: Ident,
+	running_fn: Ident,
 	halt_fn: Option<Ident>,
 	port_fn: Option<Ident>,
 }
@@ -60,7 +60,7 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(Config {
 		bhvr_type,
 		start_fn,
-		tick_fn,
+		running_fn: tick_fn,
 		halt_fn,
 		port_fn,
 	})
@@ -134,7 +134,7 @@ fn alter_behavior_fn(fn_item: &mut ImplItemFn, is_async: bool) -> Result<()> {
 			}
 		}
 	} else {
-		// Wrap function block in Box::pin and create ctx
+		// create ctx
 		quote! {
 			{
 				let mut self_ = ctx.downcast_mut::<Self>().unwrap();
@@ -158,7 +158,7 @@ fn behavior_impl(mut args: Config, mut item: ItemImpl) -> Result<TokenStream> {
 			// Rename methods
 			let mut new_ident = None;
 			// Check if it's a tick
-			if fn_item.sig.ident == args.tick_fn {
+			if fn_item.sig.ident == args.running_fn {
 				new_ident = if args.bhvr_type == "Action"
 					|| args.bhvr_type == "Condition"
 					|| args.bhvr_type == "Control"

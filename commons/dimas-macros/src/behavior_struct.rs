@@ -63,14 +63,14 @@ fn behavior_fields(type_ident_str: &str) -> TokenStream {
 		// asynchronous behaviors
 		"Action" | "Condition" | "Control" | "Decorator" => {
 			quote! {
-				tick_fn: Self::_on_running,
+				running_fn: Self::_on_running,
 				start_fn: Self::_on_start,
 			}
 		}
 		// others are synchronous
 		_ => {
 			quote! {
-				tick_fn: Self::_tick,
+				running_fn: Self::_tick,
 				start_fn: Self::_tick,
 			}
 		}

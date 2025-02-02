@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `dimas-behaviortree` node
+//! `DiMAS` behavior
 
 #[doc(hidden)]
 extern crate alloc;
@@ -29,8 +29,6 @@ use crate::{
 	blackboard::{Blackboard, BlackboardString, FromString, ParseStr},
 	port::{PortDirection, PortList, PortRemapping, get_remapped_key},
 };
-
-use super::string::BTToString;
 // endregion:   --- modules
 
 // region:      --- types
@@ -61,11 +59,12 @@ pub struct Behavior {
 	pub data: BehaviorData,
 	/// @TODO:
 	pub context: Box<dyn Any + Send + Sync>,
-	/// Function pointer to tick
-	pub tick_fn: BehaviorTickFn,
-	/// Function pointer to `on_start` function (if non Sync)
-	/// Otherwise points to `tick_fn`
+	/// Function pointer to `start` function
+	/// Points to `tick()` for sync and `on_start()` for non sync
 	pub start_fn: BehaviorTickFn,
+	/// Function pointer to `running` function
+	/// Points to `tick()` for sync and `on_running()` for non sync
+	pub running_fn: BehaviorTickFn,
 	/// Function pointer to halt
 	pub halt_fn: BehaviorHaltFn,
 }
@@ -113,7 +112,8 @@ impl Behavior {
 							"[behaviortree_rs]: {}::on_running()",
 							&self.data.config.path
 						);
-						let new_status = (self.tick_fn)(&mut self.data, &mut self.context).await?;
+						let new_status =
+							(self.running_fn)(&mut self.data, &mut self.context).await?;
 						if matches!(new_status, BehaviorStatus::Idle) {
 							return Err(BehaviorError::Status(
 								format!("{}::on_running()", self.data.config.path),
@@ -131,7 +131,7 @@ impl Behavior {
 			}
 			// SyncAction, SyncCondition may only return Success or Failure
 			BehaviorType::SyncAction | BehaviorType::SyncCondition => {
-				match (self.tick_fn)(&mut self.data, &mut self.context).await? {
+				match (self.running_fn)(&mut self.data, &mut self.context).await? {
 					status @ (BehaviorStatus::Running | BehaviorStatus::Idle) => Err(
 						BehaviorError::Status(self.data.config.path.clone(), status.to_string()),
 					),
@@ -140,7 +140,7 @@ impl Behavior {
 			}
 			// SyncControl, SyncDecorator may return any status
 			BehaviorType::SyncControl | BehaviorType::SyncDecorator => {
-				(self.tick_fn)(&mut self.data, &mut self.context).await
+				(self.running_fn)(&mut self.data, &mut self.context).await
 			}
 		}
 	}
@@ -633,7 +633,7 @@ impl BehaviorStatus {
 			Self::Success => "\x1b[32m",
 		};
 
-		color_start.to_string() + &self.bt_to_string() + "\x1b[0m"
+		color_start.to_string() + &self.to_string() + "\x1b[0m"
 	}
 
 	/// @TODO:

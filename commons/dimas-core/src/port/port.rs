@@ -16,7 +16,7 @@ use core::{
 };
 use hashbrown::HashMap;
 
-use crate::{behavior::BTToString, blackboard::BlackboardString};
+use crate::blackboard::BlackboardString;
 // endregion:   --- modules
 
 // region:      --- helper
@@ -72,7 +72,7 @@ pub trait PortClone {
 
 impl<T> PortClone for T
 where
-	T: 'static + Any + Clone + Debug + BTToString,
+	T: 'static + Any + Clone + Debug + ToString,
 {
 	fn clone_port(&self) -> Box<dyn PortValue> {
 		Box::new(self.clone())
@@ -81,9 +81,9 @@ where
 
 /// Trait to ensure properties of a port
 #[allow(clippy::module_name_repetitions)]
-pub trait PortValue: Any + PortClone + Debug + BTToString {}
+pub trait PortValue: Any + PortClone + Debug + ToString {}
 
-impl<T> PortValue for T where T: Any + PortClone + Debug + BTToString {}
+impl<T> PortValue for T where T: Any + PortClone + Debug + ToString {}
 // endregion:   --- traits
 
 // region:      --- types
@@ -159,9 +159,7 @@ impl Port {
 	#[allow(clippy::redundant_closure_for_method_calls)]
 	#[must_use]
 	pub fn default_value_str(&self) -> Option<String> {
-		self.default_value
-			.as_ref()
-			.map(|v| v.bt_to_string())
+		self.default_value.as_ref().map(|v| v.to_string())
 	}
 
 	/// @TODO:
@@ -178,8 +176,8 @@ impl Port {
 
 	/// @TODO:
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn set_default(&mut self, default: impl BTToString) {
-		self.default_value = Some(default.bt_to_string());
+	pub fn set_default(&mut self, default: impl ToString) {
+		self.default_value = Some(default.to_string());
 	}
 
 	/// @TODO:

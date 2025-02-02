@@ -10,8 +10,6 @@ use alloc::{
 };
 use core::{any::Any, convert::Infallible, fmt::Debug};
 use thiserror::Error;
-
-use crate::behavior::BTToString;
 // endregion:   --- modules
 
 // region:      --- macros
@@ -153,7 +151,7 @@ where
 }
 // endregion:   --- ParseStr
 
-// region:      --- BBString
+// region:      --- BlackboardString
 /// Trait that provides `strip_bb_pointer()` for all `AsRef<str>`,
 /// which includes `String` and `&str`.
 pub trait BlackboardString {
@@ -191,13 +189,13 @@ where
 		str_ref.starts_with('{') && str_ref.ends_with('}')
 	}
 }
-// endregion:   --- BBString
+// endregion:   --- BlackboardString
 
 // region:      -- AnyStringy
-/// Supertrait for `Any + BTToString`
-pub trait AnyStringy: Any + BTToString + Send {}
+/// Supertrait for `Any + ToString`
+pub trait AnyStringy: Any + ToString + Send {}
 
-impl<T> AnyStringy for T where T: Any + BTToString + Send {}
+impl<T> AnyStringy for T where T: Any + ToString + Send {}
 
 impl Debug for (dyn AnyStringy) {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

@@ -19,7 +19,7 @@ use core::num::ParseIntError;
 use dimas_config::factory::BTFactory;
 
 use dimas_core::{
-	behavior::{BTToString, BehaviorResult, BehaviorStatus, error::BehaviorError},
+	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
 	blackboard::FromString,
 	define_ports, input_port,
 	port::PortList,
@@ -54,12 +54,6 @@ struct Point2D {
 impl Display for Point2D {
 	fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
 		write!(f, "{},{}", self.x, self.y)
-	}
-}
-
-impl BTToString for Point2D {
-	fn bt_to_string(&self) -> String {
-		ToString::to_string(self)
 	}
 }
 
