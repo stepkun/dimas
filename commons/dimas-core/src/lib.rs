@@ -15,7 +15,6 @@ extern crate std;
 // modules
 pub mod behavior;
 pub mod blackboard;
-pub mod macros;
 pub mod port;
 pub mod utils;
 

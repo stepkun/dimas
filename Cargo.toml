@@ -50,7 +50,7 @@ repository = "https://github.com/dimas-fw/dimas/"
 
 [workspace.dependencies]
 anyhow = "1.0.95"
-clap = "4.5.27"
+clap = "4.5.28"
 dimas = { path = "dimas" }
 #dimas = "0.5.0"
 dimas-com = { path = "commons/dimas-com" }
@@ -77,7 +77,7 @@ tokio = { version = "1.43.0", features = ["parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
 trybuild = { version = "1.0.103", features = ["diff"] }
-zenoh = "1.2.0"
+zenoh = "1.2.1"
 
 [profile.release]
 opt-level = 'z'   # Optimize for size.

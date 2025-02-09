@@ -30,7 +30,7 @@ impl WhileDoElse {
 		let children_count = bhvr_.children.len();
 		// Node should only have 2 or 3 children
 		if !(2..=3).contains(&children_count) {
-			return Err(BehaviorError::NodeStructure(
+			return Err(BehaviorError::Composition(
 				"IfThenElseNode must have either 2 or 3 children.".to_string(),
 			));
 		}

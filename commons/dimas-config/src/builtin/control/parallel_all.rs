@@ -52,7 +52,7 @@ impl ParallelAll {
 		let children_count = bhvr_.children.len();
 
 		if (children_count as i32) < self.failure_threshold {
-			return Err(BehaviorError::NodeStructure(
+			return Err(BehaviorError::Composition(
 				"Number of children is less than the threshold. Can never fail.".to_string(),
 			));
 		}

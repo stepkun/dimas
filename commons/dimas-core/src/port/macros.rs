@@ -1,21 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `dimas-core` functional macros
-
-#[macro_export]
-/// Macro
-macro_rules! build_bhvr_ptr {
-    ($conf:expr, $n:expr, $t:ty $(,$x:expr),* $(,)?) => {
-        {
-            let mut behavior = <$t>::create_behavior($n, $conf, $($x),*);
-            let manifest = $crate::behavior::BehaviorManifest::new(behavior.bhvr_category(), $n, behavior.provided_ports(), "");
-            behavior.config_mut().set_manifest(::alloc::sync::Arc::new(manifest));
-
-            behavior
-        }
-    };
-	(_) => { todo!(); };
-}
+//! Macros for creating and managing ports
 
 /// Macro
 #[macro_export]
@@ -81,3 +66,39 @@ macro_rules! output_port {
 		todo!();
 	};
 }
+
+/// Macro
+#[macro_export]
+macro_rules! inout_port {
+	($n:literal) => {{
+		let port_info = $crate::port::Port::new($crate::port::PortDirection::InOut);
+
+		($n, port_info)
+	}};
+	($n:literal, expr) => {{
+		let mut port_info = $crate::port::Port::new($crate::port::PortDirection::InOut);
+
+		port_info.set_expr(true);
+
+		($n, port_info)
+	}};
+	($n:literal, $d:expr) => {{
+		let mut port_info = $crate::port::Port::new($crate::port::PortDirection::InOut);
+
+		port_info.set_default($d);
+
+		($n, port_info)
+	}};
+	($n:literal, $d:expr, expr) => {{
+		let mut port_info = $crate::port::Port::new($crate::port::PortDirection::InOut);
+
+		port_info.set_default($d);
+		port_info.set_expr(true);
+
+		($n, port_info)
+	}};
+	(_) => {
+		todo!();
+	};
+}
+

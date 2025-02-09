@@ -10,7 +10,7 @@ extern crate alloc;
 use dimas_config::factory::BTFactory;
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus},
-	define_ports, input_port, output_port,
+	define_ports, input_port, output_port, inout_port,
 	port::PortList,
 };
 use dimas_macros::{behavior, register_action};
@@ -22,6 +22,8 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
         <Sequence  name="root_sequence">
             <SaySomething message="Hello."/>
             <ThinkWhatToSay text="{the_answer}"/>
+            <SaySomething message="{the_answer}"/>
+            <RefineWhatToSay text="{the_answer}"/>
             <SaySomething message="{the_answer}"/>
         </Sequence>
     </BehaviorTree>
@@ -37,6 +39,10 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
                 editable="true">
             <output_port name="text"
                 default="Nothing to say"/>
+        </Action>
+        <Action ID="RefineWhatToSay"
+                editable="true">
+            <inout_port name="text"/>
         </Action>
     </TreeNodesModel>
 </root>
@@ -82,6 +88,31 @@ impl ThinkWhatToSay {
 	}
 }
 
+/// SyncAction "RefineWhatToSay"
+#[behavior(SyncAction)]
+struct RefineWhatToSay {}
+
+#[behavior(SyncAction)]
+impl RefineWhatToSay {
+	fn ports() -> PortList {
+		define_ports!(inout_port!("text"))
+	}
+
+	async fn tick(&mut self) -> BehaviorResult {
+		let mut msg = bhvr_.config.get_input::<String>("text")?;
+
+		msg = msg.replace("42", "still 42");
+
+		bhvr_
+			.config
+			.set_output("text", msg)?;
+
+		println!("Robot has refined his thoughts");
+
+		Ok(BehaviorStatus::Success)
+	}
+}
+
 #[tokio::test]
 async fn basic_ports() -> anyhow::Result<()> {
 	// create BT environment
@@ -90,6 +121,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 	// register all needed nodes
 	register_action!(factory, "SaySomething", SaySomething);
 	register_action!(factory, "ThinkWhatToSay", ThinkWhatToSay);
+	register_action!(factory, "RefineWhatToSay", RefineWhatToSay);
 
 	// create the BT
 	let mut tree = factory.create_tree_from_xml(XML)?;
@@ -101,6 +133,6 @@ async fn basic_ports() -> anyhow::Result<()> {
 		.blackboard()
 		.get("the_answer")
 		.expect("the_answer not found");
-	assert_eq!(answer, "The answer is 42.");
+	assert_eq!(answer, "The answer is still 42.");
 	Ok(())
 }

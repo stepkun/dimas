@@ -2,6 +2,7 @@
 
 //! Port of `DiMAS`
 
+pub mod macros;
 #[allow(clippy::module_inception)]
 mod port;
 

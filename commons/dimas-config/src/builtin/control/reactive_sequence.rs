@@ -52,7 +52,7 @@ impl ReactiveSequence {
 						self.running_child = counter as i32;
 					} else if self.running_child != counter as i32 {
 						// Multiple children running at the same time
-						return Err(BehaviorError::NodeStructure(
+						return Err(BehaviorError::Composition(
 							"[ReactiveSequence]: Only a single child can return Running."
 								.to_string(),
 						));

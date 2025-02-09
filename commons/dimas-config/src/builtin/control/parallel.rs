@@ -84,14 +84,14 @@ impl Parallel {
 		let children_count = bhvr_.children.len();
 
 		if children_count < self.success_threshold(bhvr_.children.len() as i32) {
-			return Err(BehaviorError::NodeStructure(
+			return Err(BehaviorError::Composition(
 				#[allow(clippy::match_same_arms)]
 				"Number of children is less than the threshold. Can never succeed.".to_string(),
 			));
 		}
 
 		if children_count < self.failure_threshold(bhvr_.children.len() as i32) {
-			return Err(BehaviorError::NodeStructure(
+			return Err(BehaviorError::Composition(
 				"Number of children is less than the threshold. Can never fail.".to_string(),
 			));
 		}
