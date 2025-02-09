@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `dimas-behaviortree` tree
+//! `dimas` behavior tree
 
 #[doc(hidden)]
 extern crate alloc;

@@ -15,7 +15,6 @@ use core::{num::ParseFloatError, str::FromStr};
 use dimas_config::factory::BTFactory;
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
-	blackboard::FromString,
 	define_ports, input_port, output_port,
 	port::PortList,
 };
@@ -55,14 +54,6 @@ const XML: &str = r#"
 struct Position2D {
 	x: f64,
 	y: f64,
-}
-
-impl FromString for Position2D {
-	type Err = ParseFloatError;
-
-	fn from_string(value: impl AsRef<str>) -> Result<Self, Self::Err> {
-		value.as_ref().parse()
-	}
 }
 
 impl FromStr for Position2D {
@@ -134,7 +125,7 @@ impl Script {
 	async fn tick(&mut self) -> BehaviorResult {
 		let script: String = bhvr_.config.get_input("code")?;
 		let elements: Vec<&str> = script.split(":=").collect();
-		let pos = Position2D::from_string(elements[1].trim()).map_err(|_| {
+		let pos = Position2D::from_str(elements[1].trim()).map_err(|_| {
 			BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
 		})?;
 		bhvr_

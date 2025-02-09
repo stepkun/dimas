@@ -8,11 +8,11 @@ use alloc::{
 	string::{String, ToString},
 	sync::Arc,
 };
-use core::any::Any;
+use core::{any::Any, str::FromStr};
 use hashbrown::HashMap;
 use parking_lot::{Mutex, RwLock};
 
-use super::{AnyStringy, FromString, ParseStr};
+use super::{AnyStringy, ParseStr};
 // endregion:   --- modules
 
 // region:      --- types
@@ -54,18 +54,18 @@ impl Blackboard {
 	}
 
 	/// Tries to return the value at `key`. The type `T` must implement
-	/// `FromString` when calling this method; it will try to convert
+	/// [`FromStr`] when calling this method; it will try to convert
 	/// from `String`/`&str` if there's an entry at `key` but it is not
 	/// of type `T`. If it does convert it successfully, it will replace
 	/// the existing value with `T` so converting from the string type
 	/// won't be needed next time.
 	///
 	/// If you want to get an entry that has a type that doesn't implement
-	/// `FromString`, use `get_exact<T>` instead.
+	/// [`FromStr`], use `get_exact<T>` instead.
 	/// @ TODO:
 	pub fn get_stringy<T>(&mut self, key: impl AsRef<str>) -> Option<T>
 	where
-		T: Any + Clone + FromString + Send + Sync,
+		T: Any + Clone + FromStr + Send + Sync,
 	{
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
@@ -79,7 +79,7 @@ impl Blackboard {
 
 	/// Version of `get<T>` that does _not_ try to convert from string if the type
 	/// doesn't match. This method has the benefit of not requiring the trait
-	/// `FromString`, which allows you to avoid implementing the trait for
+	/// [`FromStr`], which allows you to avoid implementing the trait for
 	/// types that don't need it or it's impossible to represent the data
 	/// type as a string.
 	/// @ TODO:
@@ -233,11 +233,11 @@ impl Blackboard {
 	}
 
 	/// Internal method that tries to get the value at key, but only works
-	/// if it's a String/&str, then tries [`FromString`] to convert it to T.
+	/// if it's a String/&str, then tries [`FromStr`] to convert it to T.
 	/// Treats the [`Entry`] as [`Entry::Generic`]
 	fn __get_allow_string<T>(&self, key: &str) -> Option<T>
 	where
-		T: Any + Clone + FromString + Send,
+		T: Any + Clone + FromStr + Send,
 	{
 		// Try to get the key
 		if let Some(entry) = self.get_entry(key) {
@@ -262,7 +262,7 @@ impl Blackboard {
 	fn __get_string(&self, key: &str) -> Option<String> {
 		self.get_entry(key).and_then(|entry| {
 			let entry_lock = entry.lock();
-			// If value is a String or &str, try to call `FromString` to convert to T
+			// If value is a String or &str, try to call [`FromStr`] to convert to T
 			match &(*entry_lock) {
 				Entry::Generic(entry) => entry
 					.downcast_ref::<String>()

@@ -1,5 +1,4 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
 
 //! Blackboard implementation of `DiMAS`
 

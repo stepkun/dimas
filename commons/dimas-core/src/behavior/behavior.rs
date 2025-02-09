@@ -15,7 +15,7 @@ use alloc::{
 };
 use core::{
 	any::{Any, TypeId},
-	fmt::{Debug, Display, Formatter},
+	fmt::{Debug, Display, Formatter}, str::FromStr,
 };
 use futures::future::BoxFuture;
 use hashbrown::HashMap;
@@ -23,7 +23,7 @@ use tracing::{Level, debug, instrument};
 
 use crate::{
 	behavior::error::BehaviorError,
-	blackboard::{Blackboard, BlackboardString, FromString, ParseStr},
+	blackboard::{Blackboard, BlackboardString, ParseStr},
 	port::{PortDirection, PortList, PortRemapping, get_remapped_key},
 };
 // endregion:   --- modules
@@ -365,7 +365,7 @@ impl BehaviorConfig {
 	/// - If port value is a string, couldn't convert it to `T` using `parse_str()`.
 	pub fn get_input<T>(&mut self, port: &str) -> Result<T, BehaviorError>
 	where
-		T: FromString + Clone + Debug + Send + Sync + 'static,
+		T: FromStr + Clone + Debug + Send + Sync + 'static,
 	{
 		match self.input_ports.get(port) {
 			Some(val) => {
@@ -406,7 +406,7 @@ impl BehaviorConfig {
 								|val| Ok(val),
 							),
 						// Value is just a normal string
-						None => <T as FromString>::from_string(val).map_or_else(
+						None => <T as FromStr>::from_str(val).map_or_else(
 							|_| {
 								Err(BehaviorError::ParsePortValue(
 									String::from(port),
@@ -499,7 +499,7 @@ impl BehaviorData {
 	/// Halt children from index `start` to the end.
 	///
 	/// # Errors
-	/// - [`BehaviorError::IndexError`] if `start` is out of bounds.
+	/// - [`BehaviorError::Index`] if `start` is out of bounds.
 	pub async fn halt_children(&mut self, start: usize) -> Result<(), BehaviorError> {
 		if start >= self.children.len() {
 			return Err(BehaviorError::Index(start));

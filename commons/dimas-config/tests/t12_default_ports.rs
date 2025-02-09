@@ -20,7 +20,6 @@ use dimas_config::factory::BTFactory;
 
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
-	blackboard::FromString,
 	define_ports, input_port,
 	port::PortList,
 };
@@ -57,14 +56,6 @@ impl Display for Point2D {
 	}
 }
 
-impl FromString for Point2D {
-	type Err = ParseIntError;
-
-	fn from_string(value: impl AsRef<str>) -> Result<Self, Self::Err> {
-		value.as_ref().parse()
-	}
-}
-
 impl FromStr for Point2D {
 	type Err = ParseIntError;
 
@@ -77,8 +68,8 @@ impl FromStr for Point2D {
 			.trim()
 			.to_string();
 		let v: Vec<&str> = s.split(',').collect();
-		let x = i32::from_string(v[0])?;
-		let y = i32::from_string(v[1])?;
+		let x = i32::from_str(v[0])?;
+		let y = i32::from_str(v[1])?;
 		Ok(Self { x, y })
 	}
 }
@@ -102,7 +93,7 @@ impl NodeWithDefaultPoints {
 
 	async fn tick(&mut self) -> BehaviorResult {
 		let msg: String = bhvr_.config.get_input("input")?;
-		let point = Point2D::from_string(&msg)
+		let point = Point2D::from_str(&msg)
 			.map_err(|_| BehaviorError::ParsePortValue("input".into(), msg))?;
 		println!("input:  [{},{}]", point.x, point.y);
 
@@ -113,7 +104,7 @@ impl NodeWithDefaultPoints {
 		println!("pointB:  [{},{}]", point.x, point.y);
 
 		let msg: String = bhvr_.config.get_input("pointC")?;
-		let point = Point2D::from_string(&msg)
+		let point = Point2D::from_str(&msg)
 			.map_err(|_| BehaviorError::ParsePortValue("pointC".into(), msg))?;
 		println!("pointC:  [{},{}]", point.x, point.y);
 

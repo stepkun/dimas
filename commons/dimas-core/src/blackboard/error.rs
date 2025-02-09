@@ -1,5 +1,4 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
 
 //! `dimas-blackboard` errors
 
@@ -9,8 +8,6 @@ extern crate alloc;
 // region		--- modules
 use alloc::string::String;
 use thiserror::Error;
-
-use crate::behavior::error::BehaviorError;
 // endregion:	--- modules
 
 // region:		--- Error

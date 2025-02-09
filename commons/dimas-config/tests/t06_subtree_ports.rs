@@ -17,7 +17,6 @@ use core::{num::ParseFloatError, str::FromStr};
 use dimas_config::factory::BTFactory;
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
-	blackboard::FromString,
 	define_ports, input_port,
 	port::PortList,
 };
@@ -73,7 +72,7 @@ impl Script {
 		let script: String = bhvr_.config.get_input("code")?;
 		let elements: Vec<&str> = script.split(":=").collect();
 		if elements[1].contains('{') {
-			let pos = move_robot::Position2D::from_string(elements[1].trim()).map_err(|_| {
+			let pos = move_robot::Position2D::from_str(elements[1].trim()).map_err(|_| {
 				BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
 			})?;
 			bhvr_
@@ -156,14 +155,6 @@ mod move_robot {
 		theta: f64,
 	}
 
-	impl FromString for Position2D {
-		type Err = ParseFloatError;
-
-		fn from_string(value: impl AsRef<str>) -> Result<Self, Self::Err> {
-			value.as_ref().parse()
-		}
-	}
-
 	impl FromStr for Position2D {
 		type Err = ParseFloatError;
 
@@ -176,9 +167,9 @@ mod move_robot {
 				.trim()
 				.to_string();
 			let v: Vec<&str> = s.split(';').collect();
-			let x = f64::from_string(v[0])?;
-			let y = f64::from_string(v[1])?;
-			let theta = f64::from_string(v[2])?;
+			let x = f64::from_str(v[0])?;
+			let y = f64::from_str(v[1])?;
+			let theta = f64::from_str(v[2])?;
 			Ok(Self { x, y, theta })
 		}
 	}

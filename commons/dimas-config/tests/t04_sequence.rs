@@ -19,7 +19,6 @@ use core::{num::ParseFloatError, str::FromStr, time::Duration};
 use dimas_config::factory::BTFactory;
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus},
-	blackboard::FromString,
 	define_ports, input_port,
 	port::PortList,
 };
@@ -90,14 +89,6 @@ struct Pose2D {
 	theta: f64,
 }
 
-impl FromString for Pose2D {
-	type Err = ParseFloatError;
-
-	fn from_string(value: impl AsRef<str>) -> Result<Self, Self::Err> {
-		value.as_ref().parse()
-	}
-}
-
 impl FromStr for Pose2D {
 	type Err = ParseFloatError;
 
@@ -110,9 +101,9 @@ impl FromStr for Pose2D {
 			.trim()
 			.to_string();
 		let v: Vec<&str> = s.split(';').collect();
-		let x = f64::from_string(v[0])?;
-		let y = f64::from_string(v[1])?;
-		let theta = f64::from_string(v[2])?;
+		let x = f64::from_str(v[0])?;
+		let y = f64::from_str(v[1])?;
+		let theta = f64::from_str(v[2])?;
 		Ok(Self { x, y, theta })
 	}
 }
