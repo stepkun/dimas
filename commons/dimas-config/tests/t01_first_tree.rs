@@ -3,16 +3,13 @@
 //! This test implements the first tutorial from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //! [see:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_01_first_tree)
 //!
-//! Differences to BehaviorTree.CPP:
-//! - we cannot register functions or methods of a struct/class
-//!
 
 #[doc(hidden)]
 extern crate alloc;
 
 use dimas_config::factory::BTFactory;
 use dimas_core::behavior::{BehaviorResult, BehaviorStatus};
-use dimas_macros::{behavior, register_action, register_condition};
+use dimas_macros::{behavior, register_action, register_condition, register_function};
 
 const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
@@ -102,6 +99,55 @@ async fn first_tree() -> anyhow::Result<()> {
 	register_action!(factory, "OpenGripper", OpenGripper);
 	register_action!(factory, "ApproachObject", ApproachObject);
 	register_action!(factory, "CloseGripper", CloseGripper);
+
+	// create the BT
+	let mut tree = factory.create_tree_from_xml(XML)?;
+
+	// run the BT
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
+
+	Ok(())
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn check_battery() -> BehaviorResult {
+	println!("battery state is ok");
+
+	Ok(BehaviorStatus::Success)
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn open_gripper() -> BehaviorResult {
+	println!("opened gripper");
+
+	Ok(BehaviorStatus::Success)
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn approach_object() -> BehaviorResult {
+	println!("approaching object");
+
+	Ok(BehaviorStatus::Success)
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn close_gripper() -> BehaviorResult {
+	println!("closed gripper");
+
+	Ok(BehaviorStatus::Success)
+}
+
+#[tokio::test]
+async fn first_tree_with_functions() -> anyhow::Result<()> {
+	// create BT environment
+	let mut factory = BTFactory::default();
+
+	// register all needed nodes
+	register_function!(factory, "CheckBattery", check_battery);
+	register_function!(factory, "OpenGripper", open_gripper);
+	register_function!(factory, "ApproachObject", approach_object);
+	register_function!(factory, "CloseGripper", close_gripper);
 
 	// create the BT
 	let mut tree = factory.create_tree_from_xml(XML)?;

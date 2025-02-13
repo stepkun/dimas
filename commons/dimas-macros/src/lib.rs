@@ -105,3 +105,12 @@ pub fn register_decorator(input: TokenStream) -> TokenStream {
 		register_behavior::BehaviorTypeInternal::Decorator,
 	)
 }
+
+/// Register a function with signature `async fn function_name() -> BehaviorResult`.
+/// A registered function can only be a behavior tree leaf - either an action or a condition.
+///
+/// The function must never return status "Running"
+#[proc_macro]
+pub fn register_function(input: TokenStream) -> TokenStream {
+	register_behavior::register_function(input.into()).into()
+}

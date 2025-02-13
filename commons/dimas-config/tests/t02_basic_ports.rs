@@ -10,7 +10,7 @@ extern crate alloc;
 use dimas_config::factory::BTFactory;
 use dimas_core::{
 	behavior::{BehaviorResult, BehaviorStatus},
-	define_ports, input_port, output_port, inout_port,
+	define_ports, inout_port, input_port, output_port,
 	port::PortList,
 };
 use dimas_macros::{behavior, register_action};
@@ -103,9 +103,7 @@ impl RefineWhatToSay {
 
 		msg = msg.replace("42", "still 42");
 
-		bhvr_
-			.config
-			.set_output("text", msg)?;
+		bhvr_.config.set_output("text", msg)?;
 
 		println!("Robot has refined his thoughts");
 

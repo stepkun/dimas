@@ -136,3 +136,77 @@ pub fn register_behavior(
 
 	TokenStream::from(expanded)
 }
+
+struct FunctionRegistration {
+	factory: syn::Ident,
+	name: proc_macro2::TokenStream,
+	function_ptr: proc_macro2::TokenStream,
+	// bhvr_type: syn::Type,
+	// params: Punctuated<syn::Expr, Comma>,
+}
+
+/// Macro is called with: `register_function!(factory, "CheckBattery", check_battery);`
+/// So we have 3 token:
+/// - a reference to the factory
+/// - a string containing the (unique) xml id
+/// - a pointer to the behavior function
+impl Parse for FunctionRegistration {
+	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+		let factory = input.parse()?;
+		input.parse::<Token![,]>()?;
+		let name = input.parse::<syn::Expr>()?.to_token_stream();
+		input.parse::<Token![,]>()?;
+		let function_ptr = input.parse()?;
+		Ok(Self {
+			factory,
+			name,
+			function_ptr,
+		})
+	}
+}
+
+/// @TODO:
+/// Conditions and Actions are handled internally as Actions for now
+///
+pub fn register_function(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+	//let bhvr_registration = parse_macro_input!(input as FunctionRegistration);
+	let bhvr_registration = syn::parse2::<FunctionRegistration>(input).expect("wrong usage");
+
+	let factory = &bhvr_registration.factory;
+	let name = &bhvr_registration.name;
+	let fct_ptr = &bhvr_registration.function_ptr;
+
+	let bhvr_type_token = quote! { ::dimas_core::behavior::BehaviorCategory::Action };
+
+	let bhvr = quote! {
+		{
+			let mut bhvr = ::dimas_core::behavior::BehaviorFunction::create_behavior(#name, config, #fct_ptr);
+			let manifest = ::dimas_core::behavior::BehaviorManifest {
+				bhvr_type: bhvr.bhvr_category(),
+				registration_id: #name.into(),
+				ports: bhvr.provided_ports(),
+				description: ::alloc::string::String::new(),
+			};
+			bhvr.config_mut().set_manifest(::alloc::sync::Arc::new(manifest));
+			bhvr
+		}
+	};
+
+	quote! {
+		{
+			let blackboard = #factory.blackboard().clone();
+
+			let bhvr_fn = move |
+				config: ::dimas_core::behavior::BehaviorConfig,
+				mut children: ::alloc::vec::Vec<::dimas_core::behavior::Behavior>
+			| -> ::dimas_core::behavior::Behavior
+			{
+				let mut bhvr = #bhvr;
+
+				bhvr
+			};
+
+			#factory.register_behavior(#name, bhvr_fn, #bhvr_type_token);
+		}
+	}
+}

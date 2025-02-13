@@ -15,7 +15,8 @@ use alloc::{
 };
 use core::{
 	any::{Any, TypeId},
-	fmt::{Debug, Display, Formatter}, str::FromStr,
+	fmt::{Debug, Display, Formatter},
+	str::FromStr,
 };
 use futures::future::BoxFuture;
 use hashbrown::HashMap;
@@ -37,7 +38,7 @@ pub type BehaviorResult<Output = BehaviorStatus> = Result<Output, BehaviorError>
 type BehaviorTickFn = for<'a> fn(
 	&'a mut BehaviorData,
 	&'a mut Box<dyn Any + Send + Sync>,
-) -> BoxFuture<'a, Result<BehaviorStatus, BehaviorError>>;
+) -> BoxFuture<'a, BehaviorResult>;
 
 /// Signature for the function to stop a behavior that is running
 type BehaviorHaltFn =
@@ -450,9 +451,7 @@ impl BehaviorConfig {
 						if value.is_bb_pointer() {
 							value
 								.strip_bb_pointer()
-								.unwrap_or_else(|| 
-									todo!()
-								)
+								.unwrap_or_else(|| todo!())
 						} else {
 							value.to_string()
 						}
@@ -476,7 +475,7 @@ impl BehaviorConfig {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct BehaviorData {
-	/// Non unique behavior name. 
+	/// Non unique behavior name.
 	/// Defaults to same as `type_str` if not set otherwise.
 	pub name: String,
 	/// Type name of the behavior
