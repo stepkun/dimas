@@ -73,24 +73,24 @@ impl Parallel {
 	#[allow(clippy::cast_possible_wrap)]
 	async fn tick(&mut self) -> BehaviorResult {
 		self.success_threshold = bhvr_
-			.config
+			.config_mut()
 			.get_input("success_count")
 			.unwrap_or_else(|_| todo!());
 		self.failure_threshold = bhvr_
-			.config
+			.config_mut()
 			.get_input("failure_count")
 			.unwrap_or_else(|_| todo!());
 
-		let children_count = bhvr_.children.len();
+		let children_count = bhvr_.children().len();
 
-		if children_count < self.success_threshold(bhvr_.children.len() as i32) {
+		if children_count < self.success_threshold(bhvr_.children().len() as i32) {
 			return Err(BehaviorError::Composition(
 				#[allow(clippy::match_same_arms)]
 				"Number of children is less than the threshold. Can never succeed.".to_string(),
 			));
 		}
 
-		if children_count < self.failure_threshold(bhvr_.children.len() as i32) {
+		if children_count < self.failure_threshold(bhvr_.children().len() as i32) {
 			return Err(BehaviorError::Composition(
 				"Number of children is less than the threshold. Can never fail.".to_string(),
 			));
@@ -100,7 +100,7 @@ impl Parallel {
 
 		for i in 0..children_count {
 			if !self.completed_list.contains(&i) {
-				let child = &mut bhvr_.children[i];
+				let child = &mut bhvr_.children_mut()[i];
 				match child.execute_tick().await? {
 					BehaviorStatus::Skipped => skipped_count += 1,
 					BehaviorStatus::Success => {
@@ -119,7 +119,7 @@ impl Parallel {
 				}
 			}
 
-			let required_success_count = self.success_threshold(bhvr_.children.len() as i32);
+			let required_success_count = self.success_threshold(bhvr_.children().len() as i32);
 
 			// Check if success condition has been met
 			if self.success_count >= required_success_count
@@ -132,7 +132,7 @@ impl Parallel {
 			}
 
 			if (children_count - self.failure_count) < required_success_count
-				|| self.failure_count == self.failure_threshold(bhvr_.children.len() as i32)
+				|| self.failure_count == self.failure_threshold(bhvr_.children().len() as i32)
 			{
 				self.clear();
 				bhvr_.reset_children().await;

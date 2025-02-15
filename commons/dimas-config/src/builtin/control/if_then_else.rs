@@ -32,7 +32,7 @@ pub struct IfThenElse {
 #[behavior(SyncControl)]
 impl IfThenElse {
 	async fn tick(&mut self) -> BehaviorResult {
-		let children_count = bhvr_.children.len();
+		let children_count = bhvr_.children().len();
 		// Node should only have 2 or 3 children
 		if !(2..=3).contains(&children_count) {
 			return Err(BehaviorError::Composition(
@@ -40,10 +40,10 @@ impl IfThenElse {
 			));
 		}
 
-		bhvr_.status = BehaviorStatus::Running;
+		bhvr_.set_status(BehaviorStatus::Running);
 
 		if self.child_idx == 0 {
-			let status = bhvr_.children[0].execute_tick().await?;
+			let status = bhvr_.children_mut()[0].execute_tick().await?;
 			match status {
 				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
 				BehaviorStatus::Success => self.child_idx += 1,
@@ -65,7 +65,7 @@ impl IfThenElse {
 		}
 
 		if self.child_idx > 0 {
-			let status = bhvr_.children[self.child_idx]
+			let status = bhvr_.children_mut()[self.child_idx]
 				.execute_tick()
 				.await?;
 			match status {

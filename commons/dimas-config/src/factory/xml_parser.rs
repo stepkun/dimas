@@ -65,7 +65,7 @@ impl XmlParser {
 		attributes: Attributes,
 	) -> Result<(), Error> {
 		let data = bhvr_ptr.data_mut();
-		let manifest = data.config.manifest()?;
+		let manifest = data.config().manifest()?;
 
 		let mut remap = PortRemapping::new();
 
@@ -76,11 +76,11 @@ impl XmlParser {
 
 		// Check if all ports from XML match ports in manifest
 		for port_name in remap.keys() {
-			if port_name != "name" && !manifest.ports.contains_key(port_name) {
+			if port_name != "name" && !manifest.port_list().contains_key(port_name) {
 				return Err(Error::PortInvalid(
 					port_name.clone(),
 					bhvr_name.to_owned(),
-					manifest.ports.clone().into_keys().collect(),
+					manifest.port_list().clone().into_keys().collect(),
 				));
 			}
 		}
@@ -89,8 +89,8 @@ impl XmlParser {
 		for (remap_name, remap_val) in remap {
 			// attribute 'name' gets special treatment
 			if remap_name == "name" {
-				data.name = remap_val.to_string();
-			} else if let Some(port) = manifest.ports.get(&remap_name) {
+				data.set_name(remap_val);
+			} else if let Some(port) = manifest.port_list().get(&remap_name) {
 				// Validate that any expr-enabled ports contain valid expressions,
 				// and the provided types for blackboard pointers are one of the valid ones
 				if port.parse_expr() {
@@ -121,24 +121,24 @@ impl XmlParser {
 					}
 				}
 
-				data.config
+				data.config_mut()
 					.add_port(port.direction(), remap_name, remap_val);
 			}
 		}
 
 		// Use defaults for unspecified port values
-		for (port_name, port_info) in &manifest.ports {
+		for (port_name, port_info) in manifest.port_list() {
 			let direction = port_info.direction();
 
 			if !matches!(direction, PortDirection::Output)
-				&& !data.config.has_port(direction, port_name)
+				&& !data.config().has_port(direction, port_name)
 				&& port_info.default_value().is_some()
 			{
 				let value = port_info.default_value_str().ok_or_else(|| {
-					Error::PortWithoutDefault(port_name.clone(), data.config.path.clone())
+					Error::PortWithoutDefault(port_name.clone(), data.config().path().clone())
 				})?;
 
-				data.config
+				data.config_mut()
 					.add_port(&PortDirection::Input, port_name.clone(), value);
 			}
 		}

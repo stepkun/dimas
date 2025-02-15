@@ -44,23 +44,23 @@ impl BehaviorFunction {
 		internal_tick_fn: BhvrFn,
 	) -> Behavior {
 		let ctx = Self { internal_tick_fn };
-		let bhvr_data = BehaviorData {
-			name: name.as_ref().to_string(),
-			type_str: String::from("Function"),
-			bhvr_type: BehaviorType::SyncAction,
-			bhvr_category: BehaviorCategory::Action,
+		let bhvr_data = BehaviorData::new(
+			name.as_ref().to_string(),
+			String::from("Function"),
+			BehaviorType::SyncAction,
+			BehaviorCategory::Action,
 			config,
-			status: BehaviorStatus::Idle,
-			children: ::alloc::vec::Vec::new(),
-			ports_fn: Self::_ports,
-		};
-		Behavior {
-			data: bhvr_data,
-			context: ::alloc::boxed::Box::new(ctx),
-			running_fn: Self::_tick,
-			start_fn: Self::_tick,
-			halt_fn: Self::_halt,
-		}
+			BehaviorStatus::Idle,
+			::alloc::vec::Vec::new(),
+			Self::_ports,
+		);
+		Behavior::new(
+			bhvr_data,
+			::alloc::boxed::Box::new(ctx),
+			Self::_tick,
+			Self::_tick,
+			Self::_halt,
+		)
 	}
 
 	#[allow(clippy::unwrap_used)]

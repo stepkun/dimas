@@ -45,7 +45,7 @@ type BehaviorHaltFn =
 	for<'a> fn(&'a mut BehaviorData, &'a mut Box<dyn Any + Send + Sync>) -> BoxFuture<'a, ()>;
 
 /// Signature of the function that returns the list of available ports
-type PortsFn = fn() -> PortList;
+type PortListFn = fn() -> PortList;
 // endregion:   --- types
 
 // region:      --- Behavior
@@ -54,21 +54,37 @@ type PortsFn = fn() -> PortList;
 #[derive(Debug)]
 pub struct Behavior {
 	/// Holds behavior commons struct
-	pub data: BehaviorData,
+	data: BehaviorData,
 	/// Holds the original struct
-	pub context: Box<dyn Any + Send + Sync>,
+	context: Box<dyn Any + Send + Sync>,
 	/// Function pointer to start tick function
 	/// Points to `tick()` for sync and `on_start()` for non sync
-	pub start_fn: BehaviorTickFn,
+	start_fn: BehaviorTickFn,
 	/// Function pointer to running tick function
 	/// Points to `tick()` for sync and `on_running()` for non sync
-	pub running_fn: BehaviorTickFn,
+	running_fn: BehaviorTickFn,
 	/// Function pointer to halt function
 	/// Poins to `halt()`
-	pub halt_fn: BehaviorHaltFn,
+	halt_fn: BehaviorHaltFn,
 }
 
 impl Behavior {
+	/// Construct a behavior
+	pub fn new(
+		data: BehaviorData,
+		context: Box<dyn Any + Send + Sync>,
+		start_fn: BehaviorTickFn,
+		running_fn: BehaviorTickFn,
+		halt_fn: BehaviorHaltFn,
+	) -> Self {
+		Self {
+			data,
+			context,
+			start_fn,
+			running_fn,
+			halt_fn,
+		}
+	}
 	/// Returns behaviors current status
 	#[must_use]
 	pub const fn status(&self) -> BehaviorStatus {
@@ -85,6 +101,44 @@ impl Behavior {
 		self.data.status = status;
 	}
 
+	/// Tick a non sync behavior
+	async fn execute_async_tick(&mut self) -> BehaviorResult {
+		let prev_status = self.data.status;
+
+		let new_status = match prev_status {
+			// start behavior when it is idle
+			BehaviorStatus::Idle => {
+				debug!("{}::on_start()", &self.data.config.path);
+				let new_status = (self.start_fn)(&mut self.data, &mut self.context).await?;
+				if matches!(new_status, BehaviorStatus::Idle) {
+					return Err(BehaviorError::Status(
+						format!("{}::on_start()", self.data.config.path),
+						"Idle".to_string(),
+					));
+				}
+				new_status
+			}
+			// check behavior status when it is running
+			BehaviorStatus::Running => {
+				debug!("{}::on_running()", &self.data.config.path);
+				let new_status = (self.running_fn)(&mut self.data, &mut self.context).await?;
+				if matches!(new_status, BehaviorStatus::Idle) {
+					return Err(BehaviorError::Status(
+						format!("{}::on_running()", self.data.config.path),
+						"Idle".to_string(),
+					));
+				}
+				new_status
+			}
+			// all other status return last status
+			_ => prev_status,
+		};
+
+		self.set_status(new_status);
+
+		Ok(new_status)
+	}
+
 	/// Tick the behavior
 	/// # Errors
 	/// - [`BehaviorError::Status`] if on_start() or on_running() return [`BehaviorStatus::Idle`]
@@ -92,47 +146,11 @@ impl Behavior {
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub async fn execute_tick(&mut self) -> BehaviorResult {
 		match self.data.bhvr_type {
-			// The asnyc behaviors call different function when previous status was 'Running'
+			// The asnyc behaviors call different tick functions depending on status
 			BehaviorType::Action
 			| BehaviorType::Condition
 			| BehaviorType::Control
-			| BehaviorType::Decorator => {
-				let prev_status = self.data.status;
-
-				let new_status = match prev_status {
-					// start behavior when it is idle
-					BehaviorStatus::Idle => {
-						debug!("{}::on_start()", &self.data.config.path);
-						let new_status = (self.start_fn)(&mut self.data, &mut self.context).await?;
-						if matches!(new_status, BehaviorStatus::Idle) {
-							return Err(BehaviorError::Status(
-								format!("{}::on_start()", self.data.config.path),
-								"Idle".to_string(),
-							));
-						}
-						new_status
-					}
-					// check behavior status when it is running
-					BehaviorStatus::Running => {
-						debug!("{}::on_running()", &self.data.config.path);
-						let new_status =
-							(self.running_fn)(&mut self.data, &mut self.context).await?;
-						if matches!(new_status, BehaviorStatus::Idle) {
-							return Err(BehaviorError::Status(
-								format!("{}::on_running()", self.data.config.path),
-								"Idle".to_string(),
-							));
-						}
-						new_status
-					}
-					// all other status return last status
-					prev_status => prev_status,
-				};
-
-				self.set_status(new_status);
-
-				Ok(new_status)
-			}
+			| BehaviorType::Decorator => self.execute_async_tick().await,
 			// SyncAction, SyncCondition may only return Success or Failure
 			BehaviorType::SyncAction | BehaviorType::SyncCondition => {
 				debug!("{}::tick()", &self.data.config.path);
@@ -211,7 +229,7 @@ impl Behavior {
 	/// Call the behaviors `ports()` function and return the [`PortList`]
 	#[must_use]
 	pub fn provided_ports(&self) -> PortList {
-		(self.data.ports_fn)()
+		(self.data.port_list_fn)()
 	}
 
 	/// Return an iterator over the children or `None` if the behavior
@@ -244,7 +262,7 @@ impl Behavior {
 pub enum BehaviorCategory {
 	/// Behavior without children that executes some action.
 	Action,
-	/// TODO: ????Behavior with children that executes a certain child based on a condition.
+	/// Behavior without children that evaluates a condition.
 	Condition,
 	/// Behavior with multiple children that executes them in some way.
 	Control,
@@ -272,17 +290,15 @@ impl Display for BehaviorCategory {
 #[derive(Clone, Debug)]
 pub struct BehaviorConfig {
 	/// The blackboard
-	pub blackboard: Blackboard,
+	blackboard: Blackboard,
 	/// Remapping for in ports
-	pub input_ports: PortRemapping,
+	input_ports: PortRemapping,
 	/// remapping for out ports
-	pub output_ports: PortRemapping,
+	output_ports: PortRemapping,
 	/// Behavior manifest
-	pub manifest: Option<Arc<BehaviorManifest>>,
-	/// Unique id of the behavior within the tree
-	pub uid: u16,
+	manifest: Option<Arc<BehaviorManifest>>,
 	/// Full path to this behavior
-	pub path: String,
+	path: String,
 }
 
 impl BehaviorConfig {
@@ -294,7 +310,6 @@ impl BehaviorConfig {
 			input_ports: HashMap::new(),
 			output_ports: HashMap::new(),
 			manifest: None,
-			uid: 1, // TODO: set value dynamically
 			path,
 		}
 	}
@@ -303,6 +318,18 @@ impl BehaviorConfig {
 	#[must_use]
 	pub const fn blackboard(&self) -> &Blackboard {
 		&self.blackboard
+	}
+
+	/// Returns a reference to the path String.
+	#[must_use]
+	pub const fn path(&self) -> &String {
+		&self.path
+	}
+
+	/// Returns a mutable reference to the blackboard.
+	#[must_use]
+	pub const fn blackboard_mut(&mut self) -> &mut Blackboard {
+		&mut self.blackboard
 	}
 
 	/// Adds a port to the config based on the direction
@@ -369,14 +396,14 @@ impl BehaviorConfig {
 		T: FromStr + Clone + Debug + Send + Sync + 'static,
 	{
 		match self.input_ports.get(port) {
-			Some(val) => {
+			Some(port_remapped) => {
 				// Check if default is needed
-				if val.is_empty() {
+				if port_remapped.is_empty() {
 					self.manifest().map_or_else(
 						|_| Err(BehaviorError::Internal("no manifest found".into())),
 						|manifest| {
 							let port_info = manifest
-								.ports
+								.port_list
 								.get(port)
 								.ok_or_else(|| BehaviorError::FindPort(port.into()))?;
 
@@ -397,7 +424,7 @@ impl BehaviorConfig {
 						},
 					)
 				} else {
-					match get_remapped_key(port, val) {
+					match get_remapped_key(port, port_remapped) {
 						// Value is a Blackboard pointer
 						Some(key) => self
 							.blackboard
@@ -407,7 +434,7 @@ impl BehaviorConfig {
 								|val| Ok(val),
 							),
 						// Value is just a normal string
-						None => <T as FromStr>::from_str(val).map_or_else(
+						None => <T as FromStr>::from_str(port_remapped).map_or_else(
 							|_| {
 								Err(BehaviorError::ParsePortValue(
 									String::from(port),
@@ -473,28 +500,95 @@ impl BehaviorConfig {
 // region:      --- BehaviorData
 /// @TODO: Restructure
 #[allow(clippy::module_name_repetitions)]
+#[allow(unused)]
 #[derive(Debug)]
 pub struct BehaviorData {
 	/// Non unique behavior name.
 	/// Defaults to same as `type_str` if not set otherwise.
-	pub name: String,
+	name: String,
 	/// Type name of the behavior
-	pub type_str: String,
+	/// @TODO: currently not used
+	type_str: String,
 	/// @TODO: Restructure
-	pub bhvr_type: BehaviorType,
+	bhvr_type: BehaviorType,
 	/// @TODO: Restructure
-	pub bhvr_category: BehaviorCategory,
+	bhvr_category: BehaviorCategory,
 	/// @TODO:
-	pub config: BehaviorConfig,
+	config: BehaviorConfig,
 	/// @TODO:
-	pub status: BehaviorStatus,
+	status: BehaviorStatus,
 	/// Vector of child behaviors
-	pub children: Vec<Behavior>,
+	children: Vec<Behavior>,
 	/// Function to get the list of ports
-	pub ports_fn: PortsFn,
+	port_list_fn: PortListFn,
 }
 
 impl BehaviorData {
+	/// Construct behavior data
+	/// @TODO: currently `type_str` is not used
+	#[allow(clippy::too_many_arguments)]
+	#[must_use]
+	pub fn new(
+		name: String,
+		type_str: String,
+		bhvr_type: BehaviorType,
+		bhvr_category: BehaviorCategory,
+		config: BehaviorConfig,
+		status: BehaviorStatus,
+		children: Vec<Behavior>,
+		ports_fn: PortListFn,
+	) -> Self {
+		Self {
+			name,
+			type_str,
+			bhvr_type,
+			bhvr_category,
+			config,
+			status,
+			children,
+			port_list_fn: ports_fn,
+		}
+	}
+
+	/// Get a reference to the [`BehaviorConfig`]
+	#[must_use]
+	pub const fn config(&self) -> &BehaviorConfig {
+		&self.config
+	}
+
+	/// Get a mutable reference to the [`BehaviorConfig`]
+	#[must_use]
+	pub const fn config_mut(&mut self) -> &mut BehaviorConfig {
+		&mut self.config
+	}
+
+	/// Get a reference to name [`String`]
+	#[must_use]
+	pub const fn name(&self) -> &String {
+		&self.name
+	}
+
+	/// Set name
+	pub fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
+	}
+
+	/// Get a reference to children
+	#[must_use]
+	pub const fn children(&self) -> &Vec<Behavior> {
+		&self.children
+	}
+
+	/// Get a mutable reference to children
+	pub fn children_mut(&mut self) -> &mut Vec<Behavior> {
+		&mut self.children
+	}
+
+	/// Set children
+	pub fn set_children(&mut self, children: Vec<Behavior>) {
+		self.children = children;
+	}
+
 	/// Halt children from index `start` to the end.
 	///
 	/// # Errors
@@ -538,6 +632,12 @@ impl BehaviorData {
 		Ok(())
 	}
 
+	/// Gets the status of this behavior
+	#[must_use]
+	pub const fn status(&self) -> BehaviorStatus {
+		self.status
+	}
+
 	/// Sets the status of this behavior
 	pub const fn set_status(&mut self, status: BehaviorStatus) {
 		self.status = status;
@@ -572,16 +672,17 @@ impl BehaviorData {
 // region:      --- BehaviorManifest
 /// @TODO:
 #[allow(clippy::module_name_repetitions)]
+#[allow(unused)]
 #[derive(Clone, Debug)]
 pub struct BehaviorManifest {
+	/// @TODO: currently not used
+	bhvr_type: BehaviorCategory,
+	/// @TODO: currently not used
+	registration_id: String,
 	/// @TODO:
-	pub bhvr_type: BehaviorCategory,
-	/// @TODO:
-	pub registration_id: String,
-	/// @TODO:
-	pub ports: PortList,
-	/// @TODO:
-	pub description: String,
+	port_list: PortList,
+	/// @TODO: currently not used
+	description: String,
 }
 
 impl BehaviorManifest {
@@ -589,15 +690,21 @@ impl BehaviorManifest {
 	pub fn new(
 		bhvr_type: BehaviorCategory,
 		registration_id: impl AsRef<str>,
-		ports: PortList,
+		port_list: PortList,
 		description: impl AsRef<str>,
 	) -> Self {
 		Self {
 			bhvr_type,
 			registration_id: registration_id.as_ref().to_string(),
-			ports,
+			port_list,
 			description: description.as_ref().to_string(),
 		}
+	}
+
+	/// Get a reference to the port list
+	#[must_use]
+	pub const fn port_list(&self) -> &PortList {
+		&self.port_list
 	}
 }
 // endregion:   --- BehaviorManifest

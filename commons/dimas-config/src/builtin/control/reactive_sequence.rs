@@ -34,10 +34,10 @@ impl ReactiveSequence {
 	async fn tick(&mut self) -> BehaviorResult {
 		let mut all_skipped = true;
 
-		bhvr_.status = BehaviorStatus::Running;
+		bhvr_.set_status(BehaviorStatus::Running);
 
-		for counter in 0..bhvr_.children.len() {
-			let child = &mut bhvr_.children[counter];
+		for counter in 0..bhvr_.children().len() {
+			let child = &mut bhvr_.children_mut()[counter];
 			let child_status = child.execute_tick().await?;
 
 			all_skipped &= child_status == BehaviorStatus::Skipped;
@@ -45,7 +45,7 @@ impl ReactiveSequence {
 			match child_status {
 				BehaviorStatus::Running => {
 					for i in 0..counter {
-						bhvr_.children[i].halt().await;
+						bhvr_.children_mut()[i].halt().await;
 						// bhvr_.halt_child(i).await?;
 					}
 					if self.running_child == -1 {
@@ -67,7 +67,7 @@ impl ReactiveSequence {
 				BehaviorStatus::Success => {}
 				BehaviorStatus::Skipped => {
 					// Halt current child
-					bhvr_.children[counter].halt().await;
+					bhvr_.children_mut()[counter].halt().await;
 					// bhvr_.halt_child(counter).await?;
 				}
 				BehaviorStatus::Idle => {

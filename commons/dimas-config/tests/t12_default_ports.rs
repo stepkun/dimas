@@ -92,23 +92,23 @@ impl NodeWithDefaultPoints {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("input")?;
+		let msg: String = bhvr_.config_mut().get_input("input")?;
 		let point = Point2D::from_str(&msg)
 			.map_err(|_| BehaviorError::ParsePortValue("input".into(), msg))?;
 		println!("input:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = bhvr_.config.get_input("pointA")?;
+		let point: Point2D = bhvr_.config_mut().get_input("pointA")?;
 		println!("pointA:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = bhvr_.config.get_input("pointB")?;
+		let point: Point2D = bhvr_.config_mut().get_input("pointB")?;
 		println!("pointB:  [{},{}]", point.x, point.y);
 
-		let msg: String = bhvr_.config.get_input("pointC")?;
+		let msg: String = bhvr_.config_mut().get_input("pointC")?;
 		let point = Point2D::from_str(&msg)
 			.map_err(|_| BehaviorError::ParsePortValue("pointC".into(), msg))?;
 		println!("pointC:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = bhvr_.config.get_input("pointD")?;
+		let point: Point2D = bhvr_.config_mut().get_input("pointD")?;
 		println!("pointD:  [{},{}]", point.x, point.y);
 
 		// let msg: String = bhvr_.config.get_input("pointE")?;

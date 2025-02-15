@@ -58,20 +58,20 @@ fn parse_config(args: Arguments) -> Result<Config> {
 	Ok(config)
 }
 
-fn behavior_fields(type_ident_str: &str) -> TokenStream {
+fn tick_functions(type_ident_str: &str) -> TokenStream {
 	match type_ident_str {
 		// asynchronous behaviors
 		"Action" | "Condition" | "Control" | "Decorator" => {
 			quote! {
-				running_fn: Self::_on_running,
-				start_fn: Self::_on_start,
+				Self::_on_start,
+				Self::_on_running,
 			}
 		}
 		// others are synchronous
 		_ => {
 			quote! {
-				running_fn: Self::_tick,
-				start_fn: Self::_tick,
+				Self::_tick,
+				Self::_tick,
 			}
 		}
 	}
@@ -156,7 +156,7 @@ fn behavior_struct(config: &Config, mut item: ItemStruct) -> Result<TokenStream>
 
 	let type_ident_str = config.bhvr_type.to_string();
 	let (bhvr_type, bhvr_category) = determine_type_category(&type_ident_str)?;
-	let bhvr_specific_tokens = behavior_fields(&type_ident_str);
+	let tick_functions = tick_functions(&type_ident_str);
 
 	// create output stream
 	let out = quote! {
@@ -175,23 +175,23 @@ fn behavior_struct(config: &Config, mut item: ItemStruct) -> Result<TokenStream>
 					#extra_fields
 				};
 
-				let bhvr_data = ::dimas_core::behavior::BehaviorData {
-					name: name.as_ref().to_string(),
-					type_str: ::alloc::string::String::from(#struct_name),
-					bhvr_type: ::dimas_core::behavior::BehaviorType::#bhvr_type,
-					bhvr_category: ::dimas_core::behavior::BehaviorCategory::#bhvr_category,
+				let bhvr_data = ::dimas_core::behavior::BehaviorData::new(
+					name.as_ref().to_string(),
+					::alloc::string::String::from(#struct_name),
+					::dimas_core::behavior::BehaviorType::#bhvr_type,
+					::dimas_core::behavior::BehaviorCategory::#bhvr_category,
 					config,
-					status: ::dimas_core::behavior::BehaviorStatus::Idle,
-					children: ::alloc::vec::Vec::new(),
-					ports_fn: Self::_ports,
-				};
+					::dimas_core::behavior::BehaviorStatus::Idle,
+					::alloc::vec::Vec::new(),
+					Self::_ports,
+				);
 
-				::dimas_core::behavior::Behavior {
-					data: bhvr_data,
-					context: ::alloc::boxed::Box::new(ctx),
-					#bhvr_specific_tokens
-					halt_fn: Self::_halt,
-				}
+				::dimas_core::behavior::Behavior::new(
+					bhvr_data,
+					::alloc::boxed::Box::new(ctx),
+					#tick_functions
+					Self::_halt,
+				)
 			}
 		}
 

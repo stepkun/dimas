@@ -31,14 +31,14 @@ pub struct SequenceWithMemory {
 #[behavior(SyncControl)]
 impl SequenceWithMemory {
 	async fn tick(&mut self) -> BehaviorResult {
-		if bhvr_.status == BehaviorStatus::Idle {
+		if bhvr_.status() == BehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
-		bhvr_.status = BehaviorStatus::Running;
+		bhvr_.set_status(BehaviorStatus::Running);
 
-		while self.child_idx < bhvr_.children.len() {
-			let cur_child = &mut bhvr_.children[self.child_idx];
+		while self.child_idx < bhvr_.children().len() {
+			let cur_child = &mut bhvr_.children_mut()[self.child_idx];
 
 			let _prev_status = cur_child.status();
 			let child_status = cur_child.execute_tick().await?;
@@ -67,7 +67,7 @@ impl SequenceWithMemory {
 		}
 
 		// All children returned Success
-		if self.child_idx == bhvr_.children.len() {
+		if self.child_idx == bhvr_.children().len() {
 			bhvr_.reset_children().await;
 			self.child_idx = 0;
 		}

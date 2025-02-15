@@ -87,7 +87,7 @@ impl CalculateGoal {
 	async fn tick(&mut self) -> BehaviorResult {
 		// initialize GoalPosition
 		let pos = Position2D { x: 1.1, y: 2.3 };
-		bhvr_.config.set_output("goal", pos)?;
+		bhvr_.config_mut().set_output("goal", pos)?;
 
 		Ok(BehaviorStatus::Success)
 	}
@@ -104,7 +104,7 @@ impl PrintTarget {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let pos: Position2D = bhvr_.config.get_input("target")?;
+		let pos: Position2D = bhvr_.config_mut().get_input("target")?;
 
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
 
@@ -123,13 +123,13 @@ impl Script {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let script: String = bhvr_.config.get_input("code")?;
+		let script: String = bhvr_.config_mut().get_input("code")?;
 		let elements: Vec<&str> = script.split(":=").collect();
 		let pos = Position2D::from_str(elements[1].trim()).map_err(|_| {
 			BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
 		})?;
 		bhvr_
-			.config
+			.config()
 			.blackboard()
 			.to_owned()
 			.set(elements[0].trim(), pos);

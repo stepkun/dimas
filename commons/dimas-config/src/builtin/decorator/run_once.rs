@@ -31,7 +31,7 @@ pub struct RunOnce {
 #[behavior(SyncDecorator)]
 impl RunOnce {
 	async fn tick(&mut self) -> BehaviorResult {
-		let skip = bhvr_.config.get_input("then_skip")?;
+		let skip = bhvr_.config_mut().get_input("then_skip")?;
 
 		if self.already_ticked {
 			return if skip {
@@ -41,7 +41,7 @@ impl RunOnce {
 			};
 		}
 
-		bhvr_.status = BehaviorStatus::Running;
+		bhvr_.set_status(BehaviorStatus::Running);
 
 		let status = bhvr_
 			.child()

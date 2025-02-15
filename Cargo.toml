@@ -50,7 +50,7 @@ repository = "https://github.com/dimas-fw/dimas/"
 
 [workspace.dependencies]
 anyhow = "1.0.95"
-clap = "4.5.28"
+clap = "4.5.29"
 dimas = { path = "dimas" }
 #dimas = "0.5.0"
 dimas-com = { path = "commons/dimas-com" }

@@ -132,7 +132,7 @@ impl SaySomething {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("message")?;
+		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		println!("Robot says: {msg}");
 
@@ -154,7 +154,7 @@ impl MoveBase {
 	}
 
 	async fn on_start(&mut self) -> BehaviorResult {
-		let pos = bhvr_.config.get_input::<Pose2D>("goal")?;
+		let pos = bhvr_.config_mut().get_input::<Pose2D>("goal")?;
 
 		println!(
 			"[ MoveBase: SEND REQUEST ]. goal: x={:2.1} y={:2.1} theta={:2.1}",

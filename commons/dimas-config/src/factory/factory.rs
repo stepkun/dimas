@@ -54,7 +54,7 @@ impl FactoryData {
 		// ForceFailure
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "ForceFailure", ForceFailure);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -65,7 +65,7 @@ impl FactoryData {
 		// ForceSuccess
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "ForceSuccess", ForceSuccess);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -76,7 +76,7 @@ impl FactoryData {
 		// IfThenElse
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "IfThenElse", IfThenElse);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -87,7 +87,7 @@ impl FactoryData {
 		// Inverter
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "Inverter", Inverter);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -99,7 +99,7 @@ impl FactoryData {
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr =
 				build_bhvr_ptr!(config, "KeepRunningUntilFailure", KeepRunningUntilFailure);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -110,7 +110,7 @@ impl FactoryData {
 		// ParallelAll
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "ParallelAll", ParallelAll);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -121,7 +121,7 @@ impl FactoryData {
 		// ReactiveFallback
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "ReactiveFallback", ReactiveFallback);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -132,7 +132,7 @@ impl FactoryData {
 		// ReactiveSequence
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "ReactiveSequence", ReactiveSequence);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -143,7 +143,7 @@ impl FactoryData {
 		// Repeat
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "Repeat", Repeat);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -154,7 +154,7 @@ impl FactoryData {
 		// Retry
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "Retry", Retry);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -165,7 +165,7 @@ impl FactoryData {
 		// RetryUntilSuccessful
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "RetryUntilSuccessful", RetryUntilSuccessful);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -176,7 +176,7 @@ impl FactoryData {
 		// RunOnce
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "RunOnce", RunOnce);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -187,7 +187,7 @@ impl FactoryData {
 		// SequenceWithMemory
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "SequenceWithMemory", SequenceWithMemory);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -198,7 +198,7 @@ impl FactoryData {
 		// WhileDoElse
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "WhileDoElse", WhileDoElse);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		self.bhvr_map.insert(
@@ -213,7 +213,7 @@ impl FactoryData {
 		// Fallback
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "Fallback", Fallback);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		map.insert(
@@ -224,7 +224,7 @@ impl FactoryData {
 		// Parallel
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "Parallel", Parallel);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		map.insert(
@@ -235,7 +235,7 @@ impl FactoryData {
 		// Sequence
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "Sequence", Sequence);
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 			bhvr
 		};
 		map.insert(

@@ -143,7 +143,7 @@ impl BehaviorTree {
 	/// @TODO:
 	#[must_use]
 	pub fn root_blackboard(&self) -> Blackboard {
-		self.root.config().blackboard.clone()
+		self.root.config().blackboard().clone()
 	}
 
 	/// @TODO:

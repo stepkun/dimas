@@ -77,7 +77,10 @@ impl AcquirePointCloud {
 			Point { x: 2, y: 2 },
 			Point { x: 3, y: 3 },
 		];
-		bhvr_.config.blackboard.set("cloud", p_cloud);
+		bhvr_
+			.config_mut()
+			.blackboard_mut()
+			.set("cloud", p_cloud);
 
 		Ok(BehaviorStatus::Success)
 	}

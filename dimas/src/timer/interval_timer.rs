@@ -33,14 +33,14 @@ impl IntervalTimer {
 		if self.handle.is_none() {
 			bhvr_.set_status(BehaviorStatus::Running);
 
-			let input = bhvr_.config.get_input("interval")?;
+			let input = bhvr_.config_mut().get_input("interval")?;
 			let interval = Duration::from_millis(input);
-			let children_count = bhvr_.children.len();
+			let children_count = bhvr_.children().len();
 
 			// @TODO: Dirty way to move access to children into spawned task
 			//        The node is not restartable/recoverable
 			let mut children: Vec<Behavior> = Vec::new();
-			std::mem::swap(&mut bhvr_.children, &mut children);
+			std::mem::swap(bhvr_.children_mut(), &mut children);
 
 			self.handle
 				.replace(tokio::task::spawn(async move {
@@ -59,7 +59,7 @@ impl IntervalTimer {
 			bhvr_.set_status(BehaviorStatus::Failure);
 		}
 
-		Ok(bhvr_.status)
+		Ok(bhvr_.status())
 		// Ok(BehaviorStatus::Running)
 	}
 

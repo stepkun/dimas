@@ -44,15 +44,15 @@ pub struct Retry {
 impl Retry {
 	async fn tick(&mut self) -> BehaviorResult {
 		// Load num_cycles from the port value
-		self.max_attempts = bhvr_.config.get_input("num_attempts")?;
+		self.max_attempts = bhvr_.config_mut().get_input("num_attempts")?;
 
 		let mut do_loop = (self.try_count as i32) < self.max_attempts || self.max_attempts == -1;
 
-		if matches!(bhvr_.status, BehaviorStatus::Idle) {
+		if matches!(bhvr_.status(), BehaviorStatus::Idle) {
 			self.all_skipped = true;
 		}
 
-		bhvr_.status = BehaviorStatus::Running;
+		bhvr_.set_status(BehaviorStatus::Running);
 
 		if do_loop {
 			let child_status = bhvr_

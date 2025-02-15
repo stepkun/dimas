@@ -47,9 +47,9 @@ impl ParallelAll {
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
 	async fn tick(&mut self) -> BehaviorResult {
-		self.failure_threshold = bhvr_.config.get_input("max_failures")?;
+		self.failure_threshold = bhvr_.config_mut().get_input("max_failures")?;
 
-		let children_count = bhvr_.children.len();
+		let children_count = bhvr_.children().len();
 
 		if (children_count as i32) < self.failure_threshold {
 			return Err(BehaviorError::Composition(
@@ -65,7 +65,7 @@ impl ParallelAll {
 				continue;
 			}
 
-			let status = bhvr_.children[i].execute_tick().await?;
+			let status = bhvr_.children_mut()[i].execute_tick().await?;
 			match status {
 				BehaviorStatus::Success => {
 					self.completed_list.insert(i);
@@ -96,7 +96,7 @@ impl ParallelAll {
 			self.completed_list.clear();
 
 			let status =
-				if self.failure_count >= self.failure_threshold(bhvr_.children.len() as i32) {
+				if self.failure_count >= self.failure_threshold(bhvr_.children().len() as i32) {
 					BehaviorStatus::Failure
 				} else {
 					BehaviorStatus::Success

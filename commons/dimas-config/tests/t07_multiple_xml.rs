@@ -53,7 +53,7 @@ struct SaySomething {}
 #[behavior(SyncAction)]
 impl SaySomething {
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("message")?;
+		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		println!("Robot says: {msg}");
 

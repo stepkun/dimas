@@ -61,8 +61,8 @@ struct PrintNumber {}
 #[behavior(SyncAction)]
 impl PrintNumber {
 	async fn tick(&mut self) -> BehaviorResult {
-		let value: i32 = bhvr_.config.get_input("val")?;
-		println!("PrintNumber [{}] has val: {value}", &bhvr_.name);
+		let value: i32 = bhvr_.config_mut().get_input("val")?;
+		println!("PrintNumber [{}] has val: {value}", bhvr_.name());
 
 		Ok(BehaviorStatus::Success)
 	}
@@ -80,35 +80,35 @@ struct Script {}
 impl Script {
 	async fn tick(&mut self) -> BehaviorResult {
 		print!("Script: ");
-		let script: String = bhvr_.config.get_input("code")?;
+		let script: String = bhvr_.config_mut().get_input("code")?;
 		let elements: Vec<&str> = script.split(":=").collect();
 		//println!("{} - {}", elements[0], elements[1]);
 
 		// try to cheat, as there is no script language implemented
 		let value: i32 = bhvr_
-			.config
-			.blackboard
+			.config_mut()
+			.blackboard_mut()
 			.get("@value")
 			.ok_or_else(|| Error::PortError("@value".into()))?;
 		if elements[0].contains("value_sqr") {
 			println!("sqr");
 			bhvr_
-				.config
-				.blackboard
+				.config_mut()
+				.blackboard_mut()
 				.set("@value_sqr", value * value);
 			Ok(BehaviorStatus::Success)
 		} else if elements[0].contains("value_pow3") {
 			println!("pow3");
 			bhvr_
-				.config
-				.blackboard
+				.config_mut()
+				.blackboard_mut()
 				.set("@value_pow3", value * value * value);
 			Ok(BehaviorStatus::Success)
 		} else if elements[0].contains("value_pow4") {
 			println!("pow4");
 			bhvr_
-				.config
-				.blackboard
+				.config_mut()
+				.blackboard_mut()
 				.set("@value_pow4", value * value * value * value);
 			Ok(BehaviorStatus::Success)
 		} else {

@@ -83,29 +83,29 @@ user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.bytes]]
-version = "1.9.0"
-when = "2024-11-28"
+version = "1.10.0"
+when = "2025-02-03"
 user-id = 6741
 user-login = "Darksonn"
 user-name = "Alice Ryhl"
 
 [[publisher.clap]]
-version = "4.5.27"
-when = "2025-01-20"
+version = "4.5.29"
+when = "2025-02-11"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.clap_builder]]
-version = "4.5.27"
-when = "2025-01-20"
+version = "4.5.29"
+when = "2025-02-11"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.clap_derive]]
-version = "4.5.24"
-when = "2025-01-07"
+version = "4.5.28"
+when = "2025-02-03"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -454,15 +454,15 @@ user-login = "Darksonn"
 user-name = "Alice Ryhl"
 
 [[publisher.toml]]
-version = "0.8.19"
-when = "2024-07-31"
+version = "0.8.20"
+when = "2025-02-05"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.toml_edit]]
-version = "0.22.23"
-when = "2025-01-30"
+version = "0.22.24"
+when = "2025-02-10"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -678,8 +678,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.winnow]]
-version = "0.7.0"
-when = "2025-01-30"
+version = "0.7.2"
+when = "2025-02-10"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -1137,29 +1137,10 @@ notes = "No unsafe usage or ambient capabilities"
 [audits.fermyon.audits]
 
 [[audits.google.audits.autocfg]]
-who = "Lukasz Anforowicz <lukasza@chromium.org>"
+who = "Manish Goregaokar <manishearth@google.com>"
 criteria = "safe-to-deploy"
-version = "1.1.0"
-notes = """
-Grepped for `-i cipher`, `-i crypto`, `'\bfs\b'``, `'\bnet\b'``, `'\bunsafe\b'``
-and there were no hits except for reasonable, client-controlled usage of
-`std::fs` in `AutoCfg::with_dir`.
-
-This crate has been added to Chromium in
-https://source.chromium.org/chromium/chromium/src/+/591a0f30c5eac93b6a3d981c2714ffa4db28dbcb
-The CL description contains a link to a Google-internal document with audit details.
-"""
-aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
-
-[[audits.google.audits.autocfg]]
-who = "Lukasz Anforowicz <lukasza@chromium.org>"
-criteria = "safe-to-deploy"
-delta = "1.1.0 -> 1.2.0"
-notes = '''
-Grepped for `-i cipher`, `-i crypto`, `'\bfs\b'``, `'\bnet\b'``, `'\bunsafe\b'``
-and nothing changed from the baseline audit of 1.1.0.  Skimmed through the
-1.1.0 => 1.2.0 delta and everything seemed okay.
-'''
+version = "1.4.0"
+notes = "Contains no unsafe"
 aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
 
 [[audits.google.audits.bitflags]]
@@ -1351,6 +1332,13 @@ version = "0.10.5"
 notes = "Reviewed on https://fxrev.dev/712371."
 aggregated-from = "https://fuchsia.googlesource.com/fuchsia/+/refs/heads/main/third_party/rust_crates/supply-chain/audits.toml?format=TEXT"
 
+[[audits.google.audits.stable_deref_trait]]
+who = "Manish Goregaokar <manishearth@google.com>"
+criteria = "safe-to-deploy"
+version = "1.2.0"
+notes = "Purely a trait, crates using this should be carefully vetted since self-referential stuff can be super tricky around various unsafe rust edges."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
 [[audits.google.audits.static_assertions]]
 who = "Lukasz Anforowicz <lukasza@chromium.org>"
 criteria = "safe-to-deploy"
@@ -1437,6 +1425,19 @@ who = "Lukasz Anforowicz <lukasza@chromium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.13 -> 1.0.14"
 notes = "Minimal delta in `.rs` files: new test assertions + doc changes."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.unicode-ident]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.14 -> 1.0.15"
+notes = "No changes relevant to any of these criteria."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.unicode-ident]]
+who = "Liza Burakova <liza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.15 -> 1.0.16"
 aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
 
 [[audits.google.audits.unicode-xid]]
@@ -2350,12 +2351,6 @@ criteria = "safe-to-deploy"
 delta = "0.10.2 -> 0.10.3"
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
-[[audits.zcash.audits.autocfg]]
-who = "Daira-Emma Hopwood <daira@jacaranda.org>"
-criteria = "safe-to-deploy"
-delta = "1.2.0 -> 1.3.0"
-aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
-
 [[audits.zcash.audits.base64]]
 who = "Jack Grigg <jack@electriccoin.co>"
 criteria = "safe-to-deploy"
@@ -2379,6 +2374,12 @@ who = "Jack Grigg <jack@electriccoin.co>"
 criteria = "safe-to-deploy"
 delta = "0.10.3 -> 0.10.4"
 notes = "Adds panics to prevent a block size of zero from causing unsoundness."
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.crossbeam-utils]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.8.20 -> 0.8.21"
 aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
 
 [[audits.zcash.audits.crypto-common]]

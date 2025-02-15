@@ -53,7 +53,7 @@ struct ActionA {
 #[behavior(SyncAction)]
 impl ActionA {
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("message")?;
+		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		let arg1 = self.arg1;
 		let arg2 = self.arg2.clone();
@@ -83,7 +83,7 @@ impl ActionB {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("message")?;
+		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		println!("{msg} is currently not implementable");
 		//let arg1 = self.arg1;
@@ -112,7 +112,7 @@ struct ActionC {
 #[behavior(SyncAction)]
 impl ActionC {
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("message")?;
+		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		let arg1 = self.arg1;
 		let arg2 = self.arg2.clone();

@@ -69,14 +69,14 @@ struct Script {}
 #[behavior(SyncAction)]
 impl Script {
 	async fn tick(&mut self) -> BehaviorResult {
-		let script: String = bhvr_.config.get_input("code")?;
+		let script: String = bhvr_.config_mut().get_input("code")?;
 		let elements: Vec<&str> = script.split(":=").collect();
 		if elements[1].contains('{') {
 			let pos = move_robot::Position2D::from_str(elements[1].trim()).map_err(|_| {
 				BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
 			})?;
 			bhvr_
-				.config
+				.config()
 				.blackboard()
 				.to_owned()
 				.set(elements[0].trim(), pos);
@@ -87,7 +87,7 @@ impl Script {
 			// remove redundant &apos; from string
 			content = content.replace("&apos;", "").trim().to_string();
 			bhvr_
-				.config
+				.config()
 				.blackboard()
 				.to_owned()
 				.set(elements[0].trim(), content);
@@ -108,7 +108,7 @@ struct SaySomething {}
 #[behavior(SyncAction)]
 impl SaySomething {
 	async fn tick(&mut self) -> BehaviorResult {
-		let msg: String = bhvr_.config.get_input("msg")?;
+		let msg: String = bhvr_.config_mut().get_input("msg")?;
 
 		println!("Robot says: {msg}");
 
@@ -184,7 +184,9 @@ mod move_robot {
 	#[behavior(Action)]
 	impl MoveBase {
 		async fn on_start(&mut self) -> BehaviorResult {
-			let pos = bhvr_.config.get_input::<Position2D>("goal")?;
+			let pos = bhvr_
+				.config_mut()
+				.get_input::<Position2D>("goal")?;
 
 			println!(
 				"[ MoveBase: SEND REQUEST ]. goal: x={:2.1} y={:2.1} theta={:2.1}",

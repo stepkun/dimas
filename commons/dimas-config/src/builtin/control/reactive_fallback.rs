@@ -28,10 +28,10 @@ pub struct ReactiveFallback {}
 impl ReactiveFallback {
 	async fn tick(&mut self) -> BehaviorResult {
 		let mut all_skipped = true;
-		bhvr_.status = BehaviorStatus::Running;
+		bhvr_.set_status(BehaviorStatus::Running);
 
-		for index in 0..bhvr_.children.len() {
-			let cur_child = &mut bhvr_.children[index];
+		for index in 0..bhvr_.children().len() {
+			let cur_child = &mut bhvr_.children_mut()[index];
 
 			let child_status = cur_child.execute_tick().await?;
 

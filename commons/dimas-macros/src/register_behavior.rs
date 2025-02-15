@@ -67,12 +67,12 @@ fn build_behavior(bhvr: &BehaviorRegistration) -> proc_macro2::TokenStream {
 	quote! {
 		{
 			let mut bhvr = #bhvr_type::create_behavior(#name, config #cloned_names);
-			let manifest = ::dimas_core::behavior::BehaviorManifest {
-				bhvr_type: bhvr.bhvr_category(),
-				registration_id: #name.into(),
-				ports: bhvr.provided_ports(),
-				description: ::alloc::string::String::new(),
-			};
+			let manifest = ::dimas_core::behavior::BehaviorManifest::new(
+				bhvr.bhvr_category(),
+				#name,
+				bhvr.provided_ports(),
+				::alloc::string::String::new(),
+			);
 			bhvr.config_mut().set_manifest(::alloc::sync::Arc::new(manifest));
 			bhvr
 		}
@@ -108,7 +108,7 @@ pub fn register_behavior(
 	let extra_steps = match bhvr_type {
 		BehaviorTypeInternal::Action | BehaviorTypeInternal::Condition => quote! {},
 		BehaviorTypeInternal::Control | BehaviorTypeInternal::Decorator => quote! {
-			bhvr.data.children = children;
+			bhvr.data_mut().set_children(children);
 		},
 	};
 
@@ -181,12 +181,12 @@ pub fn register_function(input: proc_macro2::TokenStream) -> proc_macro2::TokenS
 	let bhvr = quote! {
 		{
 			let mut bhvr = ::dimas_core::behavior::BehaviorFunction::create_behavior(#name, config, #fct_ptr);
-			let manifest = ::dimas_core::behavior::BehaviorManifest {
-				bhvr_type: bhvr.bhvr_category(),
-				registration_id: #name.into(),
-				ports: bhvr.provided_ports(),
-				description: ::alloc::string::String::new(),
-			};
+			let manifest = ::dimas_core::behavior::BehaviorManifest::new(
+				bhvr.bhvr_category(),
+				#name,
+				bhvr.provided_ports(),
+				::alloc::string::String::new(),
+			);
 			bhvr.config_mut().set_manifest(::alloc::sync::Arc::new(manifest));
 			bhvr
 		}
