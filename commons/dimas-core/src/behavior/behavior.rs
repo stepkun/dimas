@@ -85,6 +85,13 @@ impl Behavior {
 			halt_fn,
 		}
 	}
+
+	/// Get a mutable reference to the context
+	#[must_use]
+	pub fn context_mut(&mut self) -> &mut Box<dyn Any + Send + Sync> {
+		&mut self.context
+	}
+
 	/// Returns behaviors current status
 	#[must_use]
 	pub const fn status(&self) -> BehaviorStatus {
@@ -232,7 +239,7 @@ impl Behavior {
 		(self.data.port_list_fn)()
 	}
 
-	/// Return an iterator over the children or `None` if the behavior
+	/// Return an array of the children or `None` if the behavior
 	/// has no children
 	#[must_use]
 	pub fn children(&self) -> Option<&[Self]> {
@@ -243,14 +250,27 @@ impl Behavior {
 		}
 	}
 
-	/// Return a mutable iterator over the children or `None` if the behavior
+	/// Return a mutable array of the children or `None` if the behavior
 	/// has no children
+	#[must_use]
 	pub fn children_mut(&mut self) -> Option<&mut [Self]> {
 		if self.data.children.is_empty() {
 			None
 		} else {
 			Some(&mut self.data.children)
 		}
+	}
+
+	/// Return an iterator over the children
+	#[must_use]
+	pub fn children_iter(&self) -> impl DoubleEndedIterator<Item = &Self> {
+		self.data.children.iter()
+	}
+
+	/// Return a mutable iterator over the children
+	#[must_use]
+	pub fn children_iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut Self> {
+		self.data.children.iter_mut()
 	}
 }
 // endregion:   --- Behavior

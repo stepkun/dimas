@@ -6,6 +6,10 @@
 extern crate alloc;
 
 // @TODO: try to remove std lib
+#[doc(hidden)]
+extern crate std;
+
+use core::marker::PhantomData;
 
 // region:      --- modules
 use crate::{
@@ -16,70 +20,85 @@ use alloc::vec;
 use alloc::vec::Vec;
 // endregion:   --- modules
 
-// region: 		--- BehaviorIter
+// region: 		--- TreeIter
 /// Iterator over the [`BehaviorTree`]
 /// @TODO:
-struct BehaviorIter<'a> {
-	nodes: Vec<&'a Behavior>,
-	idxs: Vec<i32>,
+struct TreeIter<'a> {
+	/// stack to do a depth first search
+	stack: Vec<&'a Behavior>,
+	/// Lifetime marker
+	marker: PhantomData<&'a Behavior>,
 }
 
-impl<'a> BehaviorIter<'a> {
+impl<'a> TreeIter<'a> {
 	/// @TODO:
 	#[must_use]
 	pub fn new(root: &'a Behavior) -> Self {
 		Self {
-			nodes: vec![root],
-			idxs: vec![-1],
+			stack: vec![root],
+			marker: PhantomData,
 		}
 	}
 }
 
-impl<'a> Iterator for BehaviorIter<'a> {
+impl<'a> Iterator for TreeIter<'a> {
 	type Item = &'a Behavior;
 
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_sign_loss)]
 	#[allow(clippy::cast_possible_wrap)]
 	fn next(&mut self) -> Option<Self::Item> {
-		// Loop until we find a node to return
-		loop {
-			// Out of nodes; we have traversed the entire tree
-			if self.nodes.is_empty() {
-				return None;
+		if let Some(bhvr) = self.stack.pop() {
+			// Push children in revers order to maintain left-to-right order
+			for child in  bhvr.children_iter().rev() {
+				self.stack.push(child);
 			}
+			return Some(bhvr)
+		}
+		None
+	}
+}
+// endregion:	--- TreeIter
 
-			let end_idx = self.nodes.len() - 1;
+// region: 		--- TreeIterMut
+/// Mutuable Iterator over the [`BehaviorTree`]
+/// @TODO:
+struct TeeIterMut<'a> {
+	/// stack to do a depth first search
+	stack: Vec<*mut Behavior>,
+	/// Lifetime marker
+	marker: PhantomData<&'a mut Behavior>,
+}
 
-			let node = self.nodes[end_idx];
-			let child_idx = &mut self.idxs[end_idx];
-
-			// When this index is -1, that means we haven't returned the node yet
-			if *child_idx < 0 {
-				self.idxs[end_idx] = 0;
-				return Some(node);
-			} else if node.children().is_none()
-				|| *child_idx >= node.children().unwrap_or_else(|| todo!()).len() as i32
-			{
-				// When the node has no children, pop it off and try the next element
-				// OR
-				// If we've already returned all children, pop it off
-				// Unwrap is safe because we just checked if it's None
-				self.nodes.pop();
-				self.idxs.pop();
-			} else {
-				// If nothing else applies, we can push the node's child and return it
-				// Unwrap is safe because we just checked if it's None
-				let child = &node.children().unwrap_or_else(|| todo!())[*child_idx as usize];
-				*child_idx += 1;
-
-				self.nodes.push(child);
-				self.idxs.push(-1);
-			}
+impl<'a> TeeIterMut<'a> {
+	/// @TODO:
+	#[must_use]
+	pub fn new(root: &'a mut Behavior) -> Self {
+		Self {
+			stack: vec![root],
+			marker: PhantomData,
 		}
 	}
 }
-// endregion:	--- BehaviorIter
+
+#[allow(unsafe_code)]
+impl<'a> Iterator for TeeIterMut<'a> {
+	type Item = &'a mut Behavior;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if let Some(bhvr_ptr) = self.stack.pop() {
+			// we know this pointer is valid since the iterator owns the traversal
+			let bhvr = unsafe { &mut *bhvr_ptr };
+			// Push children in revers order to maintain left-to-right order
+			for child in  bhvr.children_iter_mut().rev() {
+				self.stack.push(child);
+			}
+			return Some(&mut *bhvr)
+		}
+		None
+	}
+}
+// endregion:	--- TreeIterMut
 
 // region:      --- BehaviorTree
 enum TickOption {
@@ -152,8 +171,31 @@ impl BehaviorTree {
 	}
 
 	/// @TODO:
-	pub fn visit_nodes(&self) -> impl Iterator<Item = &Behavior> {
-		BehaviorIter::new(&self.root)
+	pub fn iter(&self) -> impl Iterator<Item = &Behavior> {
+		TreeIter::new(&self.root)
+	}
+
+	/// @TODO:
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Behavior> {
+		TeeIterMut::new(&mut self.root)
+	}
+
+	// /// @TODO:
+	// #[allow(clippy::iter_not_returning_iterator)]
+	// pub fn into_iter(self) -> impl Iterator<Item = Behavior> {
+	// 	todo!()
+	// }
+}
+
+/*
+impl<'a> IntoIterator for BehaviorTree<'a> {
+	type Item = &'a Behavior;
+
+	type IntoIter = Self::Item;
+
+	fn into_iter(self) -> Self::IntoIter {
+		todo!()
 	}
 }
+*/
 // endregion:   --- BehaviorTree

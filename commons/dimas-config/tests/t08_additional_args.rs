@@ -3,10 +3,6 @@
 //! This test implements the eigth tutorial from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //! [see:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_08_additional_args)
 //!
-//! Differences to BehaviorTree.CPP
-//! - using an initialize method currently is not possible because we can not get a mutuable iterator.
-//!   A method `visit_nodes_mut()` is missing.
-//!
 
 #[doc(hidden)]
 extern crate alloc;
@@ -19,8 +15,7 @@ use dimas_core::{
 };
 use dimas_macros::{behavior, register_action};
 
-const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
+const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
       main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
@@ -56,7 +51,11 @@ impl ActionA {
 		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		let arg1 = self.arg1;
-		let arg2 = self.arg2.clone();
+		let arg2 = &self.arg2;
+
+		assert_eq!(arg1, 42);
+		assert_eq!(arg2, "hello world");
+
 		println!("{msg} robot says: {arg2}, the answer is {arg1}!");
 
 		Ok(BehaviorStatus::Success)
@@ -85,15 +84,18 @@ impl ActionB {
 	async fn tick(&mut self) -> BehaviorResult {
 		let msg: String = bhvr_.config_mut().get_input("message")?;
 
-		println!("{msg} is currently not implementable");
-		//let arg1 = self.arg1;
-		//let arg2 = self.arg2.clone();
-		//println!("{msg} robot says: {}, the answer is {}!", arg2, arg1);
+		// println!("{msg} is currently not implementable");
+		let arg1 = self.arg1;
+		let arg2 = &self.arg2;
 
-		Ok(BehaviorStatus::Failure)
+		assert_eq!(arg1, 42);
+		assert_eq!(arg2, "hello world");
+
+		println!("{msg} robot says: {arg2}, the answer is {arg1}!");
+
+		Ok(BehaviorStatus::Success)
 	}
 
-	#[allow(dead_code)]
 	fn initialize(&mut self, arg1: i32, arg2: String) {
 		self.arg1 = arg1;
 		self.arg2 = arg2;
@@ -115,7 +117,11 @@ impl ActionC {
 		let msg: String = bhvr_.config_mut().get_input("message")?;
 
 		let arg1 = self.arg1;
-		let arg2 = self.arg2.clone();
+		let arg2 = &self.arg2;
+
+		assert_eq!(arg1, 42);
+		assert_eq!(arg2, "hello world");
+
 		println!("{msg} robot says: {arg2}, the answer is {arg1}!");
 
 		Ok(BehaviorStatus::Success)
@@ -127,7 +133,6 @@ impl ActionC {
 }
 
 #[tokio::test]
-#[ignore]
 async fn additional_args() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();
@@ -145,20 +150,28 @@ async fn additional_args() -> anyhow::Result<()> {
 	// create the BT
 	let mut tree = factory.create_tree_from_xml(XML)?;
 
-	// initialize ActionB with the help of a visitor
-	/*
-	currently does not work, as there is no visit_nodes_mut() method providing a mutuable iterator
-	for node in tree.visit_nodes_mut() {
+	// initialize ActionB with the help of an iterator
+	for node in tree.iter_mut() {
 		if node.name() == "ActionB" {
-			let action = node.context.downcast_mut::<ActionB>().unwrap();
+			let action = node
+				.context_mut()
+				.downcast_mut::<ActionB>()
+				.expect("snh");
 			action.initialize(42, "hello world".into());
 		}
 	}
-	*/
 
 	// run the BT
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
+
+	// test the iterator
+	let mut iter = tree.iter();
+	assert_eq!(iter.next().expect("snh").name(), "Sequence");
+	assert_eq!(iter.next().expect("snh").name(), "ActionA");
+	assert_eq!(iter.next().expect("snh").name(), "ActionB");
+	assert_eq!(iter.next().expect("snh").name(), "ActionC");
+	assert!(iter.next().is_none());
 
 	Ok(())
 }
