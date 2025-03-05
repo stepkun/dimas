@@ -50,10 +50,10 @@ impl<'a> Iterator for TreeIter<'a> {
 	fn next(&mut self) -> Option<Self::Item> {
 		if let Some(bhvr) = self.stack.pop() {
 			// Push children in revers order to maintain left-to-right order
-			for child in  bhvr.children_iter().rev() {
+			for child in bhvr.children_iter().rev() {
 				self.stack.push(child);
 			}
-			return Some(bhvr)
+			return Some(bhvr);
 		}
 		None
 	}
@@ -90,10 +90,10 @@ impl<'a> Iterator for TeeIterMut<'a> {
 			// we know this pointer is valid since the iterator owns the traversal
 			let bhvr = unsafe { &mut *bhvr_ptr };
 			// Push children in revers order to maintain left-to-right order
-			for child in  bhvr.children_iter_mut().rev() {
+			for child in bhvr.children_iter_mut().rev() {
 				self.stack.push(child);
 			}
-			return Some(&mut *bhvr)
+			return Some(&mut *bhvr);
 		}
 		None
 	}

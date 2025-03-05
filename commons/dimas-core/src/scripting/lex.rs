@@ -1,0 +1,242 @@
+// Copyright © 2025 Stephan Kunz
+#![allow(unused)]
+
+//! Lexer for `DiMAS` scripting
+
+use super::{Token, TokenKind, error::Error};
+
+/// Enum to handle multi charakter tokens
+enum Started {
+	String,
+	Number, // may be hex or not
+	Ident,
+	IfEqualElse(TokenKind, TokenKind),
+	IfSameElse(TokenKind, TokenKind),
+}
+
+/// Lexer
+pub struct Lexer<'a> {
+	/// reference to the whole input 'code'
+	whole: &'a str,
+	/// reference to the start of the not yet lexed part
+	rest: &'a str,
+	/// current position in the input
+	pos: usize,
+}
+
+impl<'a> Lexer<'a> {
+	/// Create a Lexer for a certain input str
+	#[must_use]
+	pub const fn new(input: &'a str) -> Self {
+		Self {
+			whole: input,
+			rest: input,
+			pos: 0,
+		}
+	}
+}
+
+impl<'a> Iterator for Lexer<'a> {
+	type Item = Result<Token<'a>, Error>;
+
+	#[allow(clippy::too_many_lines)]
+	fn next(&mut self) -> Option<Self::Item> {
+		loop {
+			// must be in the loop for the indices to match up with c_onwards
+			let mut chars = self.rest.chars();
+			let c = chars.next()?;
+			let c_at = self.pos;
+			let c_str = &self.rest[..c.len_utf8()];
+			let c_onwards = self.rest;
+			self.rest = chars.as_str();
+			self.pos += c.len_utf8();
+
+			// must be inside loop to capture variables
+			let create = move |kind: TokenKind| {
+				Some(Ok(Token {
+					kind,
+					offset: c_at,
+					origin: c_str,
+				}))
+			};
+
+			// this will return early for single character tokens
+			let started = match c {
+				// single character Tokens
+				'(' => return create(TokenKind::LeftParen),
+				')' => return create(TokenKind::RightParen),
+				';' => return create(TokenKind::Semicolon),
+				'^' => return create(TokenKind::Circonflex),
+				'?' => return create(TokenKind::QMark),
+				// possible double character Tokens containing an '='
+				':' => Started::IfEqualElse(TokenKind::ColonEqual, TokenKind::Colon),
+				'=' => Started::IfEqualElse(TokenKind::EqualEqual, TokenKind::Equal),
+				'!' => Started::IfEqualElse(TokenKind::NotEqual, TokenKind::Not),
+				'+' => Started::IfEqualElse(TokenKind::PlusEqual, TokenKind::Plus),
+				'-' => Started::IfEqualElse(TokenKind::MinusEqual, TokenKind::Minus),
+				'*' => Started::IfEqualElse(TokenKind::StarEqual, TokenKind::Star),
+				'/' => Started::IfEqualElse(TokenKind::SlashEqual, TokenKind::Slash),
+				'<' => Started::IfEqualElse(TokenKind::LessEqual, TokenKind::Less),
+				'>' => Started::IfEqualElse(TokenKind::GreaterEqual, TokenKind::Greater),
+				// possible double character Tokens containing with twice the same character
+				'&' => Started::IfSameElse(TokenKind::And, TokenKind::Ampersand),
+				'|' => Started::IfSameElse(TokenKind::Or, TokenKind::Pipe),
+                // multi character token
+				'\'' => Started::String,
+				'0'..='9' => Started::Number,
+				'a'..='z' | 'A'..='Z' | '_' => Started::Ident,
+				// skip whitespaces
+				c if c.is_whitespace() => continue,
+				// something is wrong in the token stream
+				c => return Some(Err(Error::UnexpectedToken)),
+			};
+
+			// handling double & multi character token
+			break match started {
+				Started::IfEqualElse(yes, no) => {
+					self.rest = self.rest.trim_start();
+					let trimmed = c_onwards.len() - self.rest.len() - 1;
+					self.pos += trimmed;
+					if self.rest.starts_with('=') {
+						let span = &c_onwards[..=c.len_utf8() + trimmed];
+						self.rest = &self.rest[1..];
+						self.pos += 1;
+						Some(Ok(Token {
+							origin: span,
+							offset: c_at,
+							kind: yes,
+						}))
+					} else {
+						Some(Ok(Token {
+							origin: c_str,
+							offset: c_at,
+							kind: no,
+						}))
+					}
+				}
+				Started::IfSameElse(yes, no) => {
+					self.rest = self.rest.trim_start();
+					let trimmed = c_onwards.len() - self.rest.len() - 1;
+					self.pos += trimmed;
+					if self.rest.starts_with(c) {
+						let span = &c_onwards[..=c.len_utf8() + trimmed];
+						self.rest = &self.rest[1..];
+						self.pos += 1;
+						Some(Ok(Token {
+							origin: span,
+							offset: c_at,
+							kind: yes,
+						}))
+					} else {
+						Some(Ok(Token {
+							origin: c_str,
+							offset: c_at,
+							kind: no,
+						}))
+					}
+				}
+				Started::Ident => {
+					let first_non_ident = c_onwards
+						.find(|c| !matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '_'))
+						.unwrap_or(c_onwards.len());
+
+					let literal = &c_onwards[..first_non_ident];
+					let extra_bytes = literal.len() - c.len_utf8();
+					self.pos += extra_bytes;
+					self.rest = &self.rest[extra_bytes..];
+
+					let kind = match literal {
+						"true" => TokenKind::True,
+						"false" => TokenKind::False,
+						_ => TokenKind::Ident,
+					};
+
+					return Some(Ok(Token {
+						origin: literal,
+						offset: c_at,
+						kind,
+					}));
+				}
+				#[allow(clippy::redundant_guards)] // because that guard is not redundant!!
+				Started::Number => {
+					// check for hex number
+					if self.rest.starts_with('x') | self.rest.starts_with('X') {
+						let first_non_hex_digit = c_onwards
+							.find(|c: char| !(c.is_ascii_hexdigit() || c == 'x') || c == 'X')
+							.unwrap_or(c_onwards.len());
+
+						let mut literal = &c_onwards[..first_non_hex_digit];
+
+						let extra_bytes = literal.len() - c.len_utf8();
+						self.pos += extra_bytes;
+						self.rest = &self.rest[extra_bytes..];
+
+						literal = literal.trim_start_matches("0x");
+						literal = literal.trim_start_matches("0X");
+
+						let i = match i64::from_str_radix(literal, 16) {
+							Ok(i) => i,
+							Err(e) => {
+								return Some(Err(Error::UnexpectedToken));
+							}
+						};
+
+						return Some(Ok(Token {
+							origin: literal,
+							offset: c_at,
+							kind: TokenKind::HexNumber(i),
+						}));
+					}
+
+					let first_non_digit = c_onwards
+						.find(|c| !matches!(c, '.' | '0'..='9'))
+						.unwrap_or(c_onwards.len());
+
+					let mut literal = &c_onwards[..first_non_digit];
+					let mut dotted = literal.splitn(3, '.');
+					match (dotted.next(), dotted.next(), dotted.next()) {
+						(Some(one), Some(two), Some(_)) => {
+							literal = &literal[..one.len() + 1 + two.len()];
+						}
+						(Some(one), Some(two), None) if two.is_empty() => {
+							literal = &literal[..one.len()];
+						}
+						_ => {
+							// leave literal as-is
+						}
+					}
+					let extra_bytes = literal.len() - c.len_utf8();
+					self.pos += extra_bytes;
+					self.rest = &self.rest[extra_bytes..];
+
+					let n = match literal.parse() {
+						Ok(n) => n,
+						Err(e) => {
+							return Some(Err(Error::UnexpectedToken));
+						}
+					};
+
+					return Some(Ok(Token {
+						origin: literal,
+						offset: c_at,
+						kind: TokenKind::Number(n),
+					}));
+				}
+				Started::String => {
+					if let Some(end) = self.rest.find('\'') {
+						let literal = &c_onwards[..=(end + 1)];
+						self.pos += end + 1;
+						self.rest = &self.rest[end + 1..];
+						Some(Ok(Token {
+							origin: literal,
+							offset: c_at,
+							kind: TokenKind::String,
+						}))
+					} else {
+						return Some(Err(Error::UnexpectedToken));
+					}
+				}
+			};
+		}
+	}
+}

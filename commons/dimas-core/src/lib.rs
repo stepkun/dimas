@@ -10,6 +10,7 @@ extern crate alloc;
 pub mod behavior;
 pub mod blackboard;
 pub mod port;
+pub mod scripting;
 pub mod utils;
 
 // flatten:
