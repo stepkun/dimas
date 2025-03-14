@@ -3,7 +3,7 @@
 
 //! Parser for `DiMAS` scripting
 
-use super::Lexer;
+use super::{Chunk, Lexer, error::Error};
 
 /// Parser
 pub struct Parser<'a> {
@@ -19,5 +19,12 @@ impl<'a> Parser<'a> {
 			whole: source_code,
 			lexer: Lexer::new(source_code),
 		}
+	}
+
+	/// Create a Parser
+	/// # Errors
+	/// - if it could not create a [`Chunk`]
+	pub const fn parse(&self) -> Result<Chunk, Error> {
+		Err(Error::NoChunk)
 	}
 }

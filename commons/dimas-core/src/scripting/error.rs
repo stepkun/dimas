@@ -11,6 +11,9 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// @TODO:
+	#[error("could not create Chunk for VM")]
+	NoChunk,
+	/// @TODO:
 	#[error("unexpected token")]
 	UnexpectedToken,
 	/// @TODO:
