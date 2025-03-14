@@ -1,11 +1,12 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
 #![allow(unused)]
 #![allow(clippy::unwrap_used)]
 #![allow(clippy::upper_case_acronyms)]
 
-//! Tests
+//! Tests of lexing functionality
 
 use dimas_core::scripting::{Lexer, TokenKind};
+
 enum Color {
 	RED = 1,
 	BLUE = 2,
@@ -26,14 +27,14 @@ fn lexing_tokens(tokens: &str) {
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::StarEqual);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::SlashEqual);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Semicolon);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Not);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Bang);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Ampersand);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Pipe);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Circonflex);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::And);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Or);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::EqualEqual);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::NotEqual);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::BangEqual);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Less);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::LessEqual);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Greater);
@@ -46,7 +47,17 @@ fn lexing_tokens(tokens: &str) {
 	assert!(lexer.next().is_none());
 }
 
-fn lexing_keywords(tokens: &str) {
+#[test]
+fn lexing() {
+	let tokens = ":= = + - * / += -= *= /= ; ! & | ^ && || == != < <= > >= : ? ( )";
+	lexing_tokens(tokens);
+	let tokens2 = ":==+-*/+=-=*=/=;!&|^&&||==!=<<=>>=:?()";
+	lexing_tokens(tokens2);
+}
+
+#[test]
+fn lexing_keywords() {
+	let tokens = "true false";
 	let mut lexer = Lexer::new(tokens);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::True);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::False);
@@ -54,7 +65,9 @@ fn lexing_keywords(tokens: &str) {
 	assert!(lexer.next().is_none());
 }
 
-fn lexing_idents(tokens: &str) {
+#[test]
+fn lexing_idents() {
+	let tokens = "a_name _another_name _aThirdName_";
 	let mut lexer = Lexer::new(tokens);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Ident);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Ident);
@@ -63,7 +76,9 @@ fn lexing_idents(tokens: &str) {
 	assert!(lexer.next().is_none());
 }
 
-fn lexing_numbers(tokens: &str) {
+#[test]
+fn lexing_numbers() {
+	let tokens = "123 123.0 123.456 0.123";
 	let mut lexer = Lexer::new(tokens);
 	assert_eq!(
 		lexer.next().unwrap().unwrap().kind,
@@ -85,7 +100,9 @@ fn lexing_numbers(tokens: &str) {
 	assert!(lexer.next().is_none());
 }
 
-fn lexing_hex(tokens: &str) {
+#[test]
+fn lexing_hex() {
+	let tokens = "0x123 0xABC 0xabc 0xa1b2c3";
 	let mut lexer = Lexer::new(tokens);
 	assert_eq!(
 		lexer.next().unwrap().unwrap().kind,
@@ -107,7 +124,9 @@ fn lexing_hex(tokens: &str) {
 	assert!(lexer.next().is_none());
 }
 
-fn lexing_strings(tokens: &str) {
+#[test]
+fn lexing_strings() {
+	let tokens = "'teststring' 'another_string'";
 	let mut lexer = Lexer::new(tokens);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::String);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::String);
@@ -116,27 +135,14 @@ fn lexing_strings(tokens: &str) {
 }
 
 #[test]
-fn lexing() {
-	let tokens = ":= = + - * / += -= *= /= ; ! & | ^ && || == != < <= > >= : ? ( )";
-	lexing_tokens(tokens);
-	let tokens2 = ":==+-*/+=-=*=/=;!&|^&&||==!=<<=>>=:?()";
-	lexing_tokens(tokens2);
-	let keywords = "true false";
-	lexing_keywords(keywords);
-	let idents = "a_name _another_name _aThirdName_";
-	lexing_idents(idents);
-	let numbers = "123 123.0 123.456 0.123";
-	lexing_numbers(numbers);
-	let hex_numbers = "0x123 0xABC 0xabc 0xa1b2c3";
-	lexing_hex(hex_numbers);
-	let strings = "'teststring' 'another_string'";
-	lexing_strings(strings);
-	let enums = "RED BLUE GREEN";
+#[ignore]
+fn lexing_enums() {
+	let tokens = "RED BLUE GREEN";
 	// @TODO
+	let mut lexer = Lexer::new(tokens);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Enum);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Enum);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Enum);
+	assert!(lexer.next().is_none());
+	assert!(lexer.next().is_none());
 }
-
-#[test]
-const fn parsing() {}
-
-#[test]
-const fn executing() {}

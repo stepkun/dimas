@@ -28,9 +28,9 @@ name = "tests"
 path = "tests/all.rs"
 
 [dependencies]
-proc-macro2 = { version = "1", features = ["nightly"] }
-quote = "1.0.37"
-syn = { version = "2.0.91", features = ["full", "visit-mut"] }
+proc-macro2 = { version = "1.0.94", features = ["nightly"] }
+quote = "1.0.40"
+syn = { version = "2.0.100", features = ["full", "visit-mut"] }
 
 [dev-dependencies]
 dimas-core = { workspace = true }

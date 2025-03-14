@@ -2,9 +2,6 @@
 
 //! `scripting` errors
 
-#[doc(hidden)]
-extern crate alloc;
-
 // region		--- modules
 use thiserror::Error;
 // endregion:	--- modules
@@ -16,5 +13,8 @@ pub enum Error {
 	/// @TODO:
 	#[error("unexpected token")]
 	UnexpectedToken,
+	/// @TODO:
+	#[error("unknown Operation Code")]
+	UnknownOpCode,
 }
 // region:		--- Error

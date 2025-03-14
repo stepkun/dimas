@@ -27,10 +27,10 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
 	/// Create a Lexer for a certain input str
 	#[must_use]
-	pub const fn new(input: &'a str) -> Self {
+	pub const fn new(source_code: &'a str) -> Self {
 		Self {
-			whole: input,
-			rest: input,
+			whole: source_code,
+			rest: source_code,
 			pos: 0,
 		}
 	}
@@ -71,17 +71,17 @@ impl<'a> Iterator for Lexer<'a> {
 				// possible double character Tokens containing an '='
 				':' => Started::IfEqualElse(TokenKind::ColonEqual, TokenKind::Colon),
 				'=' => Started::IfEqualElse(TokenKind::EqualEqual, TokenKind::Equal),
-				'!' => Started::IfEqualElse(TokenKind::NotEqual, TokenKind::Not),
+				'!' => Started::IfEqualElse(TokenKind::BangEqual, TokenKind::Bang),
 				'+' => Started::IfEqualElse(TokenKind::PlusEqual, TokenKind::Plus),
 				'-' => Started::IfEqualElse(TokenKind::MinusEqual, TokenKind::Minus),
 				'*' => Started::IfEqualElse(TokenKind::StarEqual, TokenKind::Star),
 				'/' => Started::IfEqualElse(TokenKind::SlashEqual, TokenKind::Slash),
 				'<' => Started::IfEqualElse(TokenKind::LessEqual, TokenKind::Less),
 				'>' => Started::IfEqualElse(TokenKind::GreaterEqual, TokenKind::Greater),
-				// possible double character Tokens containing with twice the same character
+				// possible double character Tokens with twice the same character
 				'&' => Started::IfSameElse(TokenKind::And, TokenKind::Ampersand),
 				'|' => Started::IfSameElse(TokenKind::Or, TokenKind::Pipe),
-                // multi character token
+				// multi character token
 				'\'' => Started::String,
 				'0'..='9' => Started::Number,
 				'a'..='z' | 'A'..='Z' | '_' => Started::Ident,

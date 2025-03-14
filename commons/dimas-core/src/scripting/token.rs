@@ -41,9 +41,9 @@ pub enum TokenKind {
 	/// ||
 	Or,
 	/// !
-	Not,
+	Bang,
 	/// !=
-	NotEqual,
+	BangEqual,
 	/// ==
 	EqualEqual,
 	/// <
@@ -72,6 +72,8 @@ pub enum TokenKind {
 	HexNumber(i64),
 	/// Any String
 	String,
+	/// An Enum value
+	Enum,
 }
 
 /// Token
