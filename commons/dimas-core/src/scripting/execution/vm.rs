@@ -3,15 +3,13 @@
 
 //! Virtual machine for `DiMAS` scripting
 
-extern crate std;
-
 use core::marker::PhantomData;
 
-use super::{
-	Chunk, OP_ADD, OP_CONSTANT, OP_DIVIDE, OP_MULTIPLY, OP_NEGATE, OP_RETURN, OP_SUBTRACT,
-	error::Error,
-	values::{Numbers, Value},
-};
+use crate::scripting::{Chunk, error::Error};
+
+#[allow(clippy::wildcard_imports)]
+use super::opcodes::*;
+use super::values::{Numbers, Value};
 
 /// Stack size is fixed
 const STACK_MAX: usize = 256;
@@ -54,12 +52,15 @@ impl VM {
 	/// - unknown `OpCode`
 	pub fn run(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		self.reset();
+		// ignore empty chunks
+		if chunk.code().is_empty() {
+			return Ok(());
+		};
 		loop {
 			let instruction: u8 = chunk.code()[self.ip];
 			self.ip += 1;
 			match instruction {
 				OP_RETURN => {
-					std::println!("{}", self.pop());
 					return Ok(());
 				}
 				OP_ADD => {

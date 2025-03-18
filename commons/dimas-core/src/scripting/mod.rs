@@ -36,17 +36,13 @@
 //! ```
 //!
 
-mod chunk;
 mod error;
-mod lex;
-mod parse;
-mod token;
-mod values;
-mod vm;
+pub mod execution;
+mod lexing;
+mod parsing;
 
 // flatten
-pub use chunk::*;
-pub use lex::Lexer;
-pub use parse::Parser;
-pub use token::*;
-pub use vm::VM;
+pub use execution::VM;
+pub use lexing::{Lexer, TokenKind};
+pub use parsing::Chunk;
+pub use parsing::Parser;

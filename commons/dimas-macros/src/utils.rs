@@ -56,8 +56,8 @@ pub fn determine_type_category(ident: &str) -> Result<(Path, Path)> {
 
 /// Collect existing attribute macros and derive macros
 pub fn collect_data(item: &ItemStruct) -> Result<(TokenStream, TokenStream)> {
-	let mut derives: Vec<TokenStream> = Vec::new();
-	let mut user_attrs: Vec<Attribute> = Vec::new();
+	let mut derives: Vec<TokenStream> = Vec::default();
+	let mut user_attrs: Vec<Attribute> = Vec::default();
 
 	for attr in &item.attrs {
 		if attr.path().is_ident("derive") {

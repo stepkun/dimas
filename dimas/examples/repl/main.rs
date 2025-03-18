@@ -18,18 +18,21 @@ fn repl() {
 		match stdin().read_line(&mut input) {
 			Ok(len) => {
 				if len > 0 {
-					print!("{}", &input);
-					let parser = Parser::new(&input);
-					parser.parse().map_or_else(
-						|_| {
-							println!("parsing error");
-						},
-						|chunk| {
-							if let Err(error) = vm.run(&chunk) {
-								println!("execution error: {error}");
-							};
-						},
-					);
+					// ignore CR/LF only input
+					if input.len() > 1 {
+						print!("{}", &input);
+						let mut parser = Parser::new(&input);
+						parser.parse().map_or_else(
+							|err| {
+								println!("parsing error: {err}");
+							},
+							|chunk| {
+								if let Err(error) = vm.run(&chunk) {
+									println!("execution error: {error}");
+								};
+							},
+						);
+					};
 					input.clear();
 					print!("> ");
 					let _ = stdout().flush();

@@ -2,7 +2,10 @@
 
 //! Bsic tests for bytecode interpreter
 
-use dimas_core::scripting::{Chunk, OP_ADD, OP_CONSTANT, OP_DIVIDE, OP_NEGATE, OP_RETURN, VM};
+use dimas_core::scripting::{
+	Chunk, VM,
+	execution::opcodes::{OP_ADD, OP_CONSTANT, OP_DIVIDE, OP_NEGATE, OP_RETURN},
+};
 
 #[test]
 fn first_test() {

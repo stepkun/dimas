@@ -40,7 +40,7 @@ pub trait AttrsToMap {
 
 impl AttrsToMap for Attributes<'_, '_> {
 	fn to_map(self) -> Result<HashMap<String, String>, Error> {
-		let mut map = HashMap::new();
+		let mut map = HashMap::default();
 		//dbg!(self);
 		for attr in self {
 			let name = attr.name().into();
@@ -194,7 +194,7 @@ impl XmlParser {
 				if element.has_children() {
 					return Err(Error::ChildrenNotAllowed(bhvr_category.to_string()));
 				}
-				let mut behavior = bhvr_fn(config, Vec::new());
+				let mut behavior = bhvr_fn(config, Vec::default());
 				Self::add_ports(&mut behavior, bhvr_name, attributes)?;
 				behavior
 			}
@@ -229,7 +229,7 @@ impl XmlParser {
 		path: &str,
 	) -> Result<Vec<Behavior>, Error> {
 		event!(Level::TRACE, "build_children");
-		let mut children: Vec<Behavior> = Vec::new();
+		let mut children: Vec<Behavior> = Vec::default();
 
 		for child in element.children() {
 			match child.node_type() {

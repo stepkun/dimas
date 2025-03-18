@@ -38,4 +38,5 @@ zenoh = { workspace = true}
 [features]
 default = ["std"]
 std = []
+#unstable = []
 unstable = ["zenoh/unstable"]

@@ -2,8 +2,18 @@
 #![allow(unused)]
 
 //! Lexer for `DiMAS` scripting
+//!
+//! Implementation is heavily inspired by
+//! - Jon Gjengsets [video](https://www.youtube.com/watch?v=mNOLaw-_Buc) & [example](https://github.com/jonhoo/lox/blob/master/src/lex.rs)
+//!
 
-use super::{Token, TokenKind, error::Error};
+use core::cmp::min;
+
+use alloc::string::ToString;
+
+use crate::scripting::error::Error;
+
+use super::{Token, TokenKind};
 
 /// Enum to handle multi charakter tokens
 enum Started {
@@ -22,6 +32,10 @@ pub struct Lexer<'a> {
 	rest: &'a str,
 	/// current position in the input
 	pos: usize,
+	/// current line
+	line: usize,
+	/// store a peeked token
+	peeked: Option<Result<Token<'a>, Error>>,
 }
 
 impl<'a> Lexer<'a> {
@@ -32,7 +46,19 @@ impl<'a> Lexer<'a> {
 			whole: source_code,
 			rest: source_code,
 			pos: 0,
+			line: 1,
+			peeked: None,
 		}
+	}
+
+	/// Look forward to the next token
+	pub fn peek(&mut self) -> Option<&Result<Token<'a>, Error>> {
+		if self.peeked.is_some() {
+			return self.peeked.as_ref();
+		}
+
+		self.peeked = self.next();
+		self.peeked.as_ref()
 	}
 }
 
@@ -41,6 +67,11 @@ impl<'a> Iterator for Lexer<'a> {
 
 	#[allow(clippy::too_many_lines)]
 	fn next(&mut self) -> Option<Self::Item> {
+		// return a peeked token
+		if let Some(next) = self.peeked.take() {
+			return Some(next);
+		}
+
 		loop {
 			// must be in the loop for the indices to match up with c_onwards
 			let mut chars = self.rest.chars();
@@ -85,10 +116,15 @@ impl<'a> Iterator for Lexer<'a> {
 				'\'' => Started::String,
 				'0'..='9' => Started::Number,
 				'a'..='z' | 'A'..='Z' | '_' => Started::Ident,
+				// count lines
+				'\n' => {
+					self.line += 1;
+					continue;
+				}
 				// skip whitespaces
 				c if c.is_whitespace() => continue,
 				// something is wrong in the token stream
-				c => return Some(Err(Error::UnexpectedToken)),
+				c => return Some(Err(Error::UnexpectedChar(c.to_string(), self.line))),
 			};
 
 			// handling double & multi character token
@@ -145,6 +181,7 @@ impl<'a> Iterator for Lexer<'a> {
 					self.pos += extra_bytes;
 					self.rest = &self.rest[extra_bytes..];
 
+					// distinguish keywords from idents
 					let kind = match literal {
 						"true" => TokenKind::True,
 						"false" => TokenKind::False,
@@ -160,24 +197,27 @@ impl<'a> Iterator for Lexer<'a> {
 				#[allow(clippy::redundant_guards)] // because that guard is not redundant!!
 				Started::Number => {
 					// check for hex number
-					if self.rest.starts_with('x') | self.rest.starts_with('X') {
-						let first_non_hex_digit = c_onwards
-							.find(|c: char| !(c.is_ascii_hexdigit() || c == 'x') || c == 'X')
+					if self.rest.starts_with('x') {
+						// skip the '0x' in c_onwards
+						let number = &c_onwards[2..];
+						let first_non_hex_digit = number
+							.find(|c: char| !c.is_ascii_hexdigit())
 							.unwrap_or(c_onwards.len());
 
-						let mut literal = &c_onwards[..first_non_hex_digit];
+						// remember the skipped '0x'
+						let end = min(first_non_hex_digit + 2, c_onwards.len());
+						let mut literal = &c_onwards[..end];
 
 						let extra_bytes = literal.len() - c.len_utf8();
 						self.pos += extra_bytes;
 						self.rest = &self.rest[extra_bytes..];
 
+						// remove the '0x' before parsing
 						literal = literal.trim_start_matches("0x");
-						literal = literal.trim_start_matches("0X");
-
 						let i = match i64::from_str_radix(literal, 16) {
 							Ok(i) => i,
 							Err(e) => {
-								return Some(Err(Error::UnexpectedToken));
+								return Some(Err(Error::ParseHex(literal.to_string(), self.line)));
 							}
 						};
 
@@ -212,7 +252,7 @@ impl<'a> Iterator for Lexer<'a> {
 					let n = match literal.parse() {
 						Ok(n) => n,
 						Err(e) => {
-							return Some(Err(Error::UnexpectedToken));
+							return Some(Err(Error::ParseNumber(literal.to_string(), self.line)));
 						}
 					};
 
@@ -233,7 +273,10 @@ impl<'a> Iterator for Lexer<'a> {
 							kind: TokenKind::String,
 						}))
 					} else {
-						return Some(Err(Error::UnexpectedToken));
+						return Some(Err(Error::UnterminatedString(
+							self.whole[c_at..].to_string(),
+							self.line,
+						)));
 					}
 				}
 			};

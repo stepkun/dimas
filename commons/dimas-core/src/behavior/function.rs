@@ -51,7 +51,7 @@ impl BehaviorFunction {
 			BehaviorCategory::Action,
 			config,
 			BehaviorStatus::Idle,
-			::alloc::vec::Vec::new(),
+			::alloc::vec::Vec::default(),
 			Self::_ports,
 		);
 		Behavior::new(

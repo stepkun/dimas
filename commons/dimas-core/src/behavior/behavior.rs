@@ -327,8 +327,8 @@ impl BehaviorConfig {
 	pub fn new(blackboard: Blackboard, path: String) -> Self {
 		Self {
 			blackboard,
-			input_ports: HashMap::new(),
-			output_ports: HashMap::new(),
+			input_ports: HashMap::default(),
+			output_ports: HashMap::default(),
 			manifest: None,
 			path,
 		}

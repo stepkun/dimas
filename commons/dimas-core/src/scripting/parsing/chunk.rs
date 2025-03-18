@@ -8,27 +8,12 @@ extern crate std;
 
 use alloc::{borrow::ToOwned, vec::Vec};
 
-use super::{
+#[allow(clippy::wildcard_imports)]
+use crate::scripting::execution::opcodes::*;
+use crate::scripting::{
 	error::Error,
-	values::{HexNumbers, Numbers},
+	execution::values::{HexNumbers, Numbers},
 };
-
-/// The available operation codes
-/// These cannot be an enum because an enum in Rust is not u8
-/// @TODO
-pub const OP_CONSTANT: u8 = 100;
-/// @TODO
-pub const OP_ADD: u8 = 111;
-/// @TODO
-pub const OP_SUBTRACT: u8 = 112;
-/// @TODO
-pub const OP_MULTIPLY: u8 = 113;
-/// @TODO
-pub const OP_DIVIDE: u8 = 114;
-/// @TODO
-pub const OP_NEGATE: u8 = 200;
-/// @TODO
-pub const OP_RETURN: u8 = 255;
 
 /// A chunk of bytecode
 #[derive(Default)]

@@ -211,7 +211,7 @@ fn behavior_impl(mut args: Config, mut item: ItemImpl) -> Result<TokenStream> {
 		}
 	}
 
-	let mut extra_impls = Vec::new();
+	let mut extra_impls = Vec::default();
 
 	if args.halt_fn.is_none() {
 		extra_impls.push(parse2(quote! {

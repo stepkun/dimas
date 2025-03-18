@@ -39,7 +39,7 @@ impl IntervalTimer {
 
 			// @TODO: Dirty way to move access to children into spawned task
 			//        The node is not restartable/recoverable
-			let mut children: Vec<Behavior> = Vec::new();
+			let mut children: Vec<Behavior> = Vec::default();
 			std::mem::swap(bhvr_.children_mut(), &mut children);
 
 			self.handle

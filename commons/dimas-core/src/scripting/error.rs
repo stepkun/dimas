@@ -2,6 +2,7 @@
 
 //! `scripting` errors
 
+use alloc::string::String;
 // region		--- modules
 use thiserror::Error;
 // endregion:	--- modules
@@ -14,10 +15,19 @@ pub enum Error {
 	#[error("could not create Chunk for VM")]
 	NoChunk,
 	/// @TODO:
-	#[error("unexpected token")]
-	UnexpectedToken,
+	#[error("could not parse HexNumber {0} at line {1}")]
+	ParseHex(String, usize),
+	/// @TODO:
+	#[error("could not parse Number {0} at line {1}")]
+	ParseNumber(String, usize),
+	/// @TODO:
+	#[error("unexpected character {0} at line {1}")]
+	UnexpectedChar(String, usize),
 	/// @TODO:
 	#[error("unknown Operation Code")]
 	UnknownOpCode,
+	/// @TODO:
+	#[error("unterminated String {0} at line {1}")]
+	UnterminatedString(String, usize),
 }
 // region:		--- Error

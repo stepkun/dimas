@@ -22,6 +22,8 @@ use roxmltree::{Document, Node, NodeType, ParsingOptions};
 use tracing::{Level, instrument};
 
 use crate::builtin::{
+	action::script::Script,
+	condition::script_condition::ScriptCondition,
 	control::{
 		Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
 		SequenceWithMemory, WhileDoElse,
@@ -184,6 +186,28 @@ impl FactoryData {
 			(BehaviorCategory::Decorator, Arc::new(bhvr_fn)),
 		);
 
+		// Script
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "Script", Script);
+			bhvr.data_mut().set_children(children);
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"Script".into(),
+			(BehaviorCategory::Action, Arc::new(bhvr_fn)),
+		);
+
+		// ScriptCondition
+		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
+			let mut bhvr = build_bhvr_ptr!(config, "ScriptCondition", ScriptCondition);
+			bhvr.data_mut().set_children(children);
+			bhvr
+		};
+		self.bhvr_map.insert(
+			"ScriptCondition".into(),
+			(BehaviorCategory::Condition, Arc::new(bhvr_fn)),
+		);
+
 		// SequenceWithMemory
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
 			let mut bhvr = build_bhvr_ptr!(config, "SequenceWithMemory", SequenceWithMemory);
@@ -208,7 +232,8 @@ impl FactoryData {
 	}
 
 	fn create_fundamentals() -> HashMap<String, (BehaviorCategory, Arc<BehaviorCreateFn>)> {
-		let mut map: HashMap<String, (BehaviorCategory, Arc<BehaviorCreateFn>)> = HashMap::new();
+		let mut map: HashMap<String, (BehaviorCategory, Arc<BehaviorCreateFn>)> =
+			HashMap::default();
 
 		// Fallback
 		let bhvr_fn = move |config: BehaviorConfig, children: Vec<Behavior>| -> Behavior {
@@ -265,7 +290,7 @@ impl Default for FactoryData {
 		Self {
 			main_tree_id: None,
 			bhvr_map: Self::create_fundamentals(),
-			tree_definitions: HashMap::new(),
+			tree_definitions: HashMap::default(),
 		}
 	}
 }

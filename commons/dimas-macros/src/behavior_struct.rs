@@ -182,7 +182,7 @@ fn behavior_struct(config: &Config, mut item: ItemStruct) -> Result<TokenStream>
 					::dimas_core::behavior::BehaviorCategory::#bhvr_category,
 					config,
 					::dimas_core::behavior::BehaviorStatus::Idle,
-					::alloc::vec::Vec::new(),
+					::alloc::vec::Vec::default(),
 					Self::_ports,
 				);
 

@@ -10,6 +10,7 @@ use alloc::{borrow::ToOwned, vec::Vec};
 /// Definition of the Value type
 pub type Value = f64;
 
+/// @TODO
 #[derive(Default)]
 pub struct Numbers {
 	values: Vec<Value>,
@@ -23,6 +24,7 @@ impl Numbers {
 	}
 
 	/// read the value at a position
+	#[must_use]
 	pub fn read(&self, offset: usize) -> Value {
 		self.values
 			.get(offset)
@@ -30,6 +32,7 @@ impl Numbers {
 	}
 }
 
+/// @TODO
 #[derive(Default)]
 pub struct HexNumbers {
 	values: Vec<i32>,
@@ -43,6 +46,7 @@ impl HexNumbers {
 	}
 
 	/// read the value at a position
+	#[must_use]
 	pub fn read(&self, offset: usize) -> i32 {
 		self.values
 			.get(offset)
