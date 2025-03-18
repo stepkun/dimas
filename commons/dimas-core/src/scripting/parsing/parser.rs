@@ -1,5 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(unused)]
+#![allow(clippy::unused_self)]
+#![allow(clippy::needless_pass_by_ref_mut)]
 
 //! Parser for `DiMAS` scripting implemented as a [Pratt-Parser](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
 //! You should also read th earticel by [Robert Nystrom](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/)
@@ -11,12 +13,20 @@
 
 extern crate std;
 
-use alloc::rc::Rc;
+use alloc::{borrow::ToOwned, boxed::Box, rc::Rc};
 use hashbrown::HashMap;
 
-use crate::scripting::{Chunk, Lexer, TokenKind, error::Error};
+use crate::scripting::{
+	Chunk, Lexer, TokenKind, error::Error, execution::opcodes::OP_RETURN, lexing::Token,
+};
 
-use super::parselets::{InfixParselet, PrefixParselet};
+use super::{
+	parselets::{
+		BinaryParselet, Expression, GroupingParselet, InfixParselet, NumberParselet,
+		PrefixParselet, UnaryParselet,
+	},
+	precedence::{Precedence, ASSIGNMENT, FACTOR, NONE, TERM},
+};
 
 /// Parser
 pub struct Parser<'a> {
@@ -24,21 +34,49 @@ pub struct Parser<'a> {
 	lexer: Lexer<'a>,
 	prefix_parselets: HashMap<TokenKind, Rc<dyn PrefixParselet>>,
 	infix_parselets: HashMap<TokenKind, Rc<dyn InfixParselet>>,
+	previous: Token,
+	current: Token,
 }
 
 impl<'a> Parser<'a> {
-	/// Create a Parser
+	/// Create a Parser with all the necessary ingredients
 	#[must_use]
 	pub fn new(source_code: &'a str) -> Self {
-		let parser = Self {
+		let mut parser = Self {
 			whole: source_code,
 			lexer: Lexer::new(source_code),
 			prefix_parselets: HashMap::default(),
 			infix_parselets: HashMap::default(),
+			previous: Token::none(),
+			current: Token::none(),
 		};
 
 		// Register the parselets for the grammar
+		parser
+			.prefix_parselets
+			.insert(TokenKind::LeftParen, Rc::from(GroupingParselet));
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Minus, Rc::from(UnaryParselet));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Minus, Rc::from(BinaryParselet::new(TERM, false)));
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Number, Rc::from(NumberParselet));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Plus, Rc::from(BinaryParselet::new(TERM, false)));
+		parser.infix_parselets.insert(
+			TokenKind::Slash,
+			Rc::from(BinaryParselet::new(FACTOR, false)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::Star,
+			Rc::from(BinaryParselet::new(FACTOR, false)),
+		);
 
+		// return the prepared parser
 		parser
 	}
 
@@ -47,17 +85,85 @@ impl<'a> Parser<'a> {
 	/// - passes [`Lexer`] errors through
 	/// - if it could not create a proper [`Chunk`]
 	pub fn parse(&mut self) -> Result<Chunk, Error> {
-		let chunk = Chunk::default();
-		for token in self.lexer.by_ref() {
-			match token {
-				Ok(token) => {
-					std::println!("{:?}", token.kind);
-				}
-				Err(err) => {
-					return Err(err);
-				}
-			}
-		}
+		let mut chunk = Chunk::default();
+
+		self.advance()?;
+		self.expression(&mut chunk);
+		self.emit_byte(OP_RETURN, &mut chunk);
 		Ok(chunk)
+	}
+
+	pub(crate) fn previous(&self) -> Token {
+		self.previous.clone()
+	}
+
+	pub(crate) fn current(&self) -> Token {
+		self.current.clone()
+	}
+
+	/// Advance to the next token
+	pub(crate) fn advance(&mut self) -> Result<(), Error> {
+		self.previous = self.current();
+		let tmp = self
+			.lexer
+			.next();
+		if let Some(token) = tmp {
+			self.current = token?;			
+		}
+		Ok(())
+	}
+
+	/// Advance to next token if it has given kind
+	pub(crate) fn advance_if(&mut self, kind: TokenKind) -> Result<(), Error> {
+		if self.current.kind != kind {
+			return Err(Error::UnexpectedToken);
+		};
+		self.advance()
+	}
+
+	pub(crate) fn emit_byte(&self, byte: u8, chunk: &mut Chunk) {
+		chunk.write(byte, self.previous.line);
+	}
+
+	pub(crate) fn emit_bytes(&self, byte1: u8, byte2: u8, chunk: &mut Chunk) {
+		chunk.write(byte1, self.previous.line);
+		chunk.write(byte2, self.previous.line);
+	}
+
+	pub(crate) fn expression(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
+		self.with_precedence(ASSIGNMENT, chunk)
+	}
+
+	pub(crate) fn with_precedence(
+		&mut self,
+		precedence: Precedence,
+		chunk: &mut Chunk,
+	) -> Result<(), Error> {
+		self.advance()?;
+
+		let token = self.previous();
+		let prefix_opt = self.prefix_parselets.get(&token.kind);
+		if prefix_opt.is_none() {
+			return Err(Error::ExpressionExpected);
+		};
+		let prefix = prefix_opt.expect("should not fail").clone();
+		prefix.parse(self, chunk, token)?;
+
+		while precedence <= self.get_precedence() {
+			self.advance();
+			let token = self.previous();
+			let infix = self.infix_parselets.get(&token.kind).expect("should not fail").clone();
+			infix.parse(self, chunk, token)?;
+		}
+
+		Ok(())		
+	}
+
+	fn get_precedence(&self) -> Precedence {
+		let token = self.current();
+		if let Some(parselet) = self.infix_parselets.get(&token.kind) {
+			return parselet.get_precedence();
+		}
+		NONE
 	}
 }

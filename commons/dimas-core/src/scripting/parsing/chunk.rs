@@ -12,7 +12,7 @@ use alloc::{borrow::ToOwned, vec::Vec};
 use crate::scripting::execution::opcodes::*;
 use crate::scripting::{
 	error::Error,
-	execution::values::{HexNumbers, Numbers},
+	execution::values::{HexNumbers, HexValue, Numbers, Value},
 };
 
 /// A chunk of bytecode
@@ -24,7 +24,7 @@ pub struct Chunk {
 	lines: Vec<i16>,
 	/// storage for f64 values
 	numbers: Numbers,
-	/// storage for i32/hex values
+	/// storage for i64/hex values
 	hex_numbers: HexNumbers,
 }
 
@@ -43,16 +43,30 @@ impl Chunk {
 
 	/// Add a f64 number to the number storage returning its position in the storage
 	#[allow(clippy::cast_possible_truncation)]
-	pub fn add_constant(&mut self, value: f64) -> u8 {
+	pub fn add_constant(&mut self, value: Value) -> u8 {
 		let pos = self.numbers.write(value);
 		pos as u8
 	}
 
 	/// Read a f64 number from the number storage
 	#[must_use]
-	pub fn read_constant(&self, pos: u8) -> f64 {
+	pub fn read_constant(&self, pos: u8) -> Value {
 		let offset = usize::from(pos);
 		self.numbers.read(offset)
+	}
+
+	/// Add a i64 number to the hex number storage returning its position in the storage
+	#[allow(clippy::cast_possible_truncation)]
+	pub fn add_hex_constant(&mut self, value: HexValue) -> u8 {
+		let pos = self.hex_numbers.write(value);
+		pos as u8
+	}
+
+	/// Read a i64 number from the number storage
+	#[must_use]
+	pub fn read_hex_constant(&self, pos: u8) -> HexValue {
+		let offset = usize::from(pos);
+		self.hex_numbers.read(offset)
 	}
 
 	/// Disassemble chunk

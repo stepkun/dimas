@@ -20,7 +20,7 @@ fn repl() {
 				if len > 0 {
 					// ignore CR/LF only input
 					if input.len() > 1 {
-						print!("{}", &input);
+						//print!("{}", &input);
 						let mut parser = Parser::new(&input);
 						parser.parse().map_or_else(
 							|err| {

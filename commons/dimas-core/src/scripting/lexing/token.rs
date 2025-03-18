@@ -3,9 +3,13 @@
 
 //! Token for `DiMAS` scripting
 
+use alloc::string::{String, ToString};
+
 /// Token kind
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenKind {
+	/// Dummy to avoid using Option<Token> in many places
+	None,
 	/// =
 	Equal,
 	/// :
@@ -66,10 +70,10 @@ pub enum TokenKind {
 	False,
 	/// An Identifier
 	Ident,
-	/// Every Number is a f64
-	Number(f64),
-	/// Every hexadecimal Number is an i64
-	HexNumber(i64),
+	/// Any Number either f64 or i64
+	Number,
+	/// Any hexadecimal Number
+	HexNumber,
 	/// Any String
 	String,
 	/// An Enum value
@@ -77,12 +81,25 @@ pub enum TokenKind {
 }
 
 /// Token
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Token<'a> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Token {
 	/// Reference to the underlying location
-	pub origin: &'a str,
+	pub origin: String,
 	/// @TODO
 	pub offset: usize,
+	/// @TODO
+	pub line: i16,
 	/// Kind of token
 	pub kind: TokenKind,
+}
+
+impl Token {
+	pub fn none() -> Self {
+		Self {
+			origin: String::default(),
+			offset: 0,
+			line: 0,
+			kind: TokenKind::None,
+		}
+	}
 }

@@ -10,23 +10,24 @@
 //! Here a bigger numbers is higher precedence.
 //!
 
+pub type Precedence = i8;
 /// @TODO
-pub const NONE: i32 = 0;
+pub const NONE: Precedence = 0;
 /// @TODO
-pub const ASSIGNMENT: i32 = NONE + 1; // = :=
+pub const ASSIGNMENT: Precedence = NONE + 1; // = :=
 /// @TODO
-pub const OR: i32 = ASSIGNMENT + 1; // ||
+pub const OR: Precedence = ASSIGNMENT + 1; // ||
 /// @TODO
-pub const AND: i32 = OR + 1; // &&
+pub const AND: Precedence = OR + 1; // &&
 /// @TODO
-pub const EQUALITY: i32 = AND + 1; // == !=
+pub const EQUALITY: Precedence = AND + 1; // == !=
 /// @TODO
-pub const COMPARISON: i32 = EQUALITY + 1; // == !=
+pub const COMPARISON: Precedence = EQUALITY + 1; // == !=
 /// @TODO
-pub const TERM: i32 = COMPARISON + 1; // + -
+pub const TERM: Precedence = COMPARISON + 1; // + -
 /// @TODO
-pub const FACTOR: i32 = TERM + 1; // * /
+pub const FACTOR: Precedence = TERM + 1; // * /
 /// @TODO
-pub const UNARY: i32 = FACTOR + 1; // ! -
+pub const UNARY: Precedence = FACTOR + 1; // ! -
 /// @TODO
-pub const PRIMARY: i32 = UNARY + 1;
+pub const PRIMARY: Precedence = UNARY + 1;

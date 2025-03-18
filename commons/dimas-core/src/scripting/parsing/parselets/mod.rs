@@ -4,11 +4,22 @@
 //!Parselets for `Dimas`scripting
 //!
 
+mod binary_parselet;
+mod grouping_parselet;
+mod number_parselet;
+mod unary_parselet;
+
+// flatten
+pub use binary_parselet::BinaryParselet;
+pub use grouping_parselet::GroupingParselet;
+pub use number_parselet::NumberParselet;
+pub use unary_parselet::UnaryParselet;
+
 use alloc::boxed::Box;
 
 use crate::scripting::{error::Error, lexing::Token};
 
-use super::Parser;
+use super::{Chunk, Parser, precedence::Precedence};
 
 pub trait Expression {}
 
@@ -20,7 +31,7 @@ pub trait Expression {}
 /// which case `parse()` simply doesn't consume any more tokens.
 pub trait PrefixParselet {
 	/// Parse the token
-	fn parse(&self, parser: &mut Parser, token: Token) -> Result<Box<dyn Expression>, Error>;
+	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error>;
 }
 
 /// Interfaces used by the Pratt parser. An `InfixParselet` is
@@ -31,13 +42,8 @@ pub trait PrefixParselet {
 /// which case `parse()` simply doesn't consume any more tokens.
 pub trait InfixParselet {
 	/// Parse the token together with the left hand expression
-	fn parse(
-		&self,
-		parser: &mut Parser,
-		left: Box<dyn Expression>,
-		token: Token,
-	) -> Result<Box<dyn Expression>, Error>;
+	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error>;
 
 	/// Get the precedence the parselet is executed with.
-	fn get_precedence(&self) -> i32;
+	fn get_precedence(&self) -> Precedence;
 }

@@ -3,6 +3,8 @@
 
 //! Virtual machine for `DiMAS` scripting
 
+extern crate std;
+
 use core::marker::PhantomData;
 
 use crate::scripting::{Chunk, error::Error};
@@ -61,6 +63,7 @@ impl VM {
 			self.ip += 1;
 			match instruction {
 				OP_RETURN => {
+					std::println!("{}", self.pop());
 					return Ok(());
 				}
 				OP_ADD => {

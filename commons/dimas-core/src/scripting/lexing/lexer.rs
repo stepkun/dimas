@@ -33,9 +33,9 @@ pub struct Lexer<'a> {
 	/// current position in the input
 	pos: usize,
 	/// current line
-	line: usize,
+	line: i16,
 	/// store a peeked token
-	peeked: Option<Result<Token<'a>, Error>>,
+	peeked: Option<Result<Token, Error>>,
 }
 
 impl<'a> Lexer<'a> {
@@ -52,7 +52,7 @@ impl<'a> Lexer<'a> {
 	}
 
 	/// Look forward to the next token
-	pub fn peek(&mut self) -> Option<&Result<Token<'a>, Error>> {
+	pub fn peek(&mut self) -> Option<&Result<Token, Error>> {
 		if self.peeked.is_some() {
 			return self.peeked.as_ref();
 		}
@@ -62,8 +62,9 @@ impl<'a> Lexer<'a> {
 	}
 }
 
+#[allow(clippy::needless_lifetimes)]
 impl<'a> Iterator for Lexer<'a> {
-	type Item = Result<Token<'a>, Error>;
+	type Item = Result<Token, Error>;
 
 	#[allow(clippy::too_many_lines)]
 	fn next(&mut self) -> Option<Self::Item> {
@@ -83,11 +84,13 @@ impl<'a> Iterator for Lexer<'a> {
 			self.pos += c.len_utf8();
 
 			// must be inside loop to capture variables
+			let line = self.line;
 			let create = move |kind: TokenKind| {
 				Some(Ok(Token {
 					kind,
 					offset: c_at,
-					origin: c_str,
+					line,
+					origin: c_str.to_string(),
 				}))
 			};
 
@@ -138,14 +141,16 @@ impl<'a> Iterator for Lexer<'a> {
 						self.rest = &self.rest[1..];
 						self.pos += 1;
 						Some(Ok(Token {
-							origin: span,
+							origin: span.to_string(),
 							offset: c_at,
+							line: self.line,
 							kind: yes,
 						}))
 					} else {
 						Some(Ok(Token {
-							origin: c_str,
+							origin: c_str.to_string(),
 							offset: c_at,
+							line: self.line,
 							kind: no,
 						}))
 					}
@@ -159,14 +164,16 @@ impl<'a> Iterator for Lexer<'a> {
 						self.rest = &self.rest[1..];
 						self.pos += 1;
 						Some(Ok(Token {
-							origin: span,
+							origin: span.to_string(),
 							offset: c_at,
+							line: self.line,
 							kind: yes,
 						}))
 					} else {
 						Some(Ok(Token {
-							origin: c_str,
+							origin: c_str.to_string(),
 							offset: c_at,
+							line: self.line,
 							kind: no,
 						}))
 					}
@@ -189,8 +196,9 @@ impl<'a> Iterator for Lexer<'a> {
 					};
 
 					return Some(Ok(Token {
-						origin: literal,
+						origin: literal.to_string(),
 						offset: c_at,
+						line: self.line,
 						kind,
 					}));
 				}
@@ -212,19 +220,11 @@ impl<'a> Iterator for Lexer<'a> {
 						self.pos += extra_bytes;
 						self.rest = &self.rest[extra_bytes..];
 
-						// remove the '0x' before parsing
-						literal = literal.trim_start_matches("0x");
-						let i = match i64::from_str_radix(literal, 16) {
-							Ok(i) => i,
-							Err(e) => {
-								return Some(Err(Error::ParseHex(literal.to_string(), self.line)));
-							}
-						};
-
 						return Some(Ok(Token {
-							origin: literal,
+							origin: literal.to_string(),
 							offset: c_at,
-							kind: TokenKind::HexNumber(i),
+							line: self.line,
+							kind: TokenKind::HexNumber,
 						}));
 					}
 
@@ -249,17 +249,11 @@ impl<'a> Iterator for Lexer<'a> {
 					self.pos += extra_bytes;
 					self.rest = &self.rest[extra_bytes..];
 
-					let n = match literal.parse() {
-						Ok(n) => n,
-						Err(e) => {
-							return Some(Err(Error::ParseNumber(literal.to_string(), self.line)));
-						}
-					};
-
 					return Some(Ok(Token {
-						origin: literal,
+						origin: literal.to_string(),
 						offset: c_at,
-						kind: TokenKind::Number(n),
+						line: self.line,
+						kind: TokenKind::Number,
 					}));
 				}
 				Started::String => {
@@ -268,8 +262,9 @@ impl<'a> Iterator for Lexer<'a> {
 						self.pos += end + 1;
 						self.rest = &self.rest[end + 1..];
 						Some(Ok(Token {
-							origin: literal,
+							origin: literal.to_string(),
 							offset: c_at,
+							line: self.line,
 							kind: TokenKind::String,
 						}))
 					} else {

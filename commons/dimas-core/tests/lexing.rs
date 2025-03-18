@@ -80,22 +80,10 @@ fn lexing_idents() {
 fn lexing_numbers() {
 	let tokens = "123 123.0 123.456 0.123";
 	let mut lexer = Lexer::new(tokens);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::Number(123.0f64)
-	);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::Number(123.0f64)
-	);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::Number(123.456f64)
-	);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::Number(0.123f64)
-	);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
 	assert!(lexer.next().is_none());
 	assert!(lexer.next().is_none());
 }
@@ -104,22 +92,10 @@ fn lexing_numbers() {
 fn lexing_hex() {
 	let tokens = "0x123 0xABC 0xabc 0xa1b2c3";
 	let mut lexer = Lexer::new(tokens);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::HexNumber(291i64)
-	);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::HexNumber(2748i64)
-	);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::HexNumber(2748i64)
-	);
-	assert_eq!(
-		lexer.next().unwrap().unwrap().kind,
-		TokenKind::HexNumber(10_597_059i64)
-	);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::HexNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::HexNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::HexNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::HexNumber);
 	assert!(lexer.next().is_none());
 	assert!(lexer.next().is_none());
 }

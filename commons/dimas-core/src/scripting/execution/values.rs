@@ -7,8 +7,10 @@
 
 use alloc::{borrow::ToOwned, vec::Vec};
 
-/// Definition of the Value type
+/// Definition of the `Value` type
 pub type Value = f64;
+/// Definition of the `HexValue` type
+pub type HexValue = i64;
 
 /// @TODO
 #[derive(Default)]
@@ -35,19 +37,19 @@ impl Numbers {
 /// @TODO
 #[derive(Default)]
 pub struct HexNumbers {
-	values: Vec<i32>,
+	values: Vec<HexValue>,
 }
 
 impl HexNumbers {
 	/// Add a value to the array and return it position
-	pub fn write(&mut self, value: i32) -> usize {
+	pub fn write(&mut self, value: HexValue) -> usize {
 		self.values.push(value);
 		self.values.len() - 1
 	}
 
 	/// read the value at a position
 	#[must_use]
-	pub fn read(&self, offset: usize) -> i32 {
+	pub fn read(&self, offset: usize) -> HexValue {
 		self.values
 			.get(offset)
 			.map_or_else(|| todo!(), |value| value.to_owned())
