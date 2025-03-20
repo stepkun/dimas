@@ -600,7 +600,7 @@ impl BehaviorData {
 	}
 
 	/// Get a mutable reference to children
-	pub fn children_mut(&mut self) -> &mut Vec<Behavior> {
+	pub const fn children_mut(&mut self) -> &mut Vec<Behavior> {
 		&mut self.children
 	}
 

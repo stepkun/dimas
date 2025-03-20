@@ -6,7 +6,7 @@
 //! Parser for `DiMAS` scripting implemented as a [Pratt-Parser](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
 //! You should also read th earticel by [Robert Nystrom](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/)
 //!
-//! Implementation is heavily inspired by
+//! Implementation is inspired by
 //! - Jon Gjengsets [video](https://www.youtube.com/watch?v=mNOLaw-_Buc) & [example](https://github.com/jonhoo/lox/blob/master/src/parse.rs)
 //! - Jürgen Wurzers implementation of [Bantam](https://github.com/jwurzer/bantam-rust/blob/master/src/bantam/bantam_parser.rs)
 //!
@@ -17,20 +17,22 @@ use alloc::{borrow::ToOwned, boxed::Box, rc::Rc};
 use hashbrown::HashMap;
 
 use crate::scripting::{
-	Chunk, Lexer, TokenKind, error::Error, execution::opcodes::OP_RETURN, lexing::Token,
+	Lexer,
+	execution::{Chunk, opcodes::OP_RETURN},
 };
 
 use super::{
+	error::Error,
 	parselets::{
 		BinaryParselet, Expression, GroupingParselet, InfixParselet, NumberParselet,
 		PrefixParselet, UnaryParselet,
 	},
-	precedence::{Precedence, ASSIGNMENT, FACTOR, NONE, TERM},
+	precedence::{ASSIGNMENT, FACTOR, NONE, Precedence, TERM, UNARY},
+	token::{Token, TokenKind},
 };
 
 /// Parser
 pub struct Parser<'a> {
-	whole: &'a str,
 	lexer: Lexer<'a>,
 	prefix_parselets: HashMap<TokenKind, Rc<dyn PrefixParselet>>,
 	infix_parselets: HashMap<TokenKind, Rc<dyn InfixParselet>>,
@@ -43,7 +45,6 @@ impl<'a> Parser<'a> {
 	#[must_use]
 	pub fn new(source_code: &'a str) -> Self {
 		let mut parser = Self {
-			whole: source_code,
 			lexer: Lexer::new(source_code),
 			prefix_parselets: HashMap::default(),
 			infix_parselets: HashMap::default(),
@@ -57,13 +58,16 @@ impl<'a> Parser<'a> {
 			.insert(TokenKind::LeftParen, Rc::from(GroupingParselet));
 		parser
 			.prefix_parselets
-			.insert(TokenKind::Minus, Rc::from(UnaryParselet));
+			.insert(TokenKind::Minus, Rc::from(UnaryParselet::new(UNARY)));
 		parser
 			.infix_parselets
 			.insert(TokenKind::Minus, Rc::from(BinaryParselet::new(TERM, false)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Number, Rc::from(NumberParselet));
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Plus, Rc::from(UnaryParselet::new(UNARY)));
 		parser
 			.infix_parselets
 			.insert(TokenKind::Plus, Rc::from(BinaryParselet::new(TERM, false)));
@@ -104,11 +108,9 @@ impl<'a> Parser<'a> {
 	/// Advance to the next token
 	pub(crate) fn advance(&mut self) -> Result<(), Error> {
 		self.previous = self.current();
-		let tmp = self
-			.lexer
-			.next();
+		let tmp = self.lexer.next();
 		if let Some(token) = tmp {
-			self.current = token?;			
+			self.current = token?;
 		}
 		Ok(())
 	}
@@ -117,7 +119,7 @@ impl<'a> Parser<'a> {
 	pub(crate) fn advance_if(&mut self, kind: TokenKind) -> Result<(), Error> {
 		if self.current.kind != kind {
 			return Err(Error::UnexpectedToken);
-		};
+		}
 		self.advance()
 	}
 
@@ -145,18 +147,22 @@ impl<'a> Parser<'a> {
 		let prefix_opt = self.prefix_parselets.get(&token.kind);
 		if prefix_opt.is_none() {
 			return Err(Error::ExpressionExpected);
-		};
+		}
 		let prefix = prefix_opt.expect("should not fail").clone();
 		prefix.parse(self, chunk, token)?;
 
 		while precedence <= self.get_precedence() {
 			self.advance();
 			let token = self.previous();
-			let infix = self.infix_parselets.get(&token.kind).expect("should not fail").clone();
+			let infix = self
+				.infix_parselets
+				.get(&token.kind)
+				.expect("should not fail")
+				.clone();
 			infix.parse(self, chunk, token)?;
 		}
 
-		Ok(())		
+		Ok(())
 	}
 
 	fn get_precedence(&self) -> Precedence {

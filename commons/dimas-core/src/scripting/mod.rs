@@ -36,13 +36,10 @@
 //! ```
 //!
 
-mod error;
+mod compiling;
 pub mod execution;
-mod lexing;
-mod parsing;
 
 // flatten
+pub use compiling::Parser;
+pub use compiling::{Lexer, TokenKind};
 pub use execution::VM;
-pub use lexing::{Lexer, TokenKind};
-pub use parsing::Chunk;
-pub use parsing::Parser;

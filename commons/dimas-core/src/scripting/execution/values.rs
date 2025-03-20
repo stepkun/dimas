@@ -3,7 +3,7 @@
 #![allow(clippy::redundant_closure_for_method_calls)]
 
 //! Value implementations for `DiMAS` scripting
-//! `Numbers` are always f64 and `HexNumbers` are always i32
+//! `Numbers` are always f64 and `HexNumbers` are always i64
 
 use alloc::{borrow::ToOwned, vec::Vec};
 
@@ -19,7 +19,7 @@ pub struct Numbers {
 }
 
 impl Numbers {
-	/// Add a value to the array and return it position
+	/// Add a value to the array and return the position
 	pub fn write(&mut self, value: Value) -> usize {
 		self.values.push(value);
 		self.values.len() - 1
@@ -41,7 +41,7 @@ pub struct HexNumbers {
 }
 
 impl HexNumbers {
-	/// Add a value to the array and return it position
+	/// Add a value to the array and return the position
 	pub fn write(&mut self, value: HexValue) -> usize {
 		self.values.push(value);
 		self.values.len() - 1

@@ -10,10 +10,7 @@ use alloc::{borrow::ToOwned, vec::Vec};
 
 #[allow(clippy::wildcard_imports)]
 use crate::scripting::execution::opcodes::*;
-use crate::scripting::{
-	error::Error,
-	execution::values::{HexNumbers, HexValue, Numbers, Value},
-};
+use crate::scripting::execution::values::{HexNumbers, HexValue, Numbers, Value};
 
 /// A chunk of bytecode
 #[derive(Default)]
@@ -112,7 +109,7 @@ impl Chunk {
 				std::println!("{name:16} {value_pos:3} {}", self.numbers.read(pos));
 			}
 			None => todo!(),
-		};
+		}
 		offset + 2
 	}
 }

@@ -34,17 +34,19 @@ pub enum TokenKind {
 	SlashEqual,
 	/// ;
 	Semicolon,
-	/// &
+	/// & -> binary and
 	Ampersand,
-	/// |
+	/// | -> binary or
 	Pipe,
-	/// ^
-	Circonflex,
-	/// &&
+	/// ^ -> binary xor
+	Caret,
+	/// ~ -> binary not
+	Tilde,
+	/// && -> logic and
 	And,
-	/// ||
+	/// || -> logic or
 	Or,
-	/// !
+	/// ! -> logic not
 	Bang,
 	/// !=
 	BangEqual,

@@ -30,7 +30,8 @@ fn lexing_tokens(tokens: &str) {
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Bang);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Ampersand);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Pipe);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Circonflex);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Caret);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Tilde);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::And);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Or);
 	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::EqualEqual);
@@ -49,9 +50,9 @@ fn lexing_tokens(tokens: &str) {
 
 #[test]
 fn lexing() {
-	let tokens = ":= = + - * / += -= *= /= ; ! & | ^ && || == != < <= > >= : ? ( )";
+	let tokens = ":= = + - * / += -= *= /= ; ! & | ^ ~ && || == != < <= > >= : ? ( )";
 	lexing_tokens(tokens);
-	let tokens2 = ":==+-*/+=-=*=/=;!&|^&&||==!=<<=>>=:?()";
+	let tokens2 = ":==+-*/+=-=*=/=;!&|^~&&||==!=<<=>>=:?()";
 	lexing_tokens(tokens2);
 }
 

@@ -36,9 +36,6 @@ pub enum Error {
 	#[error("unexpected Token")]
 	UnexpectedToken,
 	/// @TODO:
-	#[error("unknown Operation Code")]
-	UnknownOpCode,
-	/// @TODO:
 	#[error("unterminated String {0} at line {1}")]
 	UnterminatedString(String, i16),
 

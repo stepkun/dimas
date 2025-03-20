@@ -11,9 +11,10 @@ use core::cmp::min;
 
 use alloc::string::ToString;
 
-use crate::scripting::error::Error;
-
-use super::{Token, TokenKind};
+use super::{
+	error::Error,
+	token::{Token, TokenKind},
+};
 
 /// Enum to handle multi charakter tokens
 enum Started {
@@ -62,8 +63,7 @@ impl<'a> Lexer<'a> {
 	}
 }
 
-#[allow(clippy::needless_lifetimes)]
-impl<'a> Iterator for Lexer<'a> {
+impl Iterator for Lexer<'_> {
 	type Item = Result<Token, Error>;
 
 	#[allow(clippy::too_many_lines)]
@@ -100,7 +100,8 @@ impl<'a> Iterator for Lexer<'a> {
 				'(' => return create(TokenKind::LeftParen),
 				')' => return create(TokenKind::RightParen),
 				';' => return create(TokenKind::Semicolon),
-				'^' => return create(TokenKind::Circonflex),
+				'^' => return create(TokenKind::Caret),
+				'~' => return create(TokenKind::Tilde),
 				'?' => return create(TokenKind::QMark),
 				// possible double character Tokens containing an '='
 				':' => Started::IfEqualElse(TokenKind::ColonEqual, TokenKind::Colon),

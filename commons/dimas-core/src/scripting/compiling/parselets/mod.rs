@@ -17,9 +17,9 @@ pub use unary_parselet::UnaryParselet;
 
 use alloc::boxed::Box;
 
-use crate::scripting::{error::Error, lexing::Token};
+use crate::scripting::execution::Chunk;
 
-use super::{Chunk, Parser, precedence::Precedence};
+use super::{Parser, error::Error, precedence::Precedence, token::Token};
 
 pub trait Expression {}
 

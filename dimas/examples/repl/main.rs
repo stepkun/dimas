@@ -27,6 +27,7 @@ fn repl() {
 								println!("parsing error: {err}");
 							},
 							|chunk| {
+								//chunk.disassemble("== created chunk ==");
 								if let Err(error) = vm.run(&chunk) {
 									println!("execution error: {error}");
 								};

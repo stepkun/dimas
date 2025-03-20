@@ -7,11 +7,13 @@ extern crate std;
 
 use core::marker::PhantomData;
 
-use crate::scripting::{Chunk, error::Error};
-
 #[allow(clippy::wildcard_imports)]
 use super::opcodes::*;
-use super::values::{Numbers, Value};
+use super::{
+	Chunk,
+	error::Error,
+	values::{Numbers, Value},
+};
 
 /// Stack size is fixed
 const STACK_MAX: usize = 256;
@@ -34,17 +36,17 @@ impl Default for VM {
 }
 
 impl VM {
-	fn reset(&mut self) {
+	const fn reset(&mut self) {
 		self.ip = 0;
 		self.stack_top = 0;
 	}
 
-	fn push(&mut self, value: Value) {
+	const fn push(&mut self, value: Value) {
 		self.stack[self.stack_top] = value;
 		self.stack_top += 1;
 	}
 
-	fn pop(&mut self) -> Value {
+	const fn pop(&mut self) -> Value {
 		self.stack_top -= 1;
 		self.stack[self.stack_top]
 	}
@@ -57,13 +59,16 @@ impl VM {
 		// ignore empty chunks
 		if chunk.code().is_empty() {
 			return Ok(());
-		};
+		}
+
 		loop {
 			let instruction: u8 = chunk.code()[self.ip];
 			self.ip += 1;
 			match instruction {
 				OP_RETURN => {
-					std::println!("{}", self.pop());
+					if self.stack_top > 0 {
+						std::println!("{}", self.pop());
+					}
 					return Ok(());
 				}
 				OP_ADD => {

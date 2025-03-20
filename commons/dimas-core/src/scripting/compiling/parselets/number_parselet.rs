@@ -7,7 +7,12 @@
 use alloc::{boxed::Box, string::ToString};
 
 use crate::scripting::{
-	Chunk, Parser, TokenKind, error::Error, execution::opcodes::OP_CONSTANT, lexing::Token,
+	Parser,
+	compiling::{
+		error::Error,
+		token::{Token, TokenKind},
+	},
+	execution::{Chunk, opcodes::OP_CONSTANT},
 };
 
 use super::{Expression, PrefixParselet};

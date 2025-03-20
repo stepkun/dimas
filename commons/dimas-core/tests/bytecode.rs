@@ -3,8 +3,11 @@
 //! Bsic tests for bytecode interpreter
 
 use dimas_core::scripting::{
-	Chunk, VM,
-	execution::opcodes::{OP_ADD, OP_CONSTANT, OP_DIVIDE, OP_NEGATE, OP_RETURN},
+	VM,
+	execution::{
+		Chunk,
+		opcodes::{OP_ADD, OP_CONSTANT, OP_DIVIDE, OP_NEGATE, OP_RETURN},
+	},
 };
 
 #[test]
