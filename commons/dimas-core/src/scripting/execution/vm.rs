@@ -5,12 +5,15 @@
 
 extern crate std;
 
-use core::marker::PhantomData;
+use core::{marker::PhantomData, str::CharIndices};
+
+use alloc::{borrow::ToOwned, string::{String, ToString}};
+use hashbrown::HashSet;
 
 #[allow(clippy::wildcard_imports)]
 use super::opcodes::*;
 use super::{
-	error::Error, values::{Value, BOOLEAN, DOUBLE, INTEGER, NIL}, Chunk
+	chunk, error::Error, values::{Value, VAL_BOOL, VAL_DOUBLE, VAL_INT, VAL_NIL, VAL_STR}, Chunk
 };
 
 /// Stack size is fixed
@@ -18,8 +21,11 @@ const STACK_MAX: usize = 256;
 
 /// A Virtual Machine
 pub struct VM {
+	/// The `InstructionPointer` (sometimes called `ProgramCounter`)
 	ip: usize,
+	/// Stack for values
 	stack: [Value; STACK_MAX],
+	/// Pointer to the next free stack place
 	stack_top: usize,
 }
 
@@ -34,8 +40,9 @@ impl Default for VM {
 }
 
 impl VM {
-	const fn reset(&mut self) {
+	fn reset(&mut self) {
 		self.ip = 0;
+		self.stack = [Value::default(); STACK_MAX];
 		self.stack_top = 0;
 	}
 
@@ -57,13 +64,46 @@ impl VM {
 		self.stack[self.stack_top]
 	}
 
-	fn arithmetic_operator(&mut self, operator: u8) -> Result<(), Error> {
+	fn arithmetic_operator(&mut self, operator: u8, chunk: &mut Chunk) -> Result<(), Error> {
 		let b_kind = self.peek(0).kind();
 		let a_kind = self.peek(1).kind();
-		if b_kind == a_kind && (b_kind == DOUBLE || b_kind == INTEGER) {
+		// Strings can be concatenated with   
+		if a_kind == VAL_STR {
+			match operator {
+				OP_ADD => {
+					let b = self.pop();
+					let a_pos = self.pop().as_string_pos()?;
+					let a = chunk.get_string(a_pos).trim_matches('\'').to_owned();
+					let res = match b.kind() {
+						VAL_BOOL => {
+							let b = b.as_bool()?;
+							a + &b.to_string()
+						}
+						VAL_DOUBLE => {
+							let b = b.as_double()?;
+							a + &b.to_string()
+						}
+						VAL_INT => {
+							let b = b.as_integer()?;
+							a + &b.to_string()
+						}
+						VAL_STR => {
+							let b_pos = b.as_string_pos()?;
+							a + chunk.get_string(b_pos).trim_matches('\'')
+						}
+						_ => return Err(Error::Unreachable),
+					};
+					let string_pos = chunk.add_string(res);
+					let value = Value::from_string_pos(string_pos);
+					self.push(value);
+					Ok(())
+				}
+				_ => Err(Error::OnlyAdd),
+			}
+		} else if b_kind == a_kind && (b_kind == VAL_DOUBLE || b_kind == VAL_INT) {
 			let mut b_val = self.pop();
 			let mut a_val = self.pop();
-			if b_kind == DOUBLE {
+			if b_kind == VAL_DOUBLE {
 				let b = b_val.as_double()?;
 				let a = a_val.as_double()?;
 				let res = match operator {
@@ -96,10 +136,10 @@ impl VM {
 	fn boolean_operator(&mut self, operator: u8) -> Result<(), Error> {
 		let b_kind = self.peek(0).kind();
 		let a_kind = self.peek(1).kind();
-		if b_kind == a_kind && (b_kind == DOUBLE || b_kind == INTEGER) {
+		if b_kind == a_kind && (b_kind == VAL_DOUBLE || b_kind == VAL_INT) {
 			let mut b_val = self.pop();
 			let mut a_val = self.pop();
-			if b_kind == DOUBLE {
+			if b_kind == VAL_DOUBLE {
 				let b = b_val.as_double()?;
 				let a = a_val.as_double()?;
 				let res = match operator {
@@ -137,11 +177,18 @@ impl VM {
 		let a = self.pop();
 		if a.kind() == b.kind() {
 			match a.kind() {
-				BOOLEAN => a.as_bool().expect("snh") == b.as_bool().expect("snh"),
-				#[allow(clippy::float_cmp)]	// @TODO: define an epsilon
-				DOUBLE => a.as_double().expect("snh") == b.as_double().expect("snh"),
-				INTEGER => a.as_integer().expect("snh") == b.as_integer().expect("snh"),
-				NIL => true,
+				VAL_BOOL => a.as_bool().expect("snh") == b.as_bool().expect("snh"),
+				#[allow(clippy::float_cmp)] // @TODO: define an epsilon
+				VAL_DOUBLE => a.as_double().expect("snh") == b.as_double().expect("snh"),
+				VAL_INT => a.as_integer().expect("snh") == b.as_integer().expect("snh"),
+				VAL_STR => { 
+					let a_pos = a.as_string_pos().expect("snh");
+					let b_pos = b.as_string_pos().expect("snh");
+					let a = chunk.get_string(a_pos);
+					let b = chunk.get_string(b_pos);
+					a == b
+				}
+				VAL_NIL => true,
 				_ => false,
 			}
 		} else {
@@ -151,9 +198,9 @@ impl VM {
 
 	fn negate(&mut self) -> Result<(), Error> {
 		let val_kind = self.peek(0).kind();
-		if val_kind == DOUBLE || val_kind == INTEGER {
+		if val_kind == VAL_DOUBLE || val_kind == VAL_INT {
 			let mut val = self.pop();
-			if val_kind == DOUBLE {
+			if val_kind == VAL_DOUBLE {
 				let double = -val.as_double()?;
 				val.to_double(double);
 			} else {
@@ -169,11 +216,11 @@ impl VM {
 
 	fn not(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		let kind = self.peek(0).kind();
-		if kind != BOOLEAN && kind != NIL {
-			return Err(Error::NoBoolean)
+		if kind != VAL_BOOL && kind != VAL_NIL {
+			return Err(Error::NoBoolean);
 		}
 		// 'nil' will be left untouched
-		if kind == BOOLEAN {
+		if kind == VAL_BOOL {
 			let mut val = self.pop();
 			val.to_bool(!val.as_bool()?);
 			self.push(val);
@@ -184,10 +231,12 @@ impl VM {
 	/// Execute a [`Chunk`] with the virtual machine
 	/// # Errors
 	/// - unknown `OpCode`
-	pub fn run(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	pub fn run(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
 		self.reset();
+		chunk.save_state();
 		// ignore empty chunks
 		if chunk.code().is_empty() {
+			chunk.restore_state();
 			return Ok(());
 		}
 
@@ -195,32 +244,42 @@ impl VM {
 			let instruction: u8 = chunk.code()[self.ip];
 			self.ip += 1;
 			match instruction {
-				OP_ADD => self.arithmetic_operator(OP_ADD)?,
+				OP_ADD => self.arithmetic_operator(OP_ADD, chunk)?,
 				OP_CONSTANT => self.constant(chunk),
-				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE)?,
+				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE, chunk)?,
 				OP_EQUAL => {
-					let res = self.equal(chunk); 
+					let res = self.equal(chunk);
 					self.push(Value::from_bool(res));
-				},
+				}
 				OP_FALSE => self.push(Value::from_bool(false))?,
 				OP_GREATER => self.boolean_operator(OP_GREATER)?,
 				OP_LESS => self.boolean_operator(OP_LESS)?,
-				OP_MULTIPLY => self.arithmetic_operator(OP_MULTIPLY)?,
+				OP_MULTIPLY => self.arithmetic_operator(OP_MULTIPLY, chunk)?,
 				OP_NEGATE => self.negate()?,
 				OP_NIL => self.push(Value::nil())?,
 				OP_NOT => self.not(chunk)?,
 				OP_RETURN => {
 					if self.stack_top > 0 {
-						std::println!("{}", self.pop());
+						let value = self.pop();
+						if  value.is_string_pos() {
+							std::println!("{}", chunk.get_string(value.as_string_pos()?));
+						} else {
+							std::println!("{value}");
+						}
 					} else {
 						std::println!("no result");
 					}
+					chunk.restore_state();
 					return Ok(());
 				}
-				OP_SUBTRACT => self.arithmetic_operator(OP_SUBTRACT)?,
+				OP_SUBTRACT => self.arithmetic_operator(OP_SUBTRACT, chunk)?,
 				OP_TRUE => self.push(Value::from_bool(true))?,
-				_ => return Err(Error::UnknownOpCode),
+				_ => {
+					chunk.restore_state();
+					return Err(Error::UnknownOpCode);
+				},
 			}
 		}
+		chunk.restore_state();
 	}
 }

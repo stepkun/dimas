@@ -20,15 +20,15 @@ fn repl() {
 				if len > 0 {
 					// ignore CR/LF only input
 					if input.len() > 1 {
-						//print!("{}", &input);
+						// print!("{}", &input);
 						let mut parser = Parser::new(&input);
 						parser.parse().map_or_else(
 							|err| {
 								println!("parsing error: {err}");
 							},
-							|chunk| {
-								//chunk.disassemble("== created chunk ==");
-								if let Err(error) = vm.run(&chunk) {
+							|mut chunk| {
+								// chunk.disassemble("== created chunk ==");
+								if let Err(error) = vm.run(&mut chunk) {
 									println!("execution error: {error}");
 								};
 							},

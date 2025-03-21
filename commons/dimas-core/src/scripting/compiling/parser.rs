@@ -25,9 +25,9 @@ use super::{
 	error::Error,
 	parselets::{
 		BinaryParselet, Expression, GroupingParselet, InfixParselet, LiteralParselet,
-		NumberParselet, PrefixParselet, UnaryParselet,
+		ValueParselet, PrefixParselet, UnaryParselet,
 	},
-	precedence::{Precedence, ASSIGNMENT, COMPARISON, EQUALITY, FACTOR, NONE, TERM, UNARY},
+	precedence::{ASSIGNMENT, COMPARISON, EQUALITY, FACTOR, NONE, Precedence, TERM, UNARY},
 	token::{Token, TokenKind},
 };
 
@@ -56,30 +56,36 @@ impl<'a> Parser<'a> {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Bang, Rc::from(UnaryParselet::new(NONE)));
-		parser
-			.infix_parselets
-			.insert(TokenKind::BangEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
-		parser
-			.infix_parselets
-			.insert(TokenKind::EqualEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
+		parser.infix_parselets.insert(
+			TokenKind::BangEqual,
+			Rc::from(BinaryParselet::new(EQUALITY, false)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::EqualEqual,
+			Rc::from(BinaryParselet::new(EQUALITY, false)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::False, Rc::from(LiteralParselet));
-		parser
-			.infix_parselets
-			.insert(TokenKind::Greater, Rc::from(BinaryParselet::new(COMPARISON, false)));
-		parser
-			.infix_parselets
-			.insert(TokenKind::GreaterEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
+		parser.infix_parselets.insert(
+			TokenKind::Greater,
+			Rc::from(BinaryParselet::new(COMPARISON, false)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::GreaterEqual,
+			Rc::from(BinaryParselet::new(EQUALITY, false)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::LeftParen, Rc::from(GroupingParselet));
-		parser
-			.infix_parselets
-			.insert(TokenKind::Less, Rc::from(BinaryParselet::new(COMPARISON, false)));
-		parser
-			.infix_parselets
-			.insert(TokenKind::LessEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
+		parser.infix_parselets.insert(
+			TokenKind::Less,
+			Rc::from(BinaryParselet::new(COMPARISON, false)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::LessEqual,
+			Rc::from(BinaryParselet::new(EQUALITY, false)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Minus, Rc::from(UnaryParselet::new(UNARY)));
@@ -91,7 +97,7 @@ impl<'a> Parser<'a> {
 			.insert(TokenKind::Nil, Rc::from(LiteralParselet));
 		parser
 			.prefix_parselets
-			.insert(TokenKind::Number, Rc::from(NumberParselet));
+			.insert(TokenKind::Number, Rc::from(ValueParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Plus, Rc::from(UnaryParselet::new(UNARY)));
@@ -106,6 +112,9 @@ impl<'a> Parser<'a> {
 			TokenKind::Star,
 			Rc::from(BinaryParselet::new(FACTOR, false)),
 		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::String, Rc::from(ValueParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::True, Rc::from(LiteralParselet));
@@ -183,15 +192,16 @@ impl<'a> Parser<'a> {
 		let prefix = prefix_opt.expect("should not fail").clone();
 		prefix.parse(self, chunk, token)?;
 
-		while precedence < self.get_precedence() {
+		while precedence <= self.get_precedence() {
 			self.advance()?;
 			let token = self.previous();
-			let infix = self
-				.infix_parselets
-				.get(&token.kind)
-				.expect("should not fail")
-				.clone();
-			infix.parse(self, chunk, token)?;
+			let infix_opt = self.infix_parselets.get(&token.kind);
+			match infix_opt {
+				Some(infix) => infix.clone().parse(self, chunk, token)?,
+				None => {
+					break;
+				}
+			}
 		}
 
 		Ok(())

@@ -34,5 +34,5 @@ fn first_test() {
 	chunk.disassemble("test chunk");
 
 	let mut vm = VM::default();
-	assert!(vm.run(&chunk).is_ok());
+	assert!(vm.run(&mut chunk).is_ok());
 }

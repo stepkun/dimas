@@ -7,13 +7,16 @@
 use alloc::boxed::Box;
 
 use crate::scripting::{
+	Parser,
 	compiling::{
 		error::Error,
 		precedence::{Precedence, UNARY},
 		token::{Token, TokenKind},
-	}, execution::{
-		opcodes::{OP_CONSTANT, OP_NEGATE, OP_NOT}, Chunk
-	}, Parser
+	},
+	execution::{
+		Chunk,
+		opcodes::{OP_CONSTANT, OP_NEGATE, OP_NOT},
+	},
 };
 
 use super::{Expression, PrefixParselet};
@@ -33,7 +36,7 @@ impl PrefixParselet for UnaryParselet {
 		let token = parser.previous();
 		// there must be a current token
 		if parser.current().kind == TokenKind::None {
-			return Err(Error::ExpressionExpected)
+			return Err(Error::ExpressionExpected);
 		}
 		// compile the operand
 		parser.with_precedence(self.precedence, chunk)?;

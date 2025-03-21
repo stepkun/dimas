@@ -6,7 +6,7 @@
 #[doc(hidden)]
 extern crate std;
 
-use alloc::{borrow::ToOwned, vec::Vec};
+use alloc::{borrow::ToOwned, string::String, vec::Vec};
 
 #[allow(clippy::wildcard_imports)]
 use crate::scripting::execution::opcodes::*;
@@ -19,8 +19,14 @@ pub struct Chunk {
 	code: Vec<u8>,
 	/// corresponding storage for the line number
 	lines: Vec<i16>,
-	/// storage for values
+	/// storage for Values
 	values: Vec<Value>,
+	/// saved values state
+	values_state: usize,
+	/// storage for Strings
+	strings: Vec<String>,
+	/// saved strings state
+	strings_state: usize,
 }
 
 impl Chunk {
@@ -30,13 +36,28 @@ impl Chunk {
 		&self.code
 	}
 
+	/// Save the current size of values and strings
+	pub(crate) fn save_state(&mut self) {
+		self.values_state = self.values.len();
+		self.strings_state = self.strings.len();
+	}
+
+	pub(crate) fn restore_state(&mut self) {
+		while self.values.len() > self.values_state {
+			self.values.pop();
+		}
+		while self.strings.len() > self.strings_state {
+			self.strings.pop();
+		}
+	}
+	
 	/// Add a byte to the chunk
 	pub fn write(&mut self, byte: u8, line: i16) {
 		self.code.push(byte);
 		self.lines.push(line);
 	}
 
-	/// Add a f64 number to the number storage returning its position in the storage
+	/// Add a Value to the Value storage returning its position in the storage
 	#[allow(clippy::cast_possible_truncation)]
 	pub fn add_constant(&mut self, value: Value) -> u8 {
 		self.values.push(value);
@@ -44,7 +65,28 @@ impl Chunk {
 		pos as u8
 	}
 
-	/// Read a Value from the Value storage
+	/// Add a String to the String storage returning its position in the storage
+	pub fn add_string(&mut self, string: String) -> usize {
+		string.trim_matches('\'');
+		self.strings.push(string);
+		self.strings.len() - 1
+	}
+
+	/// Add a String to the Value storage returning its position in the storage
+	#[allow(clippy::cast_possible_truncation)]
+	pub fn add_string_constant(&mut self, string: String) -> u8 {
+		let offset = self.add_string(string);
+		let value = Value::from_string_pos(offset);
+		self.add_constant(value)
+	}
+
+	/// Get the reference to stored [`String`]
+	#[must_use]
+	pub fn get_string(&self, pos: usize) -> &String {
+		&self.strings[pos]
+	}
+
+	/// Read a [`Value`] from the [`Value`] storage
 	#[allow(clippy::redundant_closure_for_method_calls)]
 	#[must_use]
 	pub fn read_constant(&self, pos: u8) -> Value {
@@ -102,16 +144,19 @@ impl Chunk {
 			Some(pos) => {
 				let value = self.read_constant(pos.to_owned());
 				match value.kind() {
-					values::BOOLEAN => {
+					values::VAL_BOOL => {
 						std::println!("{name:16} {pos:3} {}", value.as_bool().expect("snh"));
 					}
-					values::DOUBLE => {
+					values::VAL_DOUBLE => {
 						std::println!("{name:16} {pos:3} {}", value.as_double().expect("snh"));
 					}
-					values::INTEGER => {
+					values::VAL_INT => {
 						std::println!("{name:16} {pos:3} {}", value.as_integer().expect("snh"));
 					}
-					values::NIL => {
+					values::VAL_STR => {
+						std::println!("{name:16} {pos:3} {}", self.strings[value.as_string_pos().expect("snh")]);
+					}
+					values::VAL_NIL => {
 						std::println!("{name:16} {pos:3} 'nil'");
 					}
 					_ => todo!(),

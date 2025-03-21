@@ -20,10 +20,16 @@ pub enum Error {
 	#[error("Value is not an Integer type")]
 	NoInteger,
 	/// @TODO:
+	#[error("Value is not a String type")]
+	NoString,
+	/// @TODO:
 	#[error("Value is not a number type")]
 	NoNumber,
 	/// @TODO:
-	#[error("unknown Operation Code")]
+	#[error("to Strings you can only 'ADD' something")]
+	OnlyAdd,
+	/// @TODO:
+	#[error("Value stack overflow")]
 	StackOverflow,
 	/// @TODO:
 	#[error("unknown Operation Code")]

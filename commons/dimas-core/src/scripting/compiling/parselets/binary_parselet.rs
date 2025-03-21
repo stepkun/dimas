@@ -7,13 +7,18 @@
 use alloc::boxed::Box;
 
 use crate::scripting::{
+	Parser,
 	compiling::{
 		error::Error,
-		precedence::{Precedence, FACTOR, TERM},
+		precedence::{FACTOR, Precedence, TERM},
 		token::{Token, TokenKind},
-	}, execution::{
-		opcodes::{OP_ADD, OP_DIVIDE, OP_EQUAL, OP_GREATER, OP_LESS, OP_MULTIPLY, OP_NOT, OP_SUBTRACT}, Chunk
-	}, Parser
+	},
+	execution::{
+		Chunk,
+		opcodes::{
+			OP_ADD, OP_DIVIDE, OP_EQUAL, OP_GREATER, OP_LESS, OP_MULTIPLY, OP_NOT, OP_SUBTRACT,
+		},
+	},
 };
 
 use super::{Expression, InfixParselet};

@@ -15,11 +15,11 @@ use crate::scripting::{
 	execution::{Chunk, opcodes::OP_CONSTANT, values::Value},
 };
 
-use super::{Expression, PrefixParselet};
+use super::PrefixParselet;
 
-pub struct NumberParselet;
+pub struct ValueParselet;
 
-impl PrefixParselet for NumberParselet {
+impl PrefixParselet for ValueParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		match token.kind {
 			TokenKind::Number => {
@@ -47,6 +47,14 @@ impl PrefixParselet for NumberParselet {
 					}
 				};
 				let offset = chunk.add_constant(Value::from_integer(value));
+				if offset == u8::MAX {
+					return Err(Error::ToManyValues);
+				}
+				parser.emit_bytes(OP_CONSTANT, offset, chunk);
+				Ok(())
+			}
+			TokenKind::String => {
+				let offset = chunk.add_string_constant(token.origin);
 				if offset == u8::MAX {
 					return Err(Error::ToManyValues);
 				}
