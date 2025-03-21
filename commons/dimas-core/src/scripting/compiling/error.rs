@@ -21,14 +21,11 @@ pub enum Error {
 	#[error("could not parse HexNumber {0} at line {1}")]
 	ParseHex(String, i16),
 	/// @TODO:
-	#[error("HexNumber storage is full")]
-	ToManyHexNumbers,
-	/// @TODO:
 	#[error("could not parse Number {0} at line {1}")]
 	ParseNumber(String, i16),
 	/// @TODO:
 	#[error("Number storage is full")]
-	ToManyNumbers,
+	ToManyValues,
 	/// @TODO:
 	#[error("unexpected character {0} at line {1}")]
 	UnexpectedChar(String, i16),

@@ -191,8 +191,9 @@ impl Iterator for Lexer<'_> {
 
 					// distinguish keywords from idents
 					let kind = match literal {
-						"true" => TokenKind::True,
 						"false" => TokenKind::False,
+						"nil" => TokenKind::Nil,
+						"true" => TokenKind::True,
 						_ => TokenKind::Ident,
 					};
 

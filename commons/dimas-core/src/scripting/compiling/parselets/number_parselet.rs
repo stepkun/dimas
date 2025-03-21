@@ -12,7 +12,7 @@ use crate::scripting::{
 		error::Error,
 		token::{Token, TokenKind},
 	},
-	execution::{Chunk, opcodes::OP_CONSTANT},
+	execution::{Chunk, opcodes::OP_CONSTANT, values::Value},
 };
 
 use super::{Expression, PrefixParselet};
@@ -23,16 +23,16 @@ impl PrefixParselet for NumberParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		match token.kind {
 			TokenKind::Number => {
-				let value = match token.origin.parse() {
+				let double: f64 = match token.origin.parse() {
 					Ok(n) => n,
 					Err(e) => {
 						return Err(Error::ParseNumber(token.origin.to_string(), token.line));
 					}
 				};
 
-				let offset = chunk.add_constant(value);
+				let offset = chunk.add_constant(Value::from_double(double));
 				if offset == u8::MAX {
-					return Err(Error::ToManyNumbers);
+					return Err(Error::ToManyValues);
 				}
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())
@@ -46,9 +46,9 @@ impl PrefixParselet for NumberParselet {
 						return Err(Error::ParseHex(literal.to_string(), token.line));
 					}
 				};
-				let offset = chunk.add_hex_constant(value);
+				let offset = chunk.add_constant(Value::from_integer(value));
 				if offset == u8::MAX {
-					return Err(Error::ToManyHexNumbers);
+					return Err(Error::ToManyValues);
 				}
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())

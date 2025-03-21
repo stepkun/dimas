@@ -7,16 +7,13 @@
 use alloc::boxed::Box;
 
 use crate::scripting::{
-	Parser,
 	compiling::{
 		error::Error,
-		precedence::{FACTOR, Precedence, TERM},
+		precedence::{Precedence, FACTOR, TERM},
 		token::{Token, TokenKind},
-	},
-	execution::{
-		Chunk,
-		opcodes::{OP_ADD, OP_DIVIDE, OP_MULTIPLY, OP_SUBTRACT},
-	},
+	}, execution::{
+		opcodes::{OP_ADD, OP_DIVIDE, OP_EQUAL, OP_GREATER, OP_LESS, OP_MULTIPLY, OP_NOT, OP_SUBTRACT}, Chunk
+	}, Parser
 };
 
 use super::{Expression, InfixParselet};
@@ -40,6 +37,30 @@ impl InfixParselet for BinaryParselet {
 		let kind = parser.previous().kind;
 		parser.with_precedence(self.precedence + 1, chunk)?;
 		match kind {
+			TokenKind::BangEqual => {
+				parser.emit_bytes(OP_EQUAL, OP_NOT, chunk);
+				Ok(())
+			}
+			TokenKind::EqualEqual => {
+				parser.emit_byte(OP_EQUAL, chunk);
+				Ok(())
+			}
+			TokenKind::Greater => {
+				parser.emit_byte(OP_GREATER, chunk);
+				Ok(())
+			}
+			TokenKind::GreaterEqual => {
+				parser.emit_bytes(OP_LESS, OP_NOT, chunk);
+				Ok(())
+			}
+			TokenKind::Less => {
+				parser.emit_byte(OP_LESS, chunk);
+				Ok(())
+			}
+			TokenKind::LessEqual => {
+				parser.emit_bytes(OP_GREATER, OP_NOT, chunk);
+				Ok(())
+			}
 			TokenKind::Plus => {
 				parser.emit_byte(OP_ADD, chunk);
 				Ok(())

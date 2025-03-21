@@ -7,6 +7,7 @@ use dimas_core::scripting::{
 	execution::{
 		Chunk,
 		opcodes::{OP_ADD, OP_CONSTANT, OP_DIVIDE, OP_NEGATE, OP_RETURN},
+		values::Value,
 	},
 };
 
@@ -14,15 +15,15 @@ use dimas_core::scripting::{
 fn first_test() {
 	let mut chunk = Chunk::default();
 
-	let constant = chunk.add_constant(1.2);
+	let constant = chunk.add_constant(Value::from_double(1.2));
 	chunk.write(OP_CONSTANT, 123);
 	chunk.write(constant, 123);
-	let constant = chunk.add_constant(3.4);
+	let constant = chunk.add_constant(Value::from_double(3.4));
 	chunk.write(OP_CONSTANT, 123);
 	chunk.write(constant, 123);
 	chunk.write(OP_ADD, 123);
 
-	let constant = chunk.add_constant(5.6);
+	let constant = chunk.add_constant(Value::from_double(5.6));
 	chunk.write(OP_CONSTANT, 124);
 	chunk.write(constant, 124);
 	chunk.write(OP_DIVIDE, 124);

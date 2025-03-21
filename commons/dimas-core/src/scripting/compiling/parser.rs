@@ -24,10 +24,10 @@ use crate::scripting::{
 use super::{
 	error::Error,
 	parselets::{
-		BinaryParselet, Expression, GroupingParselet, InfixParselet, NumberParselet,
-		PrefixParselet, UnaryParselet,
+		BinaryParselet, Expression, GroupingParselet, InfixParselet, LiteralParselet,
+		NumberParselet, PrefixParselet, UnaryParselet,
 	},
-	precedence::{ASSIGNMENT, FACTOR, NONE, Precedence, TERM, UNARY},
+	precedence::{Precedence, ASSIGNMENT, COMPARISON, EQUALITY, FACTOR, NONE, TERM, UNARY},
 	token::{Token, TokenKind},
 };
 
@@ -55,13 +55,40 @@ impl<'a> Parser<'a> {
 		// Register the parselets for the grammar
 		parser
 			.prefix_parselets
+			.insert(TokenKind::Bang, Rc::from(UnaryParselet::new(NONE)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::BangEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::EqualEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
+		parser
+			.prefix_parselets
+			.insert(TokenKind::False, Rc::from(LiteralParselet));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Greater, Rc::from(BinaryParselet::new(COMPARISON, false)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::GreaterEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
+		parser
+			.prefix_parselets
 			.insert(TokenKind::LeftParen, Rc::from(GroupingParselet));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Less, Rc::from(BinaryParselet::new(COMPARISON, false)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::LessEqual, Rc::from(BinaryParselet::new(EQUALITY, false)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Minus, Rc::from(UnaryParselet::new(UNARY)));
 		parser
 			.infix_parselets
 			.insert(TokenKind::Minus, Rc::from(BinaryParselet::new(TERM, false)));
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Nil, Rc::from(LiteralParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Number, Rc::from(NumberParselet));
@@ -79,6 +106,9 @@ impl<'a> Parser<'a> {
 			TokenKind::Star,
 			Rc::from(BinaryParselet::new(FACTOR, false)),
 		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::True, Rc::from(LiteralParselet));
 
 		// return the prepared parser
 		parser
@@ -111,6 +141,8 @@ impl<'a> Parser<'a> {
 		let tmp = self.lexer.next();
 		if let Some(token) = tmp {
 			self.current = token?;
+		} else {
+			self.current = Token::none();
 		}
 		Ok(())
 	}
@@ -151,8 +183,8 @@ impl<'a> Parser<'a> {
 		let prefix = prefix_opt.expect("should not fail").clone();
 		prefix.parse(self, chunk, token)?;
 
-		while precedence <= self.get_precedence() {
-			self.advance();
+		while precedence < self.get_precedence() {
+			self.advance()?;
 			let token = self.previous();
 			let infix = self
 				.infix_parselets

@@ -11,7 +11,26 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// @TODO:
+	#[error("Value is not a Boolean type")]
+	NoBoolean,
+	/// @TODO:
+	#[error("Value is not a Double type")]
+	NoDouble,
+	/// @TODO:
+	#[error("Value is not an Integer type")]
+	NoInteger,
+	/// @TODO:
+	#[error("Value is not a number type")]
+	NoNumber,
+	/// @TODO:
+	#[error("unknown Operation Code")]
+	StackOverflow,
+	/// @TODO:
 	#[error("unknown Operation Code")]
 	UnknownOpCode,
+
+	/// @TODO:
+	#[error("this should be unreachable")]
+	Unreachable,
 }
 // region:		--- Error

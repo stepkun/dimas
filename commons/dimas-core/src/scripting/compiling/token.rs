@@ -8,7 +8,7 @@ use alloc::string::{String, ToString};
 /// Token kind
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenKind {
-	/// Dummy to avoid using Option<Token> in many places
+	/// Dummy to avoid using `Option<Token>` in many places
 	None,
 	/// =
 	Equal,
@@ -66,6 +66,8 @@ pub enum TokenKind {
 	LeftParen,
 	/// )
 	RightParen,
+	/// keyword 'nil'
+	Nil,
 	/// Keyword boolean 'true'
 	True,
 	/// Keyword boolean 'false'

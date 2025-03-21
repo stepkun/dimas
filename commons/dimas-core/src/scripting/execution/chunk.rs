@@ -10,7 +10,7 @@ use alloc::{borrow::ToOwned, vec::Vec};
 
 #[allow(clippy::wildcard_imports)]
 use crate::scripting::execution::opcodes::*;
-use crate::scripting::execution::values::{HexNumbers, HexValue, Numbers, Value};
+use crate::scripting::execution::values::{self, Value};
 
 /// A chunk of bytecode
 #[derive(Default)]
@@ -19,10 +19,8 @@ pub struct Chunk {
 	code: Vec<u8>,
 	/// corresponding storage for the line number
 	lines: Vec<i16>,
-	/// storage for f64 values
-	numbers: Numbers,
-	/// storage for i64/hex values
-	hex_numbers: HexNumbers,
+	/// storage for values
+	values: Vec<Value>,
 }
 
 impl Chunk {
@@ -41,29 +39,19 @@ impl Chunk {
 	/// Add a f64 number to the number storage returning its position in the storage
 	#[allow(clippy::cast_possible_truncation)]
 	pub fn add_constant(&mut self, value: Value) -> u8 {
-		let pos = self.numbers.write(value);
+		self.values.push(value);
+		let pos = self.values.len() - 1;
 		pos as u8
 	}
 
-	/// Read a f64 number from the number storage
+	/// Read a Value from the Value storage
+	#[allow(clippy::redundant_closure_for_method_calls)]
 	#[must_use]
 	pub fn read_constant(&self, pos: u8) -> Value {
 		let offset = usize::from(pos);
-		self.numbers.read(offset)
-	}
-
-	/// Add a i64 number to the hex number storage returning its position in the storage
-	#[allow(clippy::cast_possible_truncation)]
-	pub fn add_hex_constant(&mut self, value: HexValue) -> u8 {
-		let pos = self.hex_numbers.write(value);
-		pos as u8
-	}
-
-	/// Read a i64 number from the number storage
-	#[must_use]
-	pub fn read_hex_constant(&self, pos: u8) -> HexValue {
-		let offset = usize::from(pos);
-		self.hex_numbers.read(offset)
+		self.values
+			.get(offset)
+			.map_or_else(|| todo!(), |value| value.to_owned())
 	}
 
 	/// Disassemble chunk
@@ -84,13 +72,20 @@ impl Chunk {
 			std::print!("{:4} ", self.lines[offset]);
 		}
 		match self.code[offset].to_owned() {
-			OP_RETURN => Self::simple_instruction("OP_RETURN", offset),
 			OP_ADD => Self::simple_instruction("OP_ADD", offset),
-			OP_SUBTRACT => Self::simple_instruction("OP_SUBTRACT", offset),
-			OP_MULTIPLY => Self::simple_instruction("OP_MULTIPLY", offset),
-			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),
-			OP_NEGATE => Self::simple_instruction("OP_NEGATE", offset),
 			OP_CONSTANT => self.constant_instruction("OP_CONSTANT", offset),
+			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),
+			OP_EQUAL => Self::simple_instruction("OP_EQUAL", offset),
+			OP_FALSE => Self::simple_instruction("OP_FALSE", offset),
+			OP_GREATER => Self::simple_instruction("OP_GREATER", offset),
+			OP_LESS => Self::simple_instruction("OP_LESS", offset),
+			OP_MULTIPLY => Self::simple_instruction("OP_MULTIPLY", offset),
+			OP_NEGATE => Self::simple_instruction("OP_NEGATE", offset),
+			OP_NIL => Self::simple_instruction("OP_NIL", offset),
+			OP_NOT => Self::simple_instruction("OP_NOT", offset),
+			OP_RETURN => Self::simple_instruction("OP_RETURN", offset),
+			OP_SUBTRACT => Self::simple_instruction("OP_SUBTRACT", offset),
+			OP_TRUE => Self::simple_instruction("OP_TRUE", offset),
 			_ => todo!(),
 		}
 	}
@@ -104,9 +99,23 @@ impl Chunk {
 	/// constant instruction
 	fn constant_instruction(&self, name: &str, offset: usize) -> usize {
 		match self.code.get(offset + 1) {
-			Some(value_pos) => {
-				let pos = usize::from(value_pos.to_owned());
-				std::println!("{name:16} {value_pos:3} {}", self.numbers.read(pos));
+			Some(pos) => {
+				let value = self.read_constant(pos.to_owned());
+				match value.kind() {
+					values::BOOLEAN => {
+						std::println!("{name:16} {pos:3} {}", value.as_bool().expect("snh"));
+					}
+					values::DOUBLE => {
+						std::println!("{name:16} {pos:3} {}", value.as_double().expect("snh"));
+					}
+					values::INTEGER => {
+						std::println!("{name:16} {pos:3} {}", value.as_integer().expect("snh"));
+					}
+					values::NIL => {
+						std::println!("{name:16} {pos:3} 'nil'");
+					}
+					_ => todo!(),
+				}
 			}
 			None => todo!(),
 		}
