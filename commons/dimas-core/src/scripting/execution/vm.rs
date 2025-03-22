@@ -95,6 +95,7 @@ impl VM {
 							let b = b.as_integer()?;
 							a + &b.to_string()
 						}
+						VAL_NIL => a + "nil",
 						VAL_STR => {
 							let b_pos = b.as_string_pos()?;
 							a + chunk.get_string(b_pos).trim_matches('\'')
@@ -180,14 +181,18 @@ impl VM {
 		self.push(constant);
 	}
 
-	fn equal(&mut self, chunk: &Chunk) -> bool {
+	fn equal(&mut self, chunk: &Chunk) {
 		let b = self.pop();
 		let a = self.pop();
 		if a.kind() == b.kind() {
-			match a.kind() {
+			let res = match a.kind() {
 				VAL_BOOL => a.as_bool().expect("snh") == b.as_bool().expect("snh"),
-				#[allow(clippy::float_cmp)] // @TODO: define an epsilon
-				VAL_DOUBLE => a.as_double().expect("snh") == b.as_double().expect("snh"),
+				#[allow(clippy::float_cmp)]
+				VAL_DOUBLE => {
+					let epsilon = 0.000_000_000_000_002;
+					let delta = f64::abs(a.as_double().expect("snh") - b.as_double().expect("snh"));
+					delta <= epsilon
+				}
 				VAL_INT => a.as_integer().expect("snh") == b.as_integer().expect("snh"),
 				VAL_STR => {
 					let a_pos = a.as_string_pos().expect("snh");
@@ -198,10 +203,11 @@ impl VM {
 				}
 				VAL_NIL => true,
 				_ => false,
-			}
+			};
+			self.push(Value::from_bool(res));
 		} else {
-			false
-		}
+			self.push(Value::from_bool(false));
+		};
 	}
 
 	fn negate(&mut self) -> Result<(), Error> {
@@ -222,6 +228,17 @@ impl VM {
 		}
 	}
 
+	fn binary_not(&mut self, chunk: &Chunk) -> Result<(), Error> {
+		let kind = self.peek(0).kind();
+		if kind != VAL_INT {
+			return Err(Error::NoInteger);
+		}
+		let mut val = self.pop();
+		val.to_integer(!val.as_integer()?);
+		self.push(val);
+		Ok(())
+	}
+
 	fn not(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		let kind = self.peek(0).kind();
 		if kind != VAL_BOOL && kind != VAL_NIL {
@@ -239,7 +256,11 @@ impl VM {
 	/// Execute a [`Chunk`] with the virtual machine
 	/// # Errors
 	/// - unknown `OpCode`
-	pub fn run(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
+	pub fn run(
+		&mut self,
+		chunk: &mut Chunk,
+		stdout: &mut impl std::io::Write,
+	) -> Result<(), Error> {
 		self.reset();
 		chunk.save_state();
 		// ignore empty chunks
@@ -253,12 +274,10 @@ impl VM {
 			self.ip += 1;
 			match instruction {
 				OP_ADD => self.arithmetic_operator(OP_ADD, chunk)?,
+				OP_BINARY_NOT => self.binary_not(chunk)?,
 				OP_CONSTANT => self.constant(chunk),
 				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE, chunk)?,
-				OP_EQUAL => {
-					let res = self.equal(chunk);
-					self.push(Value::from_bool(res));
-				}
+				OP_EQUAL => self.equal(chunk),
 				OP_FALSE => self.push(Value::from_bool(false))?,
 				OP_GREATER => self.boolean_operator(OP_GREATER)?,
 				OP_LESS => self.boolean_operator(OP_LESS)?,
@@ -273,12 +292,12 @@ impl VM {
 					if self.stack_top > 0 {
 						let value = self.pop();
 						if value.is_string_pos() {
-							std::println!("{}", chunk.get_string(value.as_string_pos()?));
+							std::writeln!(stdout, "{}", chunk.get_string(value.as_string_pos()?));
 						} else {
-							std::println!("{value}");
+							std::writeln!(stdout, "{value}");
 						}
 					} else {
-						std::println!("no result");
+						std::writeln!(stdout, "no result");
 					}
 				}
 				OP_RETURN => {

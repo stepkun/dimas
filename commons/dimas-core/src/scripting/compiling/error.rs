@@ -40,7 +40,7 @@ pub enum Error {
 	UnterminatedString(String, usize),
 
 	/// @TODO:
-	#[error("this should be unreachable")]
-	Unreachable,
+	#[error("this should be unreachable in {0}")]
+	Unreachable(String),
 }
 // region:		--- Error

@@ -28,8 +28,13 @@ fn repl() {
 							},
 							|mut chunk| {
 								// chunk.disassemble("created chunk");
-								if let Err(error) = vm.run(&mut chunk) {
+								let mut stdout: Vec<u8> = Vec::new();
+								if let Err(error) = vm.run(&mut chunk, &mut stdout) {
 									println!("execution error: {error}");
+								} else {
+									for c in stdout {
+										print!("{}", c as char);
+									}
 								};
 							},
 						);

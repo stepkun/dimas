@@ -115,7 +115,7 @@ impl SegmentObject {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "not yet implemented"]
 async fn blackboard_reference() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();

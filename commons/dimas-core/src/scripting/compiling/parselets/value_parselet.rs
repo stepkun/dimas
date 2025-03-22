@@ -10,6 +10,7 @@ use crate::scripting::{
 	Parser,
 	compiling::{
 		error::Error,
+		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
 	execution::{Chunk, opcodes::OP_CONSTANT, values::Value},
@@ -61,7 +62,11 @@ impl PrefixParselet for ValueParselet {
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable),
+			_ => Err(Error::Unreachable(file!().to_string())),
 		}
+	}
+
+	fn get_precedence(&self) -> crate::scripting::compiling::precedence::Precedence {
+		Precedence::None
 	}
 }

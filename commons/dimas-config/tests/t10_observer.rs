@@ -83,7 +83,7 @@ impl AlwaysFailure {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "not yet implemented"]
 async fn observer() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();

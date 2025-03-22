@@ -165,7 +165,7 @@ const XML2: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 "#;
 
 #[tokio::test]
-#[ignore]
+#[ignore = "not yet implemented"]
 async fn basic_ports_with_script() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::default();

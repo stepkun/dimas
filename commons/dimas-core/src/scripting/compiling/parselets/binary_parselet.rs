@@ -4,7 +4,7 @@
 //! `GroupingParselet` for `Dimas`scripting
 //!
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, string::ToString};
 
 use crate::scripting::{
 	Parser,
@@ -82,7 +82,7 @@ impl InfixParselet for BinaryParselet {
 				parser.emit_byte(OP_DIVIDE, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable),
+			_ => Err(Error::Unreachable(file!().to_string())),
 		}
 	}
 

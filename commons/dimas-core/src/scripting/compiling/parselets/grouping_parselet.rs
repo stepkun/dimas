@@ -10,6 +10,7 @@ use crate::scripting::{
 	Parser,
 	compiling::{
 		error::Error,
+		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
 	execution::{Chunk, opcodes::OP_CONSTANT},
@@ -23,5 +24,9 @@ impl PrefixParselet for GroupingParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		parser.expression(chunk)?;
 		parser.advance_if(TokenKind::RightParen)
+	}
+
+	fn get_precedence(&self) -> crate::scripting::compiling::precedence::Precedence {
+		Precedence::None
 	}
 }

@@ -83,6 +83,9 @@ impl<'a> Parser<'a> {
 		);
 		parser
 			.prefix_parselets
+			.insert(TokenKind::HexNumber, Rc::from(ValueParselet));
+		parser
+			.prefix_parselets
 			.insert(TokenKind::LeftParen, Rc::from(GroupingParselet));
 		parser.infix_parselets.insert(
 			TokenKind::Less,
@@ -125,6 +128,10 @@ impl<'a> Parser<'a> {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::String, Rc::from(ValueParselet));
+		parser.prefix_parselets.insert(
+			TokenKind::Tilde,
+			Rc::from(UnaryParselet::new(Precedence::Unary)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::True, Rc::from(LiteralParselet));
@@ -255,10 +262,15 @@ impl<'a> Parser<'a> {
 			self.advance()?;
 			let token = self.current();
 			let infix_opt = self.infix_parselets.get(&token.kind);
-			match infix_opt {
-				Some(infix) => infix.clone().parse(self, chunk, token)?,
-				None => {
-					break;
+			if let Some(infix) = infix_opt {
+				infix.clone().parse(self, chunk, token)?;
+			} else {
+				let prefix_opt = self.prefix_parselets.get(&token.kind);
+				match infix_opt {
+					Some(prefix) => prefix.clone().parse(self, chunk, token)?,
+					None => {
+						break;
+					}
 				}
 			}
 		}

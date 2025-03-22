@@ -32,7 +32,9 @@ pub const OP_MULTIPLY: u8 = OP_SUBTRACT + 1;
 /// @TODO
 pub const OP_DIVIDE: u8 = OP_MULTIPLY + 1;
 /// @TODO
-pub const OP_NOT: u8 = OP_DIVIDE + 1;
+pub const OP_BINARY_NOT: u8 = OP_DIVIDE + 1;
+/// @TODO
+pub const OP_NOT: u8 = OP_BINARY_NOT + 1;
 /// @TODO
 pub const OP_NEGATE: u8 = OP_NOT + 1;
 /// @TODO

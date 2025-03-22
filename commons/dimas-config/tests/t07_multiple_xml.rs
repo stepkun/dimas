@@ -66,7 +66,7 @@ impl SaySomething {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "has errors"]
 async fn via_include() -> anyhow::Result<()> {
 	println!("subtrees via include");
 	/*

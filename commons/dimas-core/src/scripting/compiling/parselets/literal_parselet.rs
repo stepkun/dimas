@@ -4,12 +4,13 @@
 //! `LiteralParselet` for `Dimas`scripting
 //!
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, string::ToString};
 
 use crate::scripting::{
 	Parser,
 	compiling::{
 		error::Error,
+		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
 	execution::{
@@ -39,7 +40,11 @@ impl PrefixParselet for LiteralParselet {
 				parser.emit_byte(OP_TRUE, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable),
+			_ => Err(Error::Unreachable(file!().to_string())),
 		}
+	}
+
+	fn get_precedence(&self) -> crate::scripting::compiling::precedence::Precedence {
+		Precedence::None
 	}
 }

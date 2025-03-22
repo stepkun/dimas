@@ -115,6 +115,7 @@ impl Chunk {
 		}
 		match self.code[offset].to_owned() {
 			OP_ADD => Self::simple_instruction("OP_ADD", offset),
+			OP_BINARY_NOT => Self::simple_instruction("OP_BINARY_NOT", offset),
 			OP_CONSTANT => self.constant_instruction("OP_CONSTANT", offset),
 			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),
 			OP_EQUAL => Self::simple_instruction("OP_EQUAL", offset),

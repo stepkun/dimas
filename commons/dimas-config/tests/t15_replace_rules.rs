@@ -7,7 +7,7 @@
 use dimas_core::behavior::BehaviorStatus;
 
 #[tokio::test]
-#[ignore]
+#[ignore = "not yet implemented"]
 async fn replace_rules() -> anyhow::Result<()> {
 	let result = BehaviorStatus::Failure;
 	println!("not yet implemented");

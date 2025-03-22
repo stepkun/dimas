@@ -4,7 +4,7 @@
 //! `UnaryParselet` for `Dimas`scripting
 //!
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, string::ToString};
 
 use crate::scripting::{
 	Parser,
@@ -15,7 +15,7 @@ use crate::scripting::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{OP_CONSTANT, OP_NEGATE, OP_NOT},
+		opcodes::{OP_BINARY_NOT, OP_CONSTANT, OP_NEGATE, OP_NOT},
 	},
 };
 
@@ -55,7 +55,16 @@ impl PrefixParselet for UnaryParselet {
 				// do nothing
 				Ok(())
 			}
-			_ => Err(Error::Unreachable),
+			TokenKind::Tilde => {
+				// add the binary not
+				parser.emit_byte(OP_BINARY_NOT, chunk);
+				Ok(())
+			}
+			_ => Err(Error::Unreachable(file!().to_string())),
 		}
+	}
+
+	fn get_precedence(&self) -> Precedence {
+		self.precedence
 	}
 }

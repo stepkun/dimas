@@ -36,7 +36,7 @@ pub enum Error {
 	UnknownOpCode,
 
 	/// @TODO:
-	#[error("this should be unreachable")]
+	#[error("this should be unreachable in vm.rs")]
 	Unreachable,
 }
 // region:		--- Error

@@ -112,7 +112,7 @@ fn lexing_strings() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "not yet implemented"]
 fn lexing_enums() {
 	let tokens = "RED BLUE GREEN";
 	// @TODO
