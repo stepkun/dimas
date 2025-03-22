@@ -24,7 +24,7 @@ pub struct LiteralParselet;
 
 impl PrefixParselet for LiteralParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
-		let kind = parser.previous().kind;
+		let kind = parser.current().kind;
 
 		match kind {
 			TokenKind::False => {

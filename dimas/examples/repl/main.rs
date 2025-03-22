@@ -27,7 +27,7 @@ fn repl() {
 								println!("parsing error: {err}");
 							},
 							|mut chunk| {
-								// chunk.disassemble("== created chunk ==");
+								// chunk.disassemble("created chunk");
 								if let Err(error) = vm.run(&mut chunk) {
 									println!("execution error: {error}");
 								};

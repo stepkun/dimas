@@ -7,27 +7,40 @@
 //! These determine how a series of infix expressions will be grouped.
 //! For example, "a + b * c - d" will be parsed as "(a + (b * c)) - d"
 //! because "*" has higher precedence than "+" and "-".
-//! Here a bigger numbers is higher precedence.
+//! Here a bigger enum value is higher precedence.
 //!
 
-pub type Precedence = i8;
-/// @TODO
-pub const NONE: Precedence = 0;
-/// @TODO
-pub const ASSIGNMENT: Precedence = NONE + 1; // = :=
-/// @TODO
-pub const OR: Precedence = ASSIGNMENT + 1; // ||
-/// @TODO
-pub const AND: Precedence = OR + 1; // &&
-/// @TODO
-pub const EQUALITY: Precedence = AND + 1; // == !=
-/// @TODO
-pub const COMPARISON: Precedence = EQUALITY + 1; // == !=
-/// @TODO
-pub const TERM: Precedence = COMPARISON + 1; // + -
-/// @TODO
-pub const FACTOR: Precedence = TERM + 1; // * /
-/// @TODO
-pub const UNARY: Precedence = FACTOR + 1; // ! -
-/// @TODO
-pub const PRIMARY: Precedence = UNARY + 1;
+use core::{f64::consts, ops::Add};
+
+/// Precedence levels
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Precedence {
+	None = 0,
+	Assignment,
+	Or,
+	And,
+	Equality,
+	Comparison,
+	Term,
+	Factor,
+	Unary,
+	Primary,
+}
+
+impl Precedence {
+	/// Get the next higher [`Precedence`]
+	pub const fn next_higher(self) -> Self {
+		match self {
+			Self::None => Self::Assignment,
+			Self::Assignment => Self::Or,
+			Self::Or => Self::And,
+			Self::And => Self::Equality,
+			Self::Equality => Self::Comparison,
+			Self::Comparison => Self::Term,
+			Self::Term => Self::Factor,
+			Self::Factor => Self::Unary,
+			Self::Unary => Self::Primary,
+			Self::Primary => panic!(),
+		}
+	}
+}

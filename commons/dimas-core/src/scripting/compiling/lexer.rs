@@ -34,7 +34,7 @@ pub struct Lexer<'a> {
 	/// current position in the input
 	pos: usize,
 	/// current line
-	line: i16,
+	line: usize,
 	/// store a peeked token
 	peeked: Option<Result<Token, Error>>,
 }
@@ -193,6 +193,7 @@ impl Iterator for Lexer<'_> {
 					let kind = match literal {
 						"false" => TokenKind::False,
 						"nil" => TokenKind::Nil,
+						"print" => TokenKind::Print,
 						"true" => TokenKind::True,
 						_ => TokenKind::Ident,
 					};

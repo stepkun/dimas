@@ -7,13 +7,18 @@ extern crate std;
 
 use core::{marker::PhantomData, str::CharIndices};
 
-use alloc::{borrow::ToOwned, string::{String, ToString}};
+use alloc::{
+	borrow::ToOwned,
+	string::{String, ToString},
+};
 use hashbrown::HashSet;
 
 #[allow(clippy::wildcard_imports)]
 use super::opcodes::*;
 use super::{
-	chunk, error::Error, values::{Value, VAL_BOOL, VAL_DOUBLE, VAL_INT, VAL_NIL, VAL_STR}, Chunk
+	Chunk, chunk,
+	error::Error,
+	values::{VAL_BOOL, VAL_DOUBLE, VAL_INT, VAL_NIL, VAL_STR, Value},
 };
 
 /// Stack size is fixed
@@ -67,13 +72,16 @@ impl VM {
 	fn arithmetic_operator(&mut self, operator: u8, chunk: &mut Chunk) -> Result<(), Error> {
 		let b_kind = self.peek(0).kind();
 		let a_kind = self.peek(1).kind();
-		// Strings can be concatenated with   
+		// Strings can be concatenated with
 		if a_kind == VAL_STR {
 			match operator {
 				OP_ADD => {
 					let b = self.pop();
 					let a_pos = self.pop().as_string_pos()?;
-					let a = chunk.get_string(a_pos).trim_matches('\'').to_owned();
+					let a = chunk
+						.get_string(a_pos)
+						.trim_matches('\'')
+						.to_owned();
 					let res = match b.kind() {
 						VAL_BOOL => {
 							let b = b.as_bool()?;
@@ -181,7 +189,7 @@ impl VM {
 				#[allow(clippy::float_cmp)] // @TODO: define an epsilon
 				VAL_DOUBLE => a.as_double().expect("snh") == b.as_double().expect("snh"),
 				VAL_INT => a.as_integer().expect("snh") == b.as_integer().expect("snh"),
-				VAL_STR => { 
+				VAL_STR => {
 					let a_pos = a.as_string_pos().expect("snh");
 					let b_pos = b.as_string_pos().expect("snh");
 					let a = chunk.get_string(a_pos);
@@ -258,10 +266,13 @@ impl VM {
 				OP_NEGATE => self.negate()?,
 				OP_NIL => self.push(Value::nil())?,
 				OP_NOT => self.not(chunk)?,
-				OP_RETURN => {
+				OP_POP => {
+					self.pop();
+				}
+				OP_PRINT => {
 					if self.stack_top > 0 {
 						let value = self.pop();
-						if  value.is_string_pos() {
+						if value.is_string_pos() {
 							std::println!("{}", chunk.get_string(value.as_string_pos()?));
 						} else {
 							std::println!("{value}");
@@ -269,6 +280,8 @@ impl VM {
 					} else {
 						std::println!("no result");
 					}
+				}
+				OP_RETURN => {
 					chunk.restore_state();
 					return Ok(());
 				}
@@ -277,7 +290,7 @@ impl VM {
 				_ => {
 					chunk.restore_state();
 					return Err(Error::UnknownOpCode);
-				},
+				}
 			}
 		}
 		chunk.restore_state();

@@ -12,29 +12,32 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// @TODO:
-	#[error("expression expected")]
-	ExpressionExpected,
+	#[error("Expecting {0} found {1} at line {2}")]
+	ExpectedToken(String, String, usize),
+	/// @TODO:
+	#[error("expression expected at line {0}")]
+	ExpressionExpected(usize),
 	/// @TODO:
 	#[error("could not create Chunk for VM")]
 	NoChunk,
 	/// @TODO:
 	#[error("could not parse HexNumber {0} at line {1}")]
-	ParseHex(String, i16),
+	ParseHex(String, usize),
 	/// @TODO:
 	#[error("could not parse Number {0} at line {1}")]
-	ParseNumber(String, i16),
+	ParseNumber(String, usize),
 	/// @TODO:
 	#[error("Number storage is full")]
 	ToManyValues,
 	/// @TODO:
 	#[error("unexpected character {0} at line {1}")]
-	UnexpectedChar(String, i16),
+	UnexpectedChar(String, usize),
 	/// @TODO:
 	#[error("unexpected Token")]
 	UnexpectedToken,
 	/// @TODO:
 	#[error("unterminated String {0} at line {1}")]
-	UnterminatedString(String, i16),
+	UnterminatedString(String, usize),
 
 	/// @TODO:
 	#[error("this should be unreachable")]

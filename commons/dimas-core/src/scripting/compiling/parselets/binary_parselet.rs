@@ -10,7 +10,7 @@ use crate::scripting::{
 	Parser,
 	compiling::{
 		error::Error,
-		precedence::{FACTOR, Precedence, TERM},
+		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
 	execution::{
@@ -39,8 +39,8 @@ impl BinaryParselet {
 
 impl InfixParselet for BinaryParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
-		let kind = parser.previous().kind;
-		parser.with_precedence(self.precedence + 1, chunk)?;
+		let kind = parser.current().kind;
+		parser.with_precedence(self.precedence.next_higher(), chunk)?;
 		match kind {
 			TokenKind::BangEqual => {
 				parser.emit_bytes(OP_EQUAL, OP_NOT, chunk);

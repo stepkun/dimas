@@ -18,7 +18,7 @@ pub struct Chunk {
 	/// the code
 	code: Vec<u8>,
 	/// corresponding storage for the line number
-	lines: Vec<i16>,
+	lines: Vec<usize>,
 	/// storage for Values
 	values: Vec<Value>,
 	/// saved values state
@@ -50,9 +50,9 @@ impl Chunk {
 			self.strings.pop();
 		}
 	}
-	
+
 	/// Add a byte to the chunk
-	pub fn write(&mut self, byte: u8, line: i16) {
+	pub fn write(&mut self, byte: u8, line: usize) {
 		self.code.push(byte);
 		self.lines.push(line);
 	}
@@ -125,6 +125,8 @@ impl Chunk {
 			OP_NEGATE => Self::simple_instruction("OP_NEGATE", offset),
 			OP_NIL => Self::simple_instruction("OP_NIL", offset),
 			OP_NOT => Self::simple_instruction("OP_NOT", offset),
+			OP_POP => Self::simple_instruction("OP_POP", offset),
+			OP_PRINT => Self::simple_instruction("OP_PRINT", offset),
 			OP_RETURN => Self::simple_instruction("OP_RETURN", offset),
 			OP_SUBTRACT => Self::simple_instruction("OP_SUBTRACT", offset),
 			OP_TRUE => Self::simple_instruction("OP_TRUE", offset),
@@ -154,7 +156,10 @@ impl Chunk {
 						std::println!("{name:16} {pos:3} {}", value.as_integer().expect("snh"));
 					}
 					values::VAL_STR => {
-						std::println!("{name:16} {pos:3} {}", self.strings[value.as_string_pos().expect("snh")]);
+						std::println!(
+							"{name:16} {pos:3} {}",
+							self.strings[value.as_string_pos().expect("snh")]
+						);
 					}
 					values::VAL_NIL => {
 						std::println!("{name:16} {pos:3} 'nil'");

@@ -4,7 +4,7 @@
 //! `GroupingParselet` for `Dimas`scripting
 //!
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, string::ToString};
 
 use crate::scripting::{
 	Parser,
@@ -21,8 +21,7 @@ pub struct GroupingParselet;
 
 impl PrefixParselet for GroupingParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
-		parser.expression(chunk);
-		parser.advance_if(TokenKind::RightParen)?;
-		Ok(())
+		parser.expression(chunk)?;
+		parser.advance_if(TokenKind::RightParen)
 	}
 }

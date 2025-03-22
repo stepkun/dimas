@@ -13,21 +13,24 @@
 
 extern crate std;
 
-use alloc::{borrow::ToOwned, boxed::Box, rc::Rc};
+use alloc::{borrow::ToOwned, boxed::Box, rc::Rc, string::ToString};
 use hashbrown::HashMap;
 
 use crate::scripting::{
 	Lexer,
-	execution::{Chunk, opcodes::OP_RETURN},
+	execution::{
+		Chunk,
+		opcodes::{OP_POP, OP_PRINT, OP_RETURN},
+	},
 };
 
 use super::{
 	error::Error,
 	parselets::{
 		BinaryParselet, Expression, GroupingParselet, InfixParselet, LiteralParselet,
-		ValueParselet, PrefixParselet, UnaryParselet,
+		PrefixParselet, UnaryParselet, ValueParselet,
 	},
-	precedence::{ASSIGNMENT, COMPARISON, EQUALITY, FACTOR, NONE, Precedence, TERM, UNARY},
+	precedence::Precedence,
 	token::{Token, TokenKind},
 };
 
@@ -36,8 +39,10 @@ pub struct Parser<'a> {
 	lexer: Lexer<'a>,
 	prefix_parselets: HashMap<TokenKind, Rc<dyn PrefixParselet>>,
 	infix_parselets: HashMap<TokenKind, Rc<dyn InfixParselet>>,
-	previous: Token,
+	/// current handled Token
 	current: Token,
+	/// preview on next Token
+	next: Token,
 }
 
 impl<'a> Parser<'a> {
@@ -48,69 +53,74 @@ impl<'a> Parser<'a> {
 			lexer: Lexer::new(source_code),
 			prefix_parselets: HashMap::default(),
 			infix_parselets: HashMap::default(),
-			previous: Token::none(),
 			current: Token::none(),
+			next: Token::none(),
 		};
 
 		// Register the parselets for the grammar
-		parser
-			.prefix_parselets
-			.insert(TokenKind::Bang, Rc::from(UnaryParselet::new(NONE)));
+		parser.prefix_parselets.insert(
+			TokenKind::Bang,
+			Rc::from(UnaryParselet::new(Precedence::None)),
+		);
 		parser.infix_parselets.insert(
 			TokenKind::BangEqual,
-			Rc::from(BinaryParselet::new(EQUALITY, false)),
+			Rc::from(BinaryParselet::new(Precedence::Equality, false)),
 		);
 		parser.infix_parselets.insert(
 			TokenKind::EqualEqual,
-			Rc::from(BinaryParselet::new(EQUALITY, false)),
+			Rc::from(BinaryParselet::new(Precedence::Equality, false)),
 		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::False, Rc::from(LiteralParselet));
 		parser.infix_parselets.insert(
 			TokenKind::Greater,
-			Rc::from(BinaryParselet::new(COMPARISON, false)),
+			Rc::from(BinaryParselet::new(Precedence::Comparison, false)),
 		);
 		parser.infix_parselets.insert(
 			TokenKind::GreaterEqual,
-			Rc::from(BinaryParselet::new(EQUALITY, false)),
+			Rc::from(BinaryParselet::new(Precedence::Equality, false)),
 		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::LeftParen, Rc::from(GroupingParselet));
 		parser.infix_parselets.insert(
 			TokenKind::Less,
-			Rc::from(BinaryParselet::new(COMPARISON, false)),
+			Rc::from(BinaryParselet::new(Precedence::Comparison, false)),
 		);
 		parser.infix_parselets.insert(
 			TokenKind::LessEqual,
-			Rc::from(BinaryParselet::new(EQUALITY, false)),
+			Rc::from(BinaryParselet::new(Precedence::Equality, false)),
 		);
-		parser
-			.prefix_parselets
-			.insert(TokenKind::Minus, Rc::from(UnaryParselet::new(UNARY)));
-		parser
-			.infix_parselets
-			.insert(TokenKind::Minus, Rc::from(BinaryParselet::new(TERM, false)));
+		parser.prefix_parselets.insert(
+			TokenKind::Minus,
+			Rc::from(UnaryParselet::new(Precedence::Unary)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::Minus,
+			Rc::from(BinaryParselet::new(Precedence::Term, false)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Nil, Rc::from(LiteralParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Number, Rc::from(ValueParselet));
-		parser
-			.prefix_parselets
-			.insert(TokenKind::Plus, Rc::from(UnaryParselet::new(UNARY)));
-		parser
-			.infix_parselets
-			.insert(TokenKind::Plus, Rc::from(BinaryParselet::new(TERM, false)));
+		parser.prefix_parselets.insert(
+			TokenKind::Plus,
+			Rc::from(UnaryParselet::new(Precedence::Unary)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::Plus,
+			Rc::from(BinaryParselet::new(Precedence::Term, false)),
+		);
 		parser.infix_parselets.insert(
 			TokenKind::Slash,
-			Rc::from(BinaryParselet::new(FACTOR, false)),
+			Rc::from(BinaryParselet::new(Precedence::Factor, false)),
 		);
 		parser.infix_parselets.insert(
 			TokenKind::Star,
-			Rc::from(BinaryParselet::new(FACTOR, false)),
+			Rc::from(BinaryParselet::new(Precedence::Factor, false)),
 		);
 		parser
 			.prefix_parselets
@@ -131,50 +141,99 @@ impl<'a> Parser<'a> {
 		let mut chunk = Chunk::default();
 
 		self.advance()?;
-		self.expression(&mut chunk);
+		while !self.check_next(TokenKind::None) {
+			//std::println!("{}", self.current.kind);
+			// in case of error try to synchronize to next statement
+			if let Err(error) = self.statement(&mut chunk) {
+				std::println!("{error}");
+				while !(self.check_next(TokenKind::Semicolon)
+					|| self.check_next(TokenKind::Print)
+					|| self.check_next(TokenKind::None))
+				{
+					self.advance()?;
+				}
+			};
+		}
+
+		// end compiler
 		self.emit_byte(OP_RETURN, &mut chunk);
 		Ok(chunk)
-	}
-
-	pub(crate) fn previous(&self) -> Token {
-		self.previous.clone()
 	}
 
 	pub(crate) fn current(&self) -> Token {
 		self.current.clone()
 	}
 
+	pub(crate) fn next(&self) -> Token {
+		self.next.clone()
+	}
+
 	/// Advance to the next token
+	/// # Errors
+	/// passthrough of [`Lexer`] errors
 	pub(crate) fn advance(&mut self) -> Result<(), Error> {
-		self.previous = self.current();
+		self.current = self.next.clone();
 		let tmp = self.lexer.next();
 		if let Some(token) = tmp {
-			self.current = token?;
+			// passthrough of lexer errors
+			self.next = token?;
 		} else {
-			self.current = Token::none();
+			self.next = Token::none();
 		}
+		//std::println!("{}", self.current.kind);
 		Ok(())
 	}
 
 	/// Advance to next token if it has given kind
+	/// # Errors
+	/// if next token does not have the wanted kind
 	pub(crate) fn advance_if(&mut self, kind: TokenKind) -> Result<(), Error> {
-		if self.current.kind != kind {
-			return Err(Error::UnexpectedToken);
+		if self.next.kind == kind {
+			self.advance()
+		} else {
+			Err(Error::ExpectedToken(
+				kind.to_string(),
+				self.next.kind.to_string(),
+				self.next.line,
+			))
 		}
-		self.advance()
+	}
+
+	/// Check next token whether it has given kind
+	pub(crate) fn check_next(&mut self, kind: TokenKind) -> bool {
+		self.next.kind == kind
+	}
+
+	/// Check next token whether it has given kind
+	pub(crate) fn match_next(&mut self, kind: TokenKind) -> bool {
+		self.next.kind == kind && self.advance().is_ok()
 	}
 
 	pub(crate) fn emit_byte(&self, byte: u8, chunk: &mut Chunk) {
-		chunk.write(byte, self.previous.line);
+		chunk.write(byte, self.current.line);
 	}
 
 	pub(crate) fn emit_bytes(&self, byte1: u8, byte2: u8, chunk: &mut Chunk) {
-		chunk.write(byte1, self.previous.line);
-		chunk.write(byte2, self.previous.line);
+		chunk.write(byte1, self.current.line);
+		chunk.write(byte2, self.current.line);
+	}
+
+	pub(crate) fn statement(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
+		if self.next.kind == TokenKind::Print {
+			self.advance()?;
+			self.expression(chunk)?;
+			self.advance_if(TokenKind::Semicolon)?;
+			self.emit_byte(OP_PRINT, chunk);
+		} else {
+			self.expression(chunk)?;
+			self.advance_if(TokenKind::Semicolon)?;
+			self.emit_byte(OP_POP, chunk);
+		}
+		Ok(())
 	}
 
 	pub(crate) fn expression(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
-		self.with_precedence(ASSIGNMENT, chunk)
+		self.with_precedence(Precedence::Assignment, chunk)
 	}
 
 	pub(crate) fn with_precedence(
@@ -184,17 +243,17 @@ impl<'a> Parser<'a> {
 	) -> Result<(), Error> {
 		self.advance()?;
 
-		let token = self.previous();
+		let token = self.current();
 		let prefix_opt = self.prefix_parselets.get(&token.kind);
 		if prefix_opt.is_none() {
-			return Err(Error::ExpressionExpected);
+			return Err(Error::ExpressionExpected(token.line));
 		}
-		let prefix = prefix_opt.expect("should not fail").clone();
-		prefix.parse(self, chunk, token)?;
+		let prefix_parselet = prefix_opt.expect("should not fail").clone();
+		prefix_parselet.parse(self, chunk, token)?;
 
 		while precedence <= self.get_precedence() {
 			self.advance()?;
-			let token = self.previous();
+			let token = self.current();
 			let infix_opt = self.infix_parselets.get(&token.kind);
 			match infix_opt {
 				Some(infix) => infix.clone().parse(self, chunk, token)?,
@@ -208,10 +267,10 @@ impl<'a> Parser<'a> {
 	}
 
 	fn get_precedence(&self) -> Precedence {
-		let token = self.current();
+		let token = self.next();
 		if let Some(parselet) = self.infix_parselets.get(&token.kind) {
 			return parselet.get_precedence();
 		}
-		NONE
+		Precedence::None
 	}
 }

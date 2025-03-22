@@ -10,7 +10,7 @@ use crate::scripting::{
 	Parser,
 	compiling::{
 		error::Error,
-		precedence::{Precedence, UNARY},
+		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
 	execution::{
@@ -33,10 +33,10 @@ impl UnaryParselet {
 
 impl PrefixParselet for UnaryParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
-		let token = parser.previous();
+		let token = parser.current();
 		// there must be a current token
-		if parser.current().kind == TokenKind::None {
-			return Err(Error::ExpressionExpected);
+		if parser.next().kind == TokenKind::None {
+			return Err(Error::ExpressionExpected(parser.next().line));
 		}
 		// compile the operand
 		parser.with_precedence(self.precedence, chunk)?;

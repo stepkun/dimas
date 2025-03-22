@@ -9,7 +9,7 @@ use core::{fmt::Display, mem::ManuallyDrop};
 
 use alloc::{borrow::ToOwned, string::String, vec::Vec};
 
-use super::{error::Error, Chunk, VM};
+use super::{Chunk, VM, error::Error};
 
 /// Constants for working with different types of [`Value`]s
 pub(crate) const VAL_NIL: i8 = 0;
