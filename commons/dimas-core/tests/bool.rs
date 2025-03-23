@@ -119,7 +119,6 @@ fn equality() {
 }
 
 #[test]
-#[ignore = "Token ! does not work correct"]
 fn not() {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();

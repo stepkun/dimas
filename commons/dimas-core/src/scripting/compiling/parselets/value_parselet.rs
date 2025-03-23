@@ -65,8 +65,4 @@ impl PrefixParselet for ValueParselet {
 			_ => Err(Error::Unreachable(file!().to_string())),
 		}
 	}
-
-	fn get_precedence(&self) -> crate::scripting::compiling::precedence::Precedence {
-		Precedence::None
-	}
 }

@@ -25,8 +25,4 @@ impl PrefixParselet for GroupingParselet {
 		parser.expression(chunk)?;
 		parser.advance_if(TokenKind::RightParen)
 	}
-
-	fn get_precedence(&self) -> crate::scripting::compiling::precedence::Precedence {
-		Precedence::None
-	}
 }

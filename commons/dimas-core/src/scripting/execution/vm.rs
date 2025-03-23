@@ -241,15 +241,20 @@ impl VM {
 
 	fn not(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		let kind = self.peek(0).kind();
-		if kind != VAL_BOOL && kind != VAL_NIL {
-			return Err(Error::NoBoolean);
-		}
-		// 'nil' will be left untouched
-		if kind == VAL_BOOL {
-			let mut val = self.pop();
-			val.to_bool(!val.as_bool()?);
-			self.push(val);
-		}
+		let mut val = self.pop();
+		match kind {
+			VAL_BOOL => {
+				val.to_bool(!val.as_bool()?);
+			},
+			VAL_DOUBLE | VAL_STR | VAL_INT => {
+				val.to_bool(false);
+			},
+			VAL_NIL => {
+				val.to_bool(true);
+			},
+			_ => return Err(Error::Unreachable),
+		};
+		self.push(val);
 		Ok(())
 	}
 

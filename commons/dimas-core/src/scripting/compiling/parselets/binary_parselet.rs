@@ -25,14 +25,12 @@ use super::{Expression, InfixParselet};
 
 pub struct BinaryParselet {
 	precedence: Precedence,
-	is_right: bool,
 }
 
 impl BinaryParselet {
-	pub const fn new(precedence: Precedence, is_right: bool) -> Self {
+	pub const fn new(precedence: Precedence) -> Self {
 		Self {
 			precedence,
-			is_right,
 		}
 	}
 }

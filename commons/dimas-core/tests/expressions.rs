@@ -6,7 +6,6 @@
 use dimas_core::scripting::{Parser, VM};
 
 #[test]
-#[ignore = "Token ! does not work correct"]
 fn template() {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
@@ -26,5 +25,5 @@ fn template() {
 	let mut parser = Parser::new("print !(5 - 4 > 3 * 2 == !nil);");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &mut stdout).unwrap();
-	assert_eq!(stdout, b"false\n");
+	assert_eq!(stdout, b"true\n");
 }

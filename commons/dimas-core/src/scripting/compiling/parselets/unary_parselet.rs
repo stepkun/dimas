@@ -21,15 +21,7 @@ use crate::scripting::{
 
 use super::{Expression, PrefixParselet};
 
-pub struct UnaryParselet {
-	precedence: Precedence,
-}
-
-impl UnaryParselet {
-	pub const fn new(precedence: Precedence) -> Self {
-		Self { precedence }
-	}
-}
+pub struct UnaryParselet;
 
 impl PrefixParselet for UnaryParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
@@ -39,7 +31,7 @@ impl PrefixParselet for UnaryParselet {
 			return Err(Error::ExpressionExpected(parser.next().line));
 		}
 		// compile the operand
-		parser.with_precedence(self.precedence, chunk)?;
+		parser.with_precedence(Precedence::Unary, chunk)?;
 		match token.kind {
 			TokenKind::Bang => {
 				// add the logical not
@@ -62,9 +54,5 @@ impl PrefixParselet for UnaryParselet {
 			}
 			_ => Err(Error::Unreachable(file!().to_string())),
 		}
-	}
-
-	fn get_precedence(&self) -> Precedence {
-		self.precedence
 	}
 }

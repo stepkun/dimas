@@ -34,9 +34,6 @@ pub trait Expression {}
 pub trait PrefixParselet {
 	/// Parse the token
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error>;
-
-	/// Get the precedence the parselet is executed with.
-	fn get_precedence(&self) -> Precedence;
 }
 
 /// Interfaces used by the Pratt parser. An `InfixParselet` is
