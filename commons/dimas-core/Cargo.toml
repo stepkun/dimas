@@ -16,11 +16,24 @@ description = "dimas-core - core library for DiMAS"
 documentation = "https://docs.rs/dimas-core/latest/dimas-core/"
 readme = "README.md"
 exclude = [
-    "tests/**",
+    "benches/**",
     "examples/**",
+    "tests/**",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bench]]
+name = "equality"
+harness = false
+
+[[bench]]
+name = "comparison"
+harness = false
+
+[[bench]]
+name = "expression"
+harness = false
 
 [lints]
 workspace = true
@@ -36,6 +49,7 @@ tracing-subscriber = { workspace = true }
 [build-dependencies]
 
 [dev-dependencies]
+criterion = "0.5.1"
 
 [features]
 default = ["std"]

@@ -59,7 +59,7 @@ impl ReactiveFallback {
 						"Idle".to_string(),
 					));
 				}
-			};
+			}
 		}
 
 		bhvr_.reset_children().await;

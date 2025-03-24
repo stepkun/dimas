@@ -73,7 +73,7 @@ impl IntervalTimer {
 		let handle = self.handle.take();
 		if let Some(handle) = handle {
 			handle.abort();
-		};
+		}
 		// @TODO: clarify which status is best
 		bhvr_.set_status(BehaviorStatus::Success);
 	}

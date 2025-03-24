@@ -63,7 +63,7 @@ impl SequenceWithMemory {
 						"Idle".to_string(),
 					));
 				}
-			};
+			}
 		}
 
 		// All children returned Success

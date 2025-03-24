@@ -207,7 +207,7 @@ impl VM {
 			self.push(Value::from_bool(res));
 		} else {
 			self.push(Value::from_bool(false));
-		};
+		}
 	}
 
 	fn negate(&mut self) -> Result<(), Error> {
@@ -245,15 +245,15 @@ impl VM {
 		match kind {
 			VAL_BOOL => {
 				val.to_bool(!val.as_bool()?);
-			},
+			}
 			VAL_DOUBLE | VAL_STR | VAL_INT => {
 				val.to_bool(false);
-			},
+			}
 			VAL_NIL => {
 				val.to_bool(true);
-			},
+			}
 			_ => return Err(Error::Unreachable),
-		};
+		}
 		self.push(val);
 		Ok(())
 	}

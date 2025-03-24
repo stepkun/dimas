@@ -29,9 +29,7 @@ pub struct BinaryParselet {
 
 impl BinaryParselet {
 	pub const fn new(precedence: Precedence) -> Self {
-		Self {
-			precedence,
-		}
+		Self { precedence }
 	}
 }
 

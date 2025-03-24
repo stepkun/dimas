@@ -58,10 +58,9 @@ impl<'a> Parser<'a> {
 		};
 
 		// Register the parselets for the grammar
-		parser.prefix_parselets.insert(
-			TokenKind::Bang,
-			Rc::from(UnaryParselet),
-		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Bang, Rc::from(UnaryParselet));
 		parser.infix_parselets.insert(
 			TokenKind::BangEqual,
 			Rc::from(BinaryParselet::new(Precedence::Equality)),
@@ -95,10 +94,9 @@ impl<'a> Parser<'a> {
 			TokenKind::LessEqual,
 			Rc::from(BinaryParselet::new(Precedence::Equality)),
 		);
-		parser.prefix_parselets.insert(
-			TokenKind::Minus,
-			Rc::from(UnaryParselet),
-		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Minus, Rc::from(UnaryParselet));
 		parser.infix_parselets.insert(
 			TokenKind::Minus,
 			Rc::from(BinaryParselet::new(Precedence::Term)),
@@ -109,10 +107,9 @@ impl<'a> Parser<'a> {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Number, Rc::from(ValueParselet));
-		parser.prefix_parselets.insert(
-			TokenKind::Plus,
-			Rc::from(UnaryParselet),
-		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Plus, Rc::from(UnaryParselet));
 		parser.infix_parselets.insert(
 			TokenKind::Plus,
 			Rc::from(BinaryParselet::new(Precedence::Term)),
@@ -128,10 +125,9 @@ impl<'a> Parser<'a> {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::String, Rc::from(ValueParselet));
-		parser.prefix_parselets.insert(
-			TokenKind::Tilde,
-			Rc::from(UnaryParselet),
-		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Tilde, Rc::from(UnaryParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::True, Rc::from(LiteralParselet));
@@ -159,7 +155,7 @@ impl<'a> Parser<'a> {
 				{
 					self.advance()?;
 				}
-			};
+			}
 		}
 
 		// end compiler

@@ -62,7 +62,7 @@ impl Fallback {
 						"Idle".to_string(),
 					));
 				}
-			};
+			}
 		}
 
 		if self.child_idx == bhvr_.children().len() {

@@ -32,7 +32,7 @@ pub struct Repeat {
 	#[bhvr(default = "-1")]
 	num_cycles: i32,
 	#[bhvr(default = "0")]
-	repeat_count: usize,
+	count: usize,
 	#[bhvr(default = "true")]
 	all_skipped: bool,
 }
@@ -43,7 +43,7 @@ impl Repeat {
 		// Load num_cycles from the port value
 		self.num_cycles = bhvr_.config_mut().get_input("num_cycles")?;
 
-		let mut do_loop = (self.repeat_count as i32) < self.num_cycles || self.num_cycles == -1;
+		let mut do_loop = (self.count as i32) < self.num_cycles || self.num_cycles == -1;
 
 		if matches!(bhvr_.status(), BehaviorStatus::Idle) {
 			self.all_skipped = true;
@@ -62,13 +62,13 @@ impl Repeat {
 
 			match child_status {
 				BehaviorStatus::Success => {
-					self.repeat_count += 1;
+					self.count += 1;
 					bhvr_.reset_child().await;
 
 					return Ok(BehaviorStatus::Running);
 				}
 				BehaviorStatus::Failure => {
-					self.repeat_count = 0;
+					self.count = 0;
 					bhvr_.reset_child().await;
 
 					return Ok(BehaviorStatus::Failure);
@@ -89,7 +89,7 @@ impl Repeat {
 		}
 
 		// reset try counter
-		self.repeat_count = 0;
+		self.count = 0;
 
 		if self.all_skipped {
 			Ok(BehaviorStatus::Skipped)
@@ -103,7 +103,7 @@ impl Repeat {
 	}
 
 	async fn halt(&mut self) {
-		self.repeat_count = 0;
+		self.count = 0;
 		bhvr_.reset_child().await;
 	}
 }

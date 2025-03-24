@@ -354,7 +354,7 @@ impl BTFactory {
 			if format != "4" {
 				return Err(Error::BtCppFormat);
 			}
-		};
+		}
 
 		// shrink and create tree from validated xml
 		let xml = Self::shrink_xml(xml);
@@ -421,12 +421,12 @@ impl BTFactory {
 							continue;
 						}
 						in_whitespaces = true;
-					};
+					}
 				}
 				'=' => {
 					if in_whitespaces {
 						res.pop();
-					};
+					}
 					in_whitespaces = false;
 					in_assignment = true;
 				}
@@ -434,7 +434,7 @@ impl BTFactory {
 					in_whitespaces = false;
 					in_assignment = false;
 				}
-			};
+			}
 			res.push(char);
 		}
 

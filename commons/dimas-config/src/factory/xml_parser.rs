@@ -27,13 +27,6 @@ use super::{
 // endregion:   --- modules
 
 // region:      --- helper
-#[derive(Debug)]
-enum CreateBehaviorResult {
-	Behavior(Behavior),
-	Continue,
-	End,
-}
-
 pub trait AttrsToMap {
 	fn to_map(self) -> Result<HashMap<String, String>, Error>;
 }
@@ -116,7 +109,7 @@ impl XmlParser {
 										name.to_owned(),
 									));
 								}
-							};
+							}
 						}
 					}
 				}
@@ -348,7 +341,7 @@ impl XmlParser {
 								data.tree_definitions.insert(id.into(), bi);
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
-							};
+							}
 						}
 						_ => {
 							return Err(Error::ElementNotSupported(
@@ -414,11 +407,11 @@ impl XmlParser {
 			if format != "4" {
 				return Err(Error::BtCppFormat);
 			}
-		};
+		}
 
 		if let Some(id) = root.attribute("main_tree_to_execute") {
 			return Err(Error::MainTreeNotAllowed);
-		};
+		}
 
 		Self::parse_document(root, data, blackboard)
 	}
