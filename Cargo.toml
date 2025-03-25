@@ -9,6 +9,7 @@ members = [
 	"commons/dimas-config",
 	"commons/dimas-core",
 	"commons/dimas-macros",
+	"commons/dimas-scripting",
 	"commons/dimas-time",
 	"dimas",
 	"dimasctl",
@@ -63,6 +64,8 @@ dimas-core = { path = "commons/dimas-core" }
 #dimas-core = "0.5.0"
 dimas-macros = { path = "commons/dimas-macros" }
 #dimas-macros = "0.5.0"
+dimas-scripting = { path = "commons/dimas-scripting" }
+#dimas-scripting = "0.5.0"
 dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.5.0"
 doc-comment = "0.3.3"
