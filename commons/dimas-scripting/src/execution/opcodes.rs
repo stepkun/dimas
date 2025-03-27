@@ -18,7 +18,13 @@ pub const OP_FALSE: u8 = OP_TRUE + 1;
 /// @TODO
 pub const OP_POP: u8 = OP_FALSE + 1;
 /// @TODO
-pub const OP_EQUAL: u8 = OP_POP + 1;
+pub const OP_DEFINE_EXTERNAL: u8 = OP_POP + 1;
+/// @TODO
+pub const OP_GET_EXTERNAL: u8 = OP_DEFINE_EXTERNAL + 1;
+/// @TODO
+pub const OP_SET_EXTERNAL: u8 = OP_GET_EXTERNAL + 1;
+/// @TODO
+pub const OP_EQUAL: u8 = OP_SET_EXTERNAL + 1;
 /// @TODO
 pub const OP_GREATER: u8 = OP_EQUAL + 1;
 /// @TODO
@@ -38,6 +44,7 @@ pub const OP_NOT: u8 = OP_BINARY_NOT + 1;
 /// @TODO
 pub const OP_NEGATE: u8 = OP_NOT + 1;
 /// @TODO
-pub const OP_PRINT: u8 = OP_NEGATE + 1;
+pub const OP_RETURN: u8 = OP_NEGATE + 1;
 /// @TODO
-pub const OP_RETURN: u8 = OP_PRINT + 1;
+#[cfg(feature = "std")]
+pub const OP_PRINT: u8 = OP_RETURN + 1;

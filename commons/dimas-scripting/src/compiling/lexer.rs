@@ -261,7 +261,8 @@ impl Iterator for Lexer<'_> {
 				}
 				Started::String => {
 					if let Some(end) = self.rest.find('\'') {
-						let literal = &c_onwards[..=(end + 1)];
+						// we do not want the leaing and trailing `'` included
+						let literal = &c_onwards[1..=(end)];
 						self.pos += end + 1;
 						self.rest = &self.rest[end + 1..];
 						Some(Ok(Token {

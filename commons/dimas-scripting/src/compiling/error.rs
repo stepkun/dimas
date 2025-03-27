@@ -11,6 +11,9 @@ use thiserror::Error;
 /// `scripting` error type
 #[derive(Error, Debug)]
 pub enum Error {
+	/// Pass through VM error
+	#[error("{0}")]
+	VM(#[from] crate::execution::error::Error),
 	/// @TODO:
 	#[error("Expecting {0} found {1} at line {2}")]
 	ExpectedToken(String, String, usize),

@@ -1,5 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 #![no_std]
+#![allow(dead_code)]
+#![allow(unused)]
 
 //! A scripting language for `DiMAS`
 //!
@@ -43,7 +45,60 @@ extern crate alloc;
 mod compiling;
 mod execution;
 
+use alloc::string::{String, ToString};
 // flatten
 pub use compiling::Parser;
 pub use compiling::{Lexer, TokenKind};
+use execution::Error;
 pub use execution::VM;
+
+use execution::values::Value;
+use hashbrown::HashMap;
+use parking_lot::RwLock;
+
+/// The trait for providing an [`Environment`] to a [`VM`] that stores variables persistently and externally available.
+pub trait Environment: Send + Sync {
+	/// Define the variable with `name` to `value`.
+	/// It has to be created if it does not already exist.
+	fn define(&self, name: &str, value: Value);
+	/// Get a variable by name
+	/// # Errors
+	/// if the variable does not exist
+	fn get(&self, name: &str) -> Result<Value, Error>;
+	/// Set the variable with `name` to `value`.
+	/// # Errors
+	/// if variable does not exist.
+	fn set(&self, name: &str, value: Value) -> Result<(), Error>;
+}
+
+/// A default Environment for testing purpose end the REPL
+#[derive(Default)]
+pub struct DefaultEnvironment {
+	storage: RwLock<HashMap<String, Value>>,
+}
+
+impl Environment for DefaultEnvironment {
+	fn define(&self, name: &str, value: Value) {
+		self.storage
+			.write()
+			.insert(name.to_string(), value);
+	}
+
+	fn get(&self, name: &str) -> Result<Value, Error> {
+		self.storage
+			.read()
+			.get(name)
+			.map_or(Err(Error::GlobalNotDefined), |value| Ok(*value))
+	}
+
+	fn set(&self, name: &str, value: Value) -> Result<(), Error> {
+		if self.storage.read().contains_key(name) {
+			self.storage
+				.write()
+				.insert(name.to_string(), value);
+			Ok(())
+		} else {
+			Err(Error::GlobalNotDefined)
+		}
+	}
+}

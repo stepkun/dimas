@@ -40,6 +40,7 @@ workspace = true
 
 [dependencies]
 hashbrown = { workspace = true }
+parking_lot = { workspace = true }
 thiserror = { workspace = true }
 
 [build-dependencies]

@@ -10,8 +10,10 @@ use core::{marker::PhantomData, str::CharIndices};
 use alloc::{
 	borrow::ToOwned,
 	string::{String, ToString},
+	sync::Arc,
 };
-use hashbrown::HashSet;
+
+use crate::{DefaultEnvironment, Environment};
 
 #[allow(clippy::wildcard_imports)]
 use super::opcodes::*;
@@ -32,19 +34,33 @@ pub struct VM {
 	stack: [Value; STACK_MAX],
 	/// Pointer to the next free stack place
 	stack_top: usize,
+	/// Reference to storage for truly `global` variables, which are used also available outside the [`VM`]
+	globals: Arc<dyn Environment>,
 }
 
 impl Default for VM {
+	/// Create a [`VM`] with a default Environment
 	fn default() -> Self {
 		Self {
 			ip: 0,
 			stack: [Value::default(); STACK_MAX],
 			stack_top: 0,
+			globals: Arc::from(DefaultEnvironment::default()),
 		}
 	}
 }
 
 impl VM {
+	/// Create a [`VM`] with an external Environment
+	pub fn new(environment: Arc<dyn Environment>) -> Self {
+		Self {
+			ip: 0,
+			stack: [Value::default(); STACK_MAX],
+			stack_top: 0,
+			globals: environment,
+		}
+	}
+
 	fn reset(&mut self) {
 		self.ip = 0;
 		self.stack = [Value::default(); STACK_MAX];
@@ -251,13 +267,52 @@ impl VM {
 		Ok(())
 	}
 
+	#[cfg(feature = "std")]
+	fn print(&mut self, chunk: &Chunk, stdout: &mut impl std::io::Write) -> Result<(), Error> {
+		if self.stack_top > 0 {
+			let value = self.pop();
+			if value.is_string_pos() {
+				std::writeln!(stdout, "{}", chunk.get_string(value.as_string_pos()?));
+			} else {
+				std::writeln!(stdout, "{value}");
+			}
+		} else {
+			std::writeln!(stdout, "no result");
+		}
+		Ok(())
+	}
+
+	fn define_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
+		// chunk.disassemble("chunk before define_global");
+		let name_val = self.pop();
+		let value_val = self.pop();
+		let name = chunk.get_string(name_val.as_string_pos()?);
+		self.globals.define(name, value_val);
+		Ok(())
+	}
+
+	fn get_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
+		let name_val = self.pop();
+		let name = chunk.get_string(name_val.as_string_pos()?);
+		let val = self.globals.get(name)?;
+		self.push(val);
+		Ok(())
+	}
+
+	fn set_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
+		let name_val = self.pop();
+		let name = chunk.get_string(name_val.as_string_pos()?);
+		let value_val = self.pop();
+		self.globals.set(name, value_val)
+	}
+
 	/// Execute a [`Chunk`] with the virtual machine
 	/// # Errors
 	/// - unknown `OpCode`
 	pub fn run(
 		&mut self,
 		chunk: &mut Chunk,
-		stdout: &mut impl std::io::Write,
+		#[cfg(feature = "std")] stdout: &mut impl std::io::Write,
 	) -> Result<(), Error> {
 		self.reset();
 		chunk.save_state();
@@ -274,9 +329,11 @@ impl VM {
 				OP_ADD => self.arithmetic_operator(OP_ADD, chunk)?,
 				OP_BINARY_NOT => self.binary_not(chunk)?,
 				OP_CONSTANT => self.constant(chunk),
+				OP_DEFINE_EXTERNAL => self.define_global(chunk)?,
 				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE, chunk)?,
 				OP_EQUAL => self.equal(chunk),
 				OP_FALSE => self.push(Value::from_bool(false))?,
+				OP_GET_EXTERNAL => self.get_global(chunk)?,
 				OP_GREATER => self.boolean_operator(OP_GREATER)?,
 				OP_LESS => self.boolean_operator(OP_LESS)?,
 				OP_MULTIPLY => self.arithmetic_operator(OP_MULTIPLY, chunk)?,
@@ -286,22 +343,13 @@ impl VM {
 				OP_POP => {
 					self.pop();
 				}
-				OP_PRINT => {
-					if self.stack_top > 0 {
-						let value = self.pop();
-						if value.is_string_pos() {
-							std::writeln!(stdout, "{}", chunk.get_string(value.as_string_pos()?));
-						} else {
-							std::writeln!(stdout, "{value}");
-						}
-					} else {
-						std::writeln!(stdout, "no result");
-					}
-				}
+				#[cfg(feature = "std")]
+				OP_PRINT => self.print(chunk, stdout)?,
 				OP_RETURN => {
 					chunk.restore_state();
 					return Ok(());
 				}
+				OP_SET_EXTERNAL => self.set_global(chunk)?,
 				OP_SUBTRACT => self.arithmetic_operator(OP_SUBTRACT, chunk)?,
 				OP_TRUE => self.push(Value::from_bool(true))?,
 				_ => {

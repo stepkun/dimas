@@ -2,9 +2,7 @@
 #![allow(unused)]
 //! Tests
 
-use dimas_scripting::{
-	Lexer, Parser, VM,
-};
+use dimas_scripting::{Lexer, Parser, VM};
 
 // check, that the auto traits are available
 const fn is_normal<T: Sized + Send + Sync>() {}

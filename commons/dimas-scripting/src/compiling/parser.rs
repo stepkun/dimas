@@ -13,7 +13,7 @@
 
 extern crate std;
 
-use alloc::{borrow::ToOwned, boxed::Box, sync::Arc, string::ToString};
+use alloc::{borrow::ToOwned, boxed::Box, string::ToString, sync::Arc};
 use hashbrown::HashMap;
 
 use crate::{
@@ -28,7 +28,7 @@ use super::{
 	error::Error,
 	parselets::{
 		BinaryParselet, Expression, GroupingParselet, InfixParselet, LiteralParselet,
-		PrefixParselet, UnaryParselet, ValueParselet,
+		PrefixParselet, UnaryParselet, ValueParselet, VariableParselet,
 	},
 	precedence::Precedence,
 	token::{Token, TokenKind},
@@ -83,6 +83,9 @@ impl<'a> Parser<'a> {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::HexNumber, Arc::from(ValueParselet));
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Ident, Arc::from(VariableParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::LeftParen, Arc::from(GroupingParselet));
@@ -187,15 +190,15 @@ impl<'a> Parser<'a> {
 		Ok(())
 	}
 
-	/// Advance to next token if it has given kind
+	/// Consume the next token if it has the expected kind
 	/// # Errors
-	/// if next token does not have the wanted kind
-	pub(crate) fn advance_if(&mut self, kind: TokenKind) -> Result<(), Error> {
-		if self.next.kind == kind {
+	/// if next token does not have the expected kind
+	pub(crate) fn consume(&mut self, expected: TokenKind) -> Result<(), Error> {
+		if self.next.kind == expected {
 			self.advance()
 		} else {
 			Err(Error::ExpectedToken(
-				kind.to_string(),
+				expected.to_string(),
 				self.next.kind.to_string(),
 				self.next.line,
 			))
@@ -225,12 +228,12 @@ impl<'a> Parser<'a> {
 		if self.next.kind == TokenKind::Print {
 			self.advance()?;
 			self.expression(chunk)?;
-			self.advance_if(TokenKind::Semicolon)?;
+			self.consume(TokenKind::Semicolon)?;
 			self.emit_byte(OP_PRINT, chunk);
 		} else {
 			self.expression(chunk)?;
-			self.advance_if(TokenKind::Semicolon)?;
-			self.emit_byte(OP_POP, chunk);
+			self.consume(TokenKind::Semicolon)?;
+			//self.emit_byte(OP_POP, chunk);
 		}
 		Ok(())
 	}

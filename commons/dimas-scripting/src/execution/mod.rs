@@ -4,11 +4,12 @@
 //!
 
 mod chunk;
-mod error;
+pub mod error;
 pub mod opcodes;
 pub mod values;
 mod vm;
 
 // flatten
 pub use chunk::Chunk;
+pub use error::Error;
 pub use vm::VM;

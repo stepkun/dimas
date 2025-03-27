@@ -12,6 +12,8 @@ use alloc::{borrow::ToOwned, string::String, vec::Vec};
 use crate::execution::opcodes::*;
 use crate::execution::values::{self, Value};
 
+use super::Error;
+
 /// A chunk of bytecode
 #[derive(Default)]
 pub struct Chunk {
@@ -59,22 +61,24 @@ impl Chunk {
 
 	/// Add a Value to the Value storage returning its position in the storage
 	#[allow(clippy::cast_possible_truncation)]
-	pub fn add_constant(&mut self, value: Value) -> u8 {
-		self.values.push(value);
-		let pos = self.values.len() - 1;
-		pos as u8
+	pub fn add_constant(&mut self, value: Value) -> Result<u8, Error> {
+		if self.values.len() < u8::MAX as usize {
+			self.values.push(value);
+			let pos = self.values.len() - 1;
+			Ok(pos as u8)
+		} else {
+			Err(Error::StackOverflow)
+		}
 	}
 
 	/// Add a String to the String storage returning its position in the storage
 	pub fn add_string(&mut self, string: String) -> usize {
-		string.trim_matches('\'');
 		self.strings.push(string);
 		self.strings.len() - 1
 	}
 
 	/// Add a String to the Value storage returning its position in the storage
-	#[allow(clippy::cast_possible_truncation)]
-	pub fn add_string_constant(&mut self, string: String) -> u8 {
+	pub fn add_string_constant(&mut self, string: String) -> Result<u8, Error> {
 		let offset = self.add_string(string);
 		let value = Value::from_string_pos(offset);
 		self.add_constant(value)
@@ -93,7 +97,7 @@ impl Chunk {
 		let offset = usize::from(pos);
 		self.values
 			.get(offset)
-			.map_or_else(|| todo!(), |value| value.to_owned())
+			.map_or_else(|| todo!("pos: {}", pos), |value| value.to_owned())
 	}
 
 	/// Disassemble chunk
@@ -117,9 +121,11 @@ impl Chunk {
 			OP_ADD => Self::simple_instruction("OP_ADD", offset),
 			OP_BINARY_NOT => Self::simple_instruction("OP_BINARY_NOT", offset),
 			OP_CONSTANT => self.constant_instruction("OP_CONSTANT", offset),
+			OP_DEFINE_EXTERNAL => Self::simple_instruction("OP_DEFINE_GLOBAL", offset),
 			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),
 			OP_EQUAL => Self::simple_instruction("OP_EQUAL", offset),
 			OP_FALSE => Self::simple_instruction("OP_FALSE", offset),
+			OP_GET_EXTERNAL => Self::simple_instruction("OP_GET_GLOBAL", offset),
 			OP_GREATER => Self::simple_instruction("OP_GREATER", offset),
 			OP_LESS => Self::simple_instruction("OP_LESS", offset),
 			OP_MULTIPLY => Self::simple_instruction("OP_MULTIPLY", offset),
@@ -129,6 +135,7 @@ impl Chunk {
 			OP_POP => Self::simple_instruction("OP_POP", offset),
 			OP_PRINT => Self::simple_instruction("OP_PRINT", offset),
 			OP_RETURN => Self::simple_instruction("OP_RETURN", offset),
+			OP_SET_EXTERNAL => Self::simple_instruction("OP_SET_GLOBAL", offset),
 			OP_SUBTRACT => Self::simple_instruction("OP_SUBTRACT", offset),
 			OP_TRUE => Self::simple_instruction("OP_TRUE", offset),
 			_ => todo!(),

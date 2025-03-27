@@ -23,6 +23,6 @@ pub struct GroupingParselet;
 impl PrefixParselet for GroupingParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		parser.expression(chunk)?;
-		parser.advance_if(TokenKind::RightParen)
+		parser.consume(TokenKind::RightParen)
 	}
 }

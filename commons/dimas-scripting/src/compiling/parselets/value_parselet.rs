@@ -31,10 +31,7 @@ impl PrefixParselet for ValueParselet {
 					}
 				};
 
-				let offset = chunk.add_constant(Value::from_double(double));
-				if offset == u8::MAX {
-					return Err(Error::ToManyValues);
-				}
+				let offset = chunk.add_constant(Value::from_double(double))?;
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())
 			}
@@ -47,18 +44,12 @@ impl PrefixParselet for ValueParselet {
 						return Err(Error::ParseHex(literal.to_string(), token.line));
 					}
 				};
-				let offset = chunk.add_constant(Value::from_integer(value));
-				if offset == u8::MAX {
-					return Err(Error::ToManyValues);
-				}
+				let offset = chunk.add_constant(Value::from_integer(value))?;
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())
 			}
 			TokenKind::String => {
-				let offset = chunk.add_string_constant(token.origin.trim_matches('\'').to_string());
-				if offset == u8::MAX {
-					return Err(Error::ToManyValues);
-				}
+				let offset = chunk.add_string_constant(token.origin)?;
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())
 			}

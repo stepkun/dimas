@@ -11,6 +11,9 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// @TODO:
+	#[error("The Variable has not been defined")]
+	GlobalNotDefined,
+	/// @TODO:
 	#[error("Value is not a Boolean type")]
 	NoBoolean,
 	/// @TODO:
