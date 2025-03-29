@@ -78,7 +78,7 @@ impl InfixParselet for BinaryParselet {
 				parser.emit_byte(OP_DIVIDE, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string())),
+			_ => Err(Error::Unreachable(file!().to_string(), line!())),
 		}
 	}
 

@@ -40,7 +40,7 @@ impl PrefixParselet for LiteralParselet {
 				parser.emit_byte(OP_TRUE, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string())),
+			_ => Err(Error::Unreachable(file!().to_string(), line!())),
 		}
 	}
 }

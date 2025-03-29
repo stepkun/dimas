@@ -1,13 +1,13 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `scripting` errors
+//! `scripting` runtime errors
 
 // region		--- modules
 use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `scripting` error type
+/// `scripting` runtime error type
 #[derive(Error, Debug)]
 pub enum Error {
 	/// @TODO:

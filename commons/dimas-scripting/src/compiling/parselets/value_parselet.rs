@@ -53,7 +53,7 @@ impl PrefixParselet for ValueParselet {
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string())),
+			_ => Err(Error::Unreachable(file!().to_string(), line!())),
 		}
 	}
 }

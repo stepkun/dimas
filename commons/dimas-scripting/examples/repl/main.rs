@@ -24,7 +24,7 @@ fn repl() {
 								println!("parsing error: {err}");
 							},
 							|mut chunk| {
-								chunk.disassemble("created chunk");
+								// chunk.disassemble("created chunk");
 								let mut stdout: Vec<u8> = Vec::new();
 								if let Err(error) = vm.run(&mut chunk, &mut stdout) {
 									println!("execution error: {error}");

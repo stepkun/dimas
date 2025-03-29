@@ -37,7 +37,7 @@ enum DimasctlCommand {
 	/// Shurdown entities
 	Shutdown,
 }
-// endregion:	--- Commands#[allow(clippy::unnecessary_wraps)]
+// endregion:	--- Commands
 
 fn main() -> Result<()> {
 	let args = DimasctlArgs::parse();

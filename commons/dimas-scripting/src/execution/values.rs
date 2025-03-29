@@ -35,6 +35,43 @@ pub struct Value {
 	value: InnerValue,
 }
 
+impl core::fmt::Debug for Value {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		match self.kind {
+			VAL_BOOL => f
+				.debug_struct("Value")
+				.field("kind", &"bool")
+				.field("value", &self.as_bool())
+				.finish(),
+			VAL_DOUBLE => f
+				.debug_struct("Value")
+				.field("kind", &"double")
+				.field("value", &self.as_double())
+				.finish(),
+			VAL_INT => f
+				.debug_struct("Value")
+				.field("kind", &"int")
+				.field("value", &self.as_integer())
+				.finish(),
+			VAL_NIL => f
+				.debug_struct("Value")
+				.field("kind", &"nil")
+				.field("value", &"nil")
+				.finish(),
+			VAL_STR => f
+				.debug_struct("Value")
+				.field("kind", &"str_pos")
+				.field("value", &self.as_string_pos())
+				.finish(),
+			_ => f
+				.debug_struct("Value")
+				.field("kind", &self.kind)
+				.field("value", &"unimplemented")
+				.finish(),
+		}
+	}
+}
+
 impl Default for Value {
 	fn default() -> Self {
 		Self {

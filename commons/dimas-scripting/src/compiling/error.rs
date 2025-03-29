@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `scripting` errors
+//! `scripting` compiletime errors
 
 use alloc::string::String;
 // region		--- modules
@@ -8,10 +8,11 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `scripting` error type
+/// `scripting` compiletime error type
 #[derive(Error, Debug)]
 pub enum Error {
-	/// Pass through VM error
+	/// Pass through VM error.
+	/// Used to have the same error message during compilation and execution for [`Value`] errors
 	#[error("{0}")]
 	VM(#[from] crate::execution::error::Error),
 	/// @TODO:
@@ -43,7 +44,7 @@ pub enum Error {
 	UnterminatedString(String, usize),
 
 	/// @TODO:
-	#[error("this should be unreachable in {0}")]
-	Unreachable(String),
+	#[error("this should be unreachable in {0} at line {1}")]
+	Unreachable(String, u32),
 }
 // region:		--- Error

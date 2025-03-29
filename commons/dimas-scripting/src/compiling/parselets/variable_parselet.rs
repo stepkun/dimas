@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! `VariableParselet` for `Dimas`scripting
 //!
@@ -34,60 +33,49 @@ impl PrefixParselet for VariableParselet {
 				parser.advance()?;
 				parser.expression(chunk);
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_DEFINE_EXTERNAL, chunk);
+				parser.emit_bytes(OP_DEFINE_EXTERNAL, name, chunk);
 			}
 			TokenKind::PlusEqual => {
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_GET_EXTERNAL, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk);
 				parser.emit_byte(OP_ADD, chunk);
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_SET_EXTERNAL, name, chunk);
 			}
 			TokenKind::MinusEqual => {
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_GET_EXTERNAL, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk);
 				parser.emit_byte(OP_SUBTRACT, chunk);
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_SET_EXTERNAL, name, chunk);
 			}
 			TokenKind::StarEqual => {
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_GET_EXTERNAL, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk);
 				parser.emit_byte(OP_MULTIPLY, chunk);
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_SET_EXTERNAL, name, chunk);
 			}
 			TokenKind::SlashEqual => {
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_GET_EXTERNAL, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk);
 				parser.emit_byte(OP_DIVIDE, chunk);
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_SET_EXTERNAL, name, chunk);
 			}
 			TokenKind::Equal => {
 				parser.advance()?;
 				parser.expression(chunk);
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_SET_EXTERNAL, name, chunk);
 			}
 			_ => {
 				let name = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, name, chunk);
-				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.emit_bytes(OP_GET_EXTERNAL, name, chunk);
 			}
 		}
 		Ok(())

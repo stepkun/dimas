@@ -52,7 +52,7 @@ impl PrefixParselet for UnaryParselet {
 				parser.emit_byte(OP_BINARY_NOT, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string())),
+			_ => Err(Error::Unreachable(file!().to_string(), line!())),
 		}
 	}
 }

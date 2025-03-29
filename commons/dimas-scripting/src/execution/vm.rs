@@ -34,7 +34,8 @@ pub struct VM {
 	stack: [Value; STACK_MAX],
 	/// Pointer to the next free stack place
 	stack_top: usize,
-	/// Reference to storage for truly `global` variables, which are used also available outside the [`VM`]
+	/// Reference to a storage for truly `global` variables, which are used also available outside the [`VM`].
+	/// The storage has to provide getter and setter methods using interior mutability.
 	globals: Arc<dyn Environment>,
 }
 
@@ -71,17 +72,19 @@ impl VM {
 		&self.stack[self.stack_top - distance - 1]
 	}
 
-	const fn push(&mut self, value: Value) -> Result<(), Error> {
+	fn push(&mut self, value: Value) -> Result<(), Error> {
 		if self.stack_top == u8::MAX as usize {
 			return Err(Error::StackOverflow);
 		}
 		self.stack[self.stack_top] = value;
 		self.stack_top += 1;
+		//std::dbg!("pushed value {}", &value);
 		Ok(())
 	}
 
-	const fn pop(&mut self) -> Value {
+	fn pop(&mut self) -> Value {
 		self.stack_top -= 1;
+		//std::dbg!("popping a value at {}", self.stack_top);
 		self.stack[self.stack_top]
 	}
 
@@ -283,8 +286,9 @@ impl VM {
 	}
 
 	fn define_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
-		// chunk.disassemble("chunk before define_global");
-		let name_val = self.pop();
+		let pos = chunk.code()[self.ip];
+		let name_val = chunk.read_constant(pos);
+		self.ip += 1;
 		let value_val = self.pop();
 		let name = chunk.get_string(name_val.as_string_pos()?);
 		self.globals.define(name, value_val);
@@ -292,7 +296,9 @@ impl VM {
 	}
 
 	fn get_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
-		let name_val = self.pop();
+		let pos = chunk.code()[self.ip];
+		let name_val = chunk.read_constant(pos);
+		self.ip += 1;
 		let name = chunk.get_string(name_val.as_string_pos()?);
 		let val = self.globals.get(name)?;
 		self.push(val);
@@ -300,7 +306,9 @@ impl VM {
 	}
 
 	fn set_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
-		let name_val = self.pop();
+		let pos = chunk.code()[self.ip];
+		let name_val = chunk.read_constant(pos);
+		self.ip += 1;
 		let name = chunk.get_string(name_val.as_string_pos()?);
 		let value_val = self.pop();
 		self.globals.set(name, value_val)
