@@ -15,7 +15,10 @@ use crate::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{OP_CONSTANT, OP_DEFINE_EXTERNAL, OP_GET_EXTERNAL, OP_SET_EXTERNAL},
+		opcodes::{
+			OP_ADD, OP_CONSTANT, OP_DEFINE_EXTERNAL, OP_DIVIDE, OP_GET_EXTERNAL, OP_MULTIPLY,
+			OP_SET_EXTERNAL, OP_SUBTRACT,
+		},
 		values::Value,
 	},
 };
@@ -33,6 +36,46 @@ impl PrefixParselet for VariableParselet {
 				let name = chunk.add_string_constant(token.origin)?;
 				parser.emit_bytes(OP_CONSTANT, name, chunk);
 				parser.emit_byte(OP_DEFINE_EXTERNAL, chunk);
+			}
+			TokenKind::PlusEqual => {
+				let name = chunk.add_string_constant(token.origin)?;
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.advance()?;
+				parser.expression(chunk);
+				parser.emit_byte(OP_ADD, chunk);
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+			}
+			TokenKind::MinusEqual => {
+				let name = chunk.add_string_constant(token.origin)?;
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.advance()?;
+				parser.expression(chunk);
+				parser.emit_byte(OP_SUBTRACT, chunk);
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+			}
+			TokenKind::StarEqual => {
+				let name = chunk.add_string_constant(token.origin)?;
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.advance()?;
+				parser.expression(chunk);
+				parser.emit_byte(OP_MULTIPLY, chunk);
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_SET_EXTERNAL, chunk);
+			}
+			TokenKind::SlashEqual => {
+				let name = chunk.add_string_constant(token.origin)?;
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_GET_EXTERNAL, chunk);
+				parser.advance()?;
+				parser.expression(chunk);
+				parser.emit_byte(OP_DIVIDE, chunk);
+				parser.emit_bytes(OP_CONSTANT, name, chunk);
+				parser.emit_byte(OP_SET_EXTERNAL, chunk);
 			}
 			TokenKind::Equal => {
 				parser.advance()?;
