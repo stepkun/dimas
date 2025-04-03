@@ -15,7 +15,7 @@ use crate::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{OP_BINARY_NOT, OP_CONSTANT, OP_NEGATE, OP_NOT},
+		opcodes::{OP_BITWISE_NOT, OP_CONSTANT, OP_NEGATE, OP_NOT},
 	},
 };
 
@@ -49,7 +49,7 @@ impl PrefixParselet for UnaryParselet {
 			}
 			TokenKind::Tilde => {
 				// add the binary not
-				parser.emit_byte(OP_BINARY_NOT, chunk);
+				parser.emit_byte(OP_BITWISE_NOT, chunk);
 				Ok(())
 			}
 			_ => Err(Error::Unreachable(file!().to_string(), line!())),

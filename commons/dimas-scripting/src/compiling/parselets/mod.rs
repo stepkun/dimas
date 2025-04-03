@@ -7,6 +7,7 @@
 mod binary_parselet;
 mod grouping_parselet;
 mod literal_parselet;
+mod logic_parselet;
 mod unary_parselet;
 mod value_parselet;
 mod variable_parselet;
@@ -15,6 +16,7 @@ mod variable_parselet;
 pub use binary_parselet::BinaryParselet;
 pub use grouping_parselet::GroupingParselet;
 pub use literal_parselet::LiteralParselet;
+pub use logic_parselet::LogicParselet;
 pub use unary_parselet::UnaryParselet;
 pub use value_parselet::ValueParselet;
 pub use variable_parselet::VariableParselet;

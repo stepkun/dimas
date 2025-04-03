@@ -59,6 +59,11 @@ impl Chunk {
 		self.lines.push(line);
 	}
 
+	/// Patch a byte in the chunk
+	pub fn patch(&mut self, byte: u8, pos: usize) {
+		self.code[pos] = byte;
+	}
+
 	/// Add a Value to the Value storage returning its position in the storage
 	#[allow(clippy::cast_possible_truncation)]
 	pub fn add_constant(&mut self, value: Value) -> Result<u8, Error> {
@@ -119,7 +124,7 @@ impl Chunk {
 		}
 		match self.code[offset].to_owned() {
 			OP_ADD => Self::simple_instruction("OP_ADD", offset),
-			OP_BINARY_NOT => Self::simple_instruction("OP_BINARY_NOT", offset),
+			OP_BITWISE_NOT => Self::simple_instruction("OP_BINARY_NOT", offset),
 			OP_CONSTANT => self.constant_instruction("OP_CONSTANT", offset),
 			OP_DEFINE_EXTERNAL => self.constant_instruction("OP_DEFINE_GLOBAL", offset),
 			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),
@@ -127,6 +132,9 @@ impl Chunk {
 			OP_FALSE => Self::simple_instruction("OP_FALSE", offset),
 			OP_GET_EXTERNAL => self.constant_instruction("OP_GET_GLOBAL", offset),
 			OP_GREATER => Self::simple_instruction("OP_GREATER", offset),
+			OP_JMP => self.jump_instruction("OP_JMP", offset),
+			OP_JMP_IF_FALSE => self.jump_instruction("OP_JMP_IF_FALSE", offset),
+			OP_JMP_IF_TRUE => self.jump_instruction("OP_JMP_IF_TRUE", offset),
 			OP_LESS => Self::simple_instruction("OP_LESS", offset),
 			OP_MULTIPLY => Self::simple_instruction("OP_MULTIPLY", offset),
 			OP_NEGATE => Self::simple_instruction("OP_NEGATE", offset),
@@ -138,7 +146,10 @@ impl Chunk {
 			OP_SET_EXTERNAL => self.constant_instruction("OP_SET_GLOBAL", offset),
 			OP_SUBTRACT => Self::simple_instruction("OP_SUBTRACT", offset),
 			OP_TRUE => Self::simple_instruction("OP_TRUE", offset),
-			_ => todo!(),
+			value => {
+				std::println!("unknown Token: {value:3}");
+				usize::MAX
+			},
 		}
 	}
 
@@ -178,5 +189,14 @@ impl Chunk {
 			None => todo!(),
 		}
 		offset + 2
+	}
+
+	/// constant instruction
+	fn jump_instruction(&self, name: &str, offset: usize) -> usize {
+		let target = (usize::from(self.code.get(offset + 1).expect("snh").to_owned()) << 8)
+			+ usize::from(self.code.get(offset + 2).expect("snh").to_owned());
+
+		std::println!("{name:16} {offset:05} {target:05}");
+		offset + 3
 	}
 }

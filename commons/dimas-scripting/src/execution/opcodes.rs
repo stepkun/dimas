@@ -28,7 +28,13 @@ pub const OP_EQUAL: u8 = OP_SET_EXTERNAL + 1;
 /// @TODO
 pub const OP_GREATER: u8 = OP_EQUAL + 1;
 /// @TODO
-pub const OP_LESS: u8 = OP_GREATER + 1;
+pub const OP_JMP: u8 = OP_GREATER + 1;
+/// @TODO
+pub const OP_JMP_IF_TRUE: u8 = OP_JMP + 1;
+/// @TODO
+pub const OP_JMP_IF_FALSE: u8 = OP_JMP_IF_TRUE + 1;
+/// @TODO
+pub const OP_LESS: u8 = OP_JMP_IF_FALSE + 1;
 /// @TODO
 pub const OP_ADD: u8 = OP_LESS + 1;
 /// @TODO
@@ -38,9 +44,9 @@ pub const OP_MULTIPLY: u8 = OP_SUBTRACT + 1;
 /// @TODO
 pub const OP_DIVIDE: u8 = OP_MULTIPLY + 1;
 /// @TODO
-pub const OP_BINARY_NOT: u8 = OP_DIVIDE + 1;
+pub const OP_BITWISE_NOT: u8 = OP_DIVIDE + 1;
 /// @TODO
-pub const OP_NOT: u8 = OP_BINARY_NOT + 1;
+pub const OP_NOT: u8 = OP_BITWISE_NOT + 1;
 /// @TODO
 pub const OP_NEGATE: u8 = OP_NOT + 1;
 /// @TODO

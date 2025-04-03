@@ -28,7 +28,7 @@ use super::{
 	error::Error,
 	parselets::{
 		BinaryParselet, Expression, GroupingParselet, InfixParselet, LiteralParselet,
-		PrefixParselet, UnaryParselet, ValueParselet, VariableParselet,
+		LogicParselet, PrefixParselet, UnaryParselet, ValueParselet, VariableParselet,
 	},
 	precedence::Precedence,
 	token::{Token, TokenKind},
@@ -58,6 +58,10 @@ impl<'a> Parser<'a> {
 		};
 
 		// Register the parselets for the grammar
+		parser.infix_parselets.insert(
+			TokenKind::And,
+			Arc::from(LogicParselet::new(Precedence::And)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Bang, Arc::from(UnaryParselet));
@@ -110,6 +114,9 @@ impl<'a> Parser<'a> {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Number, Arc::from(ValueParselet));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Or, Arc::from(LogicParselet::new(Precedence::Or)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Plus, Arc::from(UnaryParselet));
@@ -222,6 +229,24 @@ impl<'a> Parser<'a> {
 	pub(crate) fn emit_bytes(&self, byte1: u8, byte2: u8, chunk: &mut Chunk) {
 		chunk.write(byte1, self.current.line);
 		chunk.write(byte2, self.current.line);
+	}
+
+	pub(crate) fn emit_jump(&self, instruction: u8, chunk: &mut Chunk) -> usize {
+		chunk.write(instruction, self.current.line);
+		let target_pos = chunk.code().len();
+		// the dummy address bytes
+		chunk.write(0x00, self.current.line);
+		chunk.write(0x00, self.current.line);
+		target_pos
+	}
+
+	#[allow(clippy::cast_possible_truncation)]
+	pub(crate) fn patch_jump(&self, patch_pos: usize, chunk: &mut Chunk) {
+		let target = chunk.code().len();
+		let byte1 = (target >> 8) as u8;
+		let byte2 = target as u8;
+		chunk.patch(byte1, patch_pos);
+		chunk.patch(byte2, (patch_pos + 1));
 	}
 
 	pub(crate) fn statement(&mut self, chunk: &mut Chunk) -> Result<(), Error> {

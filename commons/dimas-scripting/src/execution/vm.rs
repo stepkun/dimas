@@ -72,20 +72,26 @@ impl VM {
 		&self.stack[self.stack_top - distance - 1]
 	}
 
-	fn push(&mut self, value: Value) -> Result<(), Error> {
+	const fn push(&mut self, value: Value) -> Result<(), Error> {
 		if self.stack_top == u8::MAX as usize {
 			return Err(Error::StackOverflow);
 		}
 		self.stack[self.stack_top] = value;
 		self.stack_top += 1;
-		//std::dbg!("pushed value {}", &value);
 		Ok(())
 	}
 
-	fn pop(&mut self) -> Value {
+	const fn pop(&mut self) -> Value {
 		self.stack_top -= 1;
-		//std::dbg!("popping a value at {}", self.stack_top);
 		self.stack[self.stack_top]
+	}
+
+	fn read_jmp_address(&mut self, chunk: &Chunk) -> usize {
+		let byte1 = chunk.code()[self.ip];
+		self.ip += 1;
+		let byte2 = chunk.code()[self.ip];
+		self.ip += 1;
+		((byte1 as usize) << 8) + byte2 as usize
 	}
 
 	fn arithmetic_operator(&mut self, operator: u8, chunk: &mut Chunk) -> Result<(), Error> {
@@ -331,11 +337,12 @@ impl VM {
 		}
 
 		loop {
+			//std::dbg!(self.ip);
 			let instruction: u8 = chunk.code()[self.ip];
 			self.ip += 1;
 			match instruction {
 				OP_ADD => self.arithmetic_operator(OP_ADD, chunk)?,
-				OP_BINARY_NOT => self.binary_not(chunk)?,
+				OP_BITWISE_NOT => self.binary_not(chunk)?,
 				OP_CONSTANT => self.constant(chunk),
 				OP_DEFINE_EXTERNAL => self.define_global(chunk)?,
 				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE, chunk)?,
@@ -343,6 +350,22 @@ impl VM {
 				OP_FALSE => self.push(Value::from_bool(false))?,
 				OP_GET_EXTERNAL => self.get_global(chunk)?,
 				OP_GREATER => self.boolean_operator(OP_GREATER)?,
+				OP_JMP => {
+					let target = self.read_jmp_address(chunk);
+					self.ip = target;
+				}
+				OP_JMP_IF_FALSE => {
+					let target = self.read_jmp_address(chunk);
+					if !self.peek(0).as_bool()? {
+						self.ip = target;
+					}
+				}
+				OP_JMP_IF_TRUE => {
+					let target = self.read_jmp_address(chunk);
+					if self.peek(0).as_bool()? {
+						self.ip = target;
+					}
+				}
 				OP_LESS => self.boolean_operator(OP_LESS)?,
 				OP_MULTIPLY => self.arithmetic_operator(OP_MULTIPLY, chunk)?,
 				OP_NEGATE => self.negate()?,
