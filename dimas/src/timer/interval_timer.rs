@@ -3,11 +3,10 @@
 //! Interval timer
 
 // region:      --- modules
-use anyhow::Result;
 use core::time::Duration;
 use dimas_config::factory::BTFactory;
 use dimas_core::{
-	behavior::{Behavior, BehaviorCategory, BehaviorResult, BehaviorStatus},
+	behavior::{Behavior, BehaviorResult, BehaviorStatus},
 	define_ports, input_port,
 	port::PortList,
 };
@@ -35,7 +34,7 @@ impl IntervalTimer {
 
 			let input = bhvr_.config_mut().get_input("interval")?;
 			let interval = Duration::from_millis(input);
-			let children_count = bhvr_.children().len();
+			let _children_count = bhvr_.children().len();
 
 			// @TODO: Dirty way to move access to children into spawned task
 			//        The node is not restartable/recoverable
@@ -49,8 +48,8 @@ impl IntervalTimer {
 						interval.tick().await;
 
 						// tick every child
-						for mut child in &mut children {
-							child.execute_tick().await;
+						for child in &mut children {
+							let _ = child.execute_tick().await;
 						}
 					}
 				}));

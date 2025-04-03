@@ -43,7 +43,7 @@ impl Repeat {
 		// Load num_cycles from the port value
 		self.num_cycles = bhvr_.config_mut().get_input("num_cycles")?;
 
-		let mut do_loop = (self.count as i32) < self.num_cycles || self.num_cycles == -1;
+		let do_loop = (self.count as i32) < self.num_cycles || self.num_cycles == -1;
 
 		if matches!(bhvr_.status(), BehaviorStatus::Idle) {
 			self.all_skipped = true;

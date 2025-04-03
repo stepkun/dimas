@@ -1,15 +1,12 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 #![allow(clippy::redundant_closure_for_method_calls)]
 
 //! Value implementations for `DiMAS` scripting
 //! `Numbers` are always f64 and `HexNumbers` are always i64
 
-use core::{fmt::Display, mem::ManuallyDrop};
+use core::fmt::Display;
 
-use alloc::{borrow::ToOwned, string::String, vec::Vec};
-
-use super::{Chunk, VM, error::Error};
+use super::error::Error;
 
 /// Constants for working with different types of [`Value`]s
 pub const VAL_NIL: i8 = 0;

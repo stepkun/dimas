@@ -1,7 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![no_std]
-#![allow(dead_code)]
-#![allow(unused)]
 
 //! A scripting language for `DiMAS`
 //!

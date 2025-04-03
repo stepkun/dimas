@@ -46,7 +46,7 @@ impl Retry {
 		// Load num_cycles from the port value
 		self.max_attempts = bhvr_.config_mut().get_input("num_attempts")?;
 
-		let mut do_loop = (self.try_count as i32) < self.max_attempts || self.max_attempts == -1;
+		let do_loop = (self.try_count as i32) < self.max_attempts || self.max_attempts == -1;
 
 		if matches!(bhvr_.status(), BehaviorStatus::Idle) {
 			self.all_skipped = true;

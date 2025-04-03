@@ -1,6 +1,5 @@
 // Copyright © 2024 Stephan Kunz
 #![no_std]
-#![allow(unused)]
 
 //! Library for configuration
 //!

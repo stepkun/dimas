@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! Precedence definitions for `DiMAS` scripting Pratt-Parser
 //!
@@ -9,8 +8,6 @@
 //! because "*" has higher precedence than "+" and "-".
 //! Here a bigger enum value is higher precedence.
 //!
-
-use core::{f64::consts, ops::Add};
 
 /// Precedence levels
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

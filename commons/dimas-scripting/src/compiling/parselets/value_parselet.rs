@@ -1,16 +1,14 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! `NumberParselet` for `Dimas`scripting
 //!
 
-use alloc::{boxed::Box, string::ToString};
+use alloc::string::ToString;
 
 use crate::{
 	Parser,
 	compiling::{
 		error::Error,
-		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
 	execution::{Chunk, opcodes::OP_CONSTANT, values::Value},
@@ -26,7 +24,7 @@ impl PrefixParselet for ValueParselet {
 			TokenKind::Number => {
 				let double: f64 = match token.origin.parse() {
 					Ok(n) => n,
-					Err(e) => {
+					Err(_) => {
 						return Err(Error::ParseNumber(token.origin.to_string(), token.line));
 					}
 				};
@@ -38,11 +36,8 @@ impl PrefixParselet for ValueParselet {
 			TokenKind::HexNumber => {
 				// remove the '0x' before parsing
 				let literal = token.origin.trim_start_matches("0x");
-				let value = match i64::from_str_radix(literal, 16) {
-					Ok(i) => i,
-					Err(e) => {
-						return Err(Error::ParseHex(literal.to_string(), token.line));
-					}
+				let Ok(value) = i64::from_str_radix(literal, 16) else {
+					return Err(Error::ParseHex(literal.to_string(), token.line));
 				};
 				let offset = chunk.add_constant(Value::from_integer(value))?;
 				parser.emit_bytes(OP_CONSTANT, offset, chunk);

@@ -3,14 +3,9 @@
 //! [`BehaviorTree`] factory of `DiMAS`
 
 extern crate std;
-use std::dbg;
 
 // region:      --- modules
-use alloc::{
-	string::{String, ToString},
-	sync::Arc,
-	vec::Vec,
-};
+use alloc::{string::String, sync::Arc, vec::Vec};
 use core::fmt::Debug;
 use dimas_core::{
 	behavior::{Behavior, BehaviorCategory, BehaviorConfig, tree::BehaviorTree},
@@ -18,7 +13,7 @@ use dimas_core::{
 	build_bhvr_ptr,
 };
 use hashbrown::HashMap;
-use roxmltree::{Document, Node, NodeType, ParsingOptions};
+use roxmltree::Document;
 use tracing::{Level, instrument};
 
 use crate::builtin::{

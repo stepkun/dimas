@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 #![allow(missing_docs)]
 #![allow(clippy::unit_arg)]
 #![allow(clippy::unwrap_used)]
@@ -17,7 +16,7 @@ fn boolean_equality(c: &mut Criterion) {
 
 	c.bench_function("boolean equality", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -34,7 +33,7 @@ fn double_equality(c: &mut Criterion) {
 
 	c.bench_function("double equality", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -49,7 +48,7 @@ fn integer_equality(c: &mut Criterion) {
 
 	c.bench_function("integer equality", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -66,7 +65,7 @@ fn string_equality(c: &mut Criterion) {
 
 	c.bench_function("string equality", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -84,7 +83,7 @@ fn mixed_equality(c: &mut Criterion) {
 
 	c.bench_function("mixed equality", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});

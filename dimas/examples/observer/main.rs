@@ -1,7 +1,5 @@
 //! `DiMAS` observation example
 //! Copyright © 2024 Stephan Kunz
-#![allow(unused)]
-#![allow(clippy::unwrap_used)]
 
 use dimas::prelude::*;
 
@@ -26,7 +24,7 @@ async fn main() -> Result<()> {
 	// nodes must be registered before they are addressed in a behavior tree
 	agent.register_behavior(IntervalTimer::register);
 
-	agent.set_behavior(XML);
+	agent.set_behavior(XML)?;
 
 	agent.start().await?;
 	Ok(())

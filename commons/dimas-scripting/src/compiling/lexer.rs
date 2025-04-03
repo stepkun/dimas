@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! Lexer for `DiMAS` scripting
 //!
@@ -217,7 +216,7 @@ impl Iterator for Lexer<'_> {
 
 						// remember the skipped '0x'
 						let end = min(first_non_hex_digit + 2, c_onwards.len());
-						let mut literal = &c_onwards[..end];
+						let literal = &c_onwards[..end];
 
 						let extra_bytes = literal.len() - c.len_utf8();
 						self.pos += extra_bytes;

@@ -1,15 +1,12 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
 #![allow(clippy::needless_pass_by_value)]
 
 //! Macro `main` implementation
 //!
 
 use proc_macro2::TokenStream;
-use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::{ItemFn, Meta, Token, parse::Parser, punctuated::Punctuated};
-use syn::{ItemStruct, parse_macro_input};
 
 type Arguments = Punctuated<Meta, Token![,]>;
 

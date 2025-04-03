@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! `DiMAS` implementation for registering functions as behavior
 

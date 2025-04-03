@@ -1,11 +1,10 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! Token for `DiMAS` scripting
 
 use core::fmt::Display;
 
-use alloc::string::{String, ToString};
+use alloc::string::String;
 
 /// Token kind
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

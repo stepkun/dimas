@@ -13,11 +13,10 @@ use alloc::{
 use dimas_core::{
 	behavior::{Behavior, BehaviorCategory, BehaviorConfig},
 	blackboard::{Blackboard, BlackboardString},
-	build_bhvr_ptr,
 	port::{PortChecks, PortDirection, PortRemapping},
 };
 use hashbrown::HashMap;
-use roxmltree::{Attributes, Document, Node, NodeType, ParsingOptions};
+use roxmltree::{Attributes, Document, Node, NodeType};
 use tracing::{Level, event, instrument};
 
 use super::{
@@ -179,8 +178,7 @@ impl XmlParser {
 
 		let bhvr_name = element.tag_name().name();
 		let attributes = element.attributes();
-		let mut config =
-			BehaviorConfig::new(blackboard.clone(), path.to_owned() + "->" + bhvr_name);
+		let config = BehaviorConfig::new(blackboard.clone(), path.to_owned() + "->" + bhvr_name);
 
 		let bhvr = match bhvr_category {
 			BehaviorCategory::Action | BehaviorCategory::Condition => {
@@ -320,10 +318,9 @@ impl XmlParser {
 	fn parse_document(
 		doc: Node,
 		data: &mut FactoryData,
-		blackboard: &Blackboard,
+		_blackboard: &Blackboard,
 	) -> Result<(), Error> {
 		event!(Level::TRACE, "parse_document");
-		let mut root_behavior: Option<Behavior> = None;
 
 		for element in doc.children() {
 			match element.node_type() {
@@ -409,7 +406,7 @@ impl XmlParser {
 			}
 		}
 
-		if let Some(id) = root.attribute("main_tree_to_execute") {
+		if let Some(_id) = root.attribute("main_tree_to_execute") {
 			return Err(Error::MainTreeNotAllowed);
 		}
 

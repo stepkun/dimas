@@ -3,9 +3,8 @@
 //! Publisher
 
 // region:      --- modules
-use anyhow::Result;
 use dimas_config::factory::BTFactory;
-use dimas_core::behavior::{BehaviorCategory, BehaviorResult, BehaviorStatus};
+use dimas_core::behavior::{BehaviorResult, BehaviorStatus};
 use dimas_macros::{behavior, register_action};
 // endregion:   --- modules
 

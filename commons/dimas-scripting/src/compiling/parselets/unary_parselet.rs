@@ -1,10 +1,9 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! `UnaryParselet` for `Dimas`scripting
 //!
 
-use alloc::{boxed::Box, string::ToString};
+use alloc::string::ToString;
 
 use crate::{
 	Parser,
@@ -15,16 +14,16 @@ use crate::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{OP_BITWISE_NOT, OP_CONSTANT, OP_NEGATE, OP_NOT},
+		opcodes::{OP_BITWISE_NOT, OP_NEGATE, OP_NOT},
 	},
 };
 
-use super::{Expression, PrefixParselet};
+use super::PrefixParselet;
 
 pub struct UnaryParselet;
 
 impl PrefixParselet for UnaryParselet {
-	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
+	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
 		let token = parser.current();
 		// there must be a current token
 		if parser.next().kind == TokenKind::None {

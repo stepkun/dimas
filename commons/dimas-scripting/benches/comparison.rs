@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 #![allow(missing_docs)]
 #![allow(clippy::unit_arg)]
 #![allow(clippy::unwrap_used)]
@@ -19,7 +18,7 @@ fn double_comparison(c: &mut Criterion) {
 
 	c.bench_function("double comparison", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -34,7 +33,7 @@ fn integer_comparison(c: &mut Criterion) {
 
 	c.bench_function("integer comparison", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});

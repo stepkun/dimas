@@ -1,24 +1,17 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! Virtual machine for `DiMAS` scripting
 
 extern crate std;
 
-use core::{marker::PhantomData, str::CharIndices};
-
-use alloc::{
-	borrow::ToOwned,
-	string::{String, ToString},
-	sync::Arc,
-};
+use alloc::{borrow::ToOwned, string::ToString, sync::Arc};
 
 use crate::{DefaultEnvironment, Environment};
 
 #[allow(clippy::wildcard_imports)]
 use super::opcodes::*;
 use super::{
-	Chunk, chunk,
+	Chunk,
 	error::Error,
 	values::{VAL_BOOL, VAL_DOUBLE, VAL_INT, VAL_NIL, VAL_STR, Value},
 };
@@ -127,7 +120,7 @@ impl VM {
 					};
 					let string_pos = chunk.add_string(res);
 					a_val.make_string_pos(string_pos);
-					self.push(a_val);
+					self.push(a_val)?;
 					Ok(())
 				}
 				_ => Err(Error::OnlyAdd),
@@ -156,7 +149,7 @@ impl VM {
 				};
 				a_val.make_integer(res);
 			}
-			self.push(a_val);
+			self.push(a_val)?;
 			Ok(())
 		} else {
 			Err(Error::NoNumber)
@@ -164,7 +157,7 @@ impl VM {
 	}
 
 	fn boolean_operator(&mut self, operator: u8) -> Result<(), Error> {
-		let mut b_val = self.pop();
+		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let b_kind = b_val.kind();
 		let a_kind = a_val.kind();
@@ -184,21 +177,21 @@ impl VM {
 				};
 				a_val.make_bool(res);
 			}
-			self.push(a_val);
+			self.push(a_val)?;
 			Ok(())
 		} else {
 			Err(Error::NoNumber)
 		}
 	}
 
-	fn constant(&mut self, chunk: &Chunk) {
+	fn constant(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		let pos = chunk.code()[self.ip];
 		let constant = chunk.read_constant(pos);
 		self.ip += 1;
-		self.push(constant);
+		self.push(constant)
 	}
 
-	fn equal(&mut self, chunk: &Chunk) {
+	fn equal(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let a_kind = a_val.kind();
@@ -225,7 +218,7 @@ impl VM {
 		} else {
 			a_val.make_bool(false);
 		}
-		self.push(a_val);
+		self.push(a_val)
 	}
 
 	fn negate(&mut self) -> Result<(), Error> {
@@ -239,25 +232,23 @@ impl VM {
 				let integer = -val.as_integer()?;
 				val.make_integer(integer);
 			}
-			self.push(val);
-			Ok(())
+			self.push(val)
 		} else {
 			Err(Error::NoNumber)
 		}
 	}
 
-	fn binary_not(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	fn binary_not(&mut self) -> Result<(), Error> {
 		let mut val = self.pop();
 		let kind = val.kind();
 		if kind != VAL_INT {
 			return Err(Error::NoInteger);
 		}
 		val.make_integer(!val.as_integer()?);
-		self.push(val);
-		Ok(())
+		self.push(val)
 	}
 
-	fn not(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	fn not(&mut self) -> Result<(), Error> {
 		let mut val = self.pop();
 		let kind = val.kind();
 		match kind {
@@ -272,8 +263,7 @@ impl VM {
 			}
 			_ => return Err(Error::Unreachable(line!())),
 		}
-		self.push(val);
-		Ok(())
+		self.push(val)
 	}
 
 	#[cfg(feature = "std")]
@@ -281,12 +271,12 @@ impl VM {
 		if self.stack_top > 0 {
 			let value = self.pop();
 			if value.is_string_pos() {
-				std::writeln!(stdout, "{}", chunk.get_string(value.as_string_pos()?));
+				let _ = std::writeln!(stdout, "{}", chunk.get_string(value.as_string_pos()?));
 			} else {
-				std::writeln!(stdout, "{value}");
+				let _ = std::writeln!(stdout, "{value}");
 			}
 		} else {
-			std::writeln!(stdout, "no result");
+			let _ = std::writeln!(stdout, "no result");
 		}
 		Ok(())
 	}
@@ -307,7 +297,7 @@ impl VM {
 		self.ip += 1;
 		let name = chunk.get_string(name_val.as_string_pos()?);
 		let val = self.globals.get(name)?;
-		self.push(val);
+		self.push(val)?;
 		Ok(())
 	}
 
@@ -320,20 +310,21 @@ impl VM {
 		self.globals.set(name, value_val)
 	}
 
-	/// Execute a [`Chunk`] with the virtual machine
+	/// Execute a [`Chunk`] with the virtual machine,
+	/// Returns the topmost stack [`Value`] if there is one, otherwise [`Value::nil()`].
 	/// # Errors
 	/// - unknown `OpCode`
 	pub fn run(
 		&mut self,
 		chunk: &mut Chunk,
 		#[cfg(feature = "std")] stdout: &mut impl std::io::Write,
-	) -> Result<(), Error> {
+	) -> Result<Value, Error> {
 		self.reset();
 		chunk.save_state();
 		// ignore empty chunks
 		if chunk.code().is_empty() {
 			chunk.restore_state();
-			return Ok(());
+			return Ok(Value::nil());
 		}
 
 		loop {
@@ -342,11 +333,11 @@ impl VM {
 			self.ip += 1;
 			match instruction {
 				OP_ADD => self.arithmetic_operator(OP_ADD, chunk)?,
-				OP_BITWISE_NOT => self.binary_not(chunk)?,
-				OP_CONSTANT => self.constant(chunk),
+				OP_BITWISE_NOT => self.binary_not()?,
+				OP_CONSTANT => self.constant(chunk)?,
 				OP_DEFINE_EXTERNAL => self.define_global(chunk)?,
 				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE, chunk)?,
-				OP_EQUAL => self.equal(chunk),
+				OP_EQUAL => self.equal(chunk)?,
 				OP_FALSE => self.push(Value::from_bool(false))?,
 				OP_GET_EXTERNAL => self.get_global(chunk)?,
 				OP_GREATER => self.boolean_operator(OP_GREATER)?,
@@ -370,15 +361,20 @@ impl VM {
 				OP_MULTIPLY => self.arithmetic_operator(OP_MULTIPLY, chunk)?,
 				OP_NEGATE => self.negate()?,
 				OP_NIL => self.push(Value::nil())?,
-				OP_NOT => self.not(chunk)?,
+				OP_NOT => self.not()?,
 				OP_POP => {
 					self.pop();
 				}
 				#[cfg(feature = "std")]
 				OP_PRINT => self.print(chunk, stdout)?,
 				OP_RETURN => {
+					let val = if self.stack_top > 0 {
+						self.pop()
+					} else {
+						Value::nil()
+					};
 					chunk.restore_state();
-					return Ok(());
+					return Ok(val);
 				}
 				OP_SET_EXTERNAL => self.set_global(chunk)?,
 				OP_SUBTRACT => self.arithmetic_operator(OP_SUBTRACT, chunk)?,
@@ -389,6 +385,5 @@ impl VM {
 				}
 			}
 		}
-		chunk.restore_state();
 	}
 }

@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 #![allow(clippy::unused_self)]
 #![allow(clippy::needless_pass_by_ref_mut)]
 
@@ -13,22 +12,22 @@
 
 extern crate std;
 
-use alloc::{borrow::ToOwned, boxed::Box, string::ToString, sync::Arc};
+use alloc::{string::ToString, sync::Arc};
 use hashbrown::HashMap;
 
 use crate::{
 	Lexer,
 	execution::{
 		Chunk,
-		opcodes::{OP_POP, OP_PRINT, OP_RETURN},
+		opcodes::{OP_PRINT, OP_RETURN},
 	},
 };
 
 use super::{
 	error::Error,
 	parselets::{
-		BinaryParselet, Expression, GroupingParselet, InfixParselet, LiteralParselet,
-		LogicParselet, PrefixParselet, UnaryParselet, ValueParselet, VariableParselet,
+		BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet, LogicParselet,
+		PrefixParselet, UnaryParselet, ValueParselet, VariableParselet,
 	},
 	precedence::Precedence,
 	token::{Token, TokenKind},
@@ -218,7 +217,7 @@ impl<'a> Parser<'a> {
 	}
 
 	/// Check next token whether it has given kind
-	pub(crate) fn match_next(&mut self, kind: TokenKind) -> bool {
+	pub(crate) fn _match_next(&mut self, kind: TokenKind) -> bool {
 		self.next.kind == kind && self.advance().is_ok()
 	}
 
@@ -235,8 +234,8 @@ impl<'a> Parser<'a> {
 		chunk.write(instruction, self.current.line);
 		let target_pos = chunk.code().len();
 		// the dummy address bytes
-		chunk.write(0x00, self.current.line);
-		chunk.write(0x00, self.current.line);
+		chunk.write(0xFF, self.current.line);
+		chunk.write(0xFF, self.current.line);
 		target_pos
 	}
 
@@ -246,7 +245,7 @@ impl<'a> Parser<'a> {
 		let byte1 = (target >> 8) as u8;
 		let byte2 = target as u8;
 		chunk.patch(byte1, patch_pos);
-		chunk.patch(byte2, (patch_pos + 1));
+		chunk.patch(byte2, patch_pos + 1);
 	}
 
 	pub(crate) fn statement(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
@@ -289,7 +288,7 @@ impl<'a> Parser<'a> {
 			if let Some(infix) = infix_opt {
 				infix.clone().parse(self, chunk, token)?;
 			} else {
-				let prefix_opt = self.prefix_parselets.get(&token.kind);
+				let _prefix_opt = self.prefix_parselets.get(&token.kind);
 				match infix_opt {
 					Some(prefix) => prefix.clone().parse(self, chunk, token)?,
 					None => {

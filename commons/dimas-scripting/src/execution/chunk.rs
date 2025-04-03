@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! Bytecode implementation for `DiMAS` scripting
 
@@ -149,7 +148,7 @@ impl Chunk {
 			value => {
 				std::println!("unknown Token: {value:3}");
 				usize::MAX
-			},
+			}
 		}
 	}
 

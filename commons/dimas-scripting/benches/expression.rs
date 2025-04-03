@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 #![allow(missing_docs)]
 #![allow(clippy::unit_arg)]
 #![allow(clippy::unwrap_used)]
@@ -18,7 +17,7 @@ fn simple_expression(c: &mut Criterion) {
 
 	c.bench_function("simple expression", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -34,7 +33,7 @@ fn moderate_expression(c: &mut Criterion) {
 
 	c.bench_function("moderate expression", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});
@@ -50,7 +49,7 @@ fn string_addition(c: &mut Criterion) {
 
 	c.bench_function("string addition", |b| {
 		b.iter(|| {
-			std::hint::black_box(for i in 1..=100 {
+			std::hint::black_box(for _ in 1..=100 {
 				vm.run(&mut chunk, &mut stdout).unwrap();
 			});
 		});

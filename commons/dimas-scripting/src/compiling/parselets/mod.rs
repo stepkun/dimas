@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //!Parselets for `Dimas`scripting
 //!
@@ -21,13 +20,9 @@ pub use unary_parselet::UnaryParselet;
 pub use value_parselet::ValueParselet;
 pub use variable_parselet::VariableParselet;
 
-use alloc::boxed::Box;
-
 use crate::execution::Chunk;
 
 use super::{Parser, error::Error, precedence::Precedence, token::Token};
-
-pub trait Expression {}
 
 /// Interfaces used by the Pratt parser. A `PrefixParselet` is
 /// associated with a token that appears at the beginning of an expression.

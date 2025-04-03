@@ -1,5 +1,5 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(unused)]
+
 //! Tests
 
 use dimas_scripting::{Lexer, Parser, VM};

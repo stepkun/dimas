@@ -1,10 +1,9 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! `GroupingParselet` for `Dimas`scripting
 //!
 
-use alloc::{boxed::Box, string::ToString};
+use alloc::string::ToString;
 
 use crate::{
 	Parser,
@@ -21,7 +20,7 @@ use crate::{
 	},
 };
 
-use super::{Expression, InfixParselet};
+use super::InfixParselet;
 
 pub struct BinaryParselet {
 	precedence: Precedence,
@@ -34,7 +33,7 @@ impl BinaryParselet {
 }
 
 impl InfixParselet for BinaryParselet {
-	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
+	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
 		let kind = parser.current().kind;
 		parser.with_precedence(self.precedence.next_higher(), chunk)?;
 		match kind {

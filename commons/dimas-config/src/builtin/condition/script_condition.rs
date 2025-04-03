@@ -4,7 +4,6 @@
 
 // region:      --- modules
 use alloc::string::ToString;
-use dimas_core::behavior::error::BehaviorError;
 use dimas_core::behavior::{BehaviorResult, BehaviorStatus};
 use dimas_macros::behavior;
 //endregion:    --- modules
