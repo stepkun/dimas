@@ -118,7 +118,7 @@ impl Iterator for Lexer<'_> {
 				// multi character token
 				'\'' => Started::String,
 				'0'..='9' => Started::Number,
-				'a'..='z' | 'A'..='Z' | '_' => Started::Ident,
+				'a'..='z' | 'A'..='Z' | '_' | '@' => Started::Ident,
 				// count lines
 				'\n' => {
 					self.line += 1;
@@ -179,9 +179,12 @@ impl Iterator for Lexer<'_> {
 					}
 				}
 				Started::Ident => {
-					let first_non_ident = c_onwards
+					// An @ may only be at the start, so we don't ignore it in the end-pattern search.
+					// Therefor it is a little tricky  with the length detremination.
+					let first_non_ident = c_onwards[1..]
 						.find(|c| !matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '_'))
-						.unwrap_or(c_onwards.len());
+						.unwrap_or(c_onwards.len() - 1)
+						+ 1;
 
 					let literal = &c_onwards[..first_non_ident];
 					let extra_bytes = literal.len() - c.len_utf8();

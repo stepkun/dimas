@@ -16,6 +16,18 @@ fn defining_globals() {
 	assert_eq!(stdout, b"3\n");
 
 	stdout.clear();
+	let mut parser = Parser::new("@test:=17;print @test;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &mut stdout).unwrap();
+	assert_eq!(stdout, b"17\n");
+
+	stdout.clear();
+	let mut parser = Parser::new("_test:='string';print _test;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &mut stdout).unwrap();
+	assert_eq!(stdout, b"string\n");
+
+	stdout.clear();
 	let mut parser = Parser::new("test:=0xf;print test;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &mut stdout).unwrap();

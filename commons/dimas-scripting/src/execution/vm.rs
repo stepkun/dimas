@@ -156,6 +156,26 @@ impl VM {
 		}
 	}
 
+	fn bitwise_operator(&mut self, operator: u8) -> Result<(), Error> {
+		let b_val = self.pop();
+		let mut a_val = self.pop();
+		let b_kind = b_val.kind();
+		let a_kind = a_val.kind();
+		if a_kind == b_kind && a_kind == VAL_INT {
+			let res = match operator {
+				OP_BITWISE_AND => a_val.as_integer()? & b_val.as_integer()?,
+				OP_BITWISE_OR => a_val.as_integer()? | b_val.as_integer()?,
+				OP_BITWISE_XOR => a_val.as_integer()? ^ b_val.as_integer()?,
+				_ => return Err(Error::Unreachable(line!())),
+			};
+			a_val.make_integer(res);
+			self.push(a_val)?;
+			Ok(())
+		} else {
+			Err(Error::NoInteger)
+		}
+	}
+
 	fn boolean_operator(&mut self, operator: u8) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
@@ -332,15 +352,19 @@ impl VM {
 			let instruction: u8 = chunk.code()[self.ip];
 			self.ip += 1;
 			match instruction {
-				OP_ADD => self.arithmetic_operator(OP_ADD, chunk)?,
+				OP_ADD | OP_DIVIDE | OP_MULTIPLY | OP_SUBTRACT => {
+					self.arithmetic_operator(instruction, chunk)?;
+				}
+				OP_BITWISE_AND | OP_BITWISE_OR | OP_BITWISE_XOR => {
+					self.bitwise_operator(instruction)?;
+				}
 				OP_BITWISE_NOT => self.binary_not()?,
 				OP_CONSTANT => self.constant(chunk)?,
 				OP_DEFINE_EXTERNAL => self.define_global(chunk)?,
-				OP_DIVIDE => self.arithmetic_operator(OP_DIVIDE, chunk)?,
 				OP_EQUAL => self.equal(chunk)?,
 				OP_FALSE => self.push(Value::from_bool(false))?,
 				OP_GET_EXTERNAL => self.get_global(chunk)?,
-				OP_GREATER => self.boolean_operator(OP_GREATER)?,
+				OP_GREATER => self.boolean_operator(instruction)?,
 				OP_JMP => {
 					let target = self.read_jmp_address(chunk);
 					self.ip = target;
@@ -357,8 +381,7 @@ impl VM {
 						self.ip = target;
 					}
 				}
-				OP_LESS => self.boolean_operator(OP_LESS)?,
-				OP_MULTIPLY => self.arithmetic_operator(OP_MULTIPLY, chunk)?,
+				OP_LESS => self.boolean_operator(instruction)?,
 				OP_NEGATE => self.negate()?,
 				OP_NIL => self.push(Value::nil())?,
 				OP_NOT => self.not()?,
@@ -377,7 +400,6 @@ impl VM {
 					return Ok(val);
 				}
 				OP_SET_EXTERNAL => self.set_global(chunk)?,
-				OP_SUBTRACT => self.arithmetic_operator(OP_SUBTRACT, chunk)?,
 				OP_TRUE => self.push(Value::from_bool(true))?,
 				_ => {
 					chunk.restore_state();

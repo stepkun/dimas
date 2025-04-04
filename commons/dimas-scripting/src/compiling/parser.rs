@@ -47,6 +47,7 @@ pub struct Parser<'a> {
 impl<'a> Parser<'a> {
 	/// Create a Parser with all the necessary ingredients
 	#[must_use]
+	#[allow(clippy::too_many_lines)]
 	pub fn new(source_code: &'a str) -> Self {
 		let mut parser = Self {
 			lexer: Lexer::new(source_code),
@@ -58,6 +59,10 @@ impl<'a> Parser<'a> {
 
 		// Register the parselets for the grammar
 		parser.infix_parselets.insert(
+			TokenKind::Ampersand,
+			Arc::from(LogicParselet::new(Precedence::BitAnd)),
+		);
+		parser.infix_parselets.insert(
 			TokenKind::And,
 			Arc::from(LogicParselet::new(Precedence::And)),
 		);
@@ -67,6 +72,10 @@ impl<'a> Parser<'a> {
 		parser.infix_parselets.insert(
 			TokenKind::BangEqual,
 			Arc::from(BinaryParselet::new(Precedence::Equality)),
+		);
+		parser.infix_parselets.insert(
+			TokenKind::Caret,
+			Arc::from(LogicParselet::new(Precedence::BitXor)),
 		);
 		parser.infix_parselets.insert(
 			TokenKind::EqualEqual,
@@ -116,6 +125,10 @@ impl<'a> Parser<'a> {
 		parser
 			.infix_parselets
 			.insert(TokenKind::Or, Arc::from(LogicParselet::new(Precedence::Or)));
+		parser.infix_parselets.insert(
+			TokenKind::Pipe,
+			Arc::from(LogicParselet::new(Precedence::BitOr)),
+		);
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Plus, Arc::from(UnaryParselet));

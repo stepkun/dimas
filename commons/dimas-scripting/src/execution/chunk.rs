@@ -105,6 +105,7 @@ impl Chunk {
 	}
 
 	/// Disassemble chunk
+	#[cfg(feature = "std")]
 	pub fn disassemble(&self, name: &str) {
 		let mut offset = 0usize;
 		std::println!("== {name} ==");
@@ -114,6 +115,7 @@ impl Chunk {
 	}
 
 	/// Disassemble a single instruction
+	#[cfg(feature = "std")]
 	fn disassemble_instruction(&self, offset: usize) -> usize {
 		std::print!("{offset:04} ");
 		if offset > 0 && self.lines[offset] == self.lines[offset - 1] {
@@ -123,7 +125,10 @@ impl Chunk {
 		}
 		match self.code[offset].to_owned() {
 			OP_ADD => Self::simple_instruction("OP_ADD", offset),
-			OP_BITWISE_NOT => Self::simple_instruction("OP_BINARY_NOT", offset),
+			OP_BITWISE_AND => Self::simple_instruction("OP_BITWISE_AND", offset),
+			OP_BITWISE_NOT => Self::simple_instruction("OP_BITWISE_NOT", offset),
+			OP_BITWISE_OR => Self::simple_instruction("OP_BITWISE_OR", offset),
+			OP_BITWISE_XOR => Self::simple_instruction("OP_BITWISE_XOR", offset),
 			OP_CONSTANT => self.constant_instruction("OP_CONSTANT", offset),
 			OP_DEFINE_EXTERNAL => self.constant_instruction("OP_DEFINE_GLOBAL", offset),
 			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),

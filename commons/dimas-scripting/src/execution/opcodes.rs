@@ -45,7 +45,13 @@ pub const OP_DIVIDE: u8 = OP_MULTIPLY + 1;
 /// @TODO
 pub const OP_BITWISE_NOT: u8 = OP_DIVIDE + 1;
 /// @TODO
-pub const OP_NOT: u8 = OP_BITWISE_NOT + 1;
+pub const OP_BITWISE_AND: u8 = OP_BITWISE_NOT + 1;
+/// @TODO
+pub const OP_BITWISE_OR: u8 = OP_BITWISE_AND + 1;
+/// @TODO
+pub const OP_BITWISE_XOR: u8 = OP_BITWISE_OR + 1;
+/// @TODO
+pub const OP_NOT: u8 = OP_BITWISE_XOR + 1;
 /// @TODO
 pub const OP_NEGATE: u8 = OP_NOT + 1;
 /// @TODO
