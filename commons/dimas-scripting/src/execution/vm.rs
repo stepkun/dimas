@@ -10,7 +10,9 @@ use crate::{DefaultEnvironment, Environment};
 
 use super::op_code::OpCode;
 use super::{
-	error::Error, values::{Value, ValueType}, Chunk
+	Chunk,
+	error::Error,
+	values::{Value, ValueType},
 };
 
 /// Stack size is fixed
@@ -219,7 +221,9 @@ impl VM {
 						f64::abs(a_val.as_double().expect("snh") - b_val.as_double().expect("snh"));
 					delta <= 0.000_000_000_000_002
 				}
-				ValueType::Int => a_val.as_integer().expect("snh") == b_val.as_integer().expect("snh"),
+				ValueType::Int => {
+					a_val.as_integer().expect("snh") == b_val.as_integer().expect("snh")
+				}
 				ValueType::Str => {
 					let a_pos = a_val.as_string_pos().expect("snh");
 					let a = chunk.get_string(a_pos);

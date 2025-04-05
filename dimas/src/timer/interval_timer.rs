@@ -4,12 +4,12 @@
 
 // region:      --- modules
 use core::time::Duration;
-use dimas_config::factory::BTFactory;
-use dimas_core::{
+use dimas_behavior::{
 	behavior::{Behavior, BehaviorResult, BehaviorStatus},
 	define_ports, input_port,
 	port::PortList,
 };
+use dimas_builtin::factory::BTFactory;
 use dimas_macros::{behavior, register_control};
 use tokio::{task::JoinHandle, time};
 // endregion:   --- modules

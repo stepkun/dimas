@@ -165,7 +165,7 @@ impl Chunk {
 	/// constant instruction
 	#[cfg(feature = "std")]
 	fn constant_instruction(&self, name: &str, offset: usize) -> usize {
-    use super::values::ValueType;
+		use super::values::ValueType;
 
 		match self.code.get(offset + 1) {
 			Some(pos) => {

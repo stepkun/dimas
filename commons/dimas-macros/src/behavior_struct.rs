@@ -168,25 +168,25 @@ fn behavior_struct(config: &Config, mut item: ItemStruct) -> Result<TokenStream>
 			/// generated behavior creation function
 			pub fn create_behavior(
 				name: impl AsRef<str>,
-				config: ::dimas_core::behavior::BehaviorConfig,
+				config: ::dimas_behavior::behavior::BehaviorConfig,
 				#manual_fields_with_types
-			) -> ::dimas_core::behavior::Behavior {
+			) -> ::dimas_behavior::behavior::Behavior {
 				let ctx = Self {
 					#extra_fields
 				};
 
-				let bhvr_data = ::dimas_core::behavior::BehaviorData::new(
+				let bhvr_data = ::dimas_behavior::behavior::BehaviorData::new(
 					name.as_ref().to_string(),
 					::alloc::string::String::from(#struct_name),
-					::dimas_core::behavior::BehaviorType::#bhvr_type,
-					::dimas_core::behavior::BehaviorCategory::#bhvr_category,
+					::dimas_behavior::behavior::BehaviorType::#bhvr_type,
+					::dimas_behavior::behavior::BehaviorCategory::#bhvr_category,
 					config,
-					::dimas_core::behavior::BehaviorStatus::Idle,
+					::dimas_behavior::behavior::BehaviorStatus::Idle,
 					::alloc::vec::Vec::default(),
 					Self::_ports,
 				);
 
-				::dimas_core::behavior::Behavior::new(
+				::dimas_behavior::behavior::Behavior::new(
 					bhvr_data,
 					::alloc::boxed::Box::new(ctx),
 					#tick_functions

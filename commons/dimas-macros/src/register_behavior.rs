@@ -67,7 +67,7 @@ fn build_behavior(bhvr: &BehaviorRegistration) -> proc_macro2::TokenStream {
 	quote! {
 		{
 			let mut bhvr = #bhvr_type::create_behavior(#name, config #cloned_names);
-			let manifest = ::dimas_core::behavior::BehaviorManifest::new(
+			let manifest = ::dimas_behavior::behavior::BehaviorManifest::new(
 				bhvr.bhvr_category(),
 				#name,
 				bhvr.provided_ports(),
@@ -119,9 +119,9 @@ pub fn register_behavior(
 			#param_clone_expr
 
 			let bhvr_fn = move |
-				config: ::dimas_core::behavior::BehaviorConfig,
-				mut children: ::alloc::vec::Vec<::dimas_core::behavior::Behavior>
-			| -> ::dimas_core::behavior::Behavior
+				config: ::dimas_behavior::behavior::BehaviorConfig,
+				mut children: ::alloc::vec::Vec<::dimas_behavior::behavior::Behavior>
+			| -> ::dimas_behavior::behavior::Behavior
 			{
 				let mut bhvr = #bhvr;
 
@@ -176,12 +176,12 @@ pub fn register_function(input: proc_macro2::TokenStream) -> proc_macro2::TokenS
 	let name = &bhvr_registration.name;
 	let fct_ptr = &bhvr_registration.function_ptr;
 
-	let bhvr_type_token = quote! { ::dimas_core::behavior::BehaviorCategory::Action };
+	let bhvr_type_token = quote! { ::dimas_behavior::behavior::BehaviorCategory::Action };
 
 	let bhvr = quote! {
 		{
-			let mut bhvr = ::dimas_core::behavior::BehaviorFunction::create_behavior(#name, config, #fct_ptr);
-			let manifest = ::dimas_core::behavior::BehaviorManifest::new(
+			let mut bhvr = ::dimas_behavior::behavior::BehaviorFunction::create_behavior(#name, config, #fct_ptr);
+			let manifest = ::dimas_behavior::behavior::BehaviorManifest::new(
 				bhvr.bhvr_category(),
 				#name,
 				bhvr.provided_ports(),
@@ -197,9 +197,9 @@ pub fn register_function(input: proc_macro2::TokenStream) -> proc_macro2::TokenS
 			let blackboard = #factory.blackboard().clone();
 
 			let bhvr_fn = move |
-				config: ::dimas_core::behavior::BehaviorConfig,
-				mut children: ::alloc::vec::Vec<::dimas_core::behavior::Behavior>
-			| -> ::dimas_core::behavior::Behavior
+				config: ::dimas_behavior::behavior::BehaviorConfig,
+				mut children: ::alloc::vec::Vec<::dimas_behavior::behavior::Behavior>
+			| -> ::dimas_behavior::behavior::Behavior
 			{
 				let mut bhvr = #bhvr;
 

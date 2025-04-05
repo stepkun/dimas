@@ -32,10 +32,10 @@ fn repl() {
 									for c in stdout {
 										print!("{}", c as char);
 									}
-								};
+								}
 							},
 						);
-					};
+					}
 					input.clear();
 					print!("> ");
 					let _ = stdout().flush();

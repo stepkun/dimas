@@ -3,8 +3,8 @@
 //! Subscriber
 
 // region:      --- modules
-use dimas_config::factory::BTFactory;
-use dimas_core::behavior::{BehaviorResult, BehaviorStatus};
+use dimas_behavior::behavior::{BehaviorResult, BehaviorStatus};
+use dimas_builtin::factory::BTFactory;
 use dimas_macros::{behavior, register_control};
 // endregion:   --- modules
 

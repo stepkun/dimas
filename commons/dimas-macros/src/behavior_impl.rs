@@ -92,7 +92,7 @@ fn alter_behavior_fn(fn_item: &mut ImplItemFn, is_async: bool) -> Result<()> {
 	// Rename parameters
 	for arg in &mut fn_item.sig.inputs {
 		if let FnArg::Receiver(_) = arg {
-			let new_arg = quote! { bhvr_: &'a mut ::dimas_core::behavior::BehaviorData };
+			let new_arg = quote! { bhvr_: &'a mut ::dimas_behavior::behavior::BehaviorData };
 			let new_arg = parse2(new_arg)?;
 			*arg = new_arg;
 		}
@@ -215,13 +215,13 @@ fn behavior_impl(mut args: Config, mut item: ItemImpl) -> Result<TokenStream> {
 
 	if args.halt_fn.is_none() {
 		extra_impls.push(parse2(quote! {
-            fn _halt<'a>(bhvr_: &'a mut ::dimas_core::behavior::BehaviorData, ctx: &'a mut ::alloc::boxed::Box<dyn ::core::any::Any + ::core::marker::Send + ::core::marker::Sync>) -> ::futures::future::BoxFuture<'a, ()> { ::alloc::boxed::Box::pin(async move {}) }
+            fn _halt<'a>(bhvr_: &'a mut ::dimas_behavior::behavior::BehaviorData, ctx: &'a mut ::alloc::boxed::Box<dyn ::core::any::Any + ::core::marker::Send + ::core::marker::Sync>) -> ::futures::future::BoxFuture<'a, ()> { ::alloc::boxed::Box::pin(async move {}) }
         })?);
 	}
 
 	if args.port_fn.is_none() {
 		extra_impls.push(parse2(quote! {
-			fn _ports() -> ::dimas_core::port::PortList { ::dimas_core::port::PortList::new() }
+			fn _ports() -> ::dimas_behavior::port::PortList { ::dimas_behavior::port::PortList::new() }
 		})?);
 	}
 

@@ -4,7 +4,7 @@
 
 extern crate alloc;
 
-use dimas_core::behavior::{BehaviorStatus, BehaviorResult};
+use dimas_behavior::behavior::{BehaviorStatus, BehaviorResult};
 use dimas_macros::behavior;
 
 #[behavior(Action)]

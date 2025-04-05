@@ -71,7 +71,7 @@ pub fn behavior(metadata: TokenStream, input: TokenStream) -> TokenStream {
 pub fn register_action(input: TokenStream) -> TokenStream {
 	register_behavior::register_behavior(
 		input,
-		quote! { ::dimas_core::behavior::BehaviorCategory::Action },
+		quote! { ::dimas_behavior::behavior::BehaviorCategory::Action },
 		register_behavior::BehaviorTypeInternal::Action,
 	)
 }
@@ -81,7 +81,7 @@ pub fn register_action(input: TokenStream) -> TokenStream {
 pub fn register_condition(input: TokenStream) -> TokenStream {
 	register_behavior::register_behavior(
 		input,
-		quote! { ::dimas_core::behavior::BehaviorCategory::Condition },
+		quote! { ::dimas_behavior::behavior::BehaviorCategory::Condition },
 		register_behavior::BehaviorTypeInternal::Condition,
 	)
 }
@@ -91,7 +91,7 @@ pub fn register_condition(input: TokenStream) -> TokenStream {
 pub fn register_control(input: TokenStream) -> TokenStream {
 	register_behavior::register_behavior(
 		input,
-		quote! { ::dimas_core::behavior::BehaviorCategory::Control },
+		quote! { ::dimas_behavior::behavior::BehaviorCategory::Control },
 		register_behavior::BehaviorTypeInternal::Control,
 	)
 }
@@ -101,7 +101,7 @@ pub fn register_control(input: TokenStream) -> TokenStream {
 pub fn register_decorator(input: TokenStream) -> TokenStream {
 	register_behavior::register_behavior(
 		input,
-		quote! { ::dimas_core::behavior::BehaviorCategory::Decorator },
+		quote! { ::dimas_behavior::behavior::BehaviorCategory::Decorator },
 		register_behavior::BehaviorTypeInternal::Decorator,
 	)
 }

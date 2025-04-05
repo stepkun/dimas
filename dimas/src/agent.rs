@@ -2,11 +2,11 @@
 
 // region:      --- modules
 use anyhow::Result;
-use dimas_config::factory::{BTFactory, Error};
-use dimas_core::{
+use dimas_behavior::{
 	behavior::tree::BehaviorTree,
 	behavior::{BehaviorResult, BehaviorStatus},
 };
+use dimas_builtin::factory::{BTFactory, Error};
 use dimas_macros::{behavior, register_action, register_condition};
 use std::time::Duration;
 use tracing::{Level, event, instrument};

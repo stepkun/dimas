@@ -11,7 +11,7 @@ use super::error::Error;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(i8)]
 pub enum ValueType {
-    Nil,
+	Nil,
 	Bool,
 	Double,
 	Int,

@@ -9,10 +9,7 @@ use crate::{
 		error::Error,
 		token::{Token, TokenKind},
 	},
-	execution::{
-		Chunk,
-		op_code::OpCode,
-	},
+	execution::{Chunk, op_code::OpCode},
 };
 
 use super::PrefixParselet;

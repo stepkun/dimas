@@ -33,7 +33,8 @@ quote = "1.0.40"
 syn = { version = "2.0.100", features = ["full", "visit-mut"] }
 
 [dev-dependencies]
-dimas-core = { workspace = true }
+dimas-behavior = { workspace = true }
+#dimas-core = { workspace = true }
 futures = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 trybuild = { workspace = true }

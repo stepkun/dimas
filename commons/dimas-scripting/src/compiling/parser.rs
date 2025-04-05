@@ -16,10 +16,7 @@ use hashbrown::HashMap;
 
 use crate::{
 	Lexer,
-	execution::{
-		Chunk,
-		op_code::OpCode,
-	},
+	execution::{Chunk, op_code::OpCode},
 };
 
 use super::{
