@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `NumberParselet` for `Dimas`scripting
+//! `ValueParselet` for `Dimas` scripting analyzes and handles value tokens like numbers
 //!
 
 use alloc::string::ToString;
@@ -11,7 +11,7 @@ use crate::{
 		error::Error,
 		token::{Token, TokenKind},
 	},
-	execution::{Chunk, opcodes::OP_CONSTANT, values::Value},
+	execution::{Chunk, op_code::OpCode, values::Value},
 };
 
 use super::PrefixParselet;
@@ -30,7 +30,7 @@ impl PrefixParselet for ValueParselet {
 				};
 
 				let offset = chunk.add_constant(Value::from_double(double))?;
-				parser.emit_bytes(OP_CONSTANT, offset, chunk);
+				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}
 			TokenKind::HexNumber => {
@@ -40,12 +40,12 @@ impl PrefixParselet for ValueParselet {
 					return Err(Error::ParseHex(literal.to_string(), token.line));
 				};
 				let offset = chunk.add_constant(Value::from_integer(value))?;
-				parser.emit_bytes(OP_CONSTANT, offset, chunk);
+				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}
 			TokenKind::String => {
 				let offset = chunk.add_string_constant(token.origin)?;
-				parser.emit_bytes(OP_CONSTANT, offset, chunk);
+				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}
 			_ => Err(Error::Unreachable(file!().to_string(), line!())),

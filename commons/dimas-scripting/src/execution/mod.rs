@@ -1,11 +1,11 @@
 // Copyright © 2025 Stephan Kunz
 
-//! Execution for Scripting of `DiMAS`
+//! Virtual Machine for scripting of `DiMAS`
 //!
 
 mod chunk;
 pub mod error;
-pub mod opcodes;
+pub mod op_code;
 pub mod values;
 mod vm;
 

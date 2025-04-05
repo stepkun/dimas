@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `LiteralParselet` for `Dimas`scripting
+//! `LiteralParselet` for `Dimas` scripting handles any literal like 'true' and 'false'
 //!
 
 use alloc::string::ToString;
@@ -13,7 +13,7 @@ use crate::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{OP_FALSE, OP_NIL, OP_TRUE},
+		op_code::OpCode,
 	},
 };
 
@@ -27,15 +27,15 @@ impl PrefixParselet for LiteralParselet {
 
 		match kind {
 			TokenKind::False => {
-				parser.emit_byte(OP_FALSE, chunk);
+				parser.emit_byte(OpCode::False as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Nil => {
-				parser.emit_byte(OP_NIL, chunk);
+				parser.emit_byte(OpCode::Nil as u8, chunk);
 				Ok(())
 			}
 			TokenKind::True => {
-				parser.emit_byte(OP_TRUE, chunk);
+				parser.emit_byte(OpCode::True as u8, chunk);
 				Ok(())
 			}
 			_ => Err(Error::Unreachable(file!().to_string(), line!())),

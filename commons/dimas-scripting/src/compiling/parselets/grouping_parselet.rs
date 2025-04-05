@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `GroupingParselet` for `Dimas`scripting
+//! `GroupingParselet` for `Dimas` scripting handles parentheses
 //!
 
 use crate::{

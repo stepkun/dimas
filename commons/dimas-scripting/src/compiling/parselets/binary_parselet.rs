@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `GroupingParselet` for `Dimas`scripting
+//! `BinaryParselet` for `Dimas` scripting analyzses and handles the binary expressions
 //!
 
 use alloc::string::ToString;
@@ -14,9 +14,7 @@ use crate::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{
-			OP_ADD, OP_DIVIDE, OP_EQUAL, OP_GREATER, OP_LESS, OP_MULTIPLY, OP_NOT, OP_SUBTRACT,
-		},
+		op_code::OpCode,
 	},
 };
 
@@ -38,43 +36,43 @@ impl InfixParselet for BinaryParselet {
 		parser.with_precedence(self.precedence.next_higher(), chunk)?;
 		match kind {
 			TokenKind::BangEqual => {
-				parser.emit_bytes(OP_EQUAL, OP_NOT, chunk);
+				parser.emit_bytes(OpCode::Equal as u8, OpCode::Not as u8, chunk);
 				Ok(())
 			}
 			TokenKind::EqualEqual => {
-				parser.emit_byte(OP_EQUAL, chunk);
+				parser.emit_byte(OpCode::Equal as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Greater => {
-				parser.emit_byte(OP_GREATER, chunk);
+				parser.emit_byte(OpCode::Greater as u8, chunk);
 				Ok(())
 			}
 			TokenKind::GreaterEqual => {
-				parser.emit_bytes(OP_LESS, OP_NOT, chunk);
+				parser.emit_bytes(OpCode::Less as u8, OpCode::Not as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Less => {
-				parser.emit_byte(OP_LESS, chunk);
+				parser.emit_byte(OpCode::Less as u8, chunk);
 				Ok(())
 			}
 			TokenKind::LessEqual => {
-				parser.emit_bytes(OP_GREATER, OP_NOT, chunk);
+				parser.emit_bytes(OpCode::Greater as u8, OpCode::Not as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Plus => {
-				parser.emit_byte(OP_ADD, chunk);
+				parser.emit_byte(OpCode::Add as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Minus => {
-				parser.emit_byte(OP_SUBTRACT, chunk);
+				parser.emit_byte(OpCode::Subtract as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Star => {
-				parser.emit_byte(OP_MULTIPLY, chunk);
+				parser.emit_byte(OpCode::Multiply as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Slash => {
-				parser.emit_byte(OP_DIVIDE, chunk);
+				parser.emit_byte(OpCode::Divide as u8, chunk);
 				Ok(())
 			}
 			_ => Err(Error::Unreachable(file!().to_string(), line!())),

@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! Token for `DiMAS` scripting
+//! Token for `DiMAS` scripting created by the [`Lexer`] for the [`Parser`]
 
 use core::fmt::Display;
 

@@ -8,12 +8,9 @@ use alloc::{borrow::ToOwned, string::ToString, sync::Arc};
 
 use crate::{DefaultEnvironment, Environment};
 
-#[allow(clippy::wildcard_imports)]
-use super::opcodes::*;
+use super::op_code::OpCode;
 use super::{
-	Chunk,
-	error::Error,
-	values::{VAL_BOOL, VAL_DOUBLE, VAL_INT, VAL_NIL, VAL_STR, Value},
+	error::Error, values::{Value, ValueType}, Chunk
 };
 
 /// Stack size is fixed
@@ -87,36 +84,35 @@ impl VM {
 		((byte1 as usize) << 8) + byte2 as usize
 	}
 
-	fn arithmetic_operator(&mut self, operator: u8, chunk: &mut Chunk) -> Result<(), Error> {
+	fn arithmetic_operator(&mut self, operator: &OpCode, chunk: &mut Chunk) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let b_kind = b_val.kind();
 		let a_kind = a_val.kind();
 		// Strings can be concatenated with
-		if a_kind == VAL_STR {
+		if a_kind == ValueType::Str {
 			match operator {
-				OP_ADD => {
+				OpCode::Add => {
 					let a_pos = a_val.as_string_pos()?;
 					let a = chunk.get_string(a_pos).to_owned();
 					let res = match b_kind {
-						VAL_BOOL => {
+						ValueType::Bool => {
 							let b = b_val.as_bool()?;
 							a + &b.to_string()
 						}
-						VAL_DOUBLE => {
+						ValueType::Double => {
 							let b = b_val.as_double()?;
 							a + &b.to_string()
 						}
-						VAL_INT => {
+						ValueType::Int => {
 							let b = b_val.as_integer()?;
 							a + &b.to_string()
 						}
-						VAL_NIL => a + "nil",
-						VAL_STR => {
+						ValueType::Nil => a + "nil",
+						ValueType::Str => {
 							let b_pos = b_val.as_string_pos()?;
 							a + chunk.get_string(b_pos)
 						}
-						_ => return Err(Error::Unreachable(line!())),
 					};
 					let string_pos = chunk.add_string(res);
 					a_val.make_string_pos(string_pos);
@@ -125,15 +121,15 @@ impl VM {
 				}
 				_ => Err(Error::OnlyAdd),
 			}
-		} else if b_kind == a_kind && (b_kind == VAL_DOUBLE || b_kind == VAL_INT) {
-			if b_kind == VAL_DOUBLE {
+		} else if b_kind == a_kind && (b_kind == ValueType::Double || b_kind == ValueType::Int) {
+			if b_kind == ValueType::Double {
 				let b = b_val.as_double()?;
 				let a = a_val.as_double()?;
 				let res = match operator {
-					OP_ADD => a + b,
-					OP_SUBTRACT => a - b,
-					OP_MULTIPLY => a * b,
-					OP_DIVIDE => a / b,
+					OpCode::Add => a + b,
+					OpCode::Subtract => a - b,
+					OpCode::Multiply => a * b,
+					OpCode::Divide => a / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				a_val.make_double(res);
@@ -141,10 +137,10 @@ impl VM {
 				let b = b_val.as_integer()?;
 				let a = a_val.as_integer()?;
 				let res = match operator {
-					OP_ADD => a + b,
-					OP_SUBTRACT => a - b,
-					OP_MULTIPLY => a * b,
-					OP_DIVIDE => a / b,
+					OpCode::Add => a + b,
+					OpCode::Subtract => a - b,
+					OpCode::Multiply => a * b,
+					OpCode::Divide => a / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				a_val.make_integer(res);
@@ -156,16 +152,16 @@ impl VM {
 		}
 	}
 
-	fn bitwise_operator(&mut self, operator: u8) -> Result<(), Error> {
+	fn bitwise_operator(&mut self, operator: &OpCode) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let b_kind = b_val.kind();
 		let a_kind = a_val.kind();
-		if a_kind == b_kind && a_kind == VAL_INT {
+		if a_kind == b_kind && a_kind == ValueType::Int {
 			let res = match operator {
-				OP_BITWISE_AND => a_val.as_integer()? & b_val.as_integer()?,
-				OP_BITWISE_OR => a_val.as_integer()? | b_val.as_integer()?,
-				OP_BITWISE_XOR => a_val.as_integer()? ^ b_val.as_integer()?,
+				OpCode::BitwiseAnd => a_val.as_integer()? & b_val.as_integer()?,
+				OpCode::BitwiseOr => a_val.as_integer()? | b_val.as_integer()?,
+				OpCode::BitwiseXor => a_val.as_integer()? ^ b_val.as_integer()?,
 				_ => return Err(Error::Unreachable(line!())),
 			};
 			a_val.make_integer(res);
@@ -176,23 +172,23 @@ impl VM {
 		}
 	}
 
-	fn boolean_operator(&mut self, operator: u8) -> Result<(), Error> {
+	fn boolean_operator(&mut self, operator: &OpCode) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let b_kind = b_val.kind();
 		let a_kind = a_val.kind();
-		if b_kind == a_kind && (b_kind == VAL_DOUBLE || b_kind == VAL_INT) {
-			if b_kind == VAL_DOUBLE {
+		if b_kind == a_kind && (b_kind == ValueType::Double || b_kind == ValueType::Int) {
+			if b_kind == ValueType::Double {
 				let res = match operator {
-					OP_GREATER => a_val.as_double()? > b_val.as_double()?,
-					OP_LESS => a_val.as_double()? < b_val.as_double()?,
+					OpCode::Greater => a_val.as_double()? > b_val.as_double()?,
+					OpCode::Less => a_val.as_double()? < b_val.as_double()?,
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				a_val.make_bool(res);
 			} else {
 				let res = match operator {
-					OP_GREATER => a_val.as_integer()? > b_val.as_integer()?,
-					OP_LESS => a_val.as_integer()? < b_val.as_integer()?,
+					OpCode::Greater => a_val.as_integer()? > b_val.as_integer()?,
+					OpCode::Less => a_val.as_integer()? < b_val.as_integer()?,
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				a_val.make_bool(res);
@@ -217,22 +213,21 @@ impl VM {
 		let a_kind = a_val.kind();
 		if a_kind == b_val.kind() {
 			let res = match a_kind {
-				VAL_BOOL => a_val.as_bool().expect("snh") == b_val.as_bool().expect("snh"),
-				VAL_DOUBLE => {
+				ValueType::Bool => a_val.as_bool().expect("snh") == b_val.as_bool().expect("snh"),
+				ValueType::Double => {
 					let delta =
 						f64::abs(a_val.as_double().expect("snh") - b_val.as_double().expect("snh"));
 					delta <= 0.000_000_000_000_002
 				}
-				VAL_INT => a_val.as_integer().expect("snh") == b_val.as_integer().expect("snh"),
-				VAL_STR => {
+				ValueType::Int => a_val.as_integer().expect("snh") == b_val.as_integer().expect("snh"),
+				ValueType::Str => {
 					let a_pos = a_val.as_string_pos().expect("snh");
 					let a = chunk.get_string(a_pos);
 					let b_pos = b_val.as_string_pos().expect("snh");
 					let b = chunk.get_string(b_pos);
 					a == b
 				}
-				VAL_NIL => true,
-				_ => false,
+				ValueType::Nil => true,
 			};
 			a_val.make_bool(res);
 		} else {
@@ -244,8 +239,8 @@ impl VM {
 	fn negate(&mut self) -> Result<(), Error> {
 		let mut val = self.pop();
 		let val_kind = val.kind();
-		if val_kind == VAL_DOUBLE || val_kind == VAL_INT {
-			if val_kind == VAL_DOUBLE {
+		if val_kind == ValueType::Double || val_kind == ValueType::Int {
+			if val_kind == ValueType::Double {
 				let double = -val.as_double()?;
 				val.make_double(double);
 			} else {
@@ -261,7 +256,7 @@ impl VM {
 	fn binary_not(&mut self) -> Result<(), Error> {
 		let mut val = self.pop();
 		let kind = val.kind();
-		if kind != VAL_INT {
+		if kind != ValueType::Int {
 			return Err(Error::NoInteger);
 		}
 		val.make_integer(!val.as_integer()?);
@@ -272,16 +267,15 @@ impl VM {
 		let mut val = self.pop();
 		let kind = val.kind();
 		match kind {
-			VAL_BOOL => {
+			ValueType::Bool => {
 				val.make_bool(!val.as_bool()?);
 			}
-			VAL_DOUBLE | VAL_STR | VAL_INT => {
+			ValueType::Double | ValueType::Str | ValueType::Int => {
 				val.make_bool(false);
 			}
-			VAL_NIL => {
+			ValueType::Nil => {
 				val.make_bool(true);
 			}
-			_ => return Err(Error::Unreachable(line!())),
 		}
 		self.push(val)
 	}
@@ -349,48 +343,48 @@ impl VM {
 
 		loop {
 			//std::dbg!(self.ip);
-			let instruction: u8 = chunk.code()[self.ip];
+			let instruction: OpCode = chunk.code()[self.ip].into();
 			self.ip += 1;
 			match instruction {
-				OP_ADD | OP_DIVIDE | OP_MULTIPLY | OP_SUBTRACT => {
-					self.arithmetic_operator(instruction, chunk)?;
+				OpCode::Add | OpCode::Divide | OpCode::Multiply | OpCode::Subtract => {
+					self.arithmetic_operator(&instruction, chunk)?;
 				}
-				OP_BITWISE_AND | OP_BITWISE_OR | OP_BITWISE_XOR => {
-					self.bitwise_operator(instruction)?;
+				OpCode::BitwiseAnd | OpCode::BitwiseOr | OpCode::BitwiseXor => {
+					self.bitwise_operator(&instruction)?;
 				}
-				OP_BITWISE_NOT => self.binary_not()?,
-				OP_CONSTANT => self.constant(chunk)?,
-				OP_DEFINE_EXTERNAL => self.define_global(chunk)?,
-				OP_EQUAL => self.equal(chunk)?,
-				OP_FALSE => self.push(Value::from_bool(false))?,
-				OP_GET_EXTERNAL => self.get_global(chunk)?,
-				OP_GREATER => self.boolean_operator(instruction)?,
-				OP_JMP => {
+				OpCode::BitwiseNot => self.binary_not()?,
+				OpCode::Constant => self.constant(chunk)?,
+				OpCode::DefineExternal => self.define_global(chunk)?,
+				OpCode::Equal => self.equal(chunk)?,
+				OpCode::False => self.push(Value::from_bool(false))?,
+				OpCode::GetExternal => self.get_global(chunk)?,
+				OpCode::Greater => self.boolean_operator(&instruction)?,
+				OpCode::Jmp => {
 					let target = self.read_jmp_address(chunk);
 					self.ip = target;
 				}
-				OP_JMP_IF_FALSE => {
+				OpCode::JmpIfFalse => {
 					let target = self.read_jmp_address(chunk);
 					if !self.peek(0).as_bool()? {
 						self.ip = target;
 					}
 				}
-				OP_JMP_IF_TRUE => {
+				OpCode::JmpIfTrue => {
 					let target = self.read_jmp_address(chunk);
 					if self.peek(0).as_bool()? {
 						self.ip = target;
 					}
 				}
-				OP_LESS => self.boolean_operator(instruction)?,
-				OP_NEGATE => self.negate()?,
-				OP_NIL => self.push(Value::nil())?,
-				OP_NOT => self.not()?,
-				OP_POP => {
+				OpCode::Less => self.boolean_operator(&instruction)?,
+				OpCode::Negate => self.negate()?,
+				OpCode::Nil => self.push(Value::nil())?,
+				OpCode::Not => self.not()?,
+				OpCode::Pop => {
 					self.pop();
 				}
 				#[cfg(feature = "std")]
-				OP_PRINT => self.print(chunk, stdout)?,
-				OP_RETURN => {
+				OpCode::Print => self.print(chunk, stdout)?,
+				OpCode::Return => {
 					let val = if self.stack_top > 0 {
 						self.pop()
 					} else {
@@ -399,8 +393,8 @@ impl VM {
 					chunk.restore_state();
 					return Ok(val);
 				}
-				OP_SET_EXTERNAL => self.set_global(chunk)?,
-				OP_TRUE => self.push(Value::from_bool(true))?,
+				OpCode::SetExternal => self.set_global(chunk)?,
+				OpCode::True => self.push(Value::from_bool(true))?,
 				_ => {
 					chunk.restore_state();
 					return Err(Error::UnknownOpCode);

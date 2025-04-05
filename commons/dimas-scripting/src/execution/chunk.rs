@@ -3,13 +3,13 @@
 //! Bytecode implementation for `DiMAS` scripting
 
 #[doc(hidden)]
+#[cfg(feature = "std")]
 extern crate std;
 
 use alloc::{borrow::ToOwned, string::String, vec::Vec};
 
-#[allow(clippy::wildcard_imports)]
-use crate::execution::opcodes::*;
-use crate::execution::values::{self, Value};
+use crate::execution::op_code::OpCode;
+use crate::execution::values::Value;
 
 use super::Error;
 
@@ -123,71 +123,72 @@ impl Chunk {
 		} else {
 			std::print!("{:4} ", self.lines[offset]);
 		}
-		match self.code[offset].to_owned() {
-			OP_ADD => Self::simple_instruction("OP_ADD", offset),
-			OP_BITWISE_AND => Self::simple_instruction("OP_BITWISE_AND", offset),
-			OP_BITWISE_NOT => Self::simple_instruction("OP_BITWISE_NOT", offset),
-			OP_BITWISE_OR => Self::simple_instruction("OP_BITWISE_OR", offset),
-			OP_BITWISE_XOR => Self::simple_instruction("OP_BITWISE_XOR", offset),
-			OP_CONSTANT => self.constant_instruction("OP_CONSTANT", offset),
-			OP_DEFINE_EXTERNAL => self.constant_instruction("OP_DEFINE_GLOBAL", offset),
-			OP_DIVIDE => Self::simple_instruction("OP_DIVIDE", offset),
-			OP_EQUAL => Self::simple_instruction("OP_EQUAL", offset),
-			OP_FALSE => Self::simple_instruction("OP_FALSE", offset),
-			OP_GET_EXTERNAL => self.constant_instruction("OP_GET_GLOBAL", offset),
-			OP_GREATER => Self::simple_instruction("OP_GREATER", offset),
-			OP_JMP => self.jump_instruction("OP_JMP", offset),
-			OP_JMP_IF_FALSE => self.jump_instruction("OP_JMP_IF_FALSE", offset),
-			OP_JMP_IF_TRUE => self.jump_instruction("OP_JMP_IF_TRUE", offset),
-			OP_LESS => Self::simple_instruction("OP_LESS", offset),
-			OP_MULTIPLY => Self::simple_instruction("OP_MULTIPLY", offset),
-			OP_NEGATE => Self::simple_instruction("OP_NEGATE", offset),
-			OP_NIL => Self::simple_instruction("OP_NIL", offset),
-			OP_NOT => Self::simple_instruction("OP_NOT", offset),
-			OP_POP => Self::simple_instruction("OP_POP", offset),
-			OP_PRINT => Self::simple_instruction("OP_PRINT", offset),
-			OP_RETURN => Self::simple_instruction("OP_RETURN", offset),
-			OP_SET_EXTERNAL => self.constant_instruction("OP_SET_GLOBAL", offset),
-			OP_SUBTRACT => Self::simple_instruction("OP_SUBTRACT", offset),
-			OP_TRUE => Self::simple_instruction("OP_TRUE", offset),
-			value => {
-				std::println!("unknown Token: {value:3}");
-				usize::MAX
-			}
+		let instruction: OpCode = self.code[offset].into();
+		match instruction {
+			OpCode::Add => Self::simple_instruction("OP_ADD", offset),
+			OpCode::BitwiseAnd => Self::simple_instruction("OP_BITWISE_AND", offset),
+			OpCode::BitwiseNot => Self::simple_instruction("OP_BITWISE_NOT", offset),
+			OpCode::BitwiseOr => Self::simple_instruction("OP_BITWISE_OR", offset),
+			OpCode::BitwiseXor => Self::simple_instruction("OP_BITWISE_XOR", offset),
+			OpCode::Constant => self.constant_instruction("OP_CONSTANT", offset),
+			OpCode::DefineExternal => self.constant_instruction("OP_DEFINE_GLOBAL", offset),
+			OpCode::Divide => Self::simple_instruction("OP_DIVIDE", offset),
+			OpCode::Equal => Self::simple_instruction("OP_EQUAL", offset),
+			OpCode::False => Self::simple_instruction("OP_FALSE", offset),
+			OpCode::GetExternal => self.constant_instruction("OP_GET_GLOBAL", offset),
+			OpCode::Greater => Self::simple_instruction("OP_GREATER", offset),
+			OpCode::Jmp => self.jump_instruction("OP_JMP", offset),
+			OpCode::JmpIfFalse => self.jump_instruction("OP_JMP_IF_FALSE", offset),
+			OpCode::JmpIfTrue => self.jump_instruction("OP_JMP_IF_TRUE", offset),
+			OpCode::Less => Self::simple_instruction("OP_LESS", offset),
+			OpCode::Multiply => Self::simple_instruction("OP_MULTIPLY", offset),
+			OpCode::Negate => Self::simple_instruction("OP_NEGATE", offset),
+			OpCode::Nil => Self::simple_instruction("OP_NIL", offset),
+			OpCode::None => Self::simple_instruction("OP_NONE", offset),
+			OpCode::Not => Self::simple_instruction("OP_NOT", offset),
+			OpCode::Pop => Self::simple_instruction("OP_POP", offset),
+			OpCode::Print => Self::simple_instruction("OP_PRINT", offset),
+			OpCode::Return => Self::simple_instruction("OP_RETURN", offset),
+			OpCode::SetExternal => self.constant_instruction("OP_SET_GLOBAL", offset),
+			OpCode::Subtract => Self::simple_instruction("OP_SUBTRACT", offset),
+			OpCode::True => Self::simple_instruction("OP_TRUE", offset),
 		}
 	}
 
 	/// single byte instruction
+	#[cfg(feature = "std")]
 	fn simple_instruction(name: &str, offset: usize) -> usize {
 		std::println!("{name:16}");
 		offset + 1
 	}
 
 	/// constant instruction
+	#[cfg(feature = "std")]
 	fn constant_instruction(&self, name: &str, offset: usize) -> usize {
+    use super::values::ValueType;
+
 		match self.code.get(offset + 1) {
 			Some(pos) => {
 				let value = self.read_constant(pos.to_owned());
 				match value.kind() {
-					values::VAL_BOOL => {
+					ValueType::Bool => {
 						std::println!("{name:16} {pos:3} {}", value.as_bool().expect("snh"));
 					}
-					values::VAL_DOUBLE => {
+					ValueType::Double => {
 						std::println!("{name:16} {pos:3} {}", value.as_double().expect("snh"));
 					}
-					values::VAL_INT => {
+					ValueType::Int => {
 						std::println!("{name:16} {pos:3} {}", value.as_integer().expect("snh"));
 					}
-					values::VAL_STR => {
+					ValueType::Str => {
 						std::println!(
 							"{name:16} {pos:3} {}",
 							self.strings[value.as_string_pos().expect("snh")]
 						);
 					}
-					values::VAL_NIL => {
+					ValueType::Nil => {
 						std::println!("{name:16} {pos:3} 'nil'");
 					}
-					_ => todo!(),
 				}
 			}
 			None => todo!(),
@@ -196,6 +197,7 @@ impl Chunk {
 	}
 
 	/// constant instruction
+	#[cfg(feature = "std")]
 	fn jump_instruction(&self, name: &str, offset: usize) -> usize {
 		let target = (usize::from(self.code.get(offset + 1).expect("snh").to_owned()) << 8)
 			+ usize::from(self.code.get(offset + 2).expect("snh").to_owned());

@@ -12,13 +12,17 @@
 //! statement   → expression ";" ;
 //! expression  → assignment ;
 //! assignment  → IDENTIFIER ":=" assignment | IDENTIFIER "=" assignment | logic_or ;
+//! ternary     → logic_or "?" expression ":" expression ;
 //! logic_or    → logic_and ( "||" logic_and )* ;
-//! logic_and   → equality ( "&&" equality )* ;
+//! logic_and   → binary_or ( "&&" binary_or )* ;
+//! binary_or   → binary_xor ( "|" binary_xor )* ;
+//! binary_xor  → binary_and ( "^" binary_and )* ;
+//! binary_and  → equality ( "&" equality )* ;
 //! equality    → comparison ( ( "!=" | "==" ) comparison )* ;
 //! comparison  → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 //! term        → factor ( ( "-" | "+" ) factor )* ;
 //! factor      → unary ( ( "/" | "*" ) unary )* ;
-//! unary       → ( "!" | "-" ) unary | primary ;
+//! unary       → ( "!" | "-" | "~") unary | primary ;
 //! primary     → "true" | "false" | NUMBER | HEXNUMBER | STRING | IDENTIFIER | "(" expression ")" ;
 //!
 //! NUMBER      → DIGIT+ ( "." DIGIT+ )? ;
@@ -27,13 +31,6 @@
 //! IDENTIFIER  → ALPHA ( ALPHA | DIGIT )* ;
 //! ALPHA       → "a" ... "z" | "A" ... "Z" | "_" ;
 //! DIGIT       → "0" ... "9" ;
-//!
-//! TODO'S:
-//! ternary     → condition "?" term ":" term ;
-//! binary_xor  → binary_or ( "|" binary_or )* ;
-//! binary_or   → binary_and ( "|" binary_and )* ;
-//! binary_and  → equality ( "&" equality )* ;
-//! c_assgnmnt  → IDENTIFIER ( "+=" | "-=" | "*="" | "/=" ) term ;
 //! ```
 //!
 
@@ -69,7 +66,7 @@ pub trait Environment: Send + Sync {
 	fn set(&self, name: &str, value: Value) -> Result<(), Error>;
 }
 
-/// A default Environment for testing purpose end the REPL
+/// A very simple default Environment for testing purpose and the REPL
 #[derive(Default)]
 pub struct DefaultEnvironment {
 	storage: RwLock<HashMap<String, Value>>,

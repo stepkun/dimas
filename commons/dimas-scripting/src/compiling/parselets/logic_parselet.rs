@@ -1,20 +1,21 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `GroupingParselet` for `Dimas`scripting
+//! `LogicParselet` for `Dimas` scripting analyzes and handles logical expressions
 //!
 
 use alloc::string::ToString;
 
 use crate::{
+	Parser,
 	compiling::{
 		error::Error,
 		precedence::Precedence,
 		token::{Token, TokenKind},
-	}, execution::{
-		opcodes::{
-			OP_BITWISE_AND, OP_BITWISE_OR, OP_BITWISE_XOR, OP_JMP, OP_JMP_IF_FALSE, OP_JMP_IF_TRUE, OP_POP
-		}, Chunk
-	}, Parser
+	},
+	execution::{
+		Chunk,
+		op_code::OpCode,
+	},
 };
 
 use super::InfixParselet;
@@ -38,48 +39,48 @@ impl InfixParselet for LogicParselet {
 		match kind {
 			TokenKind::Ampersand => {
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				parser.emit_byte(OP_BITWISE_AND, chunk);
+				parser.emit_byte(OpCode::BitwiseAnd as u8, chunk);
 				Ok(())
 			}
 			TokenKind::And => {
-				let target_pos = parser.emit_jump(OP_JMP_IF_FALSE, chunk);
-				parser.emit_byte(OP_POP, chunk);
+				let target_pos = parser.emit_jump(OpCode::JmpIfFalse as u8, chunk);
+				parser.emit_byte(OpCode::Pop as u8, chunk);
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				parser.patch_jump(target_pos, chunk);
+				Parser::patch_jump(target_pos, chunk);
 				Ok(())
 			}
 			TokenKind::Caret => {
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				parser.emit_byte(OP_BITWISE_XOR, chunk);
+				parser.emit_byte(OpCode::BitwiseXor as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Or => {
-				let target_pos = parser.emit_jump(OP_JMP_IF_TRUE, chunk);
-				parser.emit_byte(OP_POP, chunk);
+				let target_pos = parser.emit_jump(OpCode::JmpIfTrue as u8, chunk);
+				parser.emit_byte(OpCode::Pop as u8, chunk);
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				parser.patch_jump(target_pos, chunk);
+				Parser::patch_jump(target_pos, chunk);
 				Ok(())
 			}
 			TokenKind::Pipe => {
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				parser.emit_byte(OP_BITWISE_OR, chunk);
+				parser.emit_byte(OpCode::BitwiseOr as u8, chunk);
 				Ok(())
 			}
 			TokenKind::QMark => {
-				let else_pos = parser.emit_jump(OP_JMP_IF_FALSE, chunk);
+				let else_pos = parser.emit_jump(OpCode::JmpIfFalse as u8, chunk);
 				// remove the decision value
-				parser.emit_byte(OP_POP, chunk);
+				parser.emit_byte(OpCode::Pop as u8, chunk);
 				// run the "true" expression
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				let end_pos = parser.emit_jump(OP_JMP, chunk);
-				parser.patch_jump(else_pos, chunk);
+				let end_pos = parser.emit_jump(OpCode::Jmp as u8, chunk);
+				Parser::patch_jump(else_pos, chunk);
 				// consume the ':'
 				parser.consume(TokenKind::Colon)?;
 				// remove the decision value
-				parser.emit_byte(OP_POP, chunk);
+				parser.emit_byte(OpCode::Pop as u8, chunk);
 				// run the "false" expression
 				parser.with_precedence(self.precedence.next_higher(), chunk)?;
-				parser.patch_jump(end_pos, chunk);
+				Parser::patch_jump(end_pos, chunk);
 				Ok(())
 			}
 			_ => Err(Error::Unreachable(file!().to_string(), line!())),

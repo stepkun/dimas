@@ -159,4 +159,3 @@ fn ternary() {
 	vm.run(&mut chunk, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 }
-

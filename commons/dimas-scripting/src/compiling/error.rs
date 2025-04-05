@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `scripting` compiletime errors
+//! `DiMAS` scripting compiletime errors
 
 use alloc::string::String;
 // region		--- modules

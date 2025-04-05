@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `scripting` runtime errors
+//! `DiMAS` scripting runtime errors
 
 // region		--- modules
 use thiserror::Error;

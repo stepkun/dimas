@@ -1,11 +1,10 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unused_self)]
-#![allow(clippy::needless_pass_by_ref_mut)]
 
 //! Parser for `DiMAS` scripting implemented as a [Pratt-Parser](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
-//! You should also read th earticel by [Robert Nystrom](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/)
+//! You should also read the articel by [Robert Nystrom](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/)
 //!
 //! Implementation is inspired by
+//! - Robert Nystrom [crafting interpreters - A Bytecode Virtual Machine](https://craftinginterpreters.com/a-bytecode-virtual-machine.html)
 //! - Jon Gjengsets [video](https://www.youtube.com/watch?v=mNOLaw-_Buc) & [example](https://github.com/jonhoo/lox/blob/master/src/parse.rs)
 //! - Jürgen Wurzers implementation of [Bantam](https://github.com/jwurzer/bantam-rust/blob/master/src/bantam/bantam_parser.rs)
 //!
@@ -19,15 +18,15 @@ use crate::{
 	Lexer,
 	execution::{
 		Chunk,
-		opcodes::{OP_PRINT, OP_RETURN},
+		op_code::OpCode,
 	},
 };
 
 use super::{
 	error::Error,
 	parselets::{
-		BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet, LogicParselet,
-		PrefixParselet, UnaryParselet, ValueParselet, VariableParselet,
+		AssignmentParselet, BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet,
+		LogicParselet, PrefixParselet, UnaryParselet, ValueParselet,
 	},
 	precedence::Precedence,
 	token::{Token, TokenKind},
@@ -97,7 +96,7 @@ impl<'a> Parser<'a> {
 			.insert(TokenKind::HexNumber, Arc::from(ValueParselet));
 		parser
 			.prefix_parselets
-			.insert(TokenKind::Ident, Arc::from(VariableParselet));
+			.insert(TokenKind::Ident, Arc::from(AssignmentParselet));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::LeftParen, Arc::from(GroupingParselet));
@@ -185,7 +184,7 @@ impl<'a> Parser<'a> {
 		}
 
 		// end compiler
-		self.emit_byte(OP_RETURN, &mut chunk);
+		self.emit_byte(OpCode::Return as u8, &mut chunk);
 		Ok(chunk)
 	}
 
@@ -229,7 +228,7 @@ impl<'a> Parser<'a> {
 	}
 
 	/// Check next token whether it has given kind
-	pub(crate) fn check_next(&mut self, kind: TokenKind) -> bool {
+	pub(crate) fn check_next(&self, kind: TokenKind) -> bool {
 		self.next.kind == kind
 	}
 
@@ -257,7 +256,7 @@ impl<'a> Parser<'a> {
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
-	pub(crate) fn patch_jump(&self, patch_pos: usize, chunk: &mut Chunk) {
+	pub(crate) fn patch_jump(patch_pos: usize, chunk: &mut Chunk) {
 		let target = chunk.code().len();
 		let byte1 = (target >> 8) as u8;
 		let byte2 = target as u8;
@@ -270,7 +269,7 @@ impl<'a> Parser<'a> {
 			self.advance()?;
 			self.expression(chunk)?;
 			self.consume(TokenKind::Semicolon)?;
-			self.emit_byte(OP_PRINT, chunk);
+			self.emit_byte(OpCode::Print as u8, chunk);
 		} else {
 			self.expression(chunk)?;
 			self.consume(TokenKind::Semicolon)?;

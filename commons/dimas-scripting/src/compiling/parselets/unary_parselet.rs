@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `UnaryParselet` for `Dimas`scripting
+//! `UnaryParselet` for `Dimas` scripting analyzes and handles the prefix expressions
 //!
 
 use alloc::string::ToString;
@@ -14,7 +14,7 @@ use crate::{
 	},
 	execution::{
 		Chunk,
-		opcodes::{OP_BITWISE_NOT, OP_NEGATE, OP_NOT},
+		op_code::OpCode,
 	},
 };
 
@@ -34,12 +34,12 @@ impl PrefixParselet for UnaryParselet {
 		match token.kind {
 			TokenKind::Bang => {
 				// add the logical not
-				parser.emit_byte(OP_NOT, chunk);
+				parser.emit_byte(OpCode::Not as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Minus => {
 				// add the negation
-				parser.emit_byte(OP_NEGATE, chunk);
+				parser.emit_byte(OpCode::Negate as u8, chunk);
 				Ok(())
 			}
 			TokenKind::Plus => {
@@ -48,7 +48,7 @@ impl PrefixParselet for UnaryParselet {
 			}
 			TokenKind::Tilde => {
 				// add the binary not
-				parser.emit_byte(OP_BITWISE_NOT, chunk);
+				parser.emit_byte(OpCode::BitwiseNot as u8, chunk);
 				Ok(())
 			}
 			_ => Err(Error::Unreachable(file!().to_string(), line!())),
