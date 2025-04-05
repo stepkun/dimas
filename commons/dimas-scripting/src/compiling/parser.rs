@@ -137,6 +137,10 @@ impl<'a> Parser<'a> {
 			Arc::from(BinaryParselet::new(Precedence::Term)),
 		);
 		parser.infix_parselets.insert(
+			TokenKind::QMark,
+			Arc::from(LogicParselet::new(Precedence::Ternary)),
+		);
+		parser.infix_parselets.insert(
 			TokenKind::Slash,
 			Arc::from(BinaryParselet::new(Precedence::Factor)),
 		);
