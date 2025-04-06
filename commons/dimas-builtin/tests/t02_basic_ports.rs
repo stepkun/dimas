@@ -165,10 +165,10 @@ const XML2: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 "#;
 
 #[tokio::test]
-#[ignore = "not yet implemented"]
+#[ignore]
 async fn basic_ports_with_script() -> anyhow::Result<()> {
 	// create BT environment
-	let mut factory = BTFactory::default();
+	let mut factory = BTFactory::extended();
 
 	// register all needed nodes
 	register_action!(factory, "SaySomething", SaySomething);

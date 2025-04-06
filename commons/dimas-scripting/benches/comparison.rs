@@ -6,10 +6,11 @@
 //! Benchmarks of scripting equality
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn double_comparison(c: &mut Criterion) {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new(
 		"1<1; 3.1475<4.99999; -3.00987654321234>-3.00987654321234; 4>3.00987654321234;",
@@ -26,7 +27,8 @@ fn double_comparison(c: &mut Criterion) {
 }
 
 fn integer_comparison(c: &mut Criterion) {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new("0x1<0x1; 0x1<0x2; 0x1>0x1; 0x2>0x1;");
 	let mut chunk = parser.parse().unwrap();

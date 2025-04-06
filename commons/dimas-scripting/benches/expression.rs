@@ -6,10 +6,11 @@
 //! Benchmarks of scripting equality
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn simple_expression(c: &mut Criterion) {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("(3 + 2) * (4 - 1);");
@@ -25,7 +26,8 @@ fn simple_expression(c: &mut Criterion) {
 }
 
 fn moderate_expression(c: &mut Criterion) {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("!(5 - 4 > 3 * 2 == !nil);");
@@ -41,7 +43,8 @@ fn moderate_expression(c: &mut Criterion) {
 }
 
 fn string_addition(c: &mut Criterion) {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("'this is a ' + 'test string';");

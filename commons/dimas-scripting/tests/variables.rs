@@ -3,11 +3,12 @@
 
 //! Tests of scripting operators
 
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 #[test]
 fn defining_globals() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("test:=3;print test;");
@@ -42,7 +43,8 @@ fn defining_globals() {
 
 #[test]
 fn change_globals() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("test:=3;test=7;print test;");
@@ -65,7 +67,8 @@ fn change_globals() {
 
 #[test]
 fn assignment_with_change() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("test:=3;test+=7;print test;");
@@ -106,7 +109,8 @@ fn assignment_with_change() {
 
 #[test]
 fn assignment_with_complex_change() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("test:=3;test+=(17-10)*2-7;print test;");

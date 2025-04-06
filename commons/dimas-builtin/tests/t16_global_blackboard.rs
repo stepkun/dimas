@@ -123,7 +123,7 @@ impl Script {
 #[tokio::test]
 async fn global_blackboard() -> anyhow::Result<()> {
 	// create an external blackboard which will survive the tree
-	let mut global_blackboard = Blackboard::default();
+	let global_blackboard = Blackboard::default();
 	// BT-Trees blackboard has global blackboard as parent
 	let blackboard = Blackboard::new(&global_blackboard);
 

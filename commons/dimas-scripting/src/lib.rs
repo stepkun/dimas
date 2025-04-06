@@ -37,17 +37,15 @@
 #[doc(hidden)]
 extern crate alloc;
 
-mod compiling;
-mod execution;
+pub mod compiling;
+pub mod execution;
 
 use alloc::string::{String, ToString};
 // flatten
-pub use compiling::Parser;
-pub use compiling::{Lexer, TokenKind};
-use execution::Error;
+pub use compiling::{Lexer, Parser, TokenKind};
 pub use execution::VM;
 
-use execution::values::Value;
+use execution::{Error, values::Value};
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 
@@ -55,15 +53,15 @@ use parking_lot::RwLock;
 pub trait Environment: Send + Sync {
 	/// Define the variable with `name` to `value`.
 	/// It has to be created if it does not already exist.
-	fn define(&self, name: &str, value: Value);
+	fn define_env(&self, name: &str, value: Value);
 	/// Get a variable by name
 	/// # Errors
 	/// if the variable does not exist
-	fn get(&self, name: &str) -> Result<Value, Error>;
+	fn get_env(&self, name: &str) -> Result<Value, Error>;
 	/// Set the variable with `name` to `value`.
 	/// # Errors
 	/// if variable does not exist.
-	fn set(&self, name: &str, value: Value) -> Result<(), Error>;
+	fn set_env(&self, name: &str, value: Value) -> Result<(), Error>;
 }
 
 /// A very simple default Environment for testing purpose and the REPL
@@ -73,20 +71,20 @@ pub struct DefaultEnvironment {
 }
 
 impl Environment for DefaultEnvironment {
-	fn define(&self, name: &str, value: Value) {
+	fn define_env(&self, name: &str, value: Value) {
 		self.storage
 			.write()
 			.insert(name.to_string(), value);
 	}
 
-	fn get(&self, name: &str) -> Result<Value, Error> {
+	fn get_env(&self, name: &str) -> Result<Value, Error> {
 		self.storage
 			.read()
 			.get(name)
 			.map_or(Err(Error::GlobalNotDefined), |value| Ok(*value))
 	}
 
-	fn set(&self, name: &str, value: Value) -> Result<(), Error> {
+	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {
 		if self.storage.read().contains_key(name) {
 			self.storage
 				.write()

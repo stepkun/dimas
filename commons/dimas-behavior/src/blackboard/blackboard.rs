@@ -9,6 +9,13 @@ use alloc::{
 	sync::Arc,
 };
 use core::{any::Any, str::FromStr};
+use dimas_scripting::{
+	Environment,
+	execution::{
+		Error,
+		values::{Value, ValueType},
+	},
+};
 use hashbrown::HashMap;
 use parking_lot::{Mutex, RwLock};
 
@@ -25,6 +32,41 @@ type EntryPtr = Arc<Mutex<Entry>>;
 pub struct Blackboard {
 	data: Arc<RwLock<BlackboardData>>,
 	parent: Box<Option<Blackboard>>,
+}
+
+impl Environment for Blackboard {
+	fn define_env(&self, name: &str, value: Value) {
+		match value.kind() {
+			ValueType::Nil => todo!(),
+			ValueType::Bool => self.set(name, value.as_bool()),
+			ValueType::Double => self.set(name, value.as_double()),
+			ValueType::Int => self.set(name, value.as_integer()),
+			ValueType::Str => self.set(name, value.as_string_pos()),
+		}
+	}
+
+	fn get_env(&self, name: &str) -> Result<Value, Error> {
+		if self.get_entry(name).is_some() {
+			Ok(Value::nil())
+		} else {
+			Err(Error::GlobalNotDefined)
+		}
+	}
+
+	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {
+		if self.get_entry(name).is_some() {
+			match value.kind() {
+				ValueType::Nil => todo!(),
+				ValueType::Bool => self.set(name, value.as_bool()),
+				ValueType::Double => self.set(name, value.as_double()),
+				ValueType::Int => self.set(name, value.as_integer()),
+				ValueType::Str => self.set(name, value.as_string_pos()),
+			}
+			Ok(())
+		} else {
+			Err(Error::GlobalNotDefined)
+		}
+	}
 }
 
 impl Blackboard {
@@ -103,7 +145,7 @@ impl Blackboard {
 	}
 
 	/// @ TODO:
-	pub fn set<T: Any + Send + Sync + 'static>(&mut self, key: impl AsRef<str>, value: T) {
+	pub fn set<T: Any + Send + Sync + 'static>(&self, key: impl AsRef<str>, value: T) {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.as_ref().strip_prefix('@') {
 			return self.root().set(key_stripped, value);
@@ -163,7 +205,7 @@ impl Blackboard {
 		None
 	}
 
-	fn create_entry<'a>(&'a mut self, key: &'a (impl AsRef<str> + Sync)) -> EntryPtr {
+	fn create_entry<'a>(&'a self, key: &'a (impl AsRef<str> + Sync)) -> EntryPtr {
 		let entry;
 
 		let mut blackboard = self.data.write();
@@ -185,14 +227,14 @@ impl Blackboard {
 				.unwrap_or_else(|| todo!());
 
 			entry = (*self.parent)
-				.as_mut()
+				.as_ref()
 				.unwrap_or_else(|| todo!())
 				.create_entry(remapped_key);
 		}
 		// Use autoremapping
 		else if blackboard.auto_remapping && self.parent.is_some() {
 			entry = (*self.parent)
-				.as_mut()
+				.as_ref()
 				.unwrap_or_else(|| todo!())
 				.create_entry(key);
 		}

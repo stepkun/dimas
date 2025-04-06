@@ -3,11 +3,12 @@
 
 //! Tests of scripting equality
 
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 #[test]
 fn equality() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print true == true;");
@@ -120,7 +121,8 @@ fn equality() {
 
 #[test]
 fn not() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print !true;");

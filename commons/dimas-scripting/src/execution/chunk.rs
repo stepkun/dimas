@@ -64,6 +64,7 @@ impl Chunk {
 	}
 
 	/// Add a Value to the Value storage returning its position in the storage
+	/// # Errors
 	#[allow(clippy::cast_possible_truncation)]
 	pub fn add_constant(&mut self, value: Value) -> Result<u8, Error> {
 		if self.values.len() < u8::MAX as usize {
@@ -82,6 +83,7 @@ impl Chunk {
 	}
 
 	/// Add a String to the Value storage returning its position in the storage
+	/// # Errors
 	pub fn add_string_constant(&mut self, string: String) -> Result<u8, Error> {
 		let offset = self.add_string(string);
 		let value = Value::from_string_pos(offset);

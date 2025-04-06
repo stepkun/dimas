@@ -33,6 +33,7 @@ workspace = true
 [dependencies]
 dimas-behavior = { workspace = true }
 dimas-macros = { workspace = true }
+dimas-scripting = { workspace = true }
 evalexpr = { workspace = true }
 futures = { workspace = true }
 hashbrown = { workspace = true }

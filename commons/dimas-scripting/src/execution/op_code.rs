@@ -2,35 +2,63 @@
 
 //! Op-Code implementation for `DiMAS` scripting bytecode
 
+/// @TODO:
 #[derive(Debug)]
 #[repr(u8)]
 pub enum OpCode {
+	/// @TODO:
 	None = 0,
+	/// @TODO:
 	Constant,
+	/// @TODO:
 	Nil,
+	/// @TODO:
 	True,
+	/// @TODO:
 	False,
+	/// @TODO:
 	Pop,
+	/// @TODO:
 	DefineExternal,
+	/// @TODO:
 	GetExternal,
+	/// @TODO:
 	SetExternal,
+	/// @TODO:
 	Equal,
+	/// @TODO:
 	Greater,
+	/// @TODO:
 	Less,
+	/// @TODO:
 	Jmp,
+	/// @TODO:
 	JmpIfTrue,
+	/// @TODO:
 	JmpIfFalse,
+	/// @TODO:
 	Add,
+	/// @TODO:
 	Subtract,
+	/// @TODO:
 	Multiply,
+	/// @TODO:
 	Divide,
+	/// @TODO:
 	BitwiseNot,
+	/// @TODO:
 	BitwiseAnd,
+	/// @TODO:
 	BitwiseOr,
+	/// @TODO:
 	BitwiseXor,
+	/// @TODO:
 	Not,
+	/// @TODO:
 	Negate,
+	/// @TODO:
 	Return,
+	/// @TODO:
 	#[cfg(feature = "std")]
 	Print = 254,
 }

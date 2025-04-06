@@ -3,11 +3,12 @@
 
 //! Tests of scripting logic operators
 
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 #[test]
 fn and() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print false && false;");
@@ -48,7 +49,8 @@ fn and() {
 
 #[test]
 fn or() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print true || true;");
@@ -65,7 +67,8 @@ fn or() {
 
 #[test]
 fn and_or() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print true || true && false;");
@@ -82,7 +85,8 @@ fn and_or() {
 
 #[test]
 fn bitwise_and() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0x1 & 0x1;");
@@ -99,7 +103,8 @@ fn bitwise_and() {
 
 #[test]
 fn bitwise_or() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0x1 | 0x1;");
@@ -122,7 +127,8 @@ fn bitwise_or() {
 
 #[test]
 fn bitwise_xor() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0x1 ^ 0x1;");
@@ -145,7 +151,8 @@ fn bitwise_xor() {
 
 #[test]
 fn ternary() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 1 < 2 ? true : false;");

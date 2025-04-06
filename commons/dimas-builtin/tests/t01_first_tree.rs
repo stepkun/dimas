@@ -8,7 +8,7 @@
 extern crate alloc;
 
 use dimas_behavior::behavior::{BehaviorResult, BehaviorStatus};
-use dimas_builtin::factory::BTFactory;
+use dimas_builtin::{builtin::condition::script_condition::ScriptCondition, factory::BTFactory};
 use dimas_macros::{behavior, register_action, register_condition, register_function};
 
 const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -102,6 +102,51 @@ async fn first_tree() -> anyhow::Result<()> {
 
 	// create the BT
 	let mut tree = factory.create_tree_from_xml(XML)?;
+
+	// run the BT
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
+
+	Ok(())
+}
+
+const XML2: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+		main_tree_to_execute="MainTree">
+	<BehaviorTree ID="MainTree">
+		<Sequence name="root_sequence">
+			<ScriptCondition	name="check_battery" code="true;"/>
+			<OpenGripper		name="open_gripper"/>
+			<ApproachObject		name="approach_object"/>
+			<CloseGripper		name="close_gripper"/>
+		</Sequence>
+	</BehaviorTree>
+
+	<!-- Description of Node Models (used by Groot) -->
+	<TreeNodesModel>
+		<Action ID="ApproachObject"
+				editable="true"/>
+		<Action ID="CloseGripper"
+				editable="true"/>
+		<Action ID="OpenGripper"
+				editable="true"/>
+	</TreeNodesModel>
+</root>
+"#;
+
+#[tokio::test]
+async fn first_tree_with_script() -> anyhow::Result<()> {
+	// create BT environment
+	let mut factory = BTFactory::extended();
+
+	// register all needed nodes
+	register_condition!(factory, "CheckBattery", ScriptCondition);
+	register_action!(factory, "OpenGripper", OpenGripper);
+	register_action!(factory, "ApproachObject", ApproachObject);
+	register_action!(factory, "CloseGripper", CloseGripper);
+
+	// create the BT
+	let mut tree = factory.create_tree_from_xml(XML2)?;
 
 	// run the BT
 	let result = tree.tick_while_running().await?;

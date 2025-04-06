@@ -11,10 +11,15 @@ use super::error::Error;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(i8)]
 pub enum ValueType {
+	/// @TODO:
 	Nil,
+	/// @TODO:
 	Bool,
+	/// @TODO:
 	Double,
+	/// @TODO:
 	Int,
+	/// @TODO:
 	Str,
 }
 

@@ -309,11 +309,11 @@ impl Display for BehaviorCategory {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug)]
 pub struct BehaviorConfig {
-	/// The blackboard
+	/// The blackboard used by this behavior
 	blackboard: Blackboard,
-	/// Remapping for in ports
+	/// In ports including remapping
 	input_ports: PortRemapping,
-	/// remapping for out ports
+	/// Out ports including remapping
 	output_ports: PortRemapping,
 	/// Behavior manifest
 	manifest: Option<Arc<BehaviorManifest>>,
@@ -533,7 +533,8 @@ pub struct BehaviorData {
 	bhvr_type: BehaviorType,
 	/// @TODO: Restructure
 	bhvr_category: BehaviorCategory,
-	/// @TODO:
+	/// Configuration at creation time.
+	/// Never changes thereafter.
 	config: BehaviorConfig,
 	/// @TODO:
 	status: BehaviorStatus,
@@ -690,7 +691,7 @@ impl BehaviorData {
 // endregion:   --- BehaviorData
 
 // region:      --- BehaviorManifest
-/// @TODO:
+/// Information that is mostly used by the XML parser
 #[allow(clippy::module_name_repetitions)]
 #[allow(unused)]
 #[derive(Clone, Debug)]

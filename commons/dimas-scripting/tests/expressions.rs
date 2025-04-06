@@ -3,11 +3,12 @@
 
 //! Tests of scripting expressions
 
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 #[test]
 fn template() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print (5 - (3 - 1)) + -1;");

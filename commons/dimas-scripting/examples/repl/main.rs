@@ -3,10 +3,11 @@
 
 use std::io::{Write, stdin, stdout};
 
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn repl() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut input = String::new();
 
 	print!("> ");

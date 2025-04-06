@@ -27,6 +27,14 @@ pub enum BehaviorError {
 	#[error("{0}")]
 	FloatParse(#[from] core::num::ParseFloatError),
 
+	/// Pass through executtion error
+	#[error("{0}")]
+	Execution(#[from] dimas_scripting::execution::error::Error),
+
+	/// Pass through parsing error
+	#[error("{0}")]
+	Parsing(#[from] dimas_scripting::compiling::error::Error),
+
 	/// Evaluation of a scripting expression failed
 	#[error("evaluating expression [{0}] failed")]
 	ExpressionEvaluation(String),

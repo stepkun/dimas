@@ -3,11 +3,12 @@
 
 //! Tests of scripting operators
 
-use dimas_scripting::{Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 #[test]
 fn add() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 123 + 456;");
@@ -42,7 +43,8 @@ fn add() {
 
 #[test]
 fn subtract() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 456 - 123;");
@@ -59,7 +61,8 @@ fn subtract() {
 
 #[test]
 fn multiply() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 123 * 456;");
@@ -76,7 +79,8 @@ fn multiply() {
 
 #[test]
 fn divide() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 6 / 3;");
@@ -93,7 +97,8 @@ fn divide() {
 
 #[test]
 fn equals() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print nil == nil;");
@@ -158,7 +163,8 @@ fn equals() {
 
 #[test]
 fn precedence() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print (1+2)*3/1+1;");
@@ -181,7 +187,8 @@ fn precedence() {
 
 #[test]
 fn comparison() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 5 == 4.999999999999998;");
@@ -201,9 +208,7 @@ fn comparison() {
 	vm.run(&mut chunk, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
-
+	stdout.clear();
 	let mut parser = Parser::new("print 5 != 4.999999999999998;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &mut stdout).unwrap();
@@ -302,7 +307,8 @@ fn comparison() {
 
 #[test]
 fn special_comparison() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0<-0;");
@@ -349,7 +355,8 @@ fn special_comparison() {
 
 #[test]
 fn negate() {
-	let mut vm = VM::default();
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print -3;");

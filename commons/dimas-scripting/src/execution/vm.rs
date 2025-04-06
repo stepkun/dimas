@@ -4,9 +4,9 @@
 
 extern crate std;
 
-use alloc::{borrow::ToOwned, string::ToString, sync::Arc};
+use alloc::{borrow::ToOwned, string::ToString};
 
-use crate::{DefaultEnvironment, Environment};
+use crate::Environment;
 
 use super::op_code::OpCode;
 use super::{
@@ -19,7 +19,7 @@ use super::{
 const STACK_MAX: usize = 256;
 
 /// A Virtual Machine
-pub struct VM {
+pub struct VM<'a> {
 	/// The `InstructionPointer` (sometimes called `ProgramCounter`)
 	ip: usize,
 	/// Stack for values
@@ -28,24 +28,12 @@ pub struct VM {
 	stack_top: usize,
 	/// Reference to a storage for truly `global` variables, which are used also available outside the [`VM`].
 	/// The storage has to provide getter and setter methods using interior mutability.
-	globals: Arc<dyn Environment>,
+	globals: &'a dyn Environment,
 }
 
-impl Default for VM {
-	/// Create a [`VM`] with a default Environment
-	fn default() -> Self {
-		Self {
-			ip: 0,
-			stack: [Value::default(); STACK_MAX],
-			stack_top: 0,
-			globals: Arc::from(DefaultEnvironment::default()),
-		}
-	}
-}
-
-impl VM {
+impl<'a> VM<'a> {
 	/// Create a [`VM`] with an external Environment
-	pub fn new(environment: Arc<dyn Environment>) -> Self {
+	pub fn new(environment: &'a dyn Environment) -> Self {
 		Self {
 			ip: 0,
 			stack: [Value::default(); STACK_MAX],
@@ -305,7 +293,7 @@ impl VM {
 		self.ip += 1;
 		let value_val = self.pop();
 		let name = chunk.get_string(name_val.as_string_pos()?);
-		self.globals.define(name, value_val);
+		self.globals.define_env(name, value_val);
 		Ok(())
 	}
 
@@ -314,7 +302,7 @@ impl VM {
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		let name = chunk.get_string(name_val.as_string_pos()?);
-		let val = self.globals.get(name)?;
+		let val = self.globals.get_env(name)?;
 		self.push(val)?;
 		Ok(())
 	}
@@ -325,7 +313,7 @@ impl VM {
 		self.ip += 1;
 		let name = chunk.get_string(name_val.as_string_pos()?);
 		let value_val = self.pop();
-		self.globals.set(name, value_val)
+		self.globals.set_env(name, value_val)
 	}
 
 	/// Execute a [`Chunk`] with the virtual machine,
