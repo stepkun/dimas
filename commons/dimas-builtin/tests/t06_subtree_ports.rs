@@ -4,7 +4,6 @@
 //! [see:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_06_subtree_ports)
 //!
 //! Differences to BehaviorTree.CPP
-//! - there is no Script node available, that has to be implemented by user
 //! - no access to sub blackboards
 //! - no 'Display' implementation for Blackboard
 //! - `Debug` implementation is basic
@@ -15,7 +14,7 @@ extern crate alloc;
 use core::{num::ParseFloatError, str::FromStr};
 
 use dimas_behavior::{
-	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
+	behavior::{BehaviorResult, BehaviorStatus},
 	define_ports, input_port,
 	port::PortList,
 };
@@ -27,7 +26,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
       main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <Sequence>
-      <Script code="move_goal:=&apos;1;2;3&apos;"/>
+      <Script code="move_goal:='1;2;3'"/>
       <SubTree ID="MoveRobot"
                target="{move_goal}"
                result="{move_result}"/>
@@ -61,46 +60,6 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
   </TreeNodesModel>
 </root>
 "#;
-
-/// SyncAction "Script"
-#[behavior(SyncAction)]
-struct Script {}
-
-#[behavior(SyncAction)]
-impl Script {
-	async fn tick(&mut self) -> BehaviorResult {
-		let script: String = bhvr_.config_mut().get_input("code")?;
-		let elements: Vec<&str> = script.split(":=").collect();
-		if elements[1].contains('{') {
-			let pos = move_robot::Position2D::from_str(elements[1].trim()).map_err(|_| {
-				BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
-			})?;
-			bhvr_
-				.config()
-				.blackboard()
-				.to_owned()
-				.set(elements[0].trim(), pos);
-		} else {
-			let mut content = elements[1].to_string();
-			// remove redundant ' from string
-			content = content.replace('\'', "").trim().to_string();
-			// remove redundant &apos; from string
-			content = content.replace("&apos;", "").trim().to_string();
-			bhvr_
-				.config()
-				.blackboard()
-				.to_owned()
-				.set(elements[0].trim(), content);
-		}
-
-		Ok(BehaviorStatus::Success)
-	}
-
-	fn ports() -> PortList {
-		define_ports!(input_port!("code"))
-	}
-}
-
 /// SyncAction "SaySomething"
 #[behavior(SyncAction)]
 struct SaySomething {}
@@ -126,7 +85,6 @@ async fn subtree_ports() -> anyhow::Result<()> {
 	let mut factory = BTFactory::extended();
 
 	// register main tree nodes
-	register_action!(factory, "Script", Script);
 	register_action!(factory, "SaySomething", SaySomething);
 	// register subtrees nodes
 	move_robot::register_nodes(&mut factory);

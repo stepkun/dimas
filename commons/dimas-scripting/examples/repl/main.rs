@@ -7,7 +7,7 @@ use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn repl() {
 	let env = DefaultEnvironment::default();
-	let mut vm = VM::new(&env);
+	let mut vm = VM::default();
 	let mut input = String::new();
 
 	print!("> ");
@@ -27,7 +27,7 @@ fn repl() {
 							|mut chunk| {
 								//chunk.disassemble("created chunk");
 								let mut stdout: Vec<u8> = Vec::new();
-								if let Err(error) = vm.run(&mut chunk, &mut stdout) {
+								if let Err(error) = vm.run(&mut chunk, &env, &mut stdout) {
 									println!("execution error: {error}");
 								} else {
 									for c in stdout {

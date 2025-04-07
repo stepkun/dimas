@@ -79,10 +79,10 @@ impl Environment for DefaultEnvironment {
 	}
 
 	fn get_env(&self, name: &str) -> Result<Value, Error> {
-		self.storage
-			.read()
-			.get(name)
-			.map_or(Err(Error::GlobalNotDefined), |value| Ok(value.clone()))
+		self.storage.read().get(name).map_or_else(
+			|| Err(Error::GlobalNotDefined(name.to_string())),
+			|value| Ok(value.clone()),
+		)
 	}
 
 	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {
@@ -92,7 +92,7 @@ impl Environment for DefaultEnvironment {
 				.insert(name.to_string(), value);
 			Ok(())
 		} else {
-			Err(Error::GlobalNotDefined)
+			Err(Error::GlobalNotDefined(name.to_string()))
 		}
 	}
 }

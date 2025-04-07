@@ -7,19 +7,11 @@
 extern crate alloc;
 
 // region:		--- modules
-use alloc::{string::String, sync::Arc};
-use core::{
-	any::Any,
-	fmt::{Debug, Display, Formatter},
-};
+use alloc::string::String;
+use core::fmt::{Debug, Display, Formatter};
 
 use crate::error::Error;
 // endregion:	--- modules
-
-// region:		--- types
-/// Supertrait to satisfy the compiler
-pub trait DynamicValue: Any + Debug + Sync + Send {}
-// endregion:	--- types
 
 // region:		--- Value
 /// Value type to allow storing different kinds of values
@@ -35,8 +27,6 @@ pub enum Value {
 	Int64(i64),
 	/// String type
 	String(String),
-	/// Other custom types
-	Dynamic(Arc<dyn DynamicValue>),
 }
 
 impl Display for Value {
@@ -47,19 +37,18 @@ impl Display for Value {
 			Self::Float64(val) => write!(f, "{val}"),
 			Self::Int64(val) => write!(f, "{val}"),
 			Self::String(val) => write!(f, "{val}"),
-			Self::Dynamic(val) => write!(f, "{val:?}"),
 		}
 	}
 }
 
 impl Value {
-	/// create a `Nil` value
+	/// Create a `Nil` value.
 	#[must_use]
 	pub const fn nil() -> Self {
 		Self::Nil()
 	}
 
-	/// Return the boolean value
+	/// Return the boolean value.
 	/// # Errors
 	/// if it is not a boolean type
 	pub const fn as_bool(&self) -> Result<bool, Error> {
@@ -69,9 +58,9 @@ impl Value {
 		}
 	}
 
-	/// Return the boolean value
-    #[must_use]
-    pub const fn is_bool(&self) -> bool {
+	/// Check if it is a boolean value.
+	#[must_use]
+	pub const fn is_bool(&self) -> bool {
 		matches!(self, Self::Boolean(_))
 	}
 }

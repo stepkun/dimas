@@ -3,9 +3,6 @@
 //! This test implements the third tutorial from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //! [see:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_03_generic_ports)
 //!
-//! Differences to BehaviorTree.CPP
-//! - there is no Script node available, that has to be implemented by user
-//!
 
 #[doc(hidden)]
 extern crate alloc;
@@ -13,7 +10,7 @@ extern crate alloc;
 use core::{num::ParseFloatError, str::FromStr};
 
 use dimas_behavior::{
-	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
+	behavior::{BehaviorResult, BehaviorStatus},
 	define_ports, input_port, output_port,
 	port::PortList,
 };
@@ -27,7 +24,7 @@ const XML: &str = r#"
        <Sequence  name="root">
            <CalculateGoal goal="{GoalPosition}" />
            <PrintTarget   target="{GoalPosition}" />
-           <Script        code=" OtherGoal:=&apos;-1;3&apos; " />
+           <Script        code=" OtherGoal:='-1;3' " />
            <PrintTarget   target="{OtherGoal}" />
        </Sequence>
     </BehaviorTree>
@@ -112,41 +109,14 @@ impl PrintTarget {
 	}
 }
 
-/// SyncAction "Script"
-#[behavior(SyncAction)]
-struct Script {}
-
-#[behavior(SyncAction)]
-impl Script {
-	fn ports() -> PortList {
-		define_ports!(input_port!("code"))
-	}
-
-	async fn tick(&mut self) -> BehaviorResult {
-		let script: String = bhvr_.config_mut().get_input("code")?;
-		let elements: Vec<&str> = script.split(":=").collect();
-		let pos = Position2D::from_str(elements[1].trim()).map_err(|_| {
-			BehaviorError::ParsePortValue("code".to_string(), "Position2D".to_string())
-		})?;
-		bhvr_
-			.config()
-			.blackboard()
-			.to_owned()
-			.set(elements[0].trim(), pos);
-
-		Ok(BehaviorStatus::Success)
-	}
-}
-
 #[tokio::test]
 async fn generic_ports() -> anyhow::Result<()> {
 	// create BT environment
-	let mut factory = BTFactory::default();
+	let mut factory = BTFactory::extended();
 
 	// register all needed nodes
 	register_action!(factory, "CalculateGoal", CalculateGoal);
 	register_action!(factory, "PrintTarget", PrintTarget);
-	register_action!(factory, "Script", Script);
 
 	// create the BT
 	let mut tree = factory.create_tree_from_xml(XML)?;

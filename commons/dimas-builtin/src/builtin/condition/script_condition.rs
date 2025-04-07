@@ -38,9 +38,9 @@ impl ScriptCondition {
 		let mut chunk = parser.parse()?;
 
 		let env = bhvr_.config().blackboard();
-		let mut vm = VM::new(env);
+		let mut vm = VM::default();
 		let mut out = Vec::new();
-		let value = vm.run(&mut chunk, &mut out)?;
+		let value = vm.run(&mut chunk, env, &mut out)?;
 		let status = if value.is_bool() {
 			let val = value.as_bool()?;
 			if val {

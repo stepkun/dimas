@@ -3,9 +3,6 @@
 //! This test implements the sixteenth tutorial from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //! [see:](https://www.behaviortree.dev/docs/tutorial-advanced/tutorial_16_global_blackboard)
 //!
-//! Differences to BehaviorTree.CPP
-//! - currently only working with scripting cheat due to missing scripting functionality
-//!
 
 #[doc(hidden)]
 extern crate alloc;
@@ -32,8 +29,8 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
     <BehaviorTree ID="MySub">
         <Sequence>
             <PrintNumber name="sub_print" val="{@value}" />
-            <SubTree ID="MySubSub"/>
             <Script code="@value_sqr := @value * @value" />
+            <SubTree ID="MySubSub"/>
         </Sequence>
     </BehaviorTree>
 
@@ -60,7 +57,7 @@ struct PrintNumber {}
 #[behavior(SyncAction)]
 impl PrintNumber {
 	async fn tick(&mut self) -> BehaviorResult {
-		let value: i32 = bhvr_.config_mut().get_input("val")?;
+		let value: i64 = bhvr_.config_mut().get_input("val")?;
 		println!("PrintNumber [{}] has val: {value}", bhvr_.name());
 
 		Ok(BehaviorStatus::Success)
@@ -68,55 +65,6 @@ impl PrintNumber {
 
 	fn ports() -> PortList {
 		define_ports!(input_port!("val"))
-	}
-}
-
-/// SyncAction "Script"
-#[behavior(SyncAction)]
-struct Script {}
-
-#[behavior(SyncAction)]
-impl Script {
-	async fn tick(&mut self) -> BehaviorResult {
-		print!("Script: ");
-		let script: String = bhvr_.config_mut().get_input("code")?;
-		let elements: Vec<&str> = script.split(":=").collect();
-		//println!("{} - {}", elements[0], elements[1]);
-
-		// try to cheat, as there is no script language implemented
-		let value: i32 = bhvr_
-			.config_mut()
-			.blackboard_mut()
-			.get("@value")
-			.ok_or_else(|| Error::PortError("@value".into()))?;
-		if elements[0].contains("value_sqr") {
-			println!("sqr");
-			bhvr_
-				.config_mut()
-				.blackboard_mut()
-				.set("@value_sqr", value * value);
-			Ok(BehaviorStatus::Success)
-		} else if elements[0].contains("value_pow3") {
-			println!("pow3");
-			bhvr_
-				.config_mut()
-				.blackboard_mut()
-				.set("@value_pow3", value * value * value);
-			Ok(BehaviorStatus::Success)
-		} else if elements[0].contains("value_pow4") {
-			println!("pow4");
-			bhvr_
-				.config_mut()
-				.blackboard_mut()
-				.set("@value_pow4", value * value * value * value);
-			Ok(BehaviorStatus::Success)
-		} else {
-			Ok(BehaviorStatus::Failure)
-		}
-	}
-
-	fn ports() -> PortList {
-		define_ports!(input_port!("code"))
 	}
 }
 
@@ -129,10 +77,10 @@ async fn global_blackboard() -> anyhow::Result<()> {
 
 	// create BT environment
 	let mut factory = BTFactory::with_blackboard(blackboard);
+	factory.add_extensions();
 
 	// register all needed nodes
 	register_action!(factory, "PrintNumber", PrintNumber);
-	register_action!(factory, "Script", Script);
 
 	// create the BT
 	let mut tree = factory.create_tree_from_xml(XML)?;
@@ -145,13 +93,13 @@ async fn global_blackboard() -> anyhow::Result<()> {
 		assert_eq!(result, BehaviorStatus::Success);
 
 		let value_sqr = global_blackboard
-			.get::<i32>("@value_sqr")
+			.get::<i64>("@value_sqr")
 			.ok_or_else(|| Error::PortError("value_sqr".into()))?;
 		let value_pow3 = global_blackboard
-			.get::<i32>("@value_pow3")
+			.get::<i64>("@value_pow3")
 			.ok_or_else(|| Error::PortError("value_pow3".into()))?;
 		let value_pow4 = global_blackboard
-			.get::<i32>("@value_pow4")
+			.get::<i64>("@value_pow4")
 			.ok_or_else(|| Error::PortError("value_pow3".into()))?;
 
 		assert_eq!(value_sqr, value * value);

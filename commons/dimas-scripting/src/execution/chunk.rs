@@ -170,7 +170,6 @@ impl Chunk {
 					Value::Float64(f) => std::println!("{name:16} {pos:3} {f}"),
 					Value::Int64(i) => std::println!("{name:16} {pos:3} {i}"),
 					Value::String(s) => std::println!("{name:16} {pos:3} {s}"),
-					Value::Dynamic(_) => todo!(),
 				}
 			}
 			None => todo!(),

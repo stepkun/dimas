@@ -8,23 +8,23 @@ use dimas_scripting::{DefaultEnvironment, Parser, VM};
 #[test]
 fn expressions() {
 	let env = DefaultEnvironment::default();
-	let mut vm = VM::new(&env);
+	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print (5 - (3 - 1)) + -1;");
 	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &mut stdout).unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"2\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print (5 - (3 - 1)) + +1;");
 	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &mut stdout).unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"4\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !(5 - 4 > 3 * 2 == !nil);");
 	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &mut stdout).unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 }

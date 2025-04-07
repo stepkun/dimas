@@ -2,6 +2,7 @@
 
 //! `DiMAS` scripting runtime errors
 
+use alloc::string::String;
 // region		--- modules
 use thiserror::Error;
 // endregion:	--- modules
@@ -17,8 +18,11 @@ pub enum Error {
 	#[error("Boolean values do not allow arithmetic operations")]
 	BoolNoArithmetic,
 	/// @TODO:
-	#[error("The Variable has not been defined")]
-	GlobalNotDefined,
+	#[error("The Variable[{0}] has an unknown type")]
+	GlobalHasUnknownType(String),
+	/// @TODO:
+	#[error("The Variable[{0}] has not been defined")]
+	GlobalNotDefined(String),
 	/// @TODO:
 	#[error("Value is 'Nil' which does not allow any operation")]
 	NilValue,

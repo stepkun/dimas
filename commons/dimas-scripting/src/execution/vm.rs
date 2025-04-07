@@ -20,29 +20,26 @@ const STACK_MAX: usize = 256;
 
 // region:		--- VM
 /// A Virtual Machine
-pub struct VM<'a> {
+pub struct VM {
 	/// The `InstructionPointer` (sometimes called `ProgramCounter`)
 	ip: usize,
 	/// Stack for values
 	stack: [Value; STACK_MAX],
 	/// Pointer to the next free stack place
 	stack_top: usize,
-	/// Reference to a storage for truly `global` variables, which are used also available outside the [`VM`].
-	/// The storage has to provide getter and setter methods using interior mutability.
-	globals: &'a dyn Environment,
 }
 
-impl<'a> VM<'a> {
-	/// Create a [`VM`] with an external Environment
-	pub fn new(environment: &'a dyn Environment) -> Self {
+impl Default for VM {
+	fn default() -> Self {
 		Self {
 			ip: 0,
 			stack: [const { Value::nil() }; STACK_MAX],
 			stack_top: 0,
-			globals: environment,
 		}
 	}
+}
 
+impl VM {
 	fn reset(&mut self) {
 		self.ip = 0;
 		self.stack = [const { Value::nil() }; STACK_MAX];
@@ -89,7 +86,7 @@ impl<'a> VM<'a> {
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				self.push(Value::Float64(res))
-			},
+			}
 			(Value::Float64(a), Value::Int64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + (*b as f64),
@@ -99,7 +96,7 @@ impl<'a> VM<'a> {
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				self.push(Value::Float64(res))
-			},
+			}
 			(Value::Int64(a), Value::Float64(b)) => {
 				let res = match operator {
 					OpCode::Add => (*a as f64) + b,
@@ -109,7 +106,7 @@ impl<'a> VM<'a> {
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				self.push(Value::Float64(res))
-			},
+			}
 			(Value::Int64(a), Value::Int64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + b,
@@ -119,25 +116,23 @@ impl<'a> VM<'a> {
 					_ => return Err(Error::Unreachable(line!())),
 				};
 				self.push(Value::Int64(res))
-			},
+			}
 			(Value::String(a), _) => {
 				let res = match operator {
 					OpCode::Add => a.to_owned() + &b_val.to_string(),
 					_ => return Err(Error::OnlyAdd),
 				};
 				self.push(Value::String(res))
-			},
+			}
 			(_, Value::String(b)) => {
 				let res = match operator {
 					OpCode::Add => a_val.to_string() + b,
 					_ => return Err(Error::OnlyAdd),
 				};
 				self.push(Value::String(res))
-			},
+			}
 			(Value::Nil(), _) | (_, Value::Nil()) => Err(Error::NilValue),
 			(Value::Boolean(_), _) | (_, Value::Boolean(_)) => Err(Error::BoolNoArithmetic),
-			(Value::Dynamic(_), _) => todo!(),
-			(_, Value::Dynamic(_)) => todo!(),
 		}
 	}
 
@@ -206,7 +201,7 @@ impl<'a> VM<'a> {
 			(Value::Float64(a), Value::Float64(b)) => {
 				let delta = f64::abs(a - b);
 				delta <= 0.000_000_000_000_002
-			},
+			}
 			(Value::String(a), Value::String(b)) => a == b,
 			(Value::Nil(), Value::Nil()) => true,
 			_ => false,
@@ -254,34 +249,32 @@ impl<'a> VM<'a> {
 		}
 	}
 
-	fn define_global(&mut self, chunk: &Chunk) {
+	fn define_global(&mut self, chunk: &Chunk, globals: &dyn Environment) {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		let value_val = self.pop();
 		//let name = chunk.get_string(name_val.as_string_pos()?);
-		self.globals
-			.define_env(&name_val.to_string(), value_val);
+		globals.define_env(&name_val.to_string(), value_val);
 	}
 
-	fn get_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	fn get_global(&mut self, chunk: &Chunk, globals: &dyn Environment) -> Result<(), Error> {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		// let name = chunk.get_string(name_val.as_string_pos()?);
-		let val = self.globals.get_env(&name_val.to_string())?;
+		let val = globals.get_env(&name_val.to_string())?;
 		self.push(val)?;
 		Ok(())
 	}
 
-	fn set_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	fn set_global(&mut self, chunk: &Chunk, globals: &dyn Environment) -> Result<(), Error> {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		// let name = chunk.get_string(name_val.as_string_pos()?);
 		let value_val = self.pop();
-		self.globals
-			.set_env(&name_val.to_string(), value_val)
+		globals.set_env(&name_val.to_string(), value_val)
 	}
 
 	/// Execute a [`Chunk`] with the virtual machine,
@@ -291,6 +284,7 @@ impl<'a> VM<'a> {
 	pub fn run(
 		&mut self,
 		chunk: &mut Chunk,
+		globals: &dyn Environment,
 		#[cfg(feature = "std")] stdout: &mut impl std::io::Write,
 	) -> Result<Value, Error> {
 		self.reset();
@@ -314,10 +308,10 @@ impl<'a> VM<'a> {
 				}
 				OpCode::BitwiseNot => self.bitwise_not()?,
 				OpCode::Constant => self.constant(chunk)?,
-				OpCode::DefineExternal => self.define_global(chunk),
+				OpCode::DefineExternal => self.define_global(chunk, globals),
 				OpCode::Equal => self.equal()?,
 				OpCode::False => self.push(Value::Boolean(false))?,
-				OpCode::GetExternal => self.get_global(chunk)?,
+				OpCode::GetExternal => self.get_global(chunk, globals)?,
 				OpCode::Greater => self.comparison_operator(&instruction)?,
 				OpCode::Jmp => {
 					let target = self.read_jmp_address(chunk);
@@ -353,7 +347,7 @@ impl<'a> VM<'a> {
 					chunk.restore_state();
 					return Ok(val);
 				}
-				OpCode::SetExternal => self.set_global(chunk)?,
+				OpCode::SetExternal => self.set_global(chunk, globals)?,
 				OpCode::True => self.push(Value::Boolean(true))?,
 				_ => {
 					chunk.restore_state();
