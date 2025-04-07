@@ -19,6 +19,10 @@ pub enum BehaviorError {
 	#[error("{0}")]
 	Blackboard(#[from] crate::blackboard::error::Error),
 
+	/// Pass through `dimas_core` error
+	#[error("{0}")]
+	Core(#[from] dimas_core::error::Error),
+
 	/// Error in structural composition of a behaviors children
 	#[error("{0}")]
 	Composition(String),

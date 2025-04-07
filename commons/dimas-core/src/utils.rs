@@ -7,6 +7,7 @@
 extern crate alloc;
 
 #[cfg(feature = "std")]
+#[doc(hidden)]
 extern crate std;
 
 // region:		--- modules

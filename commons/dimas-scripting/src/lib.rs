@@ -43,9 +43,10 @@ pub mod execution;
 use alloc::string::{String, ToString};
 // flatten
 pub use compiling::{Lexer, Parser, TokenKind};
+use dimas_core::value::Value;
 pub use execution::VM;
 
-use execution::{Error, values::Value};
+use execution::Error;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 
@@ -81,7 +82,7 @@ impl Environment for DefaultEnvironment {
 		self.storage
 			.read()
 			.get(name)
-			.map_or(Err(Error::GlobalNotDefined), |value| Ok(*value))
+			.map_or(Err(Error::GlobalNotDefined), |value| Ok(value.clone()))
 	}
 
 	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {

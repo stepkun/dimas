@@ -6,7 +6,7 @@
 use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 #[test]
-fn template() {
+fn expressions() {
 	let env = DefaultEnvironment::default();
 	let mut vm = VM::new(&env);
 	let mut stdout: Vec<u8> = Vec::new();

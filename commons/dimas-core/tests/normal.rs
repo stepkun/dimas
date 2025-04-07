@@ -2,10 +2,12 @@
 #![allow(unused)]
 //! Tests
 
+use dimas_core::value::Value;
+
 // check, that the auto traits are available
 const fn is_normal<T: Sized + Send + Sync>() {}
 
 #[test]
 const fn normal_types() {
-	//	is_normal::<Port>();
+	is_normal::<Value>();
 }

@@ -10,12 +10,24 @@ use thiserror::Error;
 /// `scripting` runtime error type
 #[derive(Error, Debug)]
 pub enum Error {
+	/// Pass through core error.
+	#[error("{0}")]
+	VM(#[from] dimas_core::error::Error),
+	/// @TODO:
+	#[error("Boolean values do not allow arithmetic operations")]
+	BoolNoArithmetic,
 	/// @TODO:
 	#[error("The Variable has not been defined")]
 	GlobalNotDefined,
 	/// @TODO:
+	#[error("Value is 'Nil' which does not allow any operation")]
+	NilValue,
+	/// @TODO:
 	#[error("Value is not a Boolean type")]
 	NoBoolean,
+	/// @TODO:
+	#[error("comparing Values needs two numeric types")]
+	NoComparison,
 	/// @TODO:
 	#[error("Value is not a Double type")]
 	NoDouble,

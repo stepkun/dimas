@@ -6,10 +6,11 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::{borrow::ToOwned, string::String, vec::Vec};
+use alloc::{borrow::ToOwned, vec::Vec};
+use dimas_core::value::Value;
 
 use crate::execution::op_code::OpCode;
-use crate::execution::values::Value;
+//use crate::execution::scripting_value::ScriptingValue;
 
 use super::Error;
 
@@ -24,10 +25,6 @@ pub struct Chunk {
 	values: Vec<Value>,
 	/// saved values state
 	values_state: usize,
-	/// storage for Strings
-	strings: Vec<String>,
-	/// saved strings state
-	strings_state: usize,
 }
 
 impl Chunk {
@@ -40,15 +37,11 @@ impl Chunk {
 	/// Save the current size of values and strings
 	pub(crate) fn save_state(&mut self) {
 		self.values_state = self.values.len();
-		self.strings_state = self.strings.len();
 	}
 
 	pub(crate) fn restore_state(&mut self) {
 		while self.values.len() > self.values_state {
 			self.values.pop();
-		}
-		while self.strings.len() > self.strings_state {
-			self.strings.pop();
 		}
 	}
 
@@ -76,26 +69,27 @@ impl Chunk {
 		}
 	}
 
-	/// Add a String to the String storage returning its position in the storage
-	pub fn add_string(&mut self, string: String) -> usize {
-		self.strings.push(string);
-		self.strings.len() - 1
-	}
+	/*
+		/// Add a String to the String storage returning its position in the storage
+		pub fn add_string(&mut self, string: String) -> usize {
+			self.strings.push(string);
+			self.strings.len() - 1
+		}
 
-	/// Add a String to the Value storage returning its position in the storage
-	/// # Errors
-	pub fn add_string_constant(&mut self, string: String) -> Result<u8, Error> {
-		let offset = self.add_string(string);
-		let value = Value::from_string_pos(offset);
-		self.add_constant(value)
-	}
+		/// Add a String to the Value storage returning its position in the storage
+		/// # Errors
+		pub fn add_string_constant(&mut self, string: String) -> Result<u8, Error> {
+			let offset = self.add_string(string);
+			let value = ScriptingValue::from_string_pos(offset);
+			self.add_constant(value)
+		}
 
-	/// Get the reference to stored [`String`]
-	#[must_use]
-	pub fn get_string(&self, pos: usize) -> &String {
-		&self.strings[pos]
-	}
-
+		/// Get the reference to stored [`String`]
+		#[must_use]
+		pub fn get_string(&self, pos: usize) -> &String {
+			&self.strings[pos]
+		}
+	*/
 	/// Read a [`Value`] from the [`Value`] storage
 	#[allow(clippy::redundant_closure_for_method_calls)]
 	#[must_use]
@@ -167,30 +161,16 @@ impl Chunk {
 	/// constant instruction
 	#[cfg(feature = "std")]
 	fn constant_instruction(&self, name: &str, offset: usize) -> usize {
-		use super::values::ValueType;
-
 		match self.code.get(offset + 1) {
 			Some(pos) => {
 				let value = self.read_constant(pos.to_owned());
-				match value.kind() {
-					ValueType::Bool => {
-						std::println!("{name:16} {pos:3} {}", value.as_bool().expect("snh"));
-					}
-					ValueType::Double => {
-						std::println!("{name:16} {pos:3} {}", value.as_double().expect("snh"));
-					}
-					ValueType::Int => {
-						std::println!("{name:16} {pos:3} {}", value.as_integer().expect("snh"));
-					}
-					ValueType::Str => {
-						std::println!(
-							"{name:16} {pos:3} {}",
-							self.strings[value.as_string_pos().expect("snh")]
-						);
-					}
-					ValueType::Nil => {
-						std::println!("{name:16} {pos:3} 'nil'");
-					}
+				match value {
+					Value::Nil() => std::println!("{name:16} {pos:3} 'NIL'"),
+					Value::Boolean(b) => std::println!("{name:16} {pos:3} {b}"),
+					Value::Float64(f) => std::println!("{name:16} {pos:3} {f}"),
+					Value::Int64(i) => std::println!("{name:16} {pos:3} {i}"),
+					Value::String(s) => std::println!("{name:16} {pos:3} {s}"),
+					Value::Dynamic(_) => todo!(),
 				}
 			}
 			None => todo!(),

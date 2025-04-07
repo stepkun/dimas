@@ -6,7 +6,6 @@
 mod chunk;
 pub mod error;
 pub mod op_code;
-pub mod values;
 mod vm;
 
 // flatten

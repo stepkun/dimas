@@ -25,3 +25,6 @@ cargo-timing*.html
 
 # eclipse project files
 .project
+
+# Rust files in root dir
+/*.rs

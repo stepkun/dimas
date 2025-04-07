@@ -8,13 +8,11 @@ use alloc::{
 	string::{String, ToString},
 	sync::Arc,
 };
+use dimas_core::value::Value;
 use core::{any::Any, str::FromStr};
 use dimas_scripting::{
 	Environment,
-	execution::{
-		Error,
-		values::{Value, ValueType},
-	},
+	execution::Error,
 };
 use hashbrown::HashMap;
 use parking_lot::{Mutex, RwLock};
@@ -36,18 +34,19 @@ pub struct Blackboard {
 
 impl Environment for Blackboard {
 	fn define_env(&self, name: &str, value: Value) {
-		match value.kind() {
-			ValueType::Nil => todo!(),
-			ValueType::Bool => self.set(name, value.as_bool()),
-			ValueType::Double => self.set(name, value.as_double()),
-			ValueType::Int => self.set(name, value.as_integer()),
-			ValueType::Str => self.set(name, value.as_string_pos()),
+		match value {
+			Value::Nil() => todo!(),
+			Value::Boolean(b) => self.set(name, b),
+			Value::Float64(f) => self.set(name, f),
+			Value::Int64(i) => self.set(name, i),
+			Value::String(s) => self.set(name, s),
+			Value::Dynamic(_) => todo!(),
 		}
 	}
 
 	fn get_env(&self, name: &str) -> Result<Value, Error> {
 		if self.get_entry(name).is_some() {
-			Ok(Value::nil())
+			todo!()
 		} else {
 			Err(Error::GlobalNotDefined)
 		}
@@ -55,12 +54,13 @@ impl Environment for Blackboard {
 
 	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {
 		if self.get_entry(name).is_some() {
-			match value.kind() {
-				ValueType::Nil => todo!(),
-				ValueType::Bool => self.set(name, value.as_bool()),
-				ValueType::Double => self.set(name, value.as_double()),
-				ValueType::Int => self.set(name, value.as_integer()),
-				ValueType::Str => self.set(name, value.as_string_pos()),
+			match value {
+				Value::Nil() => todo!(),
+				Value::Boolean(b) => self.set(name, b),
+				Value::Float64(f) => self.set(name, f),
+				Value::Int64(i) => self.set(name, i),
+				Value::String(s) => self.set(name, s),
+				Value::Dynamic(_) => todo!(),
 			}
 			Ok(())
 		} else {

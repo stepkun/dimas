@@ -4,20 +4,21 @@
 
 extern crate std;
 
-use alloc::{borrow::ToOwned, string::ToString};
+use alloc::borrow::ToOwned;
+// region:		--- modules
+use alloc::string::ToString;
+use dimas_core::value::Value;
 
 use crate::Environment;
 
 use super::op_code::OpCode;
-use super::{
-	Chunk,
-	error::Error,
-	values::{Value, ValueType},
-};
+use super::{Chunk, error::Error};
+// endregion:	--- modules
 
 /// Stack size is fixed
 const STACK_MAX: usize = 256;
 
+// region:		--- VM
 /// A Virtual Machine
 pub struct VM<'a> {
 	/// The `InstructionPointer` (sometimes called `ProgramCounter`)
@@ -36,7 +37,7 @@ impl<'a> VM<'a> {
 	pub fn new(environment: &'a dyn Environment) -> Self {
 		Self {
 			ip: 0,
-			stack: [Value::default(); STACK_MAX],
+			stack: [const { Value::nil() }; STACK_MAX],
 			stack_top: 0,
 			globals: environment,
 		}
@@ -44,7 +45,7 @@ impl<'a> VM<'a> {
 
 	fn reset(&mut self) {
 		self.ip = 0;
-		self.stack = [Value::default(); STACK_MAX];
+		self.stack = [const { Value::nil() }; STACK_MAX];
 		self.stack_top = 0;
 	}
 
@@ -52,7 +53,7 @@ impl<'a> VM<'a> {
 		&self.stack[self.stack_top - distance - 1]
 	}
 
-	const fn push(&mut self, value: Value) -> Result<(), Error> {
+	fn push(&mut self, value: Value) -> Result<(), Error> {
 		if self.stack_top == u8::MAX as usize {
 			return Err(Error::StackOverflow);
 		}
@@ -61,9 +62,9 @@ impl<'a> VM<'a> {
 		Ok(())
 	}
 
-	const fn pop(&mut self) -> Value {
+	fn pop(&mut self) -> Value {
 		self.stack_top -= 1;
-		self.stack[self.stack_top]
+		self.stack[self.stack_top].clone()
 	}
 
 	fn read_jmp_address(&mut self, chunk: &Chunk) -> usize {
@@ -74,47 +75,12 @@ impl<'a> VM<'a> {
 		((byte1 as usize) << 8) + byte2 as usize
 	}
 
-	fn arithmetic_operator(&mut self, operator: &OpCode, chunk: &mut Chunk) -> Result<(), Error> {
+	#[allow(clippy::cast_precision_loss)]
+	fn arithmetic_operator(&mut self, operator: &OpCode) -> Result<(), Error> {
 		let b_val = self.pop();
-		let mut a_val = self.pop();
-		let b_kind = b_val.kind();
-		let a_kind = a_val.kind();
-		// Strings can be concatenated with
-		if a_kind == ValueType::Str {
-			match operator {
-				OpCode::Add => {
-					let a_pos = a_val.as_string_pos()?;
-					let a = chunk.get_string(a_pos).to_owned();
-					let res = match b_kind {
-						ValueType::Bool => {
-							let b = b_val.as_bool()?;
-							a + &b.to_string()
-						}
-						ValueType::Double => {
-							let b = b_val.as_double()?;
-							a + &b.to_string()
-						}
-						ValueType::Int => {
-							let b = b_val.as_integer()?;
-							a + &b.to_string()
-						}
-						ValueType::Nil => a + "nil",
-						ValueType::Str => {
-							let b_pos = b_val.as_string_pos()?;
-							a + chunk.get_string(b_pos)
-						}
-					};
-					let string_pos = chunk.add_string(res);
-					a_val.make_string_pos(string_pos);
-					self.push(a_val)?;
-					Ok(())
-				}
-				_ => Err(Error::OnlyAdd),
-			}
-		} else if b_kind == a_kind && (b_kind == ValueType::Double || b_kind == ValueType::Int) {
-			if b_kind == ValueType::Double {
-				let b = b_val.as_double()?;
-				let a = a_val.as_double()?;
+		let a_val = self.pop();
+		match (&a_val, &b_val) {
+			(Value::Float64(a), Value::Float64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + b,
 					OpCode::Subtract => a - b,
@@ -122,10 +88,29 @@ impl<'a> VM<'a> {
 					OpCode::Divide => a / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				a_val.make_double(res);
-			} else {
-				let b = b_val.as_integer()?;
-				let a = a_val.as_integer()?;
+				self.push(Value::Float64(res))
+			},
+			(Value::Float64(a), Value::Int64(b)) => {
+				let res = match operator {
+					OpCode::Add => a + (*b as f64),
+					OpCode::Subtract => a - (*b as f64),
+					OpCode::Multiply => a * (*b as f64),
+					OpCode::Divide => a / (*b as f64),
+					_ => return Err(Error::Unreachable(line!())),
+				};
+				self.push(Value::Float64(res))
+			},
+			(Value::Int64(a), Value::Float64(b)) => {
+				let res = match operator {
+					OpCode::Add => (*a as f64) + b,
+					OpCode::Subtract => (*a as f64) - b,
+					OpCode::Multiply => (*a as f64) * b,
+					OpCode::Divide => (*a as f64) / b,
+					_ => return Err(Error::Unreachable(line!())),
+				};
+				self.push(Value::Float64(res))
+			},
+			(Value::Int64(a), Value::Int64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + b,
 					OpCode::Subtract => a - b,
@@ -133,61 +118,76 @@ impl<'a> VM<'a> {
 					OpCode::Divide => a / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				a_val.make_integer(res);
-			}
-			self.push(a_val)?;
-			Ok(())
-		} else {
-			Err(Error::NoNumber)
+				self.push(Value::Int64(res))
+			},
+			(Value::String(a), _) => {
+				let res = match operator {
+					OpCode::Add => a.to_owned() + &b_val.to_string(),
+					_ => return Err(Error::OnlyAdd),
+				};
+				self.push(Value::String(res))
+			},
+			(_, Value::String(b)) => {
+				let res = match operator {
+					OpCode::Add => a_val.to_string() + b,
+					_ => return Err(Error::OnlyAdd),
+				};
+				self.push(Value::String(res))
+			},
+			(Value::Nil(), _) | (_, Value::Nil()) => Err(Error::NilValue),
+			(Value::Boolean(_), _) | (_, Value::Boolean(_)) => Err(Error::BoolNoArithmetic),
+			(Value::Dynamic(_), _) => todo!(),
+			(_, Value::Dynamic(_)) => todo!(),
 		}
 	}
 
 	fn bitwise_operator(&mut self, operator: &OpCode) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
-		let b_kind = b_val.kind();
-		let a_kind = a_val.kind();
-		if a_kind == b_kind && a_kind == ValueType::Int {
-			let res = match operator {
-				OpCode::BitwiseAnd => a_val.as_integer()? & b_val.as_integer()?,
-				OpCode::BitwiseOr => a_val.as_integer()? | b_val.as_integer()?,
-				OpCode::BitwiseXor => a_val.as_integer()? ^ b_val.as_integer()?,
-				_ => return Err(Error::Unreachable(line!())),
-			};
-			a_val.make_integer(res);
-			self.push(a_val)?;
-			Ok(())
-		} else {
-			Err(Error::NoInteger)
+		match (a_val, b_val) {
+			(Value::Int64(a), Value::Int64(b)) => {
+				let res = match operator {
+					OpCode::BitwiseAnd => a & b,
+					OpCode::BitwiseOr => a | b,
+					OpCode::BitwiseXor => a ^ b,
+					_ => return Err(Error::Unreachable(line!())),
+				};
+				a_val = Value::Int64(res);
+				self.push(a_val)
+			}
+			_ => Err(Error::NoInteger),
 		}
 	}
 
-	fn boolean_operator(&mut self, operator: &OpCode) -> Result<(), Error> {
+	#[allow(clippy::cast_precision_loss)]
+	fn comparison_operator(&mut self, operator: &OpCode) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
-		let b_kind = b_val.kind();
-		let a_kind = a_val.kind();
-		if b_kind == a_kind && (b_kind == ValueType::Double || b_kind == ValueType::Int) {
-			if b_kind == ValueType::Double {
-				let res = match operator {
-					OpCode::Greater => a_val.as_double()? > b_val.as_double()?,
-					OpCode::Less => a_val.as_double()? < b_val.as_double()?,
-					_ => return Err(Error::Unreachable(line!())),
-				};
-				a_val.make_bool(res);
-			} else {
-				let res = match operator {
-					OpCode::Greater => a_val.as_integer()? > b_val.as_integer()?,
-					OpCode::Less => a_val.as_integer()? < b_val.as_integer()?,
-					_ => return Err(Error::Unreachable(line!())),
-				};
-				a_val.make_bool(res);
-			}
-			self.push(a_val)?;
-			Ok(())
-		} else {
-			Err(Error::NoNumber)
-		}
+		let res = match (a_val, b_val) {
+			(Value::Int64(a), Value::Int64(b)) => match operator {
+				OpCode::Greater => a > b,
+				OpCode::Less => a < b,
+				_ => return Err(Error::Unreachable(line!())),
+			},
+			(Value::Int64(a), Value::Float64(b)) => match operator {
+				OpCode::Greater => (a as f64) > b,
+				OpCode::Less => (a as f64) < b,
+				_ => return Err(Error::Unreachable(line!())),
+			},
+			(Value::Float64(a), Value::Int64(b)) => match operator {
+				OpCode::Greater => a > (b as f64),
+				OpCode::Less => a < (b as f64),
+				_ => return Err(Error::Unreachable(line!())),
+			},
+			(Value::Float64(a), Value::Float64(b)) => match operator {
+				OpCode::Greater => a > b,
+				OpCode::Less => a < b,
+				_ => return Err(Error::Unreachable(line!())),
+			},
+			_ => return Err(Error::NoComparison),
+		};
+		a_val = Value::Boolean(res);
+		self.push(a_val)
 	}
 
 	fn constant(&mut self, chunk: &Chunk) -> Result<(), Error> {
@@ -197,112 +197,79 @@ impl<'a> VM<'a> {
 		self.push(constant)
 	}
 
-	fn equal(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	fn equal(&mut self) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
-		let a_kind = a_val.kind();
-		if a_kind == b_val.kind() {
-			let res = match a_kind {
-				ValueType::Bool => a_val.as_bool().expect("snh") == b_val.as_bool().expect("snh"),
-				ValueType::Double => {
-					let delta =
-						f64::abs(a_val.as_double().expect("snh") - b_val.as_double().expect("snh"));
-					delta <= 0.000_000_000_000_002
-				}
-				ValueType::Int => {
-					a_val.as_integer().expect("snh") == b_val.as_integer().expect("snh")
-				}
-				ValueType::Str => {
-					let a_pos = a_val.as_string_pos().expect("snh");
-					let a = chunk.get_string(a_pos);
-					let b_pos = b_val.as_string_pos().expect("snh");
-					let b = chunk.get_string(b_pos);
-					a == b
-				}
-				ValueType::Nil => true,
-			};
-			a_val.make_bool(res);
-		} else {
-			a_val.make_bool(false);
-		}
+		let res = match (a_val, b_val) {
+			(Value::Boolean(a), Value::Boolean(b)) => a == b,
+			(Value::Int64(a), Value::Int64(b)) => a == b,
+			(Value::Float64(a), Value::Float64(b)) => {
+				let delta = f64::abs(a - b);
+				delta <= 0.000_000_000_000_002
+			},
+			(Value::String(a), Value::String(b)) => a == b,
+			(Value::Nil(), Value::Nil()) => true,
+			_ => false,
+		};
+		a_val = Value::Boolean(res);
 		self.push(a_val)
 	}
 
 	fn negate(&mut self) -> Result<(), Error> {
-		let mut val = self.pop();
-		let val_kind = val.kind();
-		if val_kind == ValueType::Double || val_kind == ValueType::Int {
-			if val_kind == ValueType::Double {
-				let double = -val.as_double()?;
-				val.make_double(double);
-			} else {
-				let integer = -val.as_integer()?;
-				val.make_integer(integer);
-			}
-			self.push(val)
-		} else {
-			Err(Error::NoNumber)
-		}
+		let val = self.pop();
+		let res = match val {
+			Value::Int64(v) => Value::Int64(-v),
+			Value::Float64(v) => Value::Float64(-v),
+			_ => return Err(Error::NoNumber),
+		};
+		self.push(res)
 	}
 
-	fn binary_not(&mut self) -> Result<(), Error> {
-		let mut val = self.pop();
-		let kind = val.kind();
-		if kind != ValueType::Int {
-			return Err(Error::NoInteger);
-		}
-		val.make_integer(!val.as_integer()?);
-		self.push(val)
+	fn bitwise_not(&mut self) -> Result<(), Error> {
+		let val = self.pop();
+		let res = match val {
+			Value::Int64(v) => Value::Int64(!v),
+			_ => return Err(Error::NoNumber),
+		};
+		self.push(res)
 	}
 
 	fn not(&mut self) -> Result<(), Error> {
-		let mut val = self.pop();
-		let kind = val.kind();
-		match kind {
-			ValueType::Bool => {
-				val.make_bool(!val.as_bool()?);
-			}
-			ValueType::Double | ValueType::Str | ValueType::Int => {
-				val.make_bool(false);
-			}
-			ValueType::Nil => {
-				val.make_bool(true);
-			}
-		}
-		self.push(val)
+		let val = self.pop();
+		let res = match val {
+			Value::Boolean(b) => Value::Boolean(!b),
+			Value::Nil() => Value::Boolean(true),
+			_ => Value::Boolean(false),
+		};
+		self.push(res)
 	}
 
 	#[cfg(feature = "std")]
-	fn print(&mut self, chunk: &Chunk, stdout: &mut impl std::io::Write) -> Result<(), Error> {
+	fn print(&mut self, stdout: &mut impl std::io::Write) {
 		if self.stack_top > 0 {
 			let value = self.pop();
-			if value.is_string_pos() {
-				let _ = std::writeln!(stdout, "{}", chunk.get_string(value.as_string_pos()?));
-			} else {
-				let _ = std::writeln!(stdout, "{value}");
-			}
+			let _ = std::writeln!(stdout, "{value}");
 		} else {
 			let _ = std::writeln!(stdout, "no result");
 		}
-		Ok(())
 	}
 
-	fn define_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
+	fn define_global(&mut self, chunk: &Chunk) {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		let value_val = self.pop();
-		let name = chunk.get_string(name_val.as_string_pos()?);
-		self.globals.define_env(name, value_val);
-		Ok(())
+		//let name = chunk.get_string(name_val.as_string_pos()?);
+		self.globals
+			.define_env(&name_val.to_string(), value_val);
 	}
 
 	fn get_global(&mut self, chunk: &Chunk) -> Result<(), Error> {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
-		let name = chunk.get_string(name_val.as_string_pos()?);
-		let val = self.globals.get_env(name)?;
+		// let name = chunk.get_string(name_val.as_string_pos()?);
+		let val = self.globals.get_env(&name_val.to_string())?;
 		self.push(val)?;
 		Ok(())
 	}
@@ -311,9 +278,10 @@ impl<'a> VM<'a> {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
-		let name = chunk.get_string(name_val.as_string_pos()?);
+		// let name = chunk.get_string(name_val.as_string_pos()?);
 		let value_val = self.pop();
-		self.globals.set_env(name, value_val)
+		self.globals
+			.set_env(&name_val.to_string(), value_val)
 	}
 
 	/// Execute a [`Chunk`] with the virtual machine,
@@ -339,18 +307,18 @@ impl<'a> VM<'a> {
 			self.ip += 1;
 			match instruction {
 				OpCode::Add | OpCode::Divide | OpCode::Multiply | OpCode::Subtract => {
-					self.arithmetic_operator(&instruction, chunk)?;
+					self.arithmetic_operator(&instruction)?;
 				}
 				OpCode::BitwiseAnd | OpCode::BitwiseOr | OpCode::BitwiseXor => {
 					self.bitwise_operator(&instruction)?;
 				}
-				OpCode::BitwiseNot => self.binary_not()?,
+				OpCode::BitwiseNot => self.bitwise_not()?,
 				OpCode::Constant => self.constant(chunk)?,
-				OpCode::DefineExternal => self.define_global(chunk)?,
-				OpCode::Equal => self.equal(chunk)?,
-				OpCode::False => self.push(Value::from_bool(false))?,
+				OpCode::DefineExternal => self.define_global(chunk),
+				OpCode::Equal => self.equal()?,
+				OpCode::False => self.push(Value::Boolean(false))?,
 				OpCode::GetExternal => self.get_global(chunk)?,
-				OpCode::Greater => self.boolean_operator(&instruction)?,
+				OpCode::Greater => self.comparison_operator(&instruction)?,
 				OpCode::Jmp => {
 					let target = self.read_jmp_address(chunk);
 					self.ip = target;
@@ -367,7 +335,7 @@ impl<'a> VM<'a> {
 						self.ip = target;
 					}
 				}
-				OpCode::Less => self.boolean_operator(&instruction)?,
+				OpCode::Less => self.comparison_operator(&instruction)?,
 				OpCode::Negate => self.negate()?,
 				OpCode::Nil => self.push(Value::nil())?,
 				OpCode::Not => self.not()?,
@@ -375,7 +343,7 @@ impl<'a> VM<'a> {
 					self.pop();
 				}
 				#[cfg(feature = "std")]
-				OpCode::Print => self.print(chunk, stdout)?,
+				OpCode::Print => self.print(stdout),
 				OpCode::Return => {
 					let val = if self.stack_top > 0 {
 						self.pop()
@@ -386,7 +354,7 @@ impl<'a> VM<'a> {
 					return Ok(val);
 				}
 				OpCode::SetExternal => self.set_global(chunk)?,
-				OpCode::True => self.push(Value::from_bool(true))?,
+				OpCode::True => self.push(Value::Boolean(true))?,
 				_ => {
 					chunk.restore_state();
 					return Err(Error::UnknownOpCode);
@@ -395,3 +363,4 @@ impl<'a> VM<'a> {
 		}
 	}
 }
+// endregion:	--- VM

@@ -31,7 +31,7 @@ exclude = [
 workspace = true
 
 [dependencies]
-#dimas-core = { workspace = true }
+dimas-core = { workspace = true }
 dimas-macros = { workspace = true }
 dimas-scripting = { workspace = true }
 evalexpr = { workspace = true }

@@ -3,9 +3,6 @@
 //! This test implements the second tutorial from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //! [see:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_02_basic_ports)
 //!
-//! Differences to BehaviorTree.CPP
-//! - there is no Script node available
-//!
 
 #[doc(hidden)]
 extern crate alloc;
@@ -165,7 +162,6 @@ const XML2: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 "#;
 
 #[tokio::test]
-#[ignore]
 async fn basic_ports_with_script() -> anyhow::Result<()> {
 	// create BT environment
 	let mut factory = BTFactory::extended();
@@ -183,6 +179,6 @@ async fn basic_ports_with_script() -> anyhow::Result<()> {
 		.blackboard()
 		.get("the_answer")
 		.expect("the_answer not found");
-	assert_eq!(answer, "The answer is still 42.");
+	assert_eq!(answer, "The answer is still 42");
 	Ok(())
 }

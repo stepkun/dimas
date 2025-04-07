@@ -3,6 +3,8 @@
 //! `AssignmentParselet` for `Dimas` scripting handles all kinds of assignments
 //!
 
+use dimas_core::value::Value;
+
 use crate::{
 	Parser,
 	compiling::{
@@ -22,11 +24,11 @@ impl PrefixParselet for AssignmentParselet {
 			TokenKind::ColonEqual => {
 				parser.advance()?;
 				parser.expression(chunk)?;
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::DefineExternal as u8, name, chunk);
 			}
 			TokenKind::PlusEqual => {
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::GetExternal as u8, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk)?;
@@ -34,7 +36,7 @@ impl PrefixParselet for AssignmentParselet {
 				parser.emit_bytes(OpCode::SetExternal as u8, name, chunk);
 			}
 			TokenKind::MinusEqual => {
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::GetExternal as u8, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk)?;
@@ -42,7 +44,7 @@ impl PrefixParselet for AssignmentParselet {
 				parser.emit_bytes(OpCode::SetExternal as u8, name, chunk);
 			}
 			TokenKind::StarEqual => {
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::GetExternal as u8, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk)?;
@@ -50,7 +52,7 @@ impl PrefixParselet for AssignmentParselet {
 				parser.emit_bytes(OpCode::SetExternal as u8, name, chunk);
 			}
 			TokenKind::SlashEqual => {
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::GetExternal as u8, name, chunk);
 				parser.advance()?;
 				parser.expression(chunk)?;
@@ -60,11 +62,11 @@ impl PrefixParselet for AssignmentParselet {
 			TokenKind::Equal => {
 				parser.advance()?;
 				parser.expression(chunk)?;
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::SetExternal as u8, name, chunk);
 			}
 			_ => {
-				let name = chunk.add_string_constant(token.origin)?;
+				let name = chunk.add_constant(Value::String(token.origin))?;
 				parser.emit_bytes(OpCode::GetExternal as u8, name, chunk);
 			}
 		}

@@ -35,6 +35,18 @@ fn add() {
 	assert_eq!(stdout, b"is false\n");
 
 	stdout.clear();
+	let mut parser = Parser::new("print 'value is ' + 123;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &mut stdout).unwrap();
+	assert_eq!(stdout, b"value is 123\n");
+
+	stdout.clear();
+	let mut parser = Parser::new("print 'value is ' + 0xff;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &mut stdout).unwrap();
+	assert_eq!(stdout, b"value is 255\n");
+
+	stdout.clear();
 	let mut parser = Parser::new("print 'is ' + nil;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &mut stdout).unwrap();

@@ -39,6 +39,7 @@ harness = false
 workspace = true
 
 [dependencies]
+dimas-core = { workspace = true }
 hashbrown = { workspace = true }
 parking_lot = { workspace = true }
 thiserror = { workspace = true }
