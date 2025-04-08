@@ -28,6 +28,9 @@ pub enum Error {
 	#[error("could not parse HexNumber {0} at line {1}")]
 	ParseHex(String, usize),
 	/// @TODO:
+	#[error("could not parse IntNumber {0} at line {1}")]
+	ParseInt(String, usize),
+	/// @TODO:
 	#[error("could not parse Number {0} at line {1}")]
 	ParseNumber(String, usize),
 	/// @TODO:

@@ -15,16 +15,20 @@ use super::op_code::OpCode;
 use super::{Chunk, error::Error};
 // endregion:	--- modules
 
-/// Stack size is fixed
-const STACK_MAX: usize = 256;
+/// Stack size is fixed to avoid cache misses, which drastically reduce performance.
+/// For the intended purpose (short inline scripting) this size should be enough.
+const STACK_SIZE: usize = 8;
 
 // region:		--- VM
-/// A Virtual Machine
+/// A stack based Virtual Machine.
+///
+/// The stack size is limited to avoid cache misses, which drastically reduce performance.
+/// For the intended purpose (short inline scripting) this size should be enough.
 pub struct VM {
 	/// The `InstructionPointer` (sometimes called `ProgramCounter`)
 	ip: usize,
 	/// Stack for values
-	stack: [Value; STACK_MAX],
+	stack: [Value; STACK_SIZE],
 	/// Pointer to the next free stack place
 	stack_top: usize,
 }
@@ -33,7 +37,7 @@ impl Default for VM {
 	fn default() -> Self {
 		Self {
 			ip: 0,
-			stack: [const { Value::nil() }; STACK_MAX],
+			stack: [const { Value::nil() }; STACK_SIZE],
 			stack_top: 0,
 		}
 	}
@@ -42,7 +46,7 @@ impl Default for VM {
 impl VM {
 	fn reset(&mut self) {
 		self.ip = 0;
-		self.stack = [const { Value::nil() }; STACK_MAX];
+		self.stack = [const { Value::nil() }; STACK_SIZE];
 		self.stack_top = 0;
 	}
 
@@ -192,16 +196,25 @@ impl VM {
 		self.push(constant)
 	}
 
+	#[allow(clippy::cast_precision_loss)]
 	fn equal(&mut self) -> Result<(), Error> {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let res = match (a_val, b_val) {
 			(Value::Boolean(a), Value::Boolean(b)) => a == b,
-			(Value::Int64(a), Value::Int64(b)) => a == b,
 			(Value::Float64(a), Value::Float64(b)) => {
 				let delta = f64::abs(a - b);
 				delta <= 0.000_000_000_000_002
 			}
+			(Value::Float64(a), Value::Int64(b)) => {
+				let delta = f64::abs(a - (b as f64));
+				delta <= 0.000_000_000_000_002
+			}
+			(Value::Int64(a), Value::Float64(b)) => {
+				let delta = f64::abs((a as f64) - b);
+				delta <= 0.000_000_000_000_002
+			}
+			(Value::Int64(a), Value::Int64(b)) => a == b,
 			(Value::String(a), Value::String(b)) => a == b,
 			(Value::Nil(), Value::Nil()) => true,
 			_ => false,

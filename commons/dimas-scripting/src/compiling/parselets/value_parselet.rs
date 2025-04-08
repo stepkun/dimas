@@ -22,7 +22,7 @@ pub struct ValueParselet;
 impl PrefixParselet for ValueParselet {
 	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		match token.kind {
-			TokenKind::Number => {
+			TokenKind::FloatNumber => {
 				let double: f64 = match token.origin.parse() {
 					Ok(n) => n,
 					Err(_) => {
@@ -39,6 +39,14 @@ impl PrefixParselet for ValueParselet {
 				let literal = token.origin.trim_start_matches("0x");
 				let Ok(value) = i64::from_str_radix(literal, 16) else {
 					return Err(Error::ParseHex(literal.to_string(), token.line));
+				};
+				let offset = chunk.add_constant(Value::Int64(value))?;
+				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
+				Ok(())
+			}
+			TokenKind::IntNumber => {
+				let Ok(value) = token.origin.parse::<i64>() else {
+					return Err(Error::ParseInt(token.origin, token.line));
 				};
 				let offset = chunk.add_constant(Value::Int64(value))?;
 				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);

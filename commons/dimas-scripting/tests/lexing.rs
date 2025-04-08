@@ -79,12 +79,13 @@ fn lexing_idents() {
 
 #[test]
 fn lexing_numbers() {
-	let tokens = "123 123.0 123.456 0.123";
+	let tokens = "123 123.0 123.456 0.123 0x123";
 	let mut lexer = Lexer::new(tokens);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
-	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::Number);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::IntNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::FloatNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::FloatNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::FloatNumber);
+	assert_eq!(lexer.next().unwrap().unwrap().kind, TokenKind::HexNumber);
 	assert!(lexer.next().is_none());
 	assert!(lexer.next().is_none());
 }

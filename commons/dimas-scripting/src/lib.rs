@@ -23,10 +23,11 @@
 //! term        → factor ( ( "-" | "+" ) factor )* ;
 //! factor      → unary ( ( "/" | "*" ) unary )* ;
 //! unary       → ( "!" | "-" | "~") unary | primary ;
-//! primary     → "true" | "false" | NUMBER | HEXNUMBER | STRING | IDENTIFIER | "(" expression ")" ;
+//! primary     → "true" | "false" | FLOATNUMBER | HEXNUMBER| INTNUMBER  | STRING | IDENTIFIER | "(" expression ")" ;
 //!
-//! NUMBER      → DIGIT+ ( "." DIGIT+ )? ;
-//! HEXNUMBER   → DIGIT+ | "a" ... "f"+ | "A" ... "F"+ ;
+//! FLOATNUMBER → DIGIT+ ( "." DIGIT+ ) ;
+//! HEXNUMBER   → (0x | 0X) + (DIGIT+ | "a" ... "f"+ | "A" ... "F"+ );
+//! INTNUMBER   → ( DIGIT+ ) ;
 //! STRING      → "\'" <any char except "\'">* "\'" ;
 //! IDENTIFIER  → ALPHA ( ALPHA | DIGIT )* ;
 //! ALPHA       → "a" ... "z" | "A" ... "Z" | "_" ;

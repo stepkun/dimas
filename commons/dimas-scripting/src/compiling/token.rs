@@ -78,9 +78,11 @@ pub enum TokenKind {
 	/// An Identifier
 	Ident,
 	/// Any Number either f64 or i64
-	Number,
+	FloatNumber,
 	/// Any hexadecimal Number
 	HexNumber,
+	/// Any integer Number
+	IntNumber,
 	/// Any String
 	String,
 	/// An Enum value
@@ -124,8 +126,9 @@ impl Display for TokenKind {
 			Self::Print => write!(f, "'print'"),
 			Self::False => write!(f, "'false'"),
 			Self::Ident => write!(f, "an 'Ident'"),
-			Self::Number => write!(f, "a 'Number'"),
+			Self::FloatNumber => write!(f, "a 'FloatNumber'"),
 			Self::HexNumber => write!(f, "a 'HexNumber'"),
+			Self::IntNumber => write!(f, "a 'IntNumber'"),
 			Self::String => write!(f, "a 'String'"),
 			Self::Enum => write!(f, "an 'Enum'"),
 		}

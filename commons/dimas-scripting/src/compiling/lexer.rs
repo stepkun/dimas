@@ -34,8 +34,6 @@ pub struct Lexer<'a> {
 	pos: usize,
 	/// current line
 	line: usize,
-	/// store a peeked token
-	peeked: Option<Result<Token, Error>>,
 }
 
 impl<'a> Lexer<'a> {
@@ -47,18 +45,7 @@ impl<'a> Lexer<'a> {
 			rest: source_code,
 			pos: 0,
 			line: 1,
-			peeked: None,
 		}
-	}
-
-	/// Look forward to the next token
-	pub fn peek(&mut self) -> Option<&Result<Token, Error>> {
-		if self.peeked.is_some() {
-			return self.peeked.as_ref();
-		}
-
-		self.peeked = self.next();
-		self.peeked.as_ref()
 	}
 }
 
@@ -68,10 +55,6 @@ impl Iterator for Lexer<'_> {
 	#[allow(clippy::too_many_lines)]
 	fn next(&mut self) -> Option<Self::Item> {
 		// return a peeked token
-		if let Some(next) = self.peeked.take() {
-			return Some(next);
-		}
-
 		loop {
 			// must be in the loop for the indices to match up with c_onwards
 			let mut chars = self.rest.chars();
@@ -254,11 +237,19 @@ impl Iterator for Lexer<'_> {
 					self.pos += extra_bytes;
 					self.rest = &self.rest[extra_bytes..];
 
+					if literal.contains('.') {
+						return Some(Ok(Token {
+							origin: literal.to_string(),
+							offset: c_at,
+							line: self.line,
+							kind: TokenKind::FloatNumber,
+						}));
+					}
 					return Some(Ok(Token {
 						origin: literal.to_string(),
 						offset: c_at,
 						line: self.line,
-						kind: TokenKind::Number,
+						kind: TokenKind::IntNumber,
 					}));
 				}
 				Started::String => {

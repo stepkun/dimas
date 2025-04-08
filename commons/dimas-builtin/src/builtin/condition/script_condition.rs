@@ -30,10 +30,7 @@ impl ScriptCondition {
 	}
 
 	async fn tick(&mut self) -> BehaviorResult {
-		let mut code = bhvr_.config_mut().get_input::<String>("code")?;
-		if !code.ends_with(';') {
-			code.push(';');
-		}
+		let code = bhvr_.config_mut().get_input::<String>("code")?;
 		let mut parser = Parser::new(&code);
 		let mut chunk = parser.parse()?;
 

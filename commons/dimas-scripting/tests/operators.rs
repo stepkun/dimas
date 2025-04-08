@@ -11,6 +11,12 @@ fn add() {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
+	let mut parser = Parser::new("print 123.0 + 456.0;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	assert_eq!(stdout, b"579\n");
+
+	stdout.clear();
 	let mut parser = Parser::new("print 123 + 456;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();
@@ -59,6 +65,12 @@ fn subtract() {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
+	let mut parser = Parser::new("print 4.56 - 1.23;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	assert_eq!(stdout, b"3.3299999999999996\n");
+
+	stdout.clear();
 	let mut parser = Parser::new("print 456 - 123;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();
@@ -83,6 +95,12 @@ fn multiply() {
 	assert_eq!(stdout, b"56088\n");
 
 	stdout.clear();
+	let mut parser = Parser::new("print 123.0 * 456.0;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	assert_eq!(stdout, b"56088\n");
+
+	stdout.clear();
 	let mut parser = Parser::new("print 1.2 * 3.4;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();
@@ -102,6 +120,12 @@ fn divide() {
 
 	stdout.clear();
 	let mut parser = Parser::new("print 1/3;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	assert_eq!(stdout, b"0\n");
+
+	stdout.clear();
+	let mut parser = Parser::new("print 1.0/3.0;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"0.3333333333333333\n");
@@ -198,11 +222,17 @@ fn precedence() {
 }
 
 #[test]
-fn comparison() {
+fn equality() {
 	let env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
+	let mut parser = Parser::new("print 5.0 == 4.999999999999998;");
+	let mut chunk = parser.parse().unwrap();
+	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	assert_eq!(stdout, b"true\n");
+
+	stdout.clear();
 	let mut parser = Parser::new("print 5 == 4.999999999999998;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();
@@ -237,8 +267,14 @@ fn comparison() {
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
+}
 
-	stdout.clear();
+#[test]
+fn comparison() {
+	let env = DefaultEnvironment::default();
+	let mut vm = VM::default();
+	let mut stdout: Vec<u8> = Vec::new();
+
 	let mut parser = Parser::new("print 1<2;");
 	let mut chunk = parser.parse().unwrap();
 	vm.run(&mut chunk, &env, &mut stdout).unwrap();

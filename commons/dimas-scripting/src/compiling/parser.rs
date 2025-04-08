@@ -93,6 +93,9 @@ impl<'a> Parser<'a> {
 			.insert(TokenKind::HexNumber, Arc::from(ValueParselet));
 		parser
 			.prefix_parselets
+			.insert(TokenKind::IntNumber, Arc::from(ValueParselet));
+		parser
+			.prefix_parselets
 			.insert(TokenKind::Ident, Arc::from(AssignmentParselet));
 		parser
 			.prefix_parselets
@@ -117,7 +120,7 @@ impl<'a> Parser<'a> {
 			.insert(TokenKind::Nil, Arc::from(LiteralParselet));
 		parser
 			.prefix_parselets
-			.insert(TokenKind::Number, Arc::from(ValueParselet));
+			.insert(TokenKind::FloatNumber, Arc::from(ValueParselet));
 		parser
 			.infix_parselets
 			.insert(TokenKind::Or, Arc::from(LogicParselet::new(Precedence::Or)));
@@ -229,11 +232,6 @@ impl<'a> Parser<'a> {
 		self.next.kind == kind
 	}
 
-	/// Check next token whether it has given kind
-	pub(crate) fn _match_next(&mut self, kind: TokenKind) -> bool {
-		self.next.kind == kind && self.advance().is_ok()
-	}
-
 	pub(crate) fn emit_byte(&self, byte: u8, chunk: &mut Chunk) {
 		chunk.write(byte, self.current.line);
 	}
@@ -265,7 +263,10 @@ impl<'a> Parser<'a> {
 		if self.next.kind == TokenKind::Print {
 			self.advance()?;
 			self.expression(chunk)?;
-			self.consume(TokenKind::Semicolon)?;
+			// a statement my also be finished by EOF
+			if !self.check_next(TokenKind::None) {
+				self.consume(TokenKind::Semicolon)?;
+			}
 			self.emit_byte(OpCode::Print as u8, chunk);
 		} else {
 			self.expression(chunk)?;
