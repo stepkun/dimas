@@ -23,8 +23,6 @@ pub struct Chunk {
 	lines: Vec<usize>,
 	/// storage for Values
 	values: Vec<Value>,
-	/// saved values state
-	values_state: usize,
 }
 
 impl Chunk {
@@ -34,15 +32,11 @@ impl Chunk {
 		&self.code
 	}
 
-	/// Save the current size of values and strings
-	pub(crate) fn save_state(&mut self) {
-		self.values_state = self.values.len();
-	}
-
-	pub(crate) fn restore_state(&mut self) {
-		while self.values.len() > self.values_state {
-			self.values.pop();
-		}
+	/// Finalizes the [`Chunk`] by shrinking al [`Vec`]'s
+	pub(crate) fn finalize(&mut self) {
+		self.code.shrink_to_fit();
+		self.lines.shrink_to_fit();
+		self.values.shrink_to_fit();
 	}
 
 	/// Add a byte to the chunk

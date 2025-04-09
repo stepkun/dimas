@@ -12,38 +12,38 @@ fn and() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print false && false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true && false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true && true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false && true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true && true && false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true && true && true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -54,14 +54,14 @@ fn or() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print true || true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false || true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -72,14 +72,14 @@ fn and_or() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print true || true && false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false || true && true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -90,14 +90,14 @@ fn bitwise_and() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0x1 & 0x1;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print 0x1 & 0x0;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"0\n");
 }
 
@@ -108,20 +108,20 @@ fn bitwise_or() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0x1 | 0x1;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print 0x1 | 0x0;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print 0x1 | 0x2;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"3\n");
 }
 
@@ -132,20 +132,20 @@ fn bitwise_xor() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 0x1 ^ 0x1;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"0\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print 0x1 ^ 0x0;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print 0x1 ^ 0x2;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"3\n");
 }
 
@@ -156,13 +156,13 @@ fn ternary() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print 1 < 2 ? true : false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print 1 > 2 ? true : false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 }

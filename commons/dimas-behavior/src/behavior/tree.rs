@@ -18,6 +18,8 @@ use crate::{
 };
 use alloc::vec;
 use alloc::vec::Vec;
+
+use super::error::BehaviorError;
 // endregion:   --- modules
 
 // region: 		--- TreeIter
@@ -163,6 +165,13 @@ impl BehaviorTree {
 	#[must_use]
 	pub fn root_blackboard(&self) -> Blackboard {
 		self.root.config().blackboard().clone()
+	}
+
+	/// @TODO:
+	/// # Errors
+	/// if index is out of bounds
+	pub fn subtree(&self, _index: usize) -> Result<(), BehaviorError> {
+		todo!()
 	}
 
 	/// @TODO:

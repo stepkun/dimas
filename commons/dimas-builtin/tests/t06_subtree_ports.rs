@@ -26,7 +26,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
       main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <Sequence>
-      <Script code="move_goal:='1;2;3'"/>
+      <Script code=" move_goal:='1;2;3'" />
       <SubTree ID="MoveRobot"
                target="{move_goal}"
                result="{move_result}"/>
@@ -38,10 +38,10 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
     <Fallback>
       <Sequence>
         <MoveBase goal="{target}"/>
-        <Script code="result:=&apos;goal_reached&apos;"/>
+        <Script code=" result:='goal_reached' "/>
       </Sequence>
       <ForceFailure>
-        <Script code="result:=&apos;error&apos;"/>
+        <Script code=" result:='error' "/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -60,6 +60,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
   </TreeNodesModel>
 </root>
 "#;
+
 /// SyncAction "SaySomething"
 #[behavior(SyncAction)]
 struct SaySomething {}
@@ -97,7 +98,12 @@ async fn subtree_ports() -> anyhow::Result<()> {
 	assert_eq!(result, BehaviorStatus::Success);
 
 	// visualize some information about the final state of the blackboards
+	println!("\n------ Root BB -------");
 	println!("{:?}", tree.root_blackboard());
+	// println!("\n------ First BB ------");
+	// println!("{:?}", tree.subtree(0).blackboard());
+	// println!("\n------ Second BB -----");
+	// println!("{:?}", tree.subtree(1).blackboard());
 
 	Ok(())
 }

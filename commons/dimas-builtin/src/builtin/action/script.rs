@@ -31,12 +31,12 @@ impl Script {
 	async fn tick(&mut self) -> BehaviorResult {
 		let code = bhvr_.config_mut().get_input::<String>("code")?;
 		let mut parser = Parser::new(&code);
-		let mut chunk = parser.parse()?;
+		let chunk = parser.parse()?;
 
 		let env = bhvr_.config().blackboard();
 		let mut vm = VM::default();
 		let mut out = Vec::new();
-		let value = vm.run(&mut chunk, env, &mut out)?;
+		let value = vm.run(&chunk, env, &mut out)?;
 		let status = if value.is_bool() {
 			let val = value.as_bool()?;
 			if val {

@@ -12,110 +12,110 @@ fn equality() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print true == true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true == false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false == true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false == false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true == 1;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false == 0;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true == 'true';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false == 'false';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false == '';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false == '';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true != false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false != true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false != false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true != 1;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false != 0;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print true != 'true';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false != 'false';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print false != '';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -126,49 +126,49 @@ fn not() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new("print !true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !!true;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !!false;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !123;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !0;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !nil;");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let mut parser = Parser::new("print !'';");
-	let mut chunk = parser.parse().unwrap();
-	vm.run(&mut chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse().unwrap();
+	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"false\n");
 }

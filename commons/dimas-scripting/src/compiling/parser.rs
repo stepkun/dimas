@@ -185,6 +185,7 @@ impl<'a> Parser<'a> {
 
 		// end compiler
 		self.emit_byte(OpCode::Return as u8, &mut chunk);
+		chunk.finalize();
 		Ok(chunk)
 	}
 
@@ -270,7 +271,9 @@ impl<'a> Parser<'a> {
 			self.emit_byte(OpCode::Print as u8, chunk);
 		} else {
 			self.expression(chunk)?;
-			self.consume(TokenKind::Semicolon)?;
+			if !self.check_next(TokenKind::None) {
+				self.consume(TokenKind::Semicolon)?;
+			}
 			//self.emit_byte(OP_POP, chunk);
 		}
 		Ok(())

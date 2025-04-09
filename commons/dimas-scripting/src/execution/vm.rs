@@ -296,15 +296,13 @@ impl VM {
 	/// - unknown `OpCode`
 	pub fn run(
 		&mut self,
-		chunk: &mut Chunk,
+		chunk: &Chunk,
 		globals: &dyn Environment,
 		#[cfg(feature = "std")] stdout: &mut impl std::io::Write,
 	) -> Result<Value, Error> {
 		self.reset();
-		chunk.save_state();
 		// ignore empty chunks
 		if chunk.code().is_empty() {
-			chunk.restore_state();
 			return Ok(Value::nil());
 		}
 
@@ -357,13 +355,12 @@ impl VM {
 					} else {
 						Value::nil()
 					};
-					chunk.restore_state();
+					//chunk.restore_state();
 					return Ok(val);
 				}
 				OpCode::SetExternal => self.set_global(chunk, globals)?,
 				OpCode::True => self.push(Value::Boolean(true))?,
 				_ => {
-					chunk.restore_state();
 					return Err(Error::UnknownOpCode);
 				}
 			}
