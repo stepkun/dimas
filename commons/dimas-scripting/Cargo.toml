@@ -47,7 +47,7 @@ thiserror = { workspace = true }
 [build-dependencies]
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = { workspace = true }
 
 [features]
 default = ["std"]

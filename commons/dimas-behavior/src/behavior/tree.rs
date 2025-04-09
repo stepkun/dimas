@@ -12,12 +12,12 @@ extern crate std;
 use core::marker::PhantomData;
 
 // region:      --- modules
+use alloc::{vec, vec::Vec};
+
 use crate::{
 	behavior::{Behavior, BehaviorResult, BehaviorStatus},
 	blackboard::Blackboard,
 };
-use alloc::vec;
-use alloc::vec::Vec;
 
 use super::error::BehaviorError;
 // endregion:   --- modules

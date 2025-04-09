@@ -10,13 +10,13 @@ extern crate alloc;
 use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter};
 
-use crate::error::Error;
+use super::Error;
 // endregion:	--- modules
 
 // region:		--- Value
 /// Value type to allow storing different kinds of values
 #[derive(Clone, Debug)]
-pub enum Value {
+pub enum ScriptingValue {
 	/// Nil signals the absence of a `Value`
 	Nil(),
 	/// Boolean type
@@ -29,7 +29,7 @@ pub enum Value {
 	String(String),
 }
 
-impl Display for Value {
+impl Display for ScriptingValue {
 	fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
 		match self {
 			Self::Nil() => write!(f, "nil"),
@@ -41,7 +41,7 @@ impl Display for Value {
 	}
 }
 
-impl Value {
+impl ScriptingValue {
 	/// Create a `Nil` value.
 	#[must_use]
 	pub const fn nil() -> Self {

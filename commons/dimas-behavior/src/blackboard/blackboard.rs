@@ -14,8 +14,10 @@ use core::{
 	ops::{Deref, DerefMut},
 	str::FromStr,
 };
-use dimas_core::value::Value;
-use dimas_scripting::{Environment, execution::Error};
+use dimas_scripting::{
+	Environment,
+	execution::{Error, ScriptingValue},
+};
 use hashbrown::HashMap;
 use parking_lot::{Mutex, RwLock};
 
@@ -37,17 +39,17 @@ pub struct Blackboard {
 extern crate std;
 
 impl Environment for Blackboard {
-	fn define_env(&self, name: &str, value: Value) {
+	fn define_env(&self, name: &str, value: ScriptingValue) {
 		match value {
-			Value::Nil() => todo!(),
-			Value::Boolean(b) => self.set(name, b),
-			Value::Float64(f) => self.set(name, f),
-			Value::Int64(i) => self.set(name, i),
-			Value::String(s) => self.set(name, s),
+			ScriptingValue::Nil() => todo!(),
+			ScriptingValue::Boolean(b) => self.set(name, b),
+			ScriptingValue::Float64(f) => self.set(name, f),
+			ScriptingValue::Int64(i) => self.set(name, i),
+			ScriptingValue::String(s) => self.set(name, s),
 		}
 	}
 
-	fn get_env(&self, name: &str) -> Result<Value, Error> {
+	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {
 		self.get_entry(name).map_or_else(
 			|| Err(Error::GlobalNotDefined(name.to_string())),
 			|entry| {
@@ -60,29 +62,29 @@ impl Environment for Blackboard {
 									|| {
 										entry.downcast_ref::<bool>().map_or_else(
 											|| Err(Error::GlobalHasUnknownType(name.to_string())),
-											|b| Ok(Value::Boolean(b.to_owned())),
+											|b| Ok(ScriptingValue::Boolean(b.to_owned())),
 										)
 									},
-									|i| Ok(Value::Int64(i.to_owned())),
+									|i| Ok(ScriptingValue::Int64(i.to_owned())),
 								)
 							},
-							|f| Ok(Value::Float64(f.to_owned())),
+							|f| Ok(ScriptingValue::Float64(f.to_owned())),
 						)
 					},
-					|s| Ok(Value::String(s.to_owned())),
+					|s| Ok(ScriptingValue::String(s.to_owned())),
 				)
 			},
 		)
 	}
 
-	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {
+	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
 		if self.get_entry(name).is_some() {
 			match value {
-				Value::Nil() => todo!(),
-				Value::Boolean(b) => self.set(name, b),
-				Value::Float64(f) => self.set(name, f),
-				Value::Int64(i) => self.set(name, i),
-				Value::String(s) => self.set(name, s),
+				ScriptingValue::Nil() => todo!(),
+				ScriptingValue::Boolean(b) => self.set(name, b),
+				ScriptingValue::Float64(f) => self.set(name, f),
+				ScriptingValue::Int64(i) => self.set(name, i),
+				ScriptingValue::String(s) => self.set(name, s),
 			}
 			Ok(())
 		} else {

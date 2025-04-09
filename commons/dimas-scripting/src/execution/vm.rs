@@ -4,15 +4,12 @@
 
 extern crate std;
 
-use alloc::borrow::ToOwned;
 // region:		--- modules
-use alloc::string::ToString;
-use dimas_core::value::Value;
+use alloc::{borrow::ToOwned, string::ToString};
 
 use crate::Environment;
 
-use super::op_code::OpCode;
-use super::{Chunk, error::Error};
+use super::{Chunk, ScriptingValue, error::Error, op_code::OpCode};
 // endregion:	--- modules
 
 /// Stack size is fixed to avoid cache misses, which drastically reduce performance.
@@ -28,7 +25,7 @@ pub struct VM {
 	/// The `InstructionPointer` (sometimes called `ProgramCounter`)
 	ip: usize,
 	/// Stack for values
-	stack: [Value; STACK_SIZE],
+	stack: [ScriptingValue; STACK_SIZE],
 	/// Pointer to the next free stack place
 	stack_top: usize,
 }
@@ -37,7 +34,7 @@ impl Default for VM {
 	fn default() -> Self {
 		Self {
 			ip: 0,
-			stack: [const { Value::nil() }; STACK_SIZE],
+			stack: [const { ScriptingValue::nil() }; STACK_SIZE],
 			stack_top: 0,
 		}
 	}
@@ -46,15 +43,15 @@ impl Default for VM {
 impl VM {
 	fn reset(&mut self) {
 		self.ip = 0;
-		self.stack = [const { Value::nil() }; STACK_SIZE];
+		self.stack = [const { ScriptingValue::nil() }; STACK_SIZE];
 		self.stack_top = 0;
 	}
 
-	const fn peek(&self, distance: usize) -> &Value {
+	const fn peek(&self, distance: usize) -> &ScriptingValue {
 		&self.stack[self.stack_top - distance - 1]
 	}
 
-	fn push(&mut self, value: Value) -> Result<(), Error> {
+	fn push(&mut self, value: ScriptingValue) -> Result<(), Error> {
 		if self.stack_top == u8::MAX as usize {
 			return Err(Error::StackOverflow);
 		}
@@ -63,7 +60,7 @@ impl VM {
 		Ok(())
 	}
 
-	fn pop(&mut self) -> Value {
+	fn pop(&mut self) -> ScriptingValue {
 		self.stack_top -= 1;
 		self.stack[self.stack_top].clone()
 	}
@@ -81,7 +78,7 @@ impl VM {
 		let b_val = self.pop();
 		let a_val = self.pop();
 		match (&a_val, &b_val) {
-			(Value::Float64(a), Value::Float64(b)) => {
+			(ScriptingValue::Float64(a), ScriptingValue::Float64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + b,
 					OpCode::Subtract => a - b,
@@ -89,9 +86,9 @@ impl VM {
 					OpCode::Divide => a / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				self.push(Value::Float64(res))
+				self.push(ScriptingValue::Float64(res))
 			}
-			(Value::Float64(a), Value::Int64(b)) => {
+			(ScriptingValue::Float64(a), ScriptingValue::Int64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + (*b as f64),
 					OpCode::Subtract => a - (*b as f64),
@@ -99,9 +96,9 @@ impl VM {
 					OpCode::Divide => a / (*b as f64),
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				self.push(Value::Float64(res))
+				self.push(ScriptingValue::Float64(res))
 			}
-			(Value::Int64(a), Value::Float64(b)) => {
+			(ScriptingValue::Int64(a), ScriptingValue::Float64(b)) => {
 				let res = match operator {
 					OpCode::Add => (*a as f64) + b,
 					OpCode::Subtract => (*a as f64) - b,
@@ -109,9 +106,9 @@ impl VM {
 					OpCode::Divide => (*a as f64) / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				self.push(Value::Float64(res))
+				self.push(ScriptingValue::Float64(res))
 			}
-			(Value::Int64(a), Value::Int64(b)) => {
+			(ScriptingValue::Int64(a), ScriptingValue::Int64(b)) => {
 				let res = match operator {
 					OpCode::Add => a + b,
 					OpCode::Subtract => a - b,
@@ -119,24 +116,26 @@ impl VM {
 					OpCode::Divide => a / b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				self.push(Value::Int64(res))
+				self.push(ScriptingValue::Int64(res))
 			}
-			(Value::String(a), _) => {
+			(ScriptingValue::String(a), _) => {
 				let res = match operator {
 					OpCode::Add => a.to_owned() + &b_val.to_string(),
 					_ => return Err(Error::OnlyAdd),
 				};
-				self.push(Value::String(res))
+				self.push(ScriptingValue::String(res))
 			}
-			(_, Value::String(b)) => {
+			(_, ScriptingValue::String(b)) => {
 				let res = match operator {
 					OpCode::Add => a_val.to_string() + b,
 					_ => return Err(Error::OnlyAdd),
 				};
-				self.push(Value::String(res))
+				self.push(ScriptingValue::String(res))
 			}
-			(Value::Nil(), _) | (_, Value::Nil()) => Err(Error::NilValue),
-			(Value::Boolean(_), _) | (_, Value::Boolean(_)) => Err(Error::BoolNoArithmetic),
+			(ScriptingValue::Nil(), _) | (_, ScriptingValue::Nil()) => Err(Error::NilValue),
+			(ScriptingValue::Boolean(_), _) | (_, ScriptingValue::Boolean(_)) => {
+				Err(Error::BoolNoArithmetic)
+			}
 		}
 	}
 
@@ -144,14 +143,14 @@ impl VM {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		match (a_val, b_val) {
-			(Value::Int64(a), Value::Int64(b)) => {
+			(ScriptingValue::Int64(a), ScriptingValue::Int64(b)) => {
 				let res = match operator {
 					OpCode::BitwiseAnd => a & b,
 					OpCode::BitwiseOr => a | b,
 					OpCode::BitwiseXor => a ^ b,
 					_ => return Err(Error::Unreachable(line!())),
 				};
-				a_val = Value::Int64(res);
+				a_val = ScriptingValue::Int64(res);
 				self.push(a_val)
 			}
 			_ => Err(Error::NoInteger),
@@ -163,29 +162,29 @@ impl VM {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let res = match (a_val, b_val) {
-			(Value::Int64(a), Value::Int64(b)) => match operator {
+			(ScriptingValue::Int64(a), ScriptingValue::Int64(b)) => match operator {
 				OpCode::Greater => a > b,
 				OpCode::Less => a < b,
 				_ => return Err(Error::Unreachable(line!())),
 			},
-			(Value::Int64(a), Value::Float64(b)) => match operator {
+			(ScriptingValue::Int64(a), ScriptingValue::Float64(b)) => match operator {
 				OpCode::Greater => (a as f64) > b,
 				OpCode::Less => (a as f64) < b,
 				_ => return Err(Error::Unreachable(line!())),
 			},
-			(Value::Float64(a), Value::Int64(b)) => match operator {
+			(ScriptingValue::Float64(a), ScriptingValue::Int64(b)) => match operator {
 				OpCode::Greater => a > (b as f64),
 				OpCode::Less => a < (b as f64),
 				_ => return Err(Error::Unreachable(line!())),
 			},
-			(Value::Float64(a), Value::Float64(b)) => match operator {
+			(ScriptingValue::Float64(a), ScriptingValue::Float64(b)) => match operator {
 				OpCode::Greater => a > b,
 				OpCode::Less => a < b,
 				_ => return Err(Error::Unreachable(line!())),
 			},
 			_ => return Err(Error::NoComparison),
 		};
-		a_val = Value::Boolean(res);
+		a_val = ScriptingValue::Boolean(res);
 		self.push(a_val)
 	}
 
@@ -201,33 +200,33 @@ impl VM {
 		let b_val = self.pop();
 		let mut a_val = self.pop();
 		let res = match (a_val, b_val) {
-			(Value::Boolean(a), Value::Boolean(b)) => a == b,
-			(Value::Float64(a), Value::Float64(b)) => {
+			(ScriptingValue::Boolean(a), ScriptingValue::Boolean(b)) => a == b,
+			(ScriptingValue::Float64(a), ScriptingValue::Float64(b)) => {
 				let delta = f64::abs(a - b);
 				delta <= 0.000_000_000_000_002
 			}
-			(Value::Float64(a), Value::Int64(b)) => {
+			(ScriptingValue::Float64(a), ScriptingValue::Int64(b)) => {
 				let delta = f64::abs(a - (b as f64));
 				delta <= 0.000_000_000_000_002
 			}
-			(Value::Int64(a), Value::Float64(b)) => {
+			(ScriptingValue::Int64(a), ScriptingValue::Float64(b)) => {
 				let delta = f64::abs((a as f64) - b);
 				delta <= 0.000_000_000_000_002
 			}
-			(Value::Int64(a), Value::Int64(b)) => a == b,
-			(Value::String(a), Value::String(b)) => a == b,
-			(Value::Nil(), Value::Nil()) => true,
+			(ScriptingValue::Int64(a), ScriptingValue::Int64(b)) => a == b,
+			(ScriptingValue::String(a), ScriptingValue::String(b)) => a == b,
+			(ScriptingValue::Nil(), ScriptingValue::Nil()) => true,
 			_ => false,
 		};
-		a_val = Value::Boolean(res);
+		a_val = ScriptingValue::Boolean(res);
 		self.push(a_val)
 	}
 
 	fn negate(&mut self) -> Result<(), Error> {
 		let val = self.pop();
 		let res = match val {
-			Value::Int64(v) => Value::Int64(-v),
-			Value::Float64(v) => Value::Float64(-v),
+			ScriptingValue::Int64(v) => ScriptingValue::Int64(-v),
+			ScriptingValue::Float64(v) => ScriptingValue::Float64(-v),
 			_ => return Err(Error::NoNumber),
 		};
 		self.push(res)
@@ -236,7 +235,7 @@ impl VM {
 	fn bitwise_not(&mut self) -> Result<(), Error> {
 		let val = self.pop();
 		let res = match val {
-			Value::Int64(v) => Value::Int64(!v),
+			ScriptingValue::Int64(v) => ScriptingValue::Int64(!v),
 			_ => return Err(Error::NoNumber),
 		};
 		self.push(res)
@@ -245,9 +244,9 @@ impl VM {
 	fn not(&mut self) -> Result<(), Error> {
 		let val = self.pop();
 		let res = match val {
-			Value::Boolean(b) => Value::Boolean(!b),
-			Value::Nil() => Value::Boolean(true),
-			_ => Value::Boolean(false),
+			ScriptingValue::Boolean(b) => ScriptingValue::Boolean(!b),
+			ScriptingValue::Nil() => ScriptingValue::Boolean(true),
+			_ => ScriptingValue::Boolean(false),
 		};
 		self.push(res)
 	}
@@ -291,7 +290,7 @@ impl VM {
 	}
 
 	/// Execute a [`Chunk`] with the virtual machine,
-	/// Returns the topmost stack [`Value`] if there is one, otherwise [`Value::nil()`].
+	/// Returns the topmost stack [`ScriptingValue`] if there is one, otherwise [`ScriptingValue::nil()`].
 	/// # Errors
 	/// - unknown `OpCode`
 	pub fn run(
@@ -299,11 +298,11 @@ impl VM {
 		chunk: &Chunk,
 		globals: &dyn Environment,
 		#[cfg(feature = "std")] stdout: &mut impl std::io::Write,
-	) -> Result<Value, Error> {
+	) -> Result<ScriptingValue, Error> {
 		self.reset();
 		// ignore empty chunks
 		if chunk.code().is_empty() {
-			return Ok(Value::nil());
+			return Ok(ScriptingValue::nil());
 		}
 
 		loop {
@@ -321,7 +320,7 @@ impl VM {
 				OpCode::Constant => self.constant(chunk)?,
 				OpCode::DefineExternal => self.define_global(chunk, globals),
 				OpCode::Equal => self.equal()?,
-				OpCode::False => self.push(Value::Boolean(false))?,
+				OpCode::False => self.push(ScriptingValue::Boolean(false))?,
 				OpCode::GetExternal => self.get_global(chunk, globals)?,
 				OpCode::Greater => self.comparison_operator(&instruction)?,
 				OpCode::Jmp => {
@@ -342,7 +341,7 @@ impl VM {
 				}
 				OpCode::Less => self.comparison_operator(&instruction)?,
 				OpCode::Negate => self.negate()?,
-				OpCode::Nil => self.push(Value::nil())?,
+				OpCode::Nil => self.push(ScriptingValue::nil())?,
 				OpCode::Not => self.not()?,
 				OpCode::Pop => {
 					self.pop();
@@ -353,13 +352,13 @@ impl VM {
 					let val = if self.stack_top > 0 {
 						self.pop()
 					} else {
-						Value::nil()
+						ScriptingValue::nil()
 					};
 					//chunk.restore_state();
 					return Ok(val);
 				}
 				OpCode::SetExternal => self.set_global(chunk, globals)?,
-				OpCode::True => self.push(Value::Boolean(true))?,
+				OpCode::True => self.push(ScriptingValue::Boolean(true))?,
 				_ => {
 					return Err(Error::UnknownOpCode);
 				}

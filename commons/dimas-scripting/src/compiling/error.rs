@@ -12,7 +12,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Pass through VM error.
-	/// Used to have the same error message during compilation and execution for [`Value`] errors
+	/// Used to have the same error message during compilation and execution.
 	#[error("{0}")]
 	VM(#[from] crate::execution::error::Error),
 	/// @TODO:

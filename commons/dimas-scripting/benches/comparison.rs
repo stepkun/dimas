@@ -3,7 +3,7 @@
 #![allow(clippy::unit_arg)]
 #![allow(clippy::unwrap_used)]
 
-//! Benchmarks of scripting equality
+//! Benchmarks of scripting comparison
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_scripting::{DefaultEnvironment, Parser, VM};

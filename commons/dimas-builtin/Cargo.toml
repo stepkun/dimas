@@ -23,9 +23,17 @@ exclude = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [[bench]]
-# name = "equality"
-# harness = false
+[[bench]]
+name = "fallback"
+harness = false
+
+[[bench]]
+name = "parallel"
+harness = false
+
+[[bench]]
+name = "sequence"
+harness = false
 
 [lints]
 workspace = true
@@ -47,6 +55,7 @@ tracing-subscriber = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
+criterion = { workspace = true }
 rand = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "time"] }
 

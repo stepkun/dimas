@@ -3,8 +3,8 @@
 //! `ValueParselet` for `Dimas` scripting analyzes and handles value tokens like numbers
 //!
 
+// region:   	--- modules
 use alloc::string::ToString;
-use dimas_core::value::Value;
 
 use crate::{
 	Parser,
@@ -12,10 +12,11 @@ use crate::{
 		error::Error,
 		token::{Token, TokenKind},
 	},
-	execution::{Chunk, op_code::OpCode},
+	execution::{Chunk, ScriptingValue, op_code::OpCode},
 };
 
 use super::PrefixParselet;
+// endregion:  	--- modules
 
 pub struct ValueParselet;
 
@@ -30,7 +31,7 @@ impl PrefixParselet for ValueParselet {
 					}
 				};
 
-				let offset = chunk.add_constant(Value::Float64(double))?;
+				let offset = chunk.add_constant(ScriptingValue::Float64(double))?;
 				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}
@@ -40,7 +41,7 @@ impl PrefixParselet for ValueParselet {
 				let Ok(value) = i64::from_str_radix(literal, 16) else {
 					return Err(Error::ParseHex(literal.to_string(), token.line));
 				};
-				let offset = chunk.add_constant(Value::Int64(value))?;
+				let offset = chunk.add_constant(ScriptingValue::Int64(value))?;
 				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}
@@ -48,12 +49,12 @@ impl PrefixParselet for ValueParselet {
 				let Ok(value) = token.origin.parse::<i64>() else {
 					return Err(Error::ParseInt(token.origin, token.line));
 				};
-				let offset = chunk.add_constant(Value::Int64(value))?;
+				let offset = chunk.add_constant(ScriptingValue::Int64(value))?;
 				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}
 			TokenKind::String => {
-				let offset = chunk.add_constant(Value::String(token.origin))?;
+				let offset = chunk.add_constant(ScriptingValue::String(token.origin))?;
 				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
 				Ok(())
 			}

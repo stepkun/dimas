@@ -6,13 +6,13 @@
 #[cfg(feature = "std")]
 extern crate std;
 
+// region:      --- modules
 use alloc::{borrow::ToOwned, vec::Vec};
-use dimas_core::value::Value;
 
 use crate::execution::op_code::OpCode;
-//use crate::execution::scripting_value::ScriptingValue;
 
-use super::Error;
+use super::{Error, ScriptingValue};
+// endregion:   --- modules
 
 /// A chunk of bytecode
 #[derive(Default)]
@@ -22,7 +22,7 @@ pub struct Chunk {
 	/// corresponding storage for the line number
 	lines: Vec<usize>,
 	/// storage for Values
-	values: Vec<Value>,
+	values: Vec<ScriptingValue>,
 }
 
 impl Chunk {
@@ -53,7 +53,7 @@ impl Chunk {
 	/// Add a Value to the Value storage returning its position in the storage
 	/// # Errors
 	#[allow(clippy::cast_possible_truncation)]
-	pub fn add_constant(&mut self, value: Value) -> Result<u8, Error> {
+	pub fn add_constant(&mut self, value: ScriptingValue) -> Result<u8, Error> {
 		if self.values.len() < u8::MAX as usize {
 			self.values.push(value);
 			let pos = self.values.len() - 1;
@@ -84,10 +84,10 @@ impl Chunk {
 			&self.strings[pos]
 		}
 	*/
-	/// Read a [`Value`] from the [`Value`] storage
+	/// Read a [`ScriptingValue`] from the [`ScriptingValue`] storage
 	#[allow(clippy::redundant_closure_for_method_calls)]
 	#[must_use]
-	pub fn read_constant(&self, pos: u8) -> Value {
+	pub fn read_constant(&self, pos: u8) -> ScriptingValue {
 		let offset = usize::from(pos);
 		self.values
 			.get(offset)
@@ -159,11 +159,11 @@ impl Chunk {
 			Some(pos) => {
 				let value = self.read_constant(pos.to_owned());
 				match value {
-					Value::Nil() => std::println!("{name:16} {pos:3} 'NIL'"),
-					Value::Boolean(b) => std::println!("{name:16} {pos:3} {b}"),
-					Value::Float64(f) => std::println!("{name:16} {pos:3} {f}"),
-					Value::Int64(i) => std::println!("{name:16} {pos:3} {i}"),
-					Value::String(s) => std::println!("{name:16} {pos:3} {s}"),
+					ScriptingValue::Nil() => std::println!("{name:16} {pos:3} 'NIL'"),
+					ScriptingValue::Boolean(b) => std::println!("{name:16} {pos:3} {b}"),
+					ScriptingValue::Float64(f) => std::println!("{name:16} {pos:3} {f}"),
+					ScriptingValue::Int64(i) => std::println!("{name:16} {pos:3} {i}"),
+					ScriptingValue::String(s) => std::println!("{name:16} {pos:3} {s}"),
 				}
 			}
 			None => todo!(),

@@ -41,52 +41,53 @@ extern crate alloc;
 pub mod compiling;
 pub mod execution;
 
+// region:		--- modules
 use alloc::string::{String, ToString};
 // flatten
 pub use compiling::{Lexer, Parser, TokenKind};
-use dimas_core::value::Value;
 pub use execution::VM;
 
-use execution::Error;
+use execution::{Error, ScriptingValue};
 use hashbrown::HashMap;
 use parking_lot::RwLock;
+// endregion:	--- modules
 
 /// The trait for providing an [`Environment`] to a [`VM`] that stores variables persistently and externally available.
 pub trait Environment: Send + Sync {
 	/// Define the variable with `name` to `value`.
 	/// It has to be created if it does not already exist.
-	fn define_env(&self, name: &str, value: Value);
+	fn define_env(&self, name: &str, value: ScriptingValue);
 	/// Get a variable by name
 	/// # Errors
 	/// if the variable does not exist
-	fn get_env(&self, name: &str) -> Result<Value, Error>;
+	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error>;
 	/// Set the variable with `name` to `value`.
 	/// # Errors
 	/// if variable does not exist.
-	fn set_env(&self, name: &str, value: Value) -> Result<(), Error>;
+	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error>;
 }
 
 /// A very simple default Environment for testing purpose and the REPL
 #[derive(Default)]
 pub struct DefaultEnvironment {
-	storage: RwLock<HashMap<String, Value>>,
+	storage: RwLock<HashMap<String, ScriptingValue>>,
 }
 
 impl Environment for DefaultEnvironment {
-	fn define_env(&self, name: &str, value: Value) {
+	fn define_env(&self, name: &str, value: ScriptingValue) {
 		self.storage
 			.write()
 			.insert(name.to_string(), value);
 	}
 
-	fn get_env(&self, name: &str) -> Result<Value, Error> {
+	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {
 		self.storage.read().get(name).map_or_else(
 			|| Err(Error::GlobalNotDefined(name.to_string())),
 			|value| Ok(value.clone()),
 		)
 	}
 
-	fn set_env(&self, name: &str, value: Value) -> Result<(), Error> {
+	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
 		if self.storage.read().contains_key(name) {
 			self.storage
 				.write()
