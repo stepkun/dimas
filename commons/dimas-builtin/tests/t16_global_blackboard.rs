@@ -57,7 +57,7 @@ struct PrintNumber {}
 #[behavior(SyncAction)]
 impl PrintNumber {
 	async fn tick(&mut self) -> BehaviorResult {
-		let value: i64 = bhvr_.config_mut().get_input("val")?;
+		let value: i32 = bhvr_.config_mut().get_input("val")?;
 		println!("PrintNumber [{}] has val: {value}", bhvr_.name());
 
 		Ok(BehaviorStatus::Success)
@@ -87,7 +87,7 @@ async fn global_blackboard() -> anyhow::Result<()> {
 	//dbg!(&tree);
 
 	// direct interaction with the global blackboard
-	for value in 1..=3 {
+	for value in 1..=3_i32 {
 		global_blackboard.set("value", value);
 		let result = tree.tick_once().await?;
 		assert_eq!(result, BehaviorStatus::Success);
@@ -102,9 +102,10 @@ async fn global_blackboard() -> anyhow::Result<()> {
 			.get::<i64>("@value_pow4")
 			.ok_or_else(|| Error::PortError("value_pow3".into()))?;
 
-		assert_eq!(value_sqr, value * value);
-		assert_eq!(value_pow3, value * value * value);
-		assert_eq!(value_pow4, value * value * value * value);
+		let val = i64::from(value);
+		assert_eq!(value_sqr, val * val);
+		assert_eq!(value_pow3, val * val * val);
+		assert_eq!(value_pow4, val * val * val * val);
 	}
 
 	Ok(())

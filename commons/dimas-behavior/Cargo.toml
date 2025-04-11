@@ -34,7 +34,6 @@ workspace = true
 dimas-core = { workspace = true }
 dimas-macros = { workspace = true }
 dimas-scripting = { workspace = true }
-evalexpr = { workspace = true }
 futures = { workspace = true }
 hashbrown = { workspace = true }
 parking_lot = { workspace = true }

@@ -129,9 +129,6 @@ pub struct Port {
 	r#type: PortDirection,
 	description: String,
 	default_value: Option<String>,
-	/// When `true`, should parse the port value as an expression when loading
-	/// the tree to validate syntax.
-	parse_expr: bool,
 }
 
 impl Port {
@@ -142,7 +139,6 @@ impl Port {
 			r#type: direction,
 			description: String::new(),
 			default_value: None,
-			parse_expr: false,
 		}
 	}
 
@@ -169,12 +165,6 @@ impl Port {
 	}
 
 	/// @TODO:
-	#[must_use]
-	pub const fn parse_expr(&self) -> bool {
-		self.parse_expr
-	}
-
-	/// @TODO:
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn set_default(&mut self, default: impl ToString) {
 		self.default_value = Some(default.to_string());
@@ -183,11 +173,6 @@ impl Port {
 	/// @TODO:
 	pub fn set_description(&mut self, description: String) {
 		self.description = description;
-	}
-
-	/// @TODO:
-	pub const fn set_expr(&mut self, parse_expr: bool) {
-		self.parse_expr = parse_expr;
 	}
 }
 // endregion:   --- Port

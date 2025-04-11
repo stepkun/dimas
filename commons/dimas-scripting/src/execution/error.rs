@@ -13,16 +13,22 @@ use thiserror::Error;
 pub enum Error {
 	/// Pass through core error.
 	#[error("{0}")]
-	VM(#[from] dimas_core::error::Error),
+	Core(#[from] dimas_core::error::Error),
 	/// @TODO:
 	#[error("Boolean values do not allow arithmetic operations")]
 	BoolNoArithmetic,
+	/// @TODO:
+	#[error("The Variable[{0}] exceeds type limits")]
+	GlobalExceedsLimits(String),
 	/// @TODO:
 	#[error("The Variable[{0}] has an unknown type")]
 	GlobalHasUnknownType(String),
 	/// @TODO:
 	#[error("The Variable[{0}] has not been defined")]
 	GlobalNotDefined(String),
+	/// @TODO:
+	#[error("The Variable[{0}] has a wrong type")]
+	GlobalWrongType(String),
 	/// @TODO:
 	#[error("Value is 'Nil' which does not allow any operation")]
 	NilValue,
@@ -54,6 +60,9 @@ pub enum Error {
 	#[error("unknown Operation Code")]
 	UnknownOpCode,
 
+	/// @TODO:
+	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
+	Unexpected(String, String, u32),
 	/// @TODO:
 	#[error("this should be unreachable in vm.rs line {0}")]
 	Unreachable(u32),

@@ -261,13 +261,13 @@ impl VM {
 		}
 	}
 
-	fn define_global(&mut self, chunk: &Chunk, globals: &dyn Environment) {
+	fn define_global(&mut self, chunk: &Chunk, globals: &dyn Environment) -> Result<(), Error> {
 		let pos = chunk.code()[self.ip];
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		let value_val = self.pop();
 		//let name = chunk.get_string(name_val.as_string_pos()?);
-		globals.define_env(&name_val.to_string(), value_val);
+		globals.define_env(&name_val.to_string(), value_val)
 	}
 
 	fn get_global(&mut self, chunk: &Chunk, globals: &dyn Environment) -> Result<(), Error> {
@@ -318,7 +318,7 @@ impl VM {
 				}
 				OpCode::BitwiseNot => self.bitwise_not()?,
 				OpCode::Constant => self.constant(chunk)?,
-				OpCode::DefineExternal => self.define_global(chunk, globals),
+				OpCode::DefineExternal => self.define_global(chunk, globals)?,
 				OpCode::Equal => self.equal()?,
 				OpCode::False => self.push(ScriptingValue::Boolean(false))?,
 				OpCode::GetExternal => self.get_global(chunk, globals)?,

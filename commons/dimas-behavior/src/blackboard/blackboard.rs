@@ -10,7 +10,7 @@ use alloc::{
 	sync::Arc,
 };
 use core::{
-	any::Any,
+	any::{Any, TypeId},
 	ops::{Deref, DerefMut},
 	str::FromStr,
 };
@@ -39,46 +39,10 @@ pub struct Blackboard {
 extern crate std;
 
 impl Environment for Blackboard {
-	fn define_env(&self, name: &str, value: ScriptingValue) {
-		match value {
-			ScriptingValue::Nil() => todo!(),
-			ScriptingValue::Boolean(b) => self.set(name, b),
-			ScriptingValue::Float64(f) => self.set(name, f),
-			ScriptingValue::Int64(i) => self.set(name, i),
-			ScriptingValue::String(s) => self.set(name, s),
-		}
-	}
-
-	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {
-		self.get_entry(name).map_or_else(
-			|| Err(Error::GlobalNotDefined(name.to_string())),
-			|entry| {
-				let entry = &(*entry.lock());
-				entry.downcast_ref::<String>().map_or_else(
-					|| {
-						entry.downcast_ref::<f64>().map_or_else(
-							|| {
-								entry.downcast_ref::<i64>().map_or_else(
-									|| {
-										entry.downcast_ref::<bool>().map_or_else(
-											|| Err(Error::GlobalHasUnknownType(name.to_string())),
-											|b| Ok(ScriptingValue::Boolean(b.to_owned())),
-										)
-									},
-									|i| Ok(ScriptingValue::Int64(i.to_owned())),
-								)
-							},
-							|f| Ok(ScriptingValue::Float64(f.to_owned())),
-						)
-					},
-					|s| Ok(ScriptingValue::String(s.to_owned())),
-				)
-			},
-		)
-	}
-
-	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
-		if self.get_entry(name).is_some() {
+	fn define_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
+		if self.has_entry(name) {
+			self.set_env(name, value)
+		} else {
 			match value {
 				ScriptingValue::Nil() => todo!(),
 				ScriptingValue::Boolean(b) => self.set(name, b),
@@ -87,9 +51,128 @@ impl Environment for Blackboard {
 				ScriptingValue::String(s) => self.set(name, s),
 			}
 			Ok(())
-		} else {
-			Err(Error::GlobalNotDefined(name.to_string()))
 		}
+	}
+
+	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {
+		self.get_entry(name).map_or_else(
+			|| Err(Error::GlobalNotDefined(name.to_string())),
+			|entry| {
+				let entry = &*(entry.lock());
+				let type_id = (*(entry.0)).type_id();
+				if type_id == TypeId::of::<String>() {
+					let s = entry.downcast_ref::<String>().expect("snh");
+					Ok(ScriptingValue::String(s.to_owned()))
+				} else if type_id == TypeId::of::<f64>() {
+					let f = entry.downcast_ref::<f64>().expect("snh");
+					Ok(ScriptingValue::Float64(f.to_owned()))
+				} else if type_id == TypeId::of::<f32>() {
+					let f = entry.downcast_ref::<f32>().expect("snh");
+					Ok(ScriptingValue::Float64(f64::from(f.to_owned())))
+				} else if type_id == TypeId::of::<i64>() {
+					let i = entry.downcast_ref::<i64>().expect("snh");
+					Ok(ScriptingValue::Int64(i.to_owned()))
+				} else if type_id == TypeId::of::<i32>() {
+					let i = entry.downcast_ref::<i32>().expect("snh");
+					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
+				} else if type_id == TypeId::of::<u32>() {
+					let i = entry.downcast_ref::<u32>().expect("snh");
+					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
+				} else if type_id == TypeId::of::<i16>() {
+					let i = entry.downcast_ref::<i16>().expect("snh");
+					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
+				} else if type_id == TypeId::of::<u16>() {
+					let i = entry.downcast_ref::<u16>().expect("snh");
+					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
+				} else if type_id == TypeId::of::<u8>() {
+					let i = entry.downcast_ref::<u8>().expect("snh");
+					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
+				} else if type_id == TypeId::of::<i8>() {
+					let i = entry.downcast_ref::<i8>().expect("snh");
+					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
+				} else {
+					Err(Error::GlobalHasUnknownType(name.to_string()))
+				}
+			},
+		)
+	}
+
+	#[allow(clippy::cast_possible_truncation)]
+	#[allow(clippy::cast_sign_loss)]
+	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
+		let entry_type_id = if let Some(entry) = self.get_entry(name) {
+			let inner_entry = &*(entry.lock());
+			(*(inner_entry.0)).type_id()
+		} else {
+			return Err(Error::GlobalNotDefined(name.to_string()));
+		};
+		match value {
+			ScriptingValue::Nil() => todo!(),
+			ScriptingValue::Boolean(b) => {
+				if TypeId::of::<bool>() == entry_type_id {
+					self.set(name, b);
+				} else {
+					return Err(Error::GlobalWrongType(name.to_string()));
+				}
+			}
+			ScriptingValue::Float64(f) => {
+				if TypeId::of::<f64>() == entry_type_id {
+					self.set(name, f);
+				} else if TypeId::of::<f32>() == entry_type_id {
+					if f > f64::from(f32::MAX) || f < f64::from(f32::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, f as f32);
+				} else {
+					return Err(Error::GlobalWrongType(name.to_string()));
+				}
+			}
+			ScriptingValue::Int64(i) => {
+				if TypeId::of::<i64>() == entry_type_id {
+					self.set(name, i);
+				} else if TypeId::of::<i32>() == entry_type_id {
+					if i > i64::from(i32::MAX) || i < i64::from(i32::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, i as i32);
+				} else if TypeId::of::<u32>() == entry_type_id {
+					if i > i64::from(u32::MAX) || i < i64::from(u32::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, i as u32);
+				} else if TypeId::of::<i16>() == entry_type_id {
+					if i > i64::from(i16::MAX) || i < i64::from(i16::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, i as i16);
+				} else if TypeId::of::<u16>() == entry_type_id {
+					if i > i64::from(u16::MAX) || i < i64::from(u16::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, i as u16);
+				} else if TypeId::of::<i8>() == entry_type_id {
+					if i > i64::from(i8::MAX) || i < i64::from(i8::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, i as i8);
+				} else if TypeId::of::<u8>() == entry_type_id {
+					if i > i64::from(u8::MAX) || i < i64::from(u8::MIN) {
+						return Err(Error::GlobalExceedsLimits(name.to_string()));
+					}
+					self.set(name, i as u8);
+				} else {
+					return Err(Error::GlobalWrongType(name.to_string()));
+				}
+			}
+			ScriptingValue::String(s) => {
+				if TypeId::of::<String>() == entry_type_id {
+					self.set(name, s);
+				} else {
+					return Err(Error::GlobalWrongType(name.to_string()));
+				}
+			}
+		}
+		Ok(())
 	}
 }
 
@@ -213,6 +296,16 @@ impl Blackboard {
 				.storage
 				.insert(key.to_string(), Arc::clone(&entry));
 		}
+	}
+
+	/// Check whether an Entry existss
+	fn has_entry<'a>(&'a self, key: &'a str) -> bool {
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = key.strip_prefix('@') {
+			return self.root().has_entry(key_stripped);
+		}
+
+		self.data.read().storage.contains_key(key)
 	}
 
 	/// Get an Rc to the Entry

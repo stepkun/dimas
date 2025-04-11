@@ -56,7 +56,9 @@ use parking_lot::RwLock;
 pub trait Environment: Send + Sync {
 	/// Define the variable with `name` to `value`.
 	/// It has to be created if it does not already exist.
-	fn define_env(&self, name: &str, value: ScriptingValue);
+	/// # Errors
+	/// if the Variable exists with a different type
+	fn define_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error>;
 	/// Get a variable by name
 	/// # Errors
 	/// if the variable does not exist
@@ -74,10 +76,11 @@ pub struct DefaultEnvironment {
 }
 
 impl Environment for DefaultEnvironment {
-	fn define_env(&self, name: &str, value: ScriptingValue) {
+	fn define_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
 		self.storage
 			.write()
 			.insert(name.to_string(), value);
+		Ok(())
 	}
 
 	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {

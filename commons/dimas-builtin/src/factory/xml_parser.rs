@@ -83,36 +83,6 @@ impl XmlParser {
 			if remap_name == "name" {
 				data.set_name(remap_val);
 			} else if let Some(port) = manifest.port_list().get(&remap_name) {
-				// Validate that any expr-enabled ports contain valid expressions,
-				// and the provided types for blackboard pointers are one of the valid ones
-				if port.parse_expr() {
-					let expr =
-						evalexpr::build_operator_tree::<evalexpr::DefaultNumericTypes>(&remap_val)?;
-
-					for key in expr.iter_variable_identifiers() {
-						// Check if it's a blackboard pointer
-						if key.starts_with('{') && key.ends_with('}') {
-							// Remove the brackets
-							let inner_key = &key[1..(key.len() - 1)];
-							// Split the type from the name
-							let (name, var_type) = inner_key.split_once(':').ok_or_else(|| {
-								Error::PortExpressionMissingType(inner_key.to_owned())
-							})?;
-
-							// Check if the type is supported
-							match var_type {
-								"int" | "float" | "str" | "bool" => (),
-								_ => {
-									return Err(Error::PortExpressionInvalidType(
-										var_type.to_owned(),
-										name.to_owned(),
-									));
-								}
-							}
-						}
-					}
-				}
-
 				data.config_mut()
 					.add_port(port.direction(), remap_name, remap_val);
 			}

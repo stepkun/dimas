@@ -12,7 +12,6 @@ use alloc::{
 	string::{FromUtf8Error, String},
 	vec::Vec,
 };
-use evalexpr::{DefaultNumericTypes, EvalexprError};
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -79,10 +78,6 @@ pub enum Error {
 	/// @TODO:
 	#[error("{0}")]
 	ParseBool(#[from] ParseBoolError),
-
-	/// @TODO:
-	#[error("Error parsing expression in port value: {0}")]
-	PortExpressionInvalid(#[from] EvalexprError<DefaultNumericTypes>),
 
 	/// @TODO:
 	#[error("invalid type [{0}] for variable [{1}]")]
