@@ -734,6 +734,7 @@ impl BehaviorManifest {
 /// Behavior status
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
 pub enum BehaviorStatus {
 	/// Behavior execution failed.
 	Failure,
@@ -794,6 +795,7 @@ impl Display for BehaviorStatus {
 /// Behavior type
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
 pub enum BehaviorType {
 	/// `Action`
 	Action,

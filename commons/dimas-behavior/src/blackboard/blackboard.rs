@@ -2,6 +2,10 @@
 
 //! Blackboard of `DiMAS`
 
+#[doc(hidden)]
+#[cfg(feature = "std")]
+extern crate std;
+
 // region:      --- modules
 use alloc::{
 	borrow::ToOwned,
@@ -30,13 +34,24 @@ type EntryPtr = Arc<Mutex<Entry>>;
 
 // region:      --- Blackboard
 /// @TODO:
-#[derive(Debug, Default, Clone)]
+#[derive(Default, Clone)]
 pub struct Blackboard {
 	data: Arc<RwLock<BlackboardData>>,
 	parent: Option<Box<Blackboard>>,
 }
 
-extern crate std;
+impl core::fmt::Debug for Blackboard {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		let parent = if self.parent.is_some() {
+			"Some"
+		} else {
+			"None"
+		};
+		write!(f, "parent: {parent:?}")?;
+		write!(f, "; data: [{:?}]", &self.data.read())?;
+		Ok(())
+	}
+}
 
 impl Environment for Blackboard {
 	fn define_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
@@ -409,18 +424,38 @@ impl Blackboard {
 
 // region:      --- BlackboardData
 /// @TODO:
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct BlackboardData {
 	storage: HashMap<String, Arc<Mutex<Entry>>>,
 	internal_to_external: HashMap<String, String>,
 	auto_remapping: bool,
 }
+
+impl core::fmt::Debug for BlackboardData {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		let mut semicolon = false;
+		for (key, value) in &self.storage {
+			if semicolon {
+				write!(f, "; ")?;
+			}
+			write!(f, "'{key}'='{:?}'", value.lock())?;
+			semicolon = true;
+		}
+		Ok(())
+	}
+}
 // endregion:   --- BlackboardData
 
 // region:      --- Entry
 /// @TODO:
-#[derive(Debug)]
 pub struct Entry(Box<dyn Any + Send>);
+
+impl core::fmt::Debug for Entry {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		write!(f, "{:?}", self.0.downcast_ref::<String>())?;
+		Ok(())
+	}
+}
 
 impl Deref for Entry {
 	type Target = Box<dyn Any + Send>;

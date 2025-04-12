@@ -73,7 +73,7 @@ dimas-scripting = { path = "commons/dimas-scripting" }
 dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.5.0"
 anyhow = "1.0.97"
-clap = "4.5.35"
+clap = "4.5.36"
 criterion = { version = "0.5.1", features = ["async_tokio"] }
 doc-comment = "0.3.3"
 futures = "0.3.31"
