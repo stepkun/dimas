@@ -6,9 +6,16 @@
 #[doc(hidden)]
 extern crate alloc;
 
+// #[doc(hidden)]
+// #[cfg(feature = "std")]
+// extern crate std;
+
 // modules
 pub mod behavior;
 pub mod blackboard;
+pub mod factory;
+pub mod new_behavior;
 pub mod port;
+pub mod tree;
 
 // flatten:

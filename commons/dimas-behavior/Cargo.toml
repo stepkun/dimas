@@ -45,7 +45,10 @@ tracing-subscriber = { workspace = true }
 [build-dependencies]
 
 [dev-dependencies]
-# criterion = "0.5.1"
+anyhow = { workspace = true }
+#criterion = { workspace = true }
+#rand = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "time"] }
 
 [features]
 default = ["std"]

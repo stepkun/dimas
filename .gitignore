@@ -28,3 +28,6 @@ cargo-timing*.html
 
 # Rust files in root dir
 /*.rs
+
+# XML files in root dir
+/*.xml

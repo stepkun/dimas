@@ -14,6 +14,8 @@ description = "dimasctl - a cli for DiMAS"
 documentation = "https://docs.rs/dimasctl/latest/dimasctl/"
 readme = "README.md"
 exclude = [
+    "benches/**",
+    "examples/**",
     "tests/**",
 ]
 
