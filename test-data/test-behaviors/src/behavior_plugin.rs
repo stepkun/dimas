@@ -1,0 +1,59 @@
+// Copyright © 2025 Stephan Kunz
+#![allow(unused)]
+
+//! A library with test behaviors
+
+use alloc::sync::Arc;
+use dimas_behavior::{
+	factory::BehaviorRegistry,
+	new_behavior::{BehaviorCreation, NewBehaviorType, SimpleBehavior},
+};
+
+use crate::test_nodes::{
+	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
+};
+
+/// Registration function for all external symbols
+#[allow(unsafe_code)]
+#[unsafe(no_mangle)]
+extern "Rust" fn register(registry: &mut BehaviorRegistry) -> u32 {
+	registry.register_behavior(
+		"CheckBattery",
+		SimpleBehavior::create(Arc::new(check_battery)),
+		NewBehaviorType::Condition,
+	);
+
+	registry.register_behavior(
+		"ApproachObject",
+		ApproachObject::create(),
+		NewBehaviorType::Action,
+	);
+
+	let gripper1 = Arc::new(GripperInterface::default());
+	let gripper2 = gripper1.clone();
+	registry.register_behavior(
+		"OpenGripper",
+		SimpleBehavior::create(Arc::new(move || gripper1.open())),
+		NewBehaviorType::Action,
+	);
+
+	registry.register_behavior(
+		"CloseGripper",
+		SimpleBehavior::create(Arc::new(move || gripper2.close())),
+		NewBehaviorType::Action,
+	);
+
+	registry.register_behavior(
+		"SaySomething",
+		SaySomething::create(),
+		NewBehaviorType::Action,
+	);
+
+	registry.register_behavior(
+		"ThinkWhatToSay",
+		ThinkWhatToSay::create(),
+		NewBehaviorType::Action,
+	);
+	// A return value of 0 signals success
+	0
+}

@@ -9,6 +9,7 @@ extern crate alloc;
 
 // region		--- modules
 use alloc::{
+	boxed::Box,
 	string::{FromUtf8Error, String},
 	vec::Vec,
 };
@@ -25,12 +26,21 @@ pub enum Error {
 	/// A wron BTCPP version is given
 	#[error("'BTCPP_format' must be '4'")]
 	BtCppFormat,
-	/// Unsupported XML element:
+	/// Children are not allowed for some types of behaviors
+	#[error("children are not allowed for behavior category [{0}]")]
+	ChildrenNotAllowed(String),
+	/// Passthrough for libloading Errors
+	#[error("{0}")]
+	Libloading(#[from] libloading::Error),
+	/// Decorator with more than 1 child
 	#[error("the Decorator [{0}] has more than 1 child")]
 	DecoratorOnlyOneChild(String),
 	/// Unsupported XML element:
 	#[error("element [{0}] is not supported")]
 	ElementNotSupported(String),
+	/// Loading a library failed
+	#[error("registering library [{0}] failed with [{0}]")]
+	RegisterLib(String, u32),
 	/// Attribut 'ID' is missing
 	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(String),

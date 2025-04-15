@@ -20,7 +20,6 @@ pub use simple_behavior::{BhvrTickFn, SimpleBehavior};
 use alloc::{
 	boxed::Box,
 	string::{String, ToString},
-	vec::Vec,
 };
 use error::NewBehaviorError;
 
@@ -48,31 +47,19 @@ pub trait BehaviorMethods: core::fmt::Debug + Send + Sync {
 	/// Method called to start ticking a [`Behavior`].
 	/// Defaults to calling `self.tick(...)`
 	/// # Errors
-	fn start(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult {
-		self.tick(tick_data, children)
+	fn start(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		self.tick(tree_node)
 	}
 
 	/// Method called to tick a [`Behavior`].
 	/// # Errors
-	fn tick(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult;
+	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult;
 
 	/// Method called to stop/cancel/halt a [`Behavior`].
 	/// Default implementation just returns [`BehaviorStatus::Idle`]
 	/// # Errors
 	#[allow(unused_variables)]
-	fn halt(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult {
+	fn halt(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		Ok(NewBehaviorStatus::Idle)
 	}
 }

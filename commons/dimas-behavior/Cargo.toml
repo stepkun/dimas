@@ -23,9 +23,9 @@ exclude = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [[bench]]
-# name = "equality"
-# harness = false
+[[bench]]
+name = "sequence"
+harness = false
 
 [lints]
 workspace = true
@@ -36,6 +36,7 @@ dimas-macros = { workspace = true }
 dimas-scripting = { workspace = true }
 futures = { workspace = true }
 hashbrown = { workspace = true }
+libloading = { workspace = true }
 parking_lot = { workspace = true }
 roxmltree = { workspace = true }
 thiserror = { workspace = true }
@@ -45,8 +46,9 @@ tracing-subscriber = { workspace = true }
 [build-dependencies]
 
 [dev-dependencies]
+test-behaviors = { path = "../../test-data/test-behaviors" }
 anyhow = { workspace = true }
-#criterion = { workspace = true }
+criterion = { workspace = true }
 #rand = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "time"] }
 

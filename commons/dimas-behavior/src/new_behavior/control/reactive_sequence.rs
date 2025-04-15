@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-//! `Sequence` behavior implementation
+//! `ReactiveSequence` behavior implementation
 //!
 
 // region:      --- modules
@@ -18,35 +18,35 @@ use crate::{
 };
 // endregeion:  --- modules
 
-// region:      --- Sequence
-/// A `Sequence` ticks its children in an ordered sequence from first to last.
+// region:      --- ReactiveSequence
+/// A `ReactiveSequence` ticks its children in an ordered sequence from first to last.
 /// - If any child returns [`BehaviorStatus::Failure`] the sequence returns [`BehaviorStatus::Failure`].
 /// - If all children return [`BehaviorStatus::Success`] the sequence returns [`BehaviorStatus::Success`].
 /// - While any child returns [`BehaviorStatus::Running`] the sequence returns [`BehaviorStatus::Running`].
 ///
-/// While running, the loop is not restarted, first the running child will be ticked again.
-/// If that tick succeeds the sequence continues, children that already succeeded will not be ticked again.
+/// If all the children return SUCCESS, this node returns SUCCESS.
+///
+/// IMPORTANT: to work properly, this node should not have more than a single
+///            asynchronous child.
 #[derive(Debug)]
-pub struct Sequence;
+pub struct ReactiveSequence;
 
-impl BehaviorMethods for Sequence {
+impl BehaviorMethods for ReactiveSequence {
 	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		let mut all_skipped = true;
 		let mut failure = false;
-		let mut tick_data = tree_node.tick_data.lock();
 
-		if tick_data.status == NewBehaviorStatus::Idle {
-			tick_data.all_skipped = true;
-		}
+		let mut tick_data = tree_node.tick_data.lock();
 
 		tick_data.status = NewBehaviorStatus::Running;
 
-		let children = tree_node.children.lock();
-		while tick_data.child_idx < children.len() {
-			let child = &children[tick_data.child_idx];
+		let mut children = tree_node.children.lock();
+		for counter in 0..children.len() {
+			let mut child = &children[counter];
 			let prev_status = child.status();
 			let new_status = child.execute_tick()?;
 
-			tick_data.all_skipped &= new_status == NewBehaviorStatus::Skipped;
+			all_skipped &= new_status == NewBehaviorStatus::Skipped;
 
 			match new_status {
 				NewBehaviorStatus::Failure => {
@@ -55,34 +55,32 @@ impl BehaviorMethods for Sequence {
 				}
 				NewBehaviorStatus::Idle => {
 					return Err(NewBehaviorError::Status(
-						"Sequence".to_string(),
+						"ReactiveSequence".to_string(),
 						"Idle".to_string(),
 					));
 				}
 				NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
-				NewBehaviorStatus::Skipped | NewBehaviorStatus::Success => {
-					tick_data.child_idx += 1;
-				}
-			}
-		};
-		drop(children);
-
-		// All children returned Success or Failure
-		if failure || tick_data.child_idx == tree_node.children.lock().len() {
-			// Reset children
-			tree_node.reset_children()?;
-			tick_data.child_idx = 0;
+				NewBehaviorStatus::Skipped => { child.execute_halt()?; },
+				NewBehaviorStatus::Success => { continue; }
+			};
 		}
+		drop(children);
 		drop(tick_data);
+
+		// Reset children on failure
+		tree_node.reset_children()?;
+
 		if failure {
 			Ok(NewBehaviorStatus::Failure)
+		} else if all_skipped {
+			Ok(NewBehaviorStatus::Skipped)
 		} else {
 			Ok(NewBehaviorStatus::Success)
 		}
 	}
 }
 
-impl BehaviorCreation for Sequence {
+impl BehaviorCreation for ReactiveSequence {
 	fn create() -> Box<BehaviorCreationFn> {
 		Box::new(|| Box::new(Self {}))
 	}

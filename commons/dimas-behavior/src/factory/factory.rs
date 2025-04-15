@@ -5,9 +5,13 @@
 //! Factory for creation and modification of [`BehaviorTree`]s
 //!
 
-use alloc::boxed::Box;
-use hashbrown::HashMap;
+#[doc(hidden)]
+#[cfg(feature = "std")]
+extern crate std;
+
 // region:      --- modules
+use alloc::{boxed::Box, string::String};
+use hashbrown::HashMap;
 use roxmltree::Document;
 
 use crate::{
@@ -15,7 +19,11 @@ use crate::{
 	factory::xml_parser::XmlParser,
 	new_behavior::{
 		BehaviorCreation, BehaviorMethods, BehaviorResult, BhvrTickFn, NewBehaviorType,
-		SimpleBehavior, control::sequence::Sequence,
+		SimpleBehavior,
+		control::{
+			reactive_sequence::ReactiveSequence, sequence::Sequence,
+			sequence_with_memory::SequenceWithMemory,
+		},
 	},
 	tree::BehaviorTree,
 };
@@ -25,25 +33,28 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 
 // region:      --- BehaviorTreeFactory
 /// Factory for creation and modification of [`BehaviorTree`]s
+#[derive(Default)]
 pub struct NewBehaviorTreeFactory {
 	blackboard: Blackboard,
 	registry: BehaviorRegistry,
 }
 
-impl core::default::Default for NewBehaviorTreeFactory {
-	fn default() -> Self {
-		let mut registry = BehaviorRegistry::default();
-		// register core behaviors
-		let bhvr_creation_fn = Sequence::create();
-		registry.insert("Sequence", bhvr_creation_fn, NewBehaviorType::Control);
-		Self {
-			blackboard: Blackboard::default(),
-			registry,
-		}
-	}
-}
-
 impl NewBehaviorTreeFactory {
+	/// Creat a factory with registered core behaviors
+	#[must_use]
+	pub fn with_core_behaviors() -> Self {
+		let mut factory = Self::default();
+		factory.core_behaviors();
+		factory
+	}
+
+	/// register core behaviors
+	pub fn core_behaviors(&mut self) {
+		self.register_node_type::<ReactiveSequence>("ReactiveSequence");
+		self.register_node_type::<Sequence>("Sequence");
+		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory");
+	}
+
 	/// Create a [`BehaviorTree`] from XML
 	/// # Errors
 	/// - if XML is not well formatted
@@ -71,9 +82,26 @@ impl NewBehaviorTreeFactory {
 		Ok(tree)
 	}
 
+	/// Prints out the list of registered behaviors
+	#[cfg(feature = "std")]
+	pub fn list_behaviors(&self) {
+		self.registry.list_behaviors();
+	}
+
 	/// Register a behavior plugin.
-	pub fn register_from_plugin(&mut self) {
-		todo!()
+	/// # Errors
+	#[allow(unsafe_code)]
+	pub fn register_from_plugin(&mut self, name: &str) -> Result<(), Error> {
+		// @TODO: handle multiplattform and multipath
+		// for now the path is hardcoded
+		// /home/stephan/dbx/dimas-fw/dimas/target/debug/libtest_behaviors.so
+		//let libname = String::from("./") + name + ".so";
+		let libname = "/home/stephan/dbx/dimas-fw/dimas/target/debug/libtest_behaviors.so";
+		let lib = unsafe { libloading::Library::new(libname)? };
+
+		// The Library must be kept in storage until the [`BehaviorTree`] is destroyed.
+		// Therefore the library is handed over the behavior registry, which is later owned by tree.
+		self.registry.add_library(name, lib)
 	}
 
 	/// Register a [`Behavior`] of type <T>.
@@ -85,7 +113,7 @@ impl NewBehaviorTreeFactory {
 		let bhvr_creation_fn = T::create();
 		let bhvr_type = T::kind();
 		self.registry
-			.insert(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type);
 	}
 
 	/// Register a function as [`Action`].
@@ -93,7 +121,7 @@ impl NewBehaviorTreeFactory {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Action;
 		self.registry
-			.insert(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type);
 	}
 
 	/// Register a function as [`Condition`].
@@ -101,7 +129,7 @@ impl NewBehaviorTreeFactory {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Condition;
 		self.registry
-			.insert(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type);
 	}
 
 	/// Register a function as [`Decorator`].
@@ -109,7 +137,7 @@ impl NewBehaviorTreeFactory {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Decorator;
 		self.registry
-			.insert(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type);
 	}
 }
 // endregion:   --- BehaviorTreeFactory

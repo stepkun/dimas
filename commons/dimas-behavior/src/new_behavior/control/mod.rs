@@ -5,7 +5,9 @@
 //! Control behavior library
 //!
 
+pub mod reactive_sequence;
 pub mod sequence;
+pub mod sequence_with_memory;
 
 // region:      --- modules
 use crate::new_behavior::BehaviorMethods;

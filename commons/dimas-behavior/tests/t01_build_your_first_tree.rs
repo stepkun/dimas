@@ -5,12 +5,10 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t01_build_your_first_tree.cpp)
 //!
 
-mod test_nodes;
-
 use std::sync::Arc;
 
 use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
-use test_nodes::{ApproachObject, GripperInterface, check_battery};
+use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -28,7 +26,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn manual_creation() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::default();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
 
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities
@@ -62,13 +60,17 @@ async fn manual_creation() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ignore = "not yet implemented"]
+#[ignore = "registration from plugin destroys previous registrations"]
 async fn register_from_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::default();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
 
 	// Load a plugin and register the Behaviors it contains.
 	// This automates the registering step.
-	factory.register_from_plugin();
+	// std::println!("before registration");
+	// factory.list_behaviors();
+	factory.register_from_plugin("libtest_behaviors")?;
+	// std::println!("after registration");
+	// factory.list_behaviors();
 
 	let mut tree = factory.create_from_text(XML)?;
 

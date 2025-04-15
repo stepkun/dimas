@@ -19,10 +19,6 @@ pub enum Error {
 	#[error("{0}")]
 	Behavior(#[from] crate::new_behavior::error::NewBehaviorError),
 
-	/// The index of tree node is out of bounds
-	#[error("index [{0}] out of bounds")]
-	IndexOutOfBounds(usize),
-
 	/// The root of the tree s not properly created
 	#[error("tree root [{0}] not found")]
 	RootNotFound(String),

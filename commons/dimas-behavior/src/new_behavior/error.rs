@@ -15,10 +15,12 @@ use thiserror::Error;
 #[allow(clippy::module_name_repetitions)]
 #[derive(Error, Debug)]
 pub enum NewBehaviorError {
+	/// The index of a behavior is out of bounds
+	#[error("index [{0}] out of bounds")]
+	IndexOutOfBounds(usize),
 	/// The root of the tree is not properly created
 	#[error("tree root [{0}] not found")]
 	RootNotFound(String),
-
 	/// An illegal [`BehaviorStatus`] is reached
 	#[error("child node of [{0}] returned status [{1}] when not allowed")]
 	Status(String, String),

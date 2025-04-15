@@ -37,11 +37,7 @@ impl BehaviorCreation for ApproachObject {
 }
 
 impl BehaviorMethods for ApproachObject {
-	fn tick(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult {
+	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
 		Ok(NewBehaviorStatus::Success)
 	}
@@ -95,12 +91,11 @@ impl BehaviorMethods for SaySomething {
 	// 	define_ports!(input_port!("message", "hello"))
 	// }
 
-	fn tick(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult {
-		let msg = tick_data.get_input::<String>("message")?;
+	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		let msg = tree_node
+			.tick_data
+			.lock()
+			.get_input::<String>("message")?;
 		Ok(NewBehaviorStatus::Success)
 	}
 }
@@ -128,12 +123,11 @@ impl BehaviorMethods for ThinkWhatToSay {
 	// 	define_ports!(output_port!("text"))
 	// }
 
-	fn tick(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult {
-		tick_data.set_output("text", "The answer is 42.")?;
+	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		tree_node
+			.tick_data
+			.lock()
+			.set_output("text", "The answer is 42.")?;
 		Ok(NewBehaviorStatus::Success)
 	}
 }

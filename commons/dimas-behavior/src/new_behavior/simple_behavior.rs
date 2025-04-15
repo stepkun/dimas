@@ -33,11 +33,7 @@ impl core::fmt::Debug for SimpleBehavior {
 }
 
 impl BehaviorMethods for SimpleBehavior {
-	fn tick(
-		&mut self,
-		tick_data: &mut BehaviorTickData,
-		children: &mut Vec<BehaviorTreeComponent>,
-	) -> BehaviorResult {
+	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		(self.tick_fn)()
 	}
 }

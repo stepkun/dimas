@@ -9,8 +9,6 @@
 #[doc(hidden)]
 extern crate alloc;
 
-mod test_nodes;
-
 use std::sync::Arc;
 
 use dimas_behavior::{
@@ -18,7 +16,9 @@ use dimas_behavior::{
 	new_behavior::{BehaviorResult, NewBehaviorStatus},
 	port::PortList,
 };
-use test_nodes::{ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery};
+use test_behaviors::test_nodes::{
+	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
+};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -36,7 +36,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn basic_ports() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::default();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.
 	// In this case, it requires an input called "message"
@@ -44,16 +44,32 @@ async fn basic_ports() -> anyhow::Result<()> {
 
 	// Similarly to SaySomething, ThinkWhatToSay has an OUTPUT port called "text"
 	// Both these ports are of type `String`, therefore they can connect to each other
-	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSayg");
+	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay");
 
 	// SimpleActionNodes can not define their own method providedPorts(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
 	// let mut say_something_ports = PortList::from({ InputPort::<String>::new("message") });
 	// factory.register_simple_action("SaySomething2", SaySomethingSimple, say_something_ports);
+	factory.register_node_type::<SaySomething>("SaySomething2"); // @TODO: workaraound
 
 	let mut tree = factory.create_from_text(XML)?;
-	//dbg!(&tree);
+
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, NewBehaviorStatus::Success);
+	Ok(())
+}
+
+#[tokio::test]
+#[ignore = "registration from plugin destroys previous registrations"]
+async fn register_from_plugin() -> anyhow::Result<()> {
+	extern crate std;
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	factory.register_node_type::<SaySomething>("SaySomething2"); // @TODO: workaround
+
+	factory.register_from_plugin("libtest_behaviors");
+
+	let mut tree = factory.create_from_text(XML)?;
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, NewBehaviorStatus::Success);

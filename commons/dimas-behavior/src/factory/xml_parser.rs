@@ -88,7 +88,7 @@ impl XmlParser {
 		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
-		element: Node<'_, '_>,
+		element: Node,
 	) -> Result<Vec<BehaviorTreeComponent>, Error> {
 		let mut children = Vec::new();
 
@@ -115,6 +115,7 @@ impl XmlParser {
 			}
 		}
 
+		children.shrink_to_fit();
 		Ok(children)
 	}
 
@@ -126,6 +127,7 @@ impl XmlParser {
 		element: Node,
 	) -> Result<BehaviorTreeComponent, Error> {
 		let bhvr_name = element.tag_name().name();
+		let attributes = element.attributes();
 		if bhvr_name == "SubTree" {
 			if let Some(id) = element.attribute("ID") {
 				todo!()
@@ -136,20 +138,24 @@ impl XmlParser {
 			// look for the behavior in the [`BehaviorRegisty`]
 			let (bhvr_type, bhvr_creation_fn) = registry.find(bhvr_name)?;
 			let bhvr = bhvr_creation_fn();
-			let blackboard = blackboard.clone();
 			let tree_node = match bhvr_type {
 				NewBehaviorType::Action | NewBehaviorType::Condition => {
+					if element.has_children() {
+						return Err(Error::ChildrenNotAllowed(bhvr_type.to_string()));
+					}
+					let blackboard = blackboard.clone();
 					let tick_data = BehaviorTickData::new(blackboard);
 					BehaviorTreeComponent::create_leaf(bhvr, tick_data)
 				}
 				NewBehaviorType::Control | NewBehaviorType::Decorator => {
+					let blackboard = blackboard.clone();
 					let children = Self::build_children(&blackboard, registry, tree, element)?;
-					let tick_data = BehaviorTickData::new(blackboard);
 					if bhvr_type == NewBehaviorType::Decorator && children.len() > 1 {
 						return Err(Error::DecoratorOnlyOneChild(
 							element.tag_name().name().into(),
 						));
 					}
+					let tick_data = BehaviorTickData::new(blackboard);
 					BehaviorTreeComponent::create_node(Some(bhvr), tick_data, children)
 				}
 				NewBehaviorType::SubTree => {

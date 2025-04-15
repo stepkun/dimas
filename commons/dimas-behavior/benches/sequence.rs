@@ -9,18 +9,32 @@
 extern crate alloc;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::behavior::{BehaviorResult, BehaviorStatus};
-use dimas_builtin::factory::BTFactory;
-use dimas_macros::{behavior, register_action};
+use dimas_behavior::{
+	factory::NewBehaviorTreeFactory,
+	new_behavior::{
+		BehaviorCreation, BehaviorCreationFn, BehaviorMethods, BehaviorResult, NewBehaviorStatus,
+		NewBehaviorType,
+	},
+	tree::BehaviorTreeComponent,
+};
 
-/// SyncAction "AlwaysSuccess"
-#[behavior(SyncAction)]
+/// Action `AlwaysSuccess`
+#[derive(Debug)]
 struct AlwaysSuccess {}
 
-#[behavior(SyncAction)]
-impl AlwaysSuccess {
-	async fn tick(&mut self) -> BehaviorResult {
-		Ok(BehaviorStatus::Success)
+impl BehaviorMethods for AlwaysSuccess {
+	fn tick(&self, _tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		Ok(NewBehaviorStatus::Success)
+	}
+}
+
+impl BehaviorCreation for AlwaysSuccess {
+	fn create() -> Box<BehaviorCreationFn> {
+		Box::new(|| Box::new(Self {}))
+	}
+
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Control
 	}
 }
 
@@ -43,11 +57,11 @@ fn sequence(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = BTFactory::default();
-	register_action!(factory, "AlwaysSuccess", AlwaysSuccess);
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
 
 	// create the BT
-	let mut tree = factory.create_tree_from_xml(SEQUENCE).unwrap();
+	let mut tree = factory.create_from_text(SEQUENCE).unwrap();
 
 	c.bench_function("sequence", |b| {
 		b.iter(|| {
@@ -79,12 +93,12 @@ fn reactive_sequence(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = BTFactory::extended();
-	register_action!(factory, "AlwaysSuccess", AlwaysSuccess);
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
 
 	// create the BT
 	let mut tree = factory
-		.create_tree_from_xml(REACTIVE_SEQUENCE)
+		.create_from_text(REACTIVE_SEQUENCE)
 		.unwrap();
 
 	c.bench_function("reactive sequence", |b| {
@@ -117,12 +131,12 @@ fn sequence_with_memory(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = BTFactory::extended();
-	register_action!(factory, "AlwaysSuccess", AlwaysSuccess);
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
 
 	// create the BT
 	let mut tree = factory
-		.create_tree_from_xml(SEQUENCE_WITH_MEMORY)
+		.create_from_text(SEQUENCE_WITH_MEMORY)
 		.unwrap();
 
 	c.bench_function("sequence with memory", |b| {

@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-//! `Sequence` behavior implementation
+//! `SequenceWithMemory` behavior implementation
 //!
 
 // region:      --- modules
@@ -18,18 +18,19 @@ use crate::{
 };
 // endregeion:  --- modules
 
-// region:      --- Sequence
-/// A `Sequence` ticks its children in an ordered sequence from first to last.
-/// - If any child returns [`BehaviorStatus::Failure`] the sequence returns [`BehaviorStatus::Failure`].
-/// - If all children return [`BehaviorStatus::Success`] the sequence returns [`BehaviorStatus::Success`].
-/// - While any child returns [`BehaviorStatus::Running`] the sequence returns [`BehaviorStatus::Running`].
+// region:      --- SequenceWithMemory
+/// A `SequenceWithMemory` ticks its children in an ordered sequence from first to last.
+/// If any child returns RUNNING, previous children are not ticked again.
+/// - If all the children return SUCCESS, this node returns SUCCESS.
+/// - If a child returns RUNNING, this node returns RUNNING.
+///   Loop is NOT restarted, the same running child will be ticked again.
+/// - If a child returns FAILURE, stop the loop and return FAILURE.
 ///
-/// While running, the loop is not restarted, first the running child will be ticked again.
-/// If that tick succeeds the sequence continues, children that already succeeded will not be ticked again.
+///   Loop is NOT restarted, the same running child will be ticked again.
 #[derive(Debug)]
-pub struct Sequence;
+pub struct SequenceWithMemory;
 
-impl BehaviorMethods for Sequence {
+impl BehaviorMethods for SequenceWithMemory {
 	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		let mut failure = false;
 		let mut tick_data = tree_node.tick_data.lock();
@@ -55,7 +56,7 @@ impl BehaviorMethods for Sequence {
 				}
 				NewBehaviorStatus::Idle => {
 					return Err(NewBehaviorError::Status(
-						"Sequence".to_string(),
+						"SequenceWithMemory".to_string(),
 						"Idle".to_string(),
 					));
 				}
@@ -67,22 +68,27 @@ impl BehaviorMethods for Sequence {
 		};
 		drop(children);
 
-		// All children returned Success or Failure
-		if failure || tick_data.child_idx == tree_node.children.lock().len() {
+		if failure {
+			// Do NOT reset children on failure
+			// Halt children at and after current index
+			tree_node.halt_children(tick_data.child_idx)?;
+		} 
+		// All children returned Success
+		else if tick_data.child_idx == tree_node.children.lock().len() {
 			// Reset children
 			tree_node.reset_children()?;
 			tick_data.child_idx = 0;
 		}
-		drop(tick_data);
-		if failure {
-			Ok(NewBehaviorStatus::Failure)
+
+		if tick_data.all_skipped {
+			Ok(NewBehaviorStatus::Skipped)
 		} else {
-			Ok(NewBehaviorStatus::Success)
+			Ok(NewBehaviorStatus::Failure)
 		}
 	}
 }
 
-impl BehaviorCreation for Sequence {
+impl BehaviorCreation for SequenceWithMemory {
 	fn create() -> Box<BehaviorCreationFn> {
 		Box::new(|| Box::new(Self {}))
 	}

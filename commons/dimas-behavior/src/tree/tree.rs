@@ -17,6 +17,7 @@ use alloc::{
 	vec::Vec,
 };
 use hashbrown::HashMap;
+use parking_lot::Mutex;
 
 use crate::{
 	blackboard::Blackboard,
@@ -35,9 +36,9 @@ pub struct BehaviorTreeComponent {
 	/// Behavior of this node
 	behavior: Option<Box<dyn BehaviorMethods>>,
 	/// Data needed in every tick
-	tick_data: BehaviorTickData,
+	pub tick_data: Mutex<BehaviorTickData>,
 	/// Children
-	children: Vec<BehaviorTreeComponent>,
+	pub children: Mutex<Vec<BehaviorTreeComponent>>,
 }
 
 /// Methods needed for running a [`BehaviorTree`]
@@ -47,8 +48,8 @@ impl BehaviorTreeComponent {
 	pub fn create_leaf(behavior: Box<dyn BehaviorMethods>, tick_data: BehaviorTickData) -> Self {
 		Self {
 			behavior: Some(behavior),
-			tick_data,
-			children: Vec::default(),
+			tick_data: Mutex::new(tick_data),
+			children: Mutex::new(Vec::default()),
 		}
 	}
 
@@ -61,34 +62,23 @@ impl BehaviorTreeComponent {
 	) -> Self {
 		Self {
 			behavior,
-			tick_data,
-			children,
+			tick_data: Mutex::new(tick_data),
+			children: Mutex::new(children),
 		}
 	}
 
 	/// Method called to tick a node in the [`Tree`].
 	/// # Errors
-	pub fn execute_tick(&mut self) -> BehaviorResult {
-		if let Some(bhvr) = self.behavior.as_deref_mut() {
-			if self.tick_data.status == NewBehaviorStatus::Idle {
-				let result = bhvr.start(&mut self.tick_data, &mut self.children);
-				if let Ok(status) = result {
-					if status.is_completed() {
-						self.reset_children();
-					}
-				}
-				result
+	#[allow(unsafe_code)]
+	pub fn execute_tick(&self) -> BehaviorResult {
+		if let Some(bhvr) = &self.behavior {
+			if self.tick_data.lock().status == NewBehaviorStatus::Idle {
+				bhvr.start(self)
 			} else {
-				let result = bhvr.tick(&mut self.tick_data, &mut self.children);
-				if let Ok(status) = result {
-					if status.is_completed() {
-						self.reset_children();
-					}
-				}
-				result
+				bhvr.tick(self)
 			}
 		} else {
-			for mut child in &mut self.children {
+			for mut child in &*self.children.lock() {
 				match child.execute_tick()? {
 					NewBehaviorStatus::Success => continue,
 					NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
@@ -103,41 +93,52 @@ impl BehaviorTreeComponent {
 
 	/// Method called to stop a node in the [`Tree`].
 	/// # Errors
-	pub fn execute_halt(&mut self) -> BehaviorResult {
-		if let Some(bhvr) = &mut self.behavior {
-			bhvr.halt(&mut self.tick_data, &mut self.children)
-		} else {
-			Ok(NewBehaviorStatus::Idle)
-		}
+	pub fn execute_halt(&self) -> BehaviorResult {
+		self.behavior
+			.as_ref()
+			.map_or(Ok(NewBehaviorStatus::Idle), |bhvr| bhvr.halt(self))
 	}
 
 	/// Set status of component
 	pub fn set_status(&mut self, status: NewBehaviorStatus) {
-		self.tick_data.status = status;
+		self.tick_data.lock().status = status;
 	}
 
 	/// Get current status of component
 	#[must_use]
-	pub const fn status(&self) -> NewBehaviorStatus {
-		self.tick_data.status
+	pub fn status(&self) -> NewBehaviorStatus {
+		self.tick_data.lock().status
 	}
 
 	/// reset all children
-	pub fn reset_children(&mut self) {
-		self.halt_children(0);
+	/// # Errors
+	pub fn reset_children(&self) -> Result<(), NewBehaviorError> {
+		self.halt_children(0)
 	}
 
-	/// halt all children
+	/// halt all children at and beyond `index`
 	/// # Errors
 	/// - if index is out of childrens bounds
-	pub fn halt_children(&mut self, index: usize) -> Result<(), Error> {
-		if index > self.children.len() {
-			return Err(Error::IndexOutOfBounds(index));
+	pub fn halt_children(&self, index: usize) -> Result<(), NewBehaviorError> {
+		if index > self.children.lock().len() {
+			return Err(NewBehaviorError::IndexOutOfBounds(index));
 		}
 
-		for child in &mut self.children {
+		for child in &*self.children.lock() {
 			child.execute_halt()?;
 		}
+		Ok(())
+	}
+
+	/// halt all children at `index`
+	/// # Errors
+	/// - if index is out of childrens bounds
+	pub fn halt_child(&self, index: usize) -> Result<(), NewBehaviorError> {
+		if index > self.children.lock().len() {
+			return Err(NewBehaviorError::IndexOutOfBounds(index));
+		}
+
+		self.children.lock()[index].execute_halt()?;
 		Ok(())
 	}
 }

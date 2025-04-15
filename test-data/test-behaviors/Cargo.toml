@@ -1,0 +1,39 @@
+# Copyright © 2025 Stephan Kunz
+
+[package]
+name = "test-behaviors"
+rust-version.workspace = true
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+license = "MIT"
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Behavior test data for DiMAS"
+#documentation = "https://docs.rs/dimas-time/latest/dimas-time/"
+readme = "README.md"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lints]
+workspace = true
+
+[dependencies]
+dimas-behavior = { workspace = true }
+dimas-core = { workspace = true }
+anyhow = { workspace = true}
+thiserror = { workspace = true }
+tracing = { workspace = true}
+
+[lib]
+crate-type = ["rlib", "dylib"]
+
+[build-dependencies]
+
+[dev-dependencies]
+
+[features]
+default = ["std"]
+std = []
+#unstable = []
