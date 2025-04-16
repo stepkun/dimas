@@ -48,7 +48,6 @@ async fn manual_creation() -> anyhow::Result<()> {
 	// The currently supported format is XML.
 	// IMPORTANT: When the object "tree" goes out of scope, all the tree components are destroyed
 	let mut tree = factory.create_from_text(XML)?;
-	//dbg!(&tree);
 
 	// To "execute" a Tree you need to "tick" it.
 	// The tick is propagated to the children based on the logic of the tree.

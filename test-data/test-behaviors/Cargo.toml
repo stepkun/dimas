@@ -27,7 +27,9 @@ thiserror = { workspace = true }
 tracing = { workspace = true}
 
 [lib]
-crate-type = ["rlib", "dylib"]
+name = "test_behaviors"
+#crate-type = ["cdylib"]
+crate-type = ["dylib", "rlib"]
 
 [build-dependencies]
 

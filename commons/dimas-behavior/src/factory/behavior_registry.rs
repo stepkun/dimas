@@ -30,14 +30,14 @@ impl BehaviorRegistry {
 	/// Add a behavior to the registry
 	pub fn add_behavior<F>(
 		&mut self,
-		name: impl AsRef<str>,
+		name: &str,
 		bhvr_creation_fn: F,
 		bhvr_type: NewBehaviorType,
 	) where
 		F: Fn() -> Box<dyn BehaviorMethods> + Send + Sync + 'static,
 	{
 		self.behaviors.insert(
-			name.as_ref().into(),
+			name.into(),
 			(bhvr_type, Arc::new(bhvr_creation_fn)),
 		);
 	}
@@ -61,27 +61,27 @@ impl BehaviorRegistry {
 		Ok(())
 	}
 
-	/// Register a behavior in the registry
+	/// Register a behavior from a `dylib` in the registry
 	pub extern "Rust" fn register_behavior(
 		&mut self,
-		name: impl AsRef<str>,
+		name: &str,
 		bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorMethods> + Send + Sync + 'static>,
 		bhvr_type: NewBehaviorType,
 	) {
 		self.behaviors.insert(
-			name.as_ref().into(),
+			name.into(),
 			(bhvr_type, Arc::from(bhvr_creation_fn)),
 		);
 	}
 
-	/// Get a reference to the beaviors
+	/// Get a reference to the behaviors
 	#[must_use]
 	pub fn behaviors(&self) -> &HashMap<String, (NewBehaviorType, Arc<BehaviorCreationFn>)> {
 		&self.behaviors
 	}
 	/// Find a behavior in the registry
 	/// # Errors
-	/// - if the behavior is not in the registry
+	/// - if the behavior is not found in the registry
 	pub fn find(&self, id: &str) -> Result<(NewBehaviorType, Arc<BehaviorCreationFn>), Error> {
 		// extern crate std;
 		// std::println!("find {id} in ");
