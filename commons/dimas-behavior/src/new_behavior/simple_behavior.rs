@@ -7,9 +7,12 @@
 // region:      --- modules
 use alloc::{boxed::Box, sync::Arc, vec::Vec};
 
-use crate::tree::BehaviorTreeComponent;
+use crate::{new_port::NewPortList, tree::BehaviorTreeComponent};
 
-use super::{BehaviorCreationFn, BehaviorMethods, BehaviorResult, BehaviorTickData};
+use super::{
+	BehaviorAllMethods, BehaviorCreationFn, BehaviorInstanceMethods, BehaviorRedirectionMethods,
+	BehaviorResult, BehaviorStaticMethods, BehaviorTickData, BehaviorTreeMethods,
+};
 // endregion:   --- modules
 
 // region:      --- types
@@ -32,11 +35,21 @@ impl core::fmt::Debug for SimpleBehavior {
 	}
 }
 
-impl BehaviorMethods for SimpleBehavior {
-	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+impl BehaviorTreeMethods for SimpleBehavior {}
+
+impl BehaviorInstanceMethods for SimpleBehavior {
+	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		(self.tick_fn)()
 	}
 }
+
+impl BehaviorRedirectionMethods for SimpleBehavior {
+	fn static_provided_ports(&self) -> NewPortList {
+		Self::provided_ports()
+	}
+}
+
+impl BehaviorStaticMethods for SimpleBehavior {}
 
 /// Implementation resembles the macro generated impl code
 impl SimpleBehavior {

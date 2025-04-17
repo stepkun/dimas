@@ -34,15 +34,15 @@ async fn manual_creation() -> anyhow::Result<()> {
 	factory.register_node_type::<ApproachObject>("ApproachObject");
 
 	// Registering a SimpleAction/SimpleCondition using a function pointer.
-	factory.register_simple_condition("CheckBattery", Arc::new(check_battery));
+	factory.register_simple_condition("CheckBattery", Arc::new(check_battery), None);
 
 	// You can also create SimpleAction/SimpleCondition using methods of a struct.
 	// In Rust this needs to be done with Closures and an Arc to the struct.
 	let gripper1 = Arc::new(GripperInterface::default());
 	let gripper2 = gripper1.clone();
 	// @TODO: replace the workaround with a solution!
-	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.open()));
-	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.close()));
+	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.open()), None);
+	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.close()), None);
 
 	// Trees are created at run-time, but only once at the beginning).
 	// The currently supported format is XML.

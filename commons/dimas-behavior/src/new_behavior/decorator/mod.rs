@@ -6,10 +6,10 @@
 //!
 
 // region:      --- modules
-use crate::new_behavior::BehaviorMethods;
+use crate::new_behavior::BehaviorInstanceMethods;
 // endregion:   --- modules
 
 // region:      --- DecoratorBehavior
 /// Common methods for control behaviors.
-pub trait DecoratorBehavior: BehaviorMethods {}
+pub trait DecoratorBehavior: BehaviorInstanceMethods {}
 // endregion:   --- DecoratorBehavior

@@ -4,9 +4,11 @@ error[E0412]: cannot find type `BehaviorResult` in this scope
 28 |     async fn tick(&mut self) -> BehaviorResult {
    |                                 ^^^^^^^^^^^^^^ not found in this scope
    |
-help: consider importing this type alias
+help: consider importing one of these type aliases
    |
 5  + use dimas_behavior::behavior::BehaviorResult;
+   |
+5  + use dimas_behavior::new_behavior::BehaviorResult;
    |
 
 error[E0433]: failed to resolve: use of undeclared type `BehaviorStatus`

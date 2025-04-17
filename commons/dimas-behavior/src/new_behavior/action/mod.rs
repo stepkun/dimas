@@ -6,10 +6,10 @@
 //!
 
 // region:      --- modules
-use crate::new_behavior::BehaviorMethods;
+use crate::new_behavior::BehaviorInstanceMethods;
 // endregion:   --- modules
 
 // region:      --- ActionBehavior
 /// Common methods for control behaviors.
-pub trait ActionBehavior: BehaviorMethods {}
+pub trait ActionBehavior: BehaviorInstanceMethods {}
 // endregion:   --- ActionBehavior

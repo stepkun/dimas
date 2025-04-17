@@ -13,7 +13,7 @@ use alloc::{borrow::ToOwned, boxed::Box, string::String, sync::Arc, vec::Vec};
 use hashbrown::HashMap;
 use libloading::Library;
 
-use crate::new_behavior::{BehaviorCreationFn, BehaviorMethods, NewBehaviorType};
+use crate::new_behavior::{BehaviorCreationFn, BehaviorTreeMethods, NewBehaviorType};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -30,16 +30,14 @@ impl BehaviorRegistry {
 	/// Add a behavior to the registry
 	pub fn add_behavior<F>(
 		&mut self,
-		name: &str,
+		name: impl Into<String>,
 		bhvr_creation_fn: F,
 		bhvr_type: NewBehaviorType,
 	) where
-		F: Fn() -> Box<dyn BehaviorMethods> + Send + Sync + 'static,
+		F: Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static,
 	{
-		self.behaviors.insert(
-			name.into(),
-			(bhvr_type, Arc::new(bhvr_creation_fn)),
-		);
+		self.behaviors
+			.insert(name.into(), (bhvr_type, Arc::new(bhvr_creation_fn)));
 	}
 
 	/// The Library must be kept in storage until the [`BehaviorTree`] is destroyed.
@@ -47,7 +45,7 @@ impl BehaviorRegistry {
 	/// The `add_library(..)` function also takes care of registering all 'symbols'.
 	/// # Errors
 	#[allow(unsafe_code)]
-	pub fn add_library(&mut self, name: &str, library: Library) -> Result<(), Error> {
+	pub fn add_library(&mut self, name: impl Into<String>, library: Library) -> Result<(), Error> {
 		unsafe {
 			let registration_fn: libloading::Symbol<unsafe extern "Rust" fn(&mut Self) -> u32> =
 				library.get(b"register")?;
@@ -65,13 +63,11 @@ impl BehaviorRegistry {
 	pub extern "Rust" fn register_behavior(
 		&mut self,
 		name: &str,
-		bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorMethods> + Send + Sync + 'static>,
+		bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static>,
 		bhvr_type: NewBehaviorType,
 	) {
-		self.behaviors.insert(
-			name.into(),
-			(bhvr_type, Arc::from(bhvr_creation_fn)),
-		);
+		self.behaviors
+			.insert(name.into(), (bhvr_type, Arc::from(bhvr_creation_fn)));
 	}
 
 	/// Get a reference to the behaviors

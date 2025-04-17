@@ -8,12 +8,15 @@
 
 // region:      --- modules
 use alloc::{boxed::Box, string::ToString, vec::Vec};
+use dimas_behavior_derive::Behavior;
 
 use crate::{
 	new_behavior::{
-		BehaviorCreation, BehaviorCreationFn, BehaviorMethods, BehaviorResult, BehaviorTickData,
-		NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
+		BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
 	},
+	new_port::NewPortList,
 	tree::BehaviorTreeComponent,
 };
 // endregeion:  --- modules
@@ -26,27 +29,33 @@ use crate::{
 ///
 /// While running, the loop is not restarted, first the running child will be ticked again.
 /// If that tick succeeds the sequence continues, children that already succeeded will not be ticked again.
-#[derive(Debug)]
-pub struct Sequence;
+#[derive(Behavior, Debug, Default)]
+pub struct Sequence {
+	/// Defaults to '0'
+	child_idx: usize,
+	/// Defaults to 'false'
+	all_skipped: bool,
+}
 
-impl BehaviorMethods for Sequence {
-	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+impl BehaviorInstanceMethods for Sequence {
+	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		let mut failure = false;
 		let mut tick_data = tree_node.tick_data.lock();
 
 		if tick_data.status == NewBehaviorStatus::Idle {
-			tick_data.all_skipped = true;
+			self.all_skipped = true;
 		}
 
 		tick_data.status = NewBehaviorStatus::Running;
 
 		let children = tree_node.children.lock();
-		while tick_data.child_idx < children.len() {
-			let child = &children[tick_data.child_idx];
+		let children_len = children.len();
+		while self.child_idx < children_len {
+			let child = &children[self.child_idx];
 			let prev_status = child.status();
 			let new_status = child.execute_tick()?;
 
-			tick_data.all_skipped &= new_status == NewBehaviorStatus::Skipped;
+			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
 
 			match new_status {
 				NewBehaviorStatus::Failure => {
@@ -61,34 +70,40 @@ impl BehaviorMethods for Sequence {
 				}
 				NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
 				NewBehaviorStatus::Skipped | NewBehaviorStatus::Success => {
-					tick_data.child_idx += 1;
+					self.child_idx += 1;
 				}
 			}
-		};
+		}
 		drop(children);
+		drop(tick_data);
 
 		// All children returned Success or Failure
-		if failure || tick_data.child_idx == tree_node.children.lock().len() {
+		if failure || self.child_idx == children_len {
 			// Reset children
 			tree_node.reset_children()?;
-			tick_data.child_idx = 0;
+			self.child_idx = 0;
 		}
-		drop(tick_data);
 		if failure {
 			Ok(NewBehaviorStatus::Failure)
 		} else {
 			Ok(NewBehaviorStatus::Success)
 		}
 	}
+
+	fn halt(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		tree_node.halt_children(0)
+	}
 }
 
-impl BehaviorCreation for Sequence {
+impl BehaviorCreationMethods for Sequence {
 	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
+		Box::new(|| Box::new(Self::default()))
 	}
 
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
+
+impl BehaviorStaticMethods for Sequence {}
 // endregion:   --- Sequence

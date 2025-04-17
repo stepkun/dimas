@@ -58,7 +58,7 @@ impl Fallback {
 				}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"Name here".to_string(),
+						"Fallback".to_string(),
 						"Idle".to_string(),
 					));
 				}

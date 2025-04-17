@@ -15,16 +15,18 @@ use hashbrown::HashMap;
 use roxmltree::Document;
 
 use crate::{
-	blackboard::Blackboard,
 	factory::xml_parser::XmlParser,
 	new_behavior::{
-		BehaviorCreation, BehaviorMethods, BehaviorResult, BhvrTickFn, NewBehaviorType,
+		BehaviorAllMethods, BehaviorResult, BehaviorTreeMethods, BhvrTickFn, NewBehaviorType,
 		SimpleBehavior,
 		control::{
+			fallback::Fallback, reactive_fallback::ReactiveFallback,
 			reactive_sequence::ReactiveSequence, sequence::Sequence,
 			sequence_with_memory::SequenceWithMemory,
 		},
 	},
+	new_blackboard::NewBlackboard,
+	new_port::NewPortList,
 	tree::BehaviorTree,
 };
 
@@ -35,7 +37,7 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 /// Factory for creation and modification of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct NewBehaviorTreeFactory {
-	blackboard: Blackboard,
+	blackboard: NewBlackboard,
 	registry: BehaviorRegistry,
 }
 
@@ -50,6 +52,8 @@ impl NewBehaviorTreeFactory {
 
 	/// register core behaviors
 	pub fn core_behaviors(&mut self) {
+		self.register_node_type::<Fallback>("Fallback");
+		self.register_node_type::<ReactiveFallback>("ReactiveFallback");
 		self.register_node_type::<ReactiveSequence>("ReactiveSequence");
 		self.register_node_type::<Sequence>("Sequence");
 		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory");
@@ -75,7 +79,7 @@ impl NewBehaviorTreeFactory {
 			tree.set_root_id(id);
 		} else {
 			return Err(Error::NoTreeToExecute);
-		};
+		}
 
 		XmlParser::parse_root_element(&self.blackboard, &mut self.registry, &mut tree, root)?;
 
@@ -91,7 +95,7 @@ impl NewBehaviorTreeFactory {
 	/// Register a behavior plugin.
 	/// # Errors
 	#[allow(unsafe_code)]
-	pub fn register_from_plugin(&mut self, name: &str) -> Result<(), Error> {
+	pub fn register_from_plugin(&mut self, name: impl Into<String>) -> Result<(), Error> {
 		// @TODO: handle multiplattform and multipath
 		// for now the path is hardcoded
 		// /home/stephan/dbx/dimas-fw/dimas/target/debug/libtest_behaviors.so
@@ -106,9 +110,9 @@ impl NewBehaviorTreeFactory {
 
 	/// Register a [`Behavior`] of type <T>.
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn register_node_type<T>(&mut self, name: &str)
+	pub fn register_node_type<T>(&mut self, name: impl Into<String>)
 	where
-		T: BehaviorMethods + BehaviorCreation,
+		T: BehaviorAllMethods,
 	{
 		let bhvr_creation_fn = T::create();
 		let bhvr_type = T::kind();
@@ -117,7 +121,13 @@ impl NewBehaviorTreeFactory {
 	}
 
 	/// Register a function as [`Action`].
-	pub fn register_simple_action(&mut self, name: &str, tick_fn: BhvrTickFn) {
+	#[allow(clippy::needless_pass_by_value)]
+	pub fn register_simple_action(
+		&mut self,
+		name: impl Into<String>,
+		tick_fn: BhvrTickFn,
+		port_list: Option<NewPortList>,
+	) {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Action;
 		self.registry
@@ -125,7 +135,13 @@ impl NewBehaviorTreeFactory {
 	}
 
 	/// Register a function as [`Condition`].
-	pub fn register_simple_condition(&mut self, name: &str, tick_fn: BhvrTickFn) {
+	#[allow(clippy::needless_pass_by_value)]
+	pub fn register_simple_condition(
+		&mut self,
+		name: impl Into<String>,
+		tick_fn: BhvrTickFn,
+		port_list: Option<NewPortList>,
+	) {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Condition;
 		self.registry
@@ -133,7 +149,13 @@ impl NewBehaviorTreeFactory {
 	}
 
 	/// Register a function as [`Decorator`].
-	pub fn register_simple_decorator(&mut self, name: &str, tick_fn: BhvrTickFn) {
+	#[allow(clippy::needless_pass_by_value)]
+	pub fn register_simple_decorator(
+		&mut self,
+		name: impl Into<String>,
+		tick_fn: BhvrTickFn,
+		port_list: Option<NewPortList>,
+	) {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Decorator;
 		self.registry

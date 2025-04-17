@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-//! `ReactiveSequence` behavior implementation
+//! `Sequence` behavior implementation
 //!
 
 // region:      --- modules
@@ -21,71 +21,77 @@ use crate::{
 };
 // endregeion:  --- modules
 
-// region:      --- ReactiveSequence
-/// A `ReactiveSequence` ticks its children in an ordered sequence from first to last.
-/// - If any child returns [`BehaviorStatus::Failure`] the sequence returns [`BehaviorStatus::Failure`].
-/// - If all children return [`BehaviorStatus::Success`] the sequence returns [`BehaviorStatus::Success`].
-/// - While any child returns [`BehaviorStatus::Running`] the sequence returns [`BehaviorStatus::Running`].
+// region:      --- ReactiveFallback
+/// The `ReactiveFallback` behavior is used to try different strategies until one succeeds,
+/// but every strategy is re-evaluated on each tick.
+/// All the children are ticked from first to last:
+/// - If a child returns RUNNING, continue to the next sibling.
+/// - If a child returns FAILURE, continue to the next sibling.
+/// - If a child returns SUCCESS, stop and return SUCCESS.
 ///
-/// If all the children return SUCCESS, this node returns SUCCESS.
+/// If all the children fail, than this node returns FAILURE.
 ///
-/// IMPORTANT: to work properly, this node should not have more than a single
-///            asynchronous child.
+/// IMPORTANT: to work properly, this node should not have more than
+///            a single asynchronous child.
 #[derive(Behavior, Debug, Default)]
-pub struct ReactiveSequence {
+pub struct ReactiveFallback {
 	/// Defaults to '0'
 	child_idx: usize,
 	/// Defaults to 'false'
 	all_skipped: bool,
 }
 
-impl BehaviorInstanceMethods for ReactiveSequence {
+impl BehaviorInstanceMethods for ReactiveFallback {
 	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
-		let mut failure = false;
-
+		let mut success = false;
 		let mut tick_data = tree_node.tick_data.lock();
 
+		self.all_skipped = true;
 		tick_data.status = NewBehaviorStatus::Running;
 
-		let mut children = tree_node.children.lock();
-		for counter in 0..children.len() {
-			let mut child = &children[counter];
-			let prev_status = child.status();
+		let children = tree_node.children.lock();
+		for index in 0..children.len() {
+			let child = &children[self.child_idx];
 			let new_status = child.execute_tick()?;
 
 			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
 
 			match new_status {
-				NewBehaviorStatus::Failure => {
-					failure = true;
-					break;
-				}
+				NewBehaviorStatus::Failure => {}
 				NewBehaviorStatus::Idle => {
 					return Err(NewBehaviorError::Status(
-						"ReactiveSequence".to_string(),
+						"ReactiveFallback".to_string(),
 						"Idle".to_string(),
 					));
 				}
-				NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
+				NewBehaviorStatus::Running => {
+					for i in 0..index {
+						let cd = &children[i];
+						cd.execute_halt();
+					}
+					return Ok(NewBehaviorStatus::Running);
+				}
 				NewBehaviorStatus::Skipped => {
 					child.execute_halt()?;
 				}
-				NewBehaviorStatus::Success => {}
+				NewBehaviorStatus::Success => {
+					success = true;
+					break;
+				}
 			}
 		}
 		drop(children);
 		drop(tick_data);
 
-		// Reset children on failure
 		tree_node.reset_children()?;
 		self.child_idx = 0;
 
-		if failure {
-			Ok(NewBehaviorStatus::Failure)
+		if success {
+			Ok(NewBehaviorStatus::Success)
 		} else if self.all_skipped {
 			Ok(NewBehaviorStatus::Skipped)
 		} else {
-			Ok(NewBehaviorStatus::Success)
+			Ok(NewBehaviorStatus::Failure)
 		}
 	}
 
@@ -94,7 +100,7 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 	}
 }
 
-impl BehaviorCreationMethods for ReactiveSequence {
+impl BehaviorCreationMethods for ReactiveFallback {
 	fn create() -> Box<BehaviorCreationFn> {
 		Box::new(|| Box::new(Self::default()))
 	}
@@ -104,5 +110,5 @@ impl BehaviorCreationMethods for ReactiveSequence {
 	}
 }
 
-impl BehaviorStaticMethods for ReactiveSequence {}
-// endregion:   --- ReactiveSequence
+impl BehaviorStaticMethods for ReactiveFallback {}
+// endregion:   --- ReactiveFallback

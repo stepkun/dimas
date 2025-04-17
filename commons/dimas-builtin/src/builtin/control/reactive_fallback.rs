@@ -55,7 +55,7 @@ impl ReactiveFallback {
 				}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"Name here".to_string(),
+						"ReactiveFallback".to_string(),
 						"Idle".to_string(),
 					));
 				}

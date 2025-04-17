@@ -10,23 +10,25 @@
 #[doc(hidden)]
 extern crate alloc;
 
+// region:		--- modules
 use dimas_behavior::{
-	define_ports, input_port,
 	new_behavior::{
-		BehaviorCreation, BehaviorCreationFn, BehaviorMethods, BehaviorResult, BehaviorTickData,
-		NewBehaviorStatus, NewBehaviorType,
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
+		BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType, SimpleBehavior,
 	},
-	output_port,
-	port::PortList,
+	new_port::{NewPortList, input_port, output_port},
 	tree::BehaviorTreeComponent,
 };
+use dimas_behavior_derive::Behavior;
+//  endregion:	--- modules
 
 /// Behavior `ApproachObject`
 /// Example of custom `SyncActionNode` (synchronous action) without ports.
-#[derive(Debug)]
+#[derive(Behavior, Debug)]
 pub struct ApproachObject {}
 
-impl BehaviorCreation for ApproachObject {
+impl BehaviorCreationMethods for ApproachObject {
 	fn create() -> Box<BehaviorCreationFn> {
 		Box::new(|| Box::new(Self {}))
 	}
@@ -36,12 +38,14 @@ impl BehaviorCreation for ApproachObject {
 	}
 }
 
-impl BehaviorMethods for ApproachObject {
-	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+impl BehaviorInstanceMethods for ApproachObject {
+	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
 		Ok(NewBehaviorStatus::Success)
 	}
 }
+
+impl BehaviorStaticMethods for ApproachObject {}
 
 /// Function for behavior `CheckBattery`
 /// # Errors
@@ -73,10 +77,10 @@ impl GripperInterface {
 }
 /// Behavior `SaySomething`
 /// Example of custom `SyncActionNode` (synchronous action) with an input port.
-#[derive(Debug)]
+#[derive(Behavior, Debug)]
 pub struct SaySomething {}
 
-impl BehaviorCreation for SaySomething {
+impl BehaviorCreationMethods for SaySomething {
 	fn create() -> Box<BehaviorCreationFn> {
 		Box::new(|| Box::new(Self {}))
 	}
@@ -86,12 +90,8 @@ impl BehaviorCreation for SaySomething {
 	}
 }
 
-impl BehaviorMethods for SaySomething {
-	// fn ports(&self) -> PortList {
-	// 	define_ports!(input_port!("message", "hello"))
-	// }
-
-	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+impl BehaviorInstanceMethods for SaySomething {
+	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		let msg = tree_node
 			.tick_data
 			.lock()
@@ -100,34 +100,22 @@ impl BehaviorMethods for SaySomething {
 	}
 }
 
-// @TODO: make it work
-// /// Same as struct SaySomething, but to be registered with SimpleActionNode
-// fn say_something_simple(BT::TreeNode& self) -> BehaviorResult;
-
-/// Behavior `ThinkWhatToSay`
-#[derive(Debug)]
-pub struct ThinkWhatToSay {}
-
-impl BehaviorCreation for ThinkWhatToSay {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+impl BehaviorStaticMethods for SaySomething {
+	// 	define_ports!(input_port!("message", "hello"))
+	fn provided_ports() -> NewPortList {
+		// @TODO: list creation with variadic elements via macro
+		let mut list = NewPortList::default();
+		// @TODO: variadic attributes via macro
+		list.insert(
+			"message".into(),
+			input_port::<String>("message", "hello", "").expect("snh"),
+		);
+		list
 	}
 }
 
-impl BehaviorMethods for ThinkWhatToSay {
-	// fn ports(&self) -> PortList {
-	// 	define_ports!(output_port!("text"))
-	// }
-
-	fn tick(&self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
-		tree_node
-			.tick_data
-			.lock()
-			.set_output("text", "The answer is 42.")?;
-		Ok(NewBehaviorStatus::Success)
-	}
+/// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
+/// # Errors
+pub const fn say_something_simple(/* tree_node: &SimpleBehavior */) -> BehaviorResult {
+	Ok(NewBehaviorStatus::Success)
 }

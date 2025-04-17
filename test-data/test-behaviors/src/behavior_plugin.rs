@@ -6,12 +6,10 @@
 use alloc::sync::Arc;
 use dimas_behavior::{
 	factory::BehaviorRegistry,
-	new_behavior::{BehaviorCreation, NewBehaviorType, SimpleBehavior},
+	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
 };
 
-use crate::test_nodes::{
-	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
-};
+use crate::test_nodes::{ApproachObject, GripperInterface, SaySomething, check_battery};
 
 /// Registration function for all external symbols
 #[allow(unsafe_code)]
@@ -49,11 +47,6 @@ extern "Rust" fn register(registry: &mut BehaviorRegistry) -> u32 {
 		NewBehaviorType::Action,
 	);
 
-	registry.register_behavior(
-		"ThinkWhatToSay",
-		ThinkWhatToSay::create(),
-		NewBehaviorType::Action,
-	);
 	// A return value of 0 signals success
 	0
 }

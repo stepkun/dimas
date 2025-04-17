@@ -6,12 +6,19 @@
 //! XML parser for the [`BehaviorTreeFactory`] of `DiMAS`
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString, vec::Vec};
+use alloc::{
+	boxed::Box,
+	string::{String, ToString},
+	vec::Vec,
+};
 use roxmltree::{Node, NodeType};
 
 use crate::{
-	blackboard::Blackboard,
-	new_behavior::{BehaviorMethods, BehaviorTickData, NewBehaviorType},
+	new_behavior::{
+		BehaviorConfigurationData, BehaviorTickData, BehaviorTreeMethods, NewBehaviorType,
+	},
+	new_blackboard::NewBlackboard,
+	new_port::NewPortRemappings,
 	tree::{BehaviorTree, BehaviorTreeComponent},
 };
 
@@ -23,7 +30,7 @@ pub struct XmlParser {}
 
 impl XmlParser {
 	pub(crate) fn parse_root_element(
-		blackboard: &Blackboard,
+		blackboard: &NewBlackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		root: Node,
@@ -69,23 +76,24 @@ impl XmlParser {
 	}
 
 	fn build_subtree(
-		blackboard: &Blackboard,
+		blackboard: &NewBlackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
-		id: &str,
+		id: impl Into<String>,
 	) -> Result<(), Error> {
 		// A subtreee gets a new [`Blackboard`] with parent trees [`Blackboard`] as parent
-		let blackboard = Blackboard::new(blackboard);
+		let blackboard = NewBlackboard::new(blackboard);
 		let children = Self::build_children(&blackboard, registry, tree, element)?;
 		let tick_data = BehaviorTickData::new(blackboard);
-		let subtree = BehaviorTreeComponent::create_node(None, tick_data, children);
+		let config_data = BehaviorConfigurationData::default();
+		let subtree = BehaviorTreeComponent::create_node(None, tick_data, children, config_data);
 		tree.add(id, subtree);
 		Ok(())
 	}
 
 	fn build_children(
-		blackboard: &Blackboard,
+		blackboard: &NewBlackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
@@ -121,13 +129,12 @@ impl XmlParser {
 
 	#[allow(clippy::option_if_let_else)]
 	fn build_child(
-		blackboard: &Blackboard,
+		blackboard: &NewBlackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
 	) -> Result<BehaviorTreeComponent, Error> {
 		let bhvr_name = element.tag_name().name();
-		let attributes = element.attributes();
 		if bhvr_name == "SubTree" {
 			if let Some(id) = element.attribute("ID") {
 				todo!()
@@ -137,15 +144,17 @@ impl XmlParser {
 		} else {
 			// look for the behavior in the [`BehaviorRegisty`]
 			let (bhvr_type, bhvr_creation_fn) = registry.find(bhvr_name)?;
-			let bhvr = bhvr_creation_fn();
+			let mut bhvr = bhvr_creation_fn();
 			let tree_node = match bhvr_type {
 				NewBehaviorType::Action | NewBehaviorType::Condition => {
 					if element.has_children() {
 						return Err(Error::ChildrenNotAllowed(bhvr_type.to_string()));
 					}
 					let blackboard = blackboard.clone();
-					let tick_data = BehaviorTickData::new(blackboard);
-					BehaviorTreeComponent::create_leaf(bhvr, tick_data)
+					let mut tick_data = BehaviorTickData::new(blackboard);
+					let mut config_data = BehaviorConfigurationData::new(bhvr_name);
+					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
+					BehaviorTreeComponent::create_leaf(bhvr, tick_data, config_data)
 				}
 				NewBehaviorType::Control | NewBehaviorType::Decorator => {
 					let blackboard = blackboard.clone();
@@ -155,8 +164,10 @@ impl XmlParser {
 							element.tag_name().name().into(),
 						));
 					}
-					let tick_data = BehaviorTickData::new(blackboard);
-					BehaviorTreeComponent::create_node(Some(bhvr), tick_data, children)
+					let mut tick_data = BehaviorTickData::new(blackboard);
+					let mut config_data = BehaviorConfigurationData::default();
+					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
+					BehaviorTreeComponent::create_node(Some(bhvr), tick_data, children, config_data)
 				}
 				NewBehaviorType::SubTree => {
 					todo!()
@@ -164,6 +175,37 @@ impl XmlParser {
 			};
 			Ok(tree_node)
 		}
+	}
+
+	fn create_ports(
+		bhvr: &mut Box<dyn BehaviorTreeMethods>,
+		tick_data: &mut BehaviorTickData,
+		config_data: &mut BehaviorConfigurationData,
+		element: &Node,
+	) -> Result<(), Error> {
+		let mut remappings = NewPortRemappings::new();
+		for attribute in element.attributes() {
+			let name = attribute.name().to_string();
+			let value = attribute.value().to_string();
+			// port "name" is always available
+			if name == "name" {
+				config_data.set_name(name);
+			} else {
+				// fetch found port name from list of provided ports
+				if let Some(port) = bhvr.static_provided_ports().get(&name) {
+					remappings.insert(name, value);
+					// add ports and remapping to [`BehaviorTickData`]/[`BehaviorConfigurationData`]
+					todo!();
+				} else {
+					return Err(Error::PortInvalid(
+						name,
+						config_data.name().into(),
+						bhvr.static_provided_ports().into_keys().collect(),
+					));
+				}
+			}
+		}
+		Ok(())
 	}
 }
 // endregion:   --- XmlParser

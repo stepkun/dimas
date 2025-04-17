@@ -92,7 +92,7 @@ pub fn convert_derives(derives: Vec<TokenStream>) -> TokenStream {
 		})
 }
 
-// Convert user attribs into one TokenStream
+/// Convert user attribs into one `TokenStream`
 pub fn convert_attrs(user_attrs: Vec<Attribute>) -> TokenStream {
 	user_attrs
 		.into_iter()

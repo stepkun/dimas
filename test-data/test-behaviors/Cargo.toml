@@ -21,6 +21,7 @@ workspace = true
 
 [dependencies]
 dimas-behavior = { workspace = true }
+dimas-behavior-derive = { workspace = true }
 dimas-core = { workspace = true }
 anyhow = { workspace = true}
 thiserror = { workspace = true }

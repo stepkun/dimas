@@ -13,11 +13,18 @@ use std::sync::Arc;
 
 use dimas_behavior::{
 	factory::NewBehaviorTreeFactory,
-	new_behavior::{BehaviorResult, NewBehaviorStatus},
+	new_behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
+		NewBehaviorStatus, NewBehaviorType,
+	},
+	new_port::{NewPortList, input_port, output_port, port_list},
 	port::PortList,
+	tree::BehaviorTreeComponent,
 };
+use dimas_behavior_derive::Behavior;
 use test_behaviors::test_nodes::{
-	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
+	ApproachObject, GripperInterface, SaySomething, check_battery, say_something_simple,
 };
 
 const XML: &str = r#"
@@ -34,6 +41,43 @@ const XML: &str = r#"
 </root>
 "#;
 
+/// Behavior `ThinkWhatToSay`
+#[derive(Behavior, Debug)]
+pub struct ThinkWhatToSay {}
+
+impl BehaviorCreationMethods for ThinkWhatToSay {
+	fn create() -> Box<BehaviorCreationFn> {
+		Box::new(|| Box::new(Self {}))
+	}
+
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+}
+
+impl BehaviorInstanceMethods for ThinkWhatToSay {
+	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		tree_node
+			.tick_data
+			.lock()
+			.set_output("text", "The answer is 42.")?;
+		Ok(NewBehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for ThinkWhatToSay {
+	fn provided_ports() -> NewPortList {
+		// @TODO: list creation with variadic elements via macro
+		let mut list = NewPortList::default();
+		// @TODO: variadic attributes via macro
+		list.insert(
+			"text".into(),
+			output_port::<String>("text", "", "").expect("snh"),
+		);
+		list
+	}
+}
+
 #[tokio::test]
 async fn basic_ports() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
@@ -49,9 +93,12 @@ async fn basic_ports() -> anyhow::Result<()> {
 	// SimpleActionNodes can not define their own method providedPorts(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	// let mut say_something_ports = PortList::from({ InputPort::<String>::new("message") });
-	// factory.register_simple_action("SaySomething2", SaySomethingSimple, say_something_ports);
-	factory.register_node_type::<SaySomething>("SaySomething2"); // @TODO: workaraound
+	let mut say_something_ports = port_list(input_port::<String>("message", "", "")?)?;
+	factory.register_simple_action(
+		"SaySomething2",
+		Arc::new(say_something_simple),
+		Some(say_something_ports),
+	);
 
 	let mut tree = factory.create_from_text(XML)?;
 

@@ -38,6 +38,9 @@ pub enum Error {
 	/// Unsupported XML element:
 	#[error("element [{0}] is not supported")]
 	ElementNotSupported(String),
+	/// Port not in defined port list
+	#[error("port name [{0}] does not match [{1}]s port list: {2:?}")]
+	PortInvalid(String, String, Vec<String>),
 	/// Loading a library failed
 	#[error("registering library [{0}] failed with [{0}]")]
 	RegisterLib(String, u32),

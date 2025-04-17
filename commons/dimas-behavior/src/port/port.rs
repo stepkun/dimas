@@ -100,6 +100,7 @@ pub type PortRemapping = HashMap<String, String>;
 /// @TODO:
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[repr(u8)]
 pub enum PortDirection {
 	/// @TODO:
 	Input,

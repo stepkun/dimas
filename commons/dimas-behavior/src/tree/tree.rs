@@ -1,6 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(clippy::unused_async)]
-#![allow(dead_code)]
 #![allow(unused)]
 
 //! [`BehaviorTree`] implementation.
@@ -10,22 +9,13 @@
 //!
 
 // region:      --- modules
-use alloc::{
-	borrow::ToOwned,
-	boxed::Box,
-	string::{String, ToString},
-	vec::Vec,
-};
+use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 use hashbrown::HashMap;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 
-use crate::{
-	blackboard::Blackboard,
-	new_behavior::{
-		BehaviorMethods, BehaviorResult, BehaviorTickData, NewBehaviorStatus, NewBehaviorType,
-		control::ControlBehavior, error::NewBehaviorError,
-	},
-	tree::error::Error,
+use crate::new_behavior::{
+	BehaviorConfigurationData, BehaviorResult, BehaviorTickData, BehaviorTreeMethods,
+	NewBehaviorStatus, error::NewBehaviorError,
 };
 // endregion:   --- modules
 
@@ -34,36 +24,48 @@ use crate::{
 #[derive(Debug)]
 pub struct BehaviorTreeComponent {
 	/// Behavior of this node
-	behavior: Option<Box<dyn BehaviorMethods>>,
+	behavior: Option<Mutex<Box<dyn BehaviorTreeMethods>>>,
 	/// Data needed in every tick
 	pub tick_data: Mutex<BehaviorTickData>,
 	/// Children
 	pub children: Mutex<Vec<BehaviorTreeComponent>>,
+	/// Data needed on rare occasions
+	pub config_data: Mutex<BehaviorConfigurationData>,
 }
 
 /// Methods needed for running a [`BehaviorTree`]
 impl BehaviorTreeComponent {
 	/// Constructor for a leaf
 	#[must_use]
-	pub fn create_leaf(behavior: Box<dyn BehaviorMethods>, tick_data: BehaviorTickData) -> Self {
+	pub fn create_leaf(
+		behavior: Box<dyn BehaviorTreeMethods>,
+		tick_data: BehaviorTickData,
+		config_data: BehaviorConfigurationData,
+	) -> Self {
 		Self {
-			behavior: Some(behavior),
+			behavior: Some(Mutex::new(behavior)),
 			tick_data: Mutex::new(tick_data),
 			children: Mutex::new(Vec::default()),
+			config_data: Mutex::new(config_data),
 		}
 	}
 
 	/// Constructor for a node
+	/// # Panics
+	/// - if after `is_some()` == true an unwrap fails
 	#[must_use]
 	pub fn create_node(
-		behavior: Option<Box<dyn BehaviorMethods>>,
+		behavior: Option<Box<dyn BehaviorTreeMethods>>,
 		tick_data: BehaviorTickData,
 		children: Vec<Self>,
+		config_data: BehaviorConfigurationData,
 	) -> Self {
+		let behavior = behavior.map_or_else(|| None, |bhvr| Some(Mutex::new(bhvr)));
 		Self {
 			behavior,
 			tick_data: Mutex::new(tick_data),
 			children: Mutex::new(children),
+			config_data: Mutex::new(config_data),
 		}
 	}
 
@@ -73,14 +75,14 @@ impl BehaviorTreeComponent {
 	pub fn execute_tick(&self) -> BehaviorResult {
 		if let Some(bhvr) = &self.behavior {
 			if self.tick_data.lock().status == NewBehaviorStatus::Idle {
-				bhvr.start(self)
+				bhvr.lock().start(self)
 			} else {
-				bhvr.tick(self)
+				bhvr.lock().tick(self)
 			}
 		} else {
-			for mut child in &*self.children.lock() {
+			for child in &*self.children.lock() {
 				match child.execute_tick()? {
-					NewBehaviorStatus::Success => continue,
+					NewBehaviorStatus::Success => {}
 					NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
 					NewBehaviorStatus::Failure => return Ok(NewBehaviorStatus::Failure),
 					NewBehaviorStatus::Idle => todo!(),
@@ -96,7 +98,7 @@ impl BehaviorTreeComponent {
 	pub fn execute_halt(&self) -> BehaviorResult {
 		self.behavior
 			.as_ref()
-			.map_or(Ok(NewBehaviorStatus::Idle), |bhvr| bhvr.halt(self))
+			.map_or(Ok(NewBehaviorStatus::Idle), |bhvr| bhvr.lock().halt(self))
 	}
 
 	/// Set status of component
@@ -112,14 +114,14 @@ impl BehaviorTreeComponent {
 
 	/// reset all children
 	/// # Errors
-	pub fn reset_children(&self) -> Result<(), NewBehaviorError> {
+	pub fn reset_children(&self) -> BehaviorResult {
 		self.halt_children(0)
 	}
 
 	/// halt all children at and beyond `index`
 	/// # Errors
 	/// - if index is out of childrens bounds
-	pub fn halt_children(&self, index: usize) -> Result<(), NewBehaviorError> {
+	pub fn halt_children(&self, index: usize) -> BehaviorResult {
 		if index > self.children.lock().len() {
 			return Err(NewBehaviorError::IndexOutOfBounds(index));
 		}
@@ -127,23 +129,24 @@ impl BehaviorTreeComponent {
 		for child in &*self.children.lock() {
 			child.execute_halt()?;
 		}
-		Ok(())
+		Ok(NewBehaviorStatus::Idle)
 	}
 
 	/// halt all children at `index`
 	/// # Errors
 	/// - if index is out of childrens bounds
-	pub fn halt_child(&self, index: usize) -> Result<(), NewBehaviorError> {
+	pub fn halt_child(&self, index: usize) -> BehaviorResult {
 		if index > self.children.lock().len() {
 			return Err(NewBehaviorError::IndexOutOfBounds(index));
 		}
 
 		self.children.lock()[index].execute_halt()?;
-		Ok(())
+		Ok(NewBehaviorStatus::Idle)
 	}
 }
 
 // region:		--- TickOption
+/// Tick options
 #[repr(u8)]
 enum TickOption {
 	WhileRunning,
@@ -163,11 +166,11 @@ pub struct BehaviorTree {
 }
 
 impl BehaviorTree {
-	pub(crate) fn add(&mut self, id: &str, subtree: BehaviorTreeComponent) {
+	pub(crate) fn add(&mut self, id: impl Into<String>, subtree: BehaviorTreeComponent) {
 		self.subtrees.insert(id.into(), subtree);
 	}
 
-	pub(crate) fn set_root_id(&mut self, id: &str) {
+	pub(crate) fn set_root_id(&mut self, id: impl Into<String>) {
 		self.root_id = id.into();
 	}
 
@@ -181,7 +184,7 @@ impl BehaviorTree {
 	async fn tick_root(&mut self, opt: TickOption) -> BehaviorResult {
 		let mut status = NewBehaviorStatus::Idle;
 
-		let mut root = self
+		let root = self
 			.subtrees
 			.get_mut(&self.root_id)
 			.ok_or_else(|| NewBehaviorError::RootNotFound(self.root_id.clone()))?;

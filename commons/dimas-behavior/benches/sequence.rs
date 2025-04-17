@@ -8,35 +8,11 @@
 #[doc(hidden)]
 extern crate alloc;
 
+mod behaviors;
+
+use behaviors::AlwaysSuccess;
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::{
-	factory::NewBehaviorTreeFactory,
-	new_behavior::{
-		BehaviorCreation, BehaviorCreationFn, BehaviorMethods, BehaviorResult, NewBehaviorStatus,
-		NewBehaviorType,
-	},
-	tree::BehaviorTreeComponent,
-};
-
-/// Action `AlwaysSuccess`
-#[derive(Debug)]
-struct AlwaysSuccess {}
-
-impl BehaviorMethods for AlwaysSuccess {
-	fn tick(&self, _tree_node: &BehaviorTreeComponent) -> BehaviorResult {
-		Ok(NewBehaviorStatus::Success)
-	}
-}
-
-impl BehaviorCreation for AlwaysSuccess {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Control
-	}
-}
+use dimas_behavior::factory::NewBehaviorTreeFactory;
 
 const SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"

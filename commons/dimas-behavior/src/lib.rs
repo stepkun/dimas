@@ -15,6 +15,8 @@ pub mod behavior;
 pub mod blackboard;
 pub mod factory;
 pub mod new_behavior;
+pub mod new_blackboard;
+pub mod new_port;
 pub mod port;
 pub mod tree;
 
