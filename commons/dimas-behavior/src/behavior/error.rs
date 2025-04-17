@@ -67,7 +67,7 @@ pub enum BehaviorError {
 	#[error("port [{0}] is not declared in behavior [{1}]")]
 	PortNotDeclared(String, String),
 
-	/// Type mismatch between port definitin and found value
+	/// Type mismatch between port definiton and found value
 	#[error("could not parse value for port [{0}] into specified type [{1}]")]
 	ParsePortValue(String, String),
 

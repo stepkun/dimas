@@ -10,7 +10,7 @@ extern crate alloc;
 use core::any::TypeId;
 
 // region:      --- modules
-use alloc::string::String;
+use alloc::string::{String, ToString};
 
 use super::{NewPortList, error::Error};
 // endregion:   --- modules
@@ -32,11 +32,47 @@ const FORBIDDEN_NAMES: &[&str] = &[
 // endregion:   --- types
 
 // region:      --- helper
+/// Function handles the special remapping cases
+#[must_use]
+pub fn get_remapped_key(port_name: &str, remapped_port: &str) -> Option<String> {
+	// is the shortcut '{=}' used?
+	if port_name == "{=}" || remapped_port == "{=}" {
+		Some(port_name.to_string())
+	} else {
+		strip_bb_pointer(remapped_port)
+	}
+}
+
+/// Remove all 'decoration' from port name
+#[must_use]
+pub fn strip_bb_pointer(port: &str) -> Option<String> {
+	// Is bb pointer
+	if port.starts_with('{') && port.ends_with('}') {
+		Some(
+			port.strip_prefix('{')
+				.unwrap_or_else(|| todo!())
+				.strip_suffix('}')
+				.unwrap_or_else(|| todo!())
+				.to_string(),
+		)
+	} else {
+		None
+	}
+}
+
+/// Check if it is a port
+#[must_use]
+pub fn is_bb_pointer(port: &str) -> bool {
+	port.starts_with('{') && port.ends_with('}')
+}
+
 /// Create a [`PortLists`]
 /// # Errors
-/// - if the name violates the conventions.
+/// - if a name of a port violates the conventions.
 pub fn port_list(port: NewPortDefinition) -> Result<NewPortList, Error> {
-	Ok(NewPortList::default())
+	let mut port_list = NewPortList::default();
+	port_list.insert(port.name.clone(), port);
+	Ok(port_list)
 }
 
 /// Create a [`PortDefinition`]
@@ -137,8 +173,11 @@ impl NewPort {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum NewPortDirection {
+	/// Input port
 	In,
+	/// Output port
 	Out,
+	/// Bidirecional port
 	InOut,
 }
 
@@ -157,13 +196,14 @@ impl core::fmt::Display for NewPortDirection {
 
 // region:      --- PortDefinition
 /// A static [`PortDefinition`], which is used for configuration.
+/// Access to members is public within crate to maximize performance
 #[derive(Clone, Debug)]
 pub struct NewPortDefinition {
-	direction: NewPortDirection,
-	type_id: TypeId,
-	name: String,
-	default_value: String,
-	description: String,
+	pub(crate) direction: NewPortDirection,
+	pub(crate) type_id: TypeId,
+	pub(crate) name: String,
+	pub(crate) default_value: String,
+	pub(crate) description: String,
 }
 
 impl NewPortDefinition {

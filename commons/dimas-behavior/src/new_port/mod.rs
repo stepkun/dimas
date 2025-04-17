@@ -7,7 +7,10 @@ mod error;
 mod port;
 
 // flatten
-pub use port::{NewPort, NewPortDefinition, input_port, output_port, port_list};
+pub use port::{
+	NewPort, NewPortDefinition, NewPortDirection, get_remapped_key, input_port, is_bb_pointer,
+	output_port, port_list, strip_bb_pointer,
+};
 
 // region:      --- modules
 use alloc::string::String;

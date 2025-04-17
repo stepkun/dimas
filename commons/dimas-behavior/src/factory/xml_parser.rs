@@ -183,7 +183,7 @@ impl XmlParser {
 		config_data: &mut BehaviorConfigurationData,
 		element: &Node,
 	) -> Result<(), Error> {
-		let mut remappings = NewPortRemappings::new();
+		//let mut remappings = NewPortRemappings::new();
 		for attribute in element.attributes() {
 			let name = attribute.name().to_string();
 			let value = attribute.value().to_string();
@@ -193,9 +193,10 @@ impl XmlParser {
 			} else {
 				// fetch found port name from list of provided ports
 				if let Some(port) = bhvr.static_provided_ports().get(&name) {
-					remappings.insert(name, value);
+					//remappings.insert(name, value);
 					// add ports and remapping to [`BehaviorTickData`]/[`BehaviorConfigurationData`]
-					todo!();
+					tick_data.add_port(&port.direction, name, value);
+					//todo!();
 				} else {
 					return Err(Error::PortInvalid(
 						name,

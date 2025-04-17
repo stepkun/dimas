@@ -24,7 +24,9 @@ pub type BhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
 /// A simple behavior
 pub struct SimpleBehavior {
 	/// the function to be called on tick
-	tick_fn: BhvrTickFn,
+	pub(crate) tick_fn: BhvrTickFn,
+	/// list of provided ports
+	pub(crate) provided_ports: NewPortList,
 }
 
 impl core::fmt::Debug for SimpleBehavior {
@@ -45,7 +47,7 @@ impl BehaviorInstanceMethods for SimpleBehavior {
 
 impl BehaviorRedirectionMethods for SimpleBehavior {
 	fn static_provided_ports(&self) -> NewPortList {
-		Self::provided_ports()
+		self.provided_ports.clone()
 	}
 }
 
@@ -58,6 +60,20 @@ impl SimpleBehavior {
 		Box::new(move || {
 			Box::new(Self {
 				tick_fn: tick_fn.clone(),
+				provided_ports: NewPortList::default(),
+			})
+		})
+	}
+
+	/// Create a `SimpleBehavior` with the given function and list of ports
+	pub fn create_with_ports(
+		tick_fn: BhvrTickFn,
+		port_list: NewPortList,
+	) -> Box<BehaviorCreationFn> {
+		Box::new(move || {
+			Box::new(Self {
+				tick_fn: tick_fn.clone(),
+				provided_ports: port_list.clone(),
 			})
 		})
 	}

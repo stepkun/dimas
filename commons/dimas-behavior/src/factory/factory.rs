@@ -17,8 +17,8 @@ use roxmltree::Document;
 use crate::{
 	factory::xml_parser::XmlParser,
 	new_behavior::{
-		BehaviorAllMethods, BehaviorResult, BehaviorTreeMethods, BhvrTickFn, NewBehaviorType,
-		SimpleBehavior,
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorResult, BehaviorTreeMethods, BhvrTickFn,
+		NewBehaviorType, SimpleBehavior,
 		control::{
 			fallback::Fallback, reactive_fallback::ReactiveFallback,
 			reactive_sequence::ReactiveSequence, sequence::Sequence,
@@ -128,7 +128,11 @@ impl NewBehaviorTreeFactory {
 		tick_fn: BhvrTickFn,
 		port_list: Option<NewPortList>,
 	) {
-		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
+		let bhvr_creation_fn = if let Some(port_list) = port_list {
+			SimpleBehavior::create_with_ports(tick_fn, port_list)
+		} else {
+			SimpleBehavior::create(tick_fn)
+		};
 		let bhvr_type = NewBehaviorType::Action;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type);
