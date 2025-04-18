@@ -9,8 +9,8 @@ mod port;
 use error::Error;
 // flatten
 pub use port::{
-	NewPort, NewPortDefinition, NewPortDirection, get_remapped_key, input_port, is_bb_pointer,
-	output_port, port_list, strip_bb_pointer,
+	NewPortDefinition, NewPortDirection, get_remapped_key, input_port, is_bb_pointer, output_port,
+	strip_bb_pointer,
 };
 
 // region:      --- modules

@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::needless_pass_by_value)]
 #![allow(unused)]
 
 //! `dimas-behavior` Port implementation
@@ -10,12 +9,9 @@ extern crate alloc;
 use core::any::TypeId;
 
 // region:      --- modules
-use alloc::{
-	string::{String, ToString},
-	vec,
-};
+use alloc::string::{String, ToString};
 
-use super::{NewPortList, error::Error};
+use super::error::Error;
 // endregion:   --- modules
 
 // region:      --- types
@@ -67,14 +63,6 @@ pub fn strip_bb_pointer(port: &str) -> Option<String> {
 #[must_use]
 pub fn is_bb_pointer(port: &str) -> bool {
 	port.starts_with('{') && port.ends_with('}')
-}
-
-/// Create a [`PortLists`]
-/// # Errors
-/// - if a name of a port violates the conventions.
-pub fn port_list(port: NewPortDefinition) -> Result<NewPortList, Error> {
-	let mut port_list = vec![port];
-	Ok(port_list)
 }
 
 /// Create a [`PortDefinition`]
@@ -138,37 +126,6 @@ fn is_allowed_name(name: &str) -> bool {
 	true
 }
 // endregion:   --- helper
-
-// region:      --- Port
-/// A [`Port`]
-#[derive(Clone, Debug)]
-pub struct NewPort {
-	direction: NewPortDirection,
-	name: String,
-	description: String,
-}
-impl NewPort {
-	/// Construct a [`Port`]
-	/// # Errors
-	/// - if the name violates the conventions.
-	pub fn new(
-		direction: NewPortDirection,
-		name: impl Into<String>,
-		description: impl Into<String>,
-	) -> Result<Self, Error> {
-		let name = name.into();
-		if is_allowed_name(&name) {
-			Ok(Self {
-				direction,
-				name,
-				description: description.into(),
-			})
-		} else {
-			Err(Error::NameNotAllowed(name))
-		}
-	}
-}
-// endregion:   --- Port
 
 // region:      --- PortDirection
 /// A [`Port`]

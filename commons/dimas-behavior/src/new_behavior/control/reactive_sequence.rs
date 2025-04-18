@@ -1,20 +1,17 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unused_async)]
-#![allow(dead_code)]
-#![allow(unused)]
 
 //! `ReactiveSequence` behavior implementation
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString, vec::Vec};
+use alloc::{boxed::Box, string::ToString};
 use dimas_behavior_derive::Behavior;
 
 use crate::{
 	new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
-		BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
+		NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
 	},
 	new_port::NewPortList,
 	tree::BehaviorTreeComponent,
@@ -47,10 +44,9 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 
 		tick_data.status = NewBehaviorStatus::Running;
 
-		let mut children = tree_node.children.lock();
+		let children = tree_node.children.lock();
 		for counter in 0..children.len() {
-			let mut child = &children[counter];
-			let prev_status = child.status();
+			let child = &children[counter];
 			let new_status = child.execute_tick()?;
 
 			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;

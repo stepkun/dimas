@@ -37,7 +37,7 @@ impl ScriptCondition {
 		let env = bhvr_.config().blackboard();
 		let mut vm = VM::default();
 		let mut out = Vec::new();
-		let value = vm.run(&chunk, env, &mut out)?;
+		let value: dimas_scripting::execution::ScriptingValue = vm.run(&chunk, env, &mut out)?;
 		let status = if value.is_bool() {
 			let val = value.as_bool()?;
 			if val {

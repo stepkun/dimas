@@ -5,6 +5,11 @@
 //! Action behavior library
 //!
 
+mod script;
+
+// flatten
+pub use script::Script;
+
 // region:      --- modules
 use crate::new_behavior::BehaviorInstanceMethods;
 // endregion:   --- modules

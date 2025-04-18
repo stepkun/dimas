@@ -1,18 +1,15 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(dead_code)]
-#![allow(unused)]
 
 //! `DiMAS` implementation for registering functions as behavior
 
 // region:      --- modules
-use alloc::{boxed::Box, sync::Arc, vec::Vec};
+use alloc::{boxed::Box, sync::Arc};
 
 use crate::{new_port::NewPortList, tree::BehaviorTreeComponent};
 
 use super::{
-	BehaviorAllMethods, BehaviorCreationFn, BehaviorInstanceMethods, BehaviorRedirectionMethods,
-	BehaviorResult, BehaviorStaticMethods, BehaviorTickData, BehaviorTreeMethods,
-	NewBehaviorStatus,
+	BehaviorCreationFn, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult,
+	BehaviorTreeMethods,
 };
 // endregion:   --- modules
 
@@ -20,19 +17,9 @@ use super::{
 /// Signature of a simple registered behavior function called by `SimpleBehavior`'s tick
 pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
 
-#[allow(clippy::unnecessary_wraps)]
-const fn simple_tick_fn() -> BehaviorResult {
-	Ok(NewBehaviorStatus::Failure)
-}
-
 /// Signature of a registered behavior function called by `SimpleBehavior`'s tick
 pub type ComplexBhvrTickFn =
 	Arc<dyn Fn(&BehaviorTreeComponent) -> BehaviorResult + Send + Sync + 'static>;
-
-#[allow(clippy::unnecessary_wraps)]
-const fn full_tick_fn() -> BehaviorResult {
-	Ok(NewBehaviorStatus::Failure)
-}
 // endregion:   --- types
 
 // region:      --- BehaviorFunction
@@ -59,10 +46,7 @@ impl BehaviorTreeMethods for SimpleBehavior {}
 impl BehaviorInstanceMethods for SimpleBehavior {
 	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
 		if self.provided_ports.is_some() {
-			self
-				.complex_tick_fn
-				.as_ref()
-				.expect("snh")(tree_node)
+			self.complex_tick_fn.as_ref().expect("snh")(tree_node)
 		} else {
 			(self.simple_tick_fn.as_ref().expect("snh"))()
 		}

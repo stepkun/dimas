@@ -5,13 +5,14 @@
 //! [`BehaviorTree`] implementation.
 //!
 //! Implemenation is a [`composite pattern`](https://en.wikipedia.org/wiki/Composite_pattern)
-//! using a `struct` insteaf of a `trait` to improve performance.
+//! using a `struct` instead of a `trait` to improve performance.
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
+use alloc::{boxed::Box, string::String, vec::Vec};
 use hashbrown::HashMap;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::Mutex;
+use rustc_hash::FxBuildHasher;
 
 use crate::new_behavior::{
 	BehaviorConfigurationData, BehaviorResult, BehaviorTickData, BehaviorTreeMethods,
@@ -161,8 +162,9 @@ enum TickOption {
 pub struct BehaviorTree {
 	/// Id of the root node in the map below.
 	root_id: String,
-	/// Map of direct accessible [`BehaviorTreeNode`]s
-	subtrees: HashMap<String, BehaviorTreeComponent>,
+	/// Map of direct accessible [`BehaviorTreeComponent`]s. These are `SubTree`s
+	/// @TODO: replace with a vec and maybe use references
+	subtrees: HashMap<String, BehaviorTreeComponent, FxBuildHasher>,
 }
 
 impl BehaviorTree {

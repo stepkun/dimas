@@ -98,17 +98,8 @@ impl BehaviorInstanceMethods for SaySomething {
 }
 
 impl BehaviorStaticMethods for SaySomething {
-	// 	define_ports!(input_port!("message", "hello"))
 	fn provided_ports() -> NewPortList {
-		// @TODO: list creation with variadic elements via macro
-		let mut list = NewPortList::default();
-		// @TODO: variadic attributes via macro
-		let entry = input_port::<String>("message", "hello", "").expect("snh");
-		match add_to_port_list(&mut list, entry) {
-			Ok(entry) => {}
-			Err(err) => panic!("{err}"),
-		}
-		list
+		vec![input_port::<String>("message", "hello", "").expect("snh")]
 	}
 }
 
@@ -138,15 +129,7 @@ impl BehaviorInstanceMethods for ThinkWhatToSay {
 
 impl BehaviorStaticMethods for ThinkWhatToSay {
 	fn provided_ports() -> NewPortList {
-		// @TODO: list creation with variadic elements via macro
-		let mut list = NewPortList::default();
-		// @TODO: variadic attributes via macro
-		let entry = output_port::<String>("text", "", "").expect("snh");
-		match add_to_port_list(&mut list, entry) {
-			Ok(entry) => {}
-			Err(err) => panic!("{err}"),
-		}
-		list
+		vec![output_port::<String>("text", "", "").expect("snh")]
 	}
 }
 

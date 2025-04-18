@@ -1,6 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(dead_code)]
-#![allow(unused)]
 
 //! Factory for creation and modification of [`BehaviorTree`]s
 //!
@@ -10,15 +8,15 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{boxed::Box, string::String};
-use hashbrown::HashMap;
+use alloc::string::String;
 use roxmltree::Document;
 
 use crate::{
 	factory::xml_parser::XmlParser,
 	new_behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorResult, BehaviorTreeMethods,
-		ComplexBhvrTickFn, NewBehaviorType, SimpleBehavior, SimpleBhvrTickFn,
+		BehaviorAllMethods, ComplexBhvrTickFn, NewBehaviorType, SimpleBehavior, SimpleBhvrTickFn,
+		action::Script,
+		condition::script_condition::ScriptCondition,
 		control::{
 			fallback::Fallback, reactive_fallback::ReactiveFallback,
 			reactive_sequence::ReactiveSequence, sequence::Sequence,
@@ -42,21 +40,27 @@ pub struct NewBehaviorTreeFactory {
 }
 
 impl NewBehaviorTreeFactory {
-	/// Creat a factory with registered core behaviors
-	#[must_use]
-	pub fn with_core_behaviors() -> Self {
+	/// Create a factory with registered core behaviors
+	/// # Errors
+	/// - if core behaviors cannot be registered
+	pub fn with_core_behaviors() -> Result<Self, Error> {
 		let mut factory = Self::default();
-		factory.core_behaviors();
-		factory
+		factory.core_behaviors()?;
+		Ok(factory)
 	}
 
 	/// register core behaviors
-	pub fn core_behaviors(&mut self) {
-		self.register_node_type::<Fallback>("Fallback");
-		self.register_node_type::<ReactiveFallback>("ReactiveFallback");
-		self.register_node_type::<ReactiveSequence>("ReactiveSequence");
-		self.register_node_type::<Sequence>("Sequence");
-		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory");
+	/// # Errors
+	/// - if any registration fails
+	pub fn core_behaviors(&mut self) -> Result<(), Error> {
+		self.register_node_type::<Fallback>("Fallback")?;
+		self.register_node_type::<ReactiveFallback>("ReactiveFallback")?;
+		self.register_node_type::<ReactiveSequence>("ReactiveSequence")?;
+		self.register_node_type::<Sequence>("Sequence")?;
+		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory")?;
+
+		self.register_node_type::<Script>("Script")?;
+		self.register_node_type::<ScriptCondition>("ScriptCondition")
 	}
 
 	/// Create a [`BehaviorTree`] from XML
@@ -77,11 +81,16 @@ impl NewBehaviorTreeFactory {
 		let mut tree = BehaviorTree::default();
 		if let Some(id) = root.attribute("main_tree_to_execute") {
 			tree.set_root_id(id);
+			XmlParser::parse_root_element(
+				&self.blackboard,
+				&mut self.registry,
+				&mut tree,
+				root,
+				true,
+			)?;
 		} else {
 			return Err(Error::NoTreeToExecute);
 		}
-
-		XmlParser::parse_root_element(&self.blackboard, &mut self.registry, &mut tree, root)?;
 
 		Ok(tree)
 	}
@@ -109,66 +118,73 @@ impl NewBehaviorTreeFactory {
 	}
 
 	/// Register a [`Behavior`] of type <T>.
+	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn register_node_type<T>(&mut self, name: impl Into<String>)
+	pub fn register_node_type<T>(&mut self, name: impl Into<String>) -> Result<(), Error>
 	where
 		T: BehaviorAllMethods,
 	{
 		let bhvr_creation_fn = T::create();
 		let bhvr_type = T::kind();
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
 	/// Register a function as [`Action`].
+	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn register_simple_action(&mut self, name: impl Into<String>, tick_fn: SimpleBhvrTickFn) {
+	pub fn register_simple_action(
+		&mut self,
+		name: impl Into<String>,
+		tick_fn: SimpleBhvrTickFn,
+	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Action;
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
 	/// Register a function as [`Action`].
+	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_action_with_ports(
 		&mut self,
 		name: impl Into<String>,
 		tick_fn: ComplexBhvrTickFn,
 		port_list: NewPortList,
-	) {
+	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create_with_ports(tick_fn, port_list);
 		let bhvr_type = NewBehaviorType::Action;
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
 	/// Register a function as [`Condition`].
+	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_condition(
 		&mut self,
 		name: impl Into<String>,
 		tick_fn: SimpleBhvrTickFn,
-		port_list: Option<NewPortList>,
-	) {
+	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Condition;
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
 	/// Register a function as [`Decorator`].
+	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_decorator(
 		&mut self,
 		name: impl Into<String>,
 		tick_fn: SimpleBhvrTickFn,
-		port_list: Option<NewPortList>,
-	) {
+	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = NewBehaviorType::Decorator;
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type);
+			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 }
 // endregion:   --- BehaviorTreeFactory

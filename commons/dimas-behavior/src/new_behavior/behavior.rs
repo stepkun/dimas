@@ -1,12 +1,10 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! [`Behavior`] implementation
 //!
 
 // region:      --- modules
 use alloc::{
-	boxed::Box,
 	format,
 	string::{String, ToString},
 };
@@ -15,14 +13,12 @@ use core::{any::TypeId, str::FromStr};
 use crate::{
 	new_blackboard::NewBlackboard,
 	new_port::{
-		NewPortDirection, NewPortList, NewPortRemappings, find_in_port_list,
-		find_in_remapping_list, get_remapped_key, is_bb_pointer, strip_bb_pointer,
+		NewPortDirection, NewPortRemappings, find_in_remapping_list, get_remapped_key,
+		is_bb_pointer, strip_bb_pointer,
 	},
 };
 
-use super::{
-	BehaviorCreationFn, BehaviorResult, NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
-};
+use super::{BehaviorResult, NewBehaviorStatus, error::NewBehaviorError};
 // endregion:   --- modules
 
 // region:		--- BehaviorConfigurationData

@@ -1,6 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(clippy::needless_pass_by_ref_mut)]
-#![allow(clippy::unnecessary_wraps)]
 #![allow(unused)]
 
 //! XML parser for the [`BehaviorTreeFactory`] of `DiMAS`
@@ -18,7 +17,7 @@ use crate::{
 		BehaviorConfigurationData, BehaviorTickData, BehaviorTreeMethods, NewBehaviorType,
 	},
 	new_blackboard::NewBlackboard,
-	new_port::{NewPortRemappings, find_in_port_list, port_list_entries},
+	new_port::{find_in_port_list, port_list_entries},
 	tree::{BehaviorTree, BehaviorTreeComponent},
 };
 
@@ -34,6 +33,7 @@ impl XmlParser {
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		root: Node,
+		main_tree: bool,
 	) -> Result<(), Error> {
 		for element in root.children() {
 			match element.node_type() {
@@ -53,7 +53,9 @@ impl XmlParser {
 						"BehaviorTree" => {
 							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
-								Self::build_subtree(blackboard, registry, tree, element, id)?;
+								Self::build_subtree(
+									blackboard, registry, tree, element, id, main_tree,
+								)?;
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
 							}
@@ -81,10 +83,11 @@ impl XmlParser {
 		tree: &mut BehaviorTree,
 		element: Node,
 		id: impl Into<String>,
+		main_tree: bool,
 	) -> Result<(), Error> {
 		let id = id.into();
 		// A subtreee gets a new [`Blackboard`] with parent trees [`Blackboard`] as parent
-		let blackboard = if id == "MainTree" {
+		let blackboard = if main_tree {
 			blackboard.clone()
 		} else {
 			NewBlackboard::new(blackboard)
@@ -92,8 +95,7 @@ impl XmlParser {
 		let children = Self::build_children(&blackboard, registry, tree, element)?;
 		let tick_data = BehaviorTickData::new(blackboard);
 		let config_data = BehaviorConfigurationData::default();
-		let mut subtree =
-			BehaviorTreeComponent::create_node(None, tick_data, children, config_data);
+		let subtree = BehaviorTreeComponent::create_node(None, tick_data, children, config_data);
 		// minimize size of subtree
 		subtree
 			.tick_data

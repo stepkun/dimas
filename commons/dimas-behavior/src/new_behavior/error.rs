@@ -11,10 +11,16 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- BehaviorError
-/// `dimas-core` behavior error type
+/// `dimas-behavior` behavior error type
 #[allow(clippy::module_name_repetitions)]
 #[derive(Error, Debug)]
 pub enum NewBehaviorError {
+	/// Pass through executtion error
+	#[error("{0}")]
+	Execution(#[from] dimas_scripting::execution::error::Error),
+	/// Pass through float parsing error
+	#[error("{0}")]
+	FloatParse(#[from] core::num::ParseFloatError),
 	/// The index of a behavior is out of bounds
 	#[error("index [{0}] out of bounds")]
 	IndexOutOfBounds(usize),
@@ -27,6 +33,9 @@ pub enum NewBehaviorError {
 	/// Type mismatch between port definiton and found value
 	#[error("could not parse value for port [{0}] into specified type [{1}]")]
 	ParsePortValue(String, String),
+	/// Pass through parsing error
+	#[error("{0}")]
+	Parsing(#[from] dimas_scripting::compiling::error::Error),
 	/// Port has not been defined in behavior
 	#[error("port [{0}] is not declared in behavior [{1}]")]
 	PortNotDeclared(String, String),

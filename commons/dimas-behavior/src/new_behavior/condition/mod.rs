@@ -5,6 +5,8 @@
 //! Condition behavior library
 //!
 
+pub mod script_condition;
+
 // region:      --- modules
 use crate::new_behavior::BehaviorInstanceMethods;
 // endregion:   --- modules

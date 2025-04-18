@@ -1,20 +1,17 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unused_async)]
-#![allow(dead_code)]
-#![allow(unused)]
 
 //! `Sequence` behavior implementation
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString, vec::Vec};
+use alloc::{boxed::Box, string::ToString};
 use dimas_behavior_derive::Behavior;
 
 use crate::{
 	new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
-		BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
+		NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
 	},
 	new_port::NewPortList,
 	tree::BehaviorTreeComponent,
@@ -67,7 +64,7 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 				NewBehaviorStatus::Running => {
 					for i in 0..index {
 						let cd = &children[i];
-						cd.execute_halt();
+						cd.execute_halt()?;
 					}
 					return Ok(NewBehaviorStatus::Running);
 				}

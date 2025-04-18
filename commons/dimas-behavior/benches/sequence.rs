@@ -33,8 +33,10 @@ fn sequence(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	factory
+		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
+		.unwrap();
 
 	// create the BT
 	let mut tree = factory.create_from_text(SEQUENCE).unwrap();
@@ -69,8 +71,10 @@ fn reactive_sequence(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	factory
+		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
+		.unwrap();
 
 	// create the BT
 	let mut tree = factory
@@ -107,8 +111,10 @@ fn sequence_with_memory(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	factory
+		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
+		.unwrap();
 
 	// create the BT
 	let mut tree = factory

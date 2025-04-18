@@ -26,23 +26,23 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn build_your_first_tree() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities
 	// like ports (we will discuss this in future tutorials).
-	factory.register_node_type::<ApproachObject>("ApproachObject");
+	factory.register_node_type::<ApproachObject>("ApproachObject")?;
 
 	// Registering a SimpleAction/SimpleCondition using a function pointer.
-	factory.register_simple_condition("CheckBattery", Arc::new(check_battery), None);
+	factory.register_simple_condition("CheckBattery", Arc::new(check_battery))?;
 
 	// You can also create SimpleAction/SimpleCondition using methods of a struct.
 	// In Rust this needs to be done with Closures and an Arc to the struct.
 	let gripper1 = Arc::new(GripperInterface::default());
 	let gripper2 = gripper1.clone();
 	// @TODO: replace the workaround with a solution!
-	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.open()));
-	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.close()));
+	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.open()))?;
+	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.close()))?;
 
 	// Trees are created at run-time, but only once at the beginning).
 	// The currently supported format is XML.
@@ -60,7 +60,7 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
 	// Load a plugin and register the Behaviors it contains.
 	// This automates the registering step.

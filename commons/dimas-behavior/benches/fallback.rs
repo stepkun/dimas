@@ -33,9 +33,13 @@ fn fallback(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
-	factory.register_node_type::<AlwaysFailure>("AlwaysFailure");
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	factory
+		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
+		.unwrap();
+	factory
+		.register_node_type::<AlwaysFailure>("AlwaysFailure")
+		.unwrap();
 
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).unwrap();
@@ -70,9 +74,13 @@ fn reactive_fallback(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess");
-	factory.register_node_type::<AlwaysFailure>("AlwaysFailure");
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	factory
+		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
+		.unwrap();
+	factory
+		.register_node_type::<AlwaysFailure>("AlwaysFailure")
+		.unwrap();
 
 	// create the BT
 	let mut tree = factory

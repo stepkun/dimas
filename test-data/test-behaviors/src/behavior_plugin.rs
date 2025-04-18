@@ -7,7 +7,7 @@ use alloc::sync::Arc;
 use dimas_behavior::{
 	factory::BehaviorRegistry,
 	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
-	new_port::{input_port, port_list},
+	new_port::input_port,
 };
 
 use crate::test_nodes::{
@@ -60,8 +60,7 @@ extern "Rust" fn register(registry: &mut BehaviorRegistry) -> u32 {
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let mut say_something_ports =
-		port_list(input_port::<String>("message", "", "").expect("snh")).expect("snh");
+	let mut say_something_ports = vec![input_port::<String>("message", "", "").expect("snh")];
 	registry.register_behavior(
 		"SaySomething2",
 		SimpleBehavior::create_with_ports(Arc::new(say_something_simple), say_something_ports),

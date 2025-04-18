@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! This test implements the second tutorial/example from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_02_basic_ports)
@@ -12,21 +11,9 @@ extern crate alloc;
 use std::sync::Arc;
 
 use dimas_behavior::{
-	factory::NewBehaviorTreeFactory,
-	new_behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
-		NewBehaviorStatus, NewBehaviorType,
-	},
-	new_port::{NewPortList, add_to_port_list, input_port, output_port, port_list},
-	port::PortList,
-	tree::BehaviorTreeComponent,
+	factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus, new_port::input_port,
 };
-use dimas_behavior_derive::Behavior;
-use test_behaviors::test_nodes::{
-	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
-	say_something_simple,
-};
+use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, say_something_simple};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -45,25 +32,25 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn basic_ports() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.
 	// In this case, it requires an input called "message"
-	factory.register_node_type::<SaySomething>("SaySomething");
+	factory.register_node_type::<SaySomething>("SaySomething")?;
 
 	// Similarly to SaySomething, ThinkWhatToSay has an OUTPUT port called "text"
 	// Both these ports are of type `String`, therefore they can connect to each other
-	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay");
+	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay")?;
 
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let mut say_something_ports = port_list(input_port::<String>("message", "", "")?)?;
+	let say_something_ports = vec![input_port::<String>("message", "", "")?];
 	factory.register_simple_action_with_ports(
 		"SaySomething2",
 		Arc::new(say_something_simple),
 		say_something_ports,
-	);
+	)?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
@@ -75,9 +62,9 @@ async fn basic_ports() -> anyhow::Result<()> {
 #[tokio::test]
 async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	extern crate std;
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
+	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("libtest_behaviors");
+	factory.register_from_plugin("libtest_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
