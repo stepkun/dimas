@@ -17,8 +17,8 @@ use roxmltree::Document;
 use crate::{
 	factory::xml_parser::XmlParser,
 	new_behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorResult, BehaviorTreeMethods, BhvrTickFn,
-		NewBehaviorType, SimpleBehavior,
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorResult, BehaviorTreeMethods,
+		ComplexBhvrTickFn, NewBehaviorType, SimpleBehavior, SimpleBhvrTickFn,
 		control::{
 			fallback::Fallback, reactive_fallback::ReactiveFallback,
 			reactive_sequence::ReactiveSequence, sequence::Sequence,
@@ -122,17 +122,22 @@ impl NewBehaviorTreeFactory {
 
 	/// Register a function as [`Action`].
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn register_simple_action(
+	pub fn register_simple_action(&mut self, name: impl Into<String>, tick_fn: SimpleBhvrTickFn) {
+		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
+		let bhvr_type = NewBehaviorType::Action;
+		self.registry
+			.add_behavior(name, bhvr_creation_fn, bhvr_type);
+	}
+
+	/// Register a function as [`Action`].
+	#[allow(clippy::needless_pass_by_value)]
+	pub fn register_simple_action_with_ports(
 		&mut self,
 		name: impl Into<String>,
-		tick_fn: BhvrTickFn,
-		port_list: Option<NewPortList>,
+		tick_fn: ComplexBhvrTickFn,
+		port_list: NewPortList,
 	) {
-		let bhvr_creation_fn = if let Some(port_list) = port_list {
-			SimpleBehavior::create_with_ports(tick_fn, port_list)
-		} else {
-			SimpleBehavior::create(tick_fn)
-		};
+		let bhvr_creation_fn = SimpleBehavior::create_with_ports(tick_fn, port_list);
 		let bhvr_type = NewBehaviorType::Action;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type);
@@ -143,7 +148,7 @@ impl NewBehaviorTreeFactory {
 	pub fn register_simple_condition(
 		&mut self,
 		name: impl Into<String>,
-		tick_fn: BhvrTickFn,
+		tick_fn: SimpleBhvrTickFn,
 		port_list: Option<NewPortList>,
 	) {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
@@ -157,7 +162,7 @@ impl NewBehaviorTreeFactory {
 	pub fn register_simple_decorator(
 		&mut self,
 		name: impl Into<String>,
-		tick_fn: BhvrTickFn,
+		tick_fn: SimpleBhvrTickFn,
 		port_list: Option<NewPortList>,
 	) {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);

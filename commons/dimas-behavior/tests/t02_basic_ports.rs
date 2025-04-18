@@ -59,10 +59,10 @@ async fn basic_ports() -> anyhow::Result<()> {
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
 	let mut say_something_ports = port_list(input_port::<String>("message", "", "")?)?;
-	factory.register_simple_action(
+	factory.register_simple_action_with_ports(
 		"SaySomething2",
 		Arc::new(say_something_simple),
-		Some(say_something_ports),
+		say_something_ports,
 	);
 
 	let mut tree = factory.create_from_text(XML)?;

@@ -12,21 +12,38 @@ use crate::{new_port::NewPortList, tree::BehaviorTreeComponent};
 use super::{
 	BehaviorAllMethods, BehaviorCreationFn, BehaviorInstanceMethods, BehaviorRedirectionMethods,
 	BehaviorResult, BehaviorStaticMethods, BehaviorTickData, BehaviorTreeMethods,
+	NewBehaviorStatus,
 };
 // endregion:   --- modules
 
 // region:      --- types
-/// Signature of the registered behavior function called by `BehaviorFunction`'s tick
-pub type BhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
+/// Signature of a simple registered behavior function called by `SimpleBehavior`'s tick
+pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
+
+#[allow(clippy::unnecessary_wraps)]
+const fn simple_tick_fn() -> BehaviorResult {
+	Ok(NewBehaviorStatus::Failure)
+}
+
+/// Signature of a registered behavior function called by `SimpleBehavior`'s tick
+pub type ComplexBhvrTickFn =
+	Arc<dyn Fn(&BehaviorTreeComponent) -> BehaviorResult + Send + Sync + 'static>;
+
+#[allow(clippy::unnecessary_wraps)]
+const fn full_tick_fn() -> BehaviorResult {
+	Ok(NewBehaviorStatus::Failure)
+}
 // endregion:   --- types
 
 // region:      --- BehaviorFunction
 /// A simple behavior
 pub struct SimpleBehavior {
 	/// the function to be called on tick
-	pub(crate) tick_fn: BhvrTickFn,
+	pub(crate) simple_tick_fn: Option<SimpleBhvrTickFn>,
+	/// the function to be called on tick
+	pub(crate) complex_tick_fn: Option<ComplexBhvrTickFn>,
 	/// list of provided ports
-	pub(crate) provided_ports: NewPortList,
+	pub(crate) provided_ports: Option<NewPortList>,
 }
 
 impl core::fmt::Debug for SimpleBehavior {
@@ -41,13 +58,25 @@ impl BehaviorTreeMethods for SimpleBehavior {}
 
 impl BehaviorInstanceMethods for SimpleBehavior {
 	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
-		(self.tick_fn)()
+		if self.provided_ports.is_some() {
+			self
+				.complex_tick_fn
+				.as_ref()
+				.expect("snh")(tree_node)
+		} else {
+			(self.simple_tick_fn.as_ref().expect("snh"))()
+		}
 	}
 }
 
 impl BehaviorRedirectionMethods for SimpleBehavior {
+	#[allow(clippy::option_if_let_else)]
 	fn static_provided_ports(&self) -> NewPortList {
-		self.provided_ports.clone()
+		if let Some(port_list) = &self.provided_ports {
+			port_list.clone()
+		} else {
+			NewPortList::default()
+		}
 	}
 }
 
@@ -56,24 +85,26 @@ impl BehaviorRedirectionMethods for SimpleBehavior {
 /// Implementation resembles the macro generated impl code
 impl SimpleBehavior {
 	/// Create a `SimpleBehavior` with the given function
-	pub fn create(tick_fn: BhvrTickFn) -> Box<BehaviorCreationFn> {
+	pub fn create(tick_fn: SimpleBhvrTickFn) -> Box<BehaviorCreationFn> {
 		Box::new(move || {
 			Box::new(Self {
-				tick_fn: tick_fn.clone(),
-				provided_ports: NewPortList::default(),
+				simple_tick_fn: Some(tick_fn.clone()),
+				complex_tick_fn: None,
+				provided_ports: None,
 			})
 		})
 	}
 
 	/// Create a `SimpleBehavior` with the given function and list of ports
 	pub fn create_with_ports(
-		tick_fn: BhvrTickFn,
+		tick_fn: ComplexBhvrTickFn,
 		port_list: NewPortList,
 	) -> Box<BehaviorCreationFn> {
 		Box::new(move || {
 			Box::new(Self {
-				tick_fn: tick_fn.clone(),
-				provided_ports: port_list.clone(),
+				simple_tick_fn: None,
+				complex_tick_fn: Some(tick_fn.clone()),
+				provided_ports: Some(port_list.clone()),
 			})
 		})
 	}

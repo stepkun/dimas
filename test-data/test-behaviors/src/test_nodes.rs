@@ -152,8 +152,11 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn say_something_simple(/* behavior: &SimpleBehavior, tree_node: &BehaviorTreeComponent */)
- -> BehaviorResult {
-	println!("Robot says: this works not yet");
+pub fn say_something_simple(tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	let msg = tree_node
+		.tick_data
+		.lock()
+		.get_input::<String>("message")?;
+	println!("Robot says: {msg}");
 	Ok(NewBehaviorStatus::Success)
 }

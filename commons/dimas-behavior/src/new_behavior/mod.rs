@@ -14,7 +14,7 @@ mod simple_behavior;
 
 // flatten
 pub use behavior::{BehaviorConfigurationData, BehaviorTickData};
-pub use simple_behavior::{BhvrTickFn, SimpleBehavior};
+pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 
 // region:      --- modules
 use alloc::boxed::Box;
