@@ -24,6 +24,7 @@ use dimas_scripting::{
 };
 use hashbrown::HashMap;
 use parking_lot::{Mutex, RwLock};
+use rustc_hash::FxBuildHasher;
 
 use super::ParseStr;
 // endregion:   --- modules
@@ -423,10 +424,13 @@ impl NewBlackboard {
 // endregion:   --- Blackboard
 
 // region:      --- BlackboardData
-/// @TODO:
+/// The key value store for the Blackboard.
+///
+/// It is using the `FxHasher` from `rustc-hash`, because the default `SipHash`
+/// can not be used across loaded libraries
 #[derive(Default)]
 struct BlackboardData {
-	storage: HashMap<String, Arc<Mutex<Entry>>>,
+	storage: HashMap<String, Arc<Mutex<Entry>>, FxBuildHasher>,
 	internal_to_external: HashMap<String, String>,
 	auto_remapping: bool,
 }

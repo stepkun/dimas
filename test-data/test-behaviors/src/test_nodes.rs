@@ -112,9 +112,48 @@ impl BehaviorStaticMethods for SaySomething {
 	}
 }
 
+/// Behavior `ThinkWhatToSay`
+#[derive(Behavior, Debug)]
+pub struct ThinkWhatToSay {}
+
+impl BehaviorCreationMethods for ThinkWhatToSay {
+	fn create() -> Box<BehaviorCreationFn> {
+		Box::new(|| Box::new(Self {}))
+	}
+
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+}
+
+impl BehaviorInstanceMethods for ThinkWhatToSay {
+	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+		tree_node
+			.tick_data
+			.lock()
+			.set_output("text", "The answer is 42")?;
+		Ok(NewBehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for ThinkWhatToSay {
+	fn provided_ports() -> NewPortList {
+		// @TODO: list creation with variadic elements via macro
+		let mut list = NewPortList::default();
+		// @TODO: variadic attributes via macro
+		let entry = output_port::<String>("text", "", "").expect("snh");
+		match add_to_port_list(&mut list, entry) {
+			Ok(entry) => {}
+			Err(err) => panic!("{err}"),
+		}
+		list
+	}
+}
+
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn say_something_simple(/* behavior: &SimpleBehavior, tree_node: &BehaviorTreeComponent */) -> BehaviorResult {
+pub fn say_something_simple(/* behavior: &SimpleBehavior, tree_node: &BehaviorTreeComponent */)
+ -> BehaviorResult {
 	println!("Robot says: this works not yet");
 	Ok(NewBehaviorStatus::Success)
 }

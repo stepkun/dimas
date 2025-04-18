@@ -24,7 +24,8 @@ use dimas_behavior::{
 };
 use dimas_behavior_derive::Behavior;
 use test_behaviors::test_nodes::{
-	ApproachObject, GripperInterface, SaySomething, check_battery, say_something_simple,
+	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
+	say_something_simple,
 };
 
 const XML: &str = r#"
@@ -41,44 +42,6 @@ const XML: &str = r#"
 	</BehaviorTree>
 </root>
 "#;
-
-/// Behavior `ThinkWhatToSay`
-#[derive(Behavior, Debug)]
-pub struct ThinkWhatToSay {}
-
-impl BehaviorCreationMethods for ThinkWhatToSay {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
-
-impl BehaviorInstanceMethods for ThinkWhatToSay {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
-		tree_node
-			.tick_data
-			.lock()
-			.set_output("text", "The answer is 42")?;
-		Ok(NewBehaviorStatus::Success)
-	}
-}
-
-impl BehaviorStaticMethods for ThinkWhatToSay {
-	fn provided_ports() -> NewPortList {
-		// @TODO: list creation with variadic elements via macro
-		let mut list = NewPortList::default();
-		// @TODO: variadic attributes via macro
-		let entry = output_port::<String>("text", "", "").expect("snh");
-		match add_to_port_list(&mut list, entry) {
-			Ok(entry) => {}
-			Err(err) => panic!("{err}"),
-		}
-		list
-	}
-}
 
 #[tokio::test]
 async fn basic_ports() -> anyhow::Result<()> {
@@ -110,14 +73,9 @@ async fn basic_ports() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ignore = "problem with HashMap in Blackboard"]
 async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	extern crate std;
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-
-	// Similarly to SaySomething, ThinkWhatToSay has an OUTPUT port called "text"
-	// Both these ports are of type `String`, therefore they can connect to each other
-	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay");
 
 	factory.register_from_plugin("libtest_behaviors");
 

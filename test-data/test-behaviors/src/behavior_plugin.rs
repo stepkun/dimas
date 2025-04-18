@@ -11,7 +11,8 @@ use dimas_behavior::{
 };
 
 use crate::test_nodes::{
-	ApproachObject, GripperInterface, SaySomething, check_battery, say_something_simple,
+	ApproachObject, GripperInterface, SaySomething, ThinkWhatToSay, check_battery,
+	say_something_simple,
 };
 
 /// Registration function for all external symbols
@@ -47,6 +48,12 @@ extern "Rust" fn register(registry: &mut BehaviorRegistry) -> u32 {
 	registry.register_behavior(
 		"SaySomething",
 		SaySomething::create(),
+		NewBehaviorType::Action,
+	);
+
+	registry.register_behavior(
+		"ThinkWhatToSay",
+		ThinkWhatToSay::create(),
 		NewBehaviorType::Action,
 	);
 

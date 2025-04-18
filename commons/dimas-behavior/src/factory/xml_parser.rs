@@ -92,7 +92,21 @@ impl XmlParser {
 		let children = Self::build_children(&blackboard, registry, tree, element)?;
 		let tick_data = BehaviorTickData::new(blackboard);
 		let config_data = BehaviorConfigurationData::default();
-		let subtree = BehaviorTreeComponent::create_node(None, tick_data, children, config_data);
+		let mut subtree =
+			BehaviorTreeComponent::create_node(None, tick_data, children, config_data);
+		// minimize size of subtree
+		subtree
+			.tick_data
+			.lock()
+			.input_remappings
+			.shrink_to_fit();
+		subtree
+			.tick_data
+			.lock()
+			.output_remappings
+			.shrink_to_fit();
+		subtree.children.lock().shrink_to_fit();
+		//subtree.config_data.lock().?.shrink_to_fit()
 		tree.add(id, subtree);
 		Ok(())
 	}
