@@ -18,7 +18,7 @@ use dimas_behavior::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
 		NewBehaviorStatus, NewBehaviorType,
 	},
-	new_port::{NewPortList, input_port, output_port, port_list},
+	new_port::{NewPortList, add_to_port_list, input_port, output_port, port_list},
 	port::PortList,
 	tree::BehaviorTreeComponent,
 };
@@ -35,6 +35,7 @@ const XML: &str = r#"
 			<SaySomething     message="hello" />
 			<SaySomething2    message="this works too" />
 			<ThinkWhatToSay   text="{the_answer}"/>
+			<SaySomething     message="{the_answer}" />
 			<SaySomething2    message="{the_answer}" />
 		</Sequence>
 	</BehaviorTree>
@@ -60,7 +61,7 @@ impl BehaviorInstanceMethods for ThinkWhatToSay {
 		tree_node
 			.tick_data
 			.lock()
-			.set_output("text", "The answer is 42.")?;
+			.set_output("text", "The answer is 42")?;
 		Ok(NewBehaviorStatus::Success)
 	}
 }
@@ -70,10 +71,11 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 		// @TODO: list creation with variadic elements via macro
 		let mut list = NewPortList::default();
 		// @TODO: variadic attributes via macro
-		list.insert(
-			"text".into(),
-			output_port::<String>("text", "", "").expect("snh"),
-		);
+		let entry = output_port::<String>("text", "", "").expect("snh");
+		match add_to_port_list(&mut list, entry) {
+			Ok(entry) => {}
+			Err(err) => panic!("{err}"),
+		}
 		list
 	}
 }
@@ -90,7 +92,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 	// Both these ports are of type `String`, therefore they can connect to each other
 	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay");
 
-	// SimpleActionNodes can not define their own method providedPorts(), therefore
+	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
 	let mut say_something_ports = port_list(input_port::<String>("message", "", "")?)?;
@@ -108,11 +110,14 @@ async fn basic_ports() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ignore = "registration from plugin destroys previous registrations"]
-async fn register_from_plugin() -> anyhow::Result<()> {
+#[ignore = "problem with HashMap in Blackboard"]
+async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	extern crate std;
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
-	factory.register_node_type::<SaySomething>("SaySomething2"); // @TODO: workaround
+
+	// Similarly to SaySomething, ThinkWhatToSay has an OUTPUT port called "text"
+	// Both these ports are of type `String`, therefore they can connect to each other
+	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay");
 
 	factory.register_from_plugin("libtest_behaviors");
 

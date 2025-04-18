@@ -3,6 +3,9 @@
 
 //! [`BehaviorRegistry`] library
 //!
+//! The registry is not using a `HashMap` but a `Vec` due to two reasons:
+//! - A `HashMap` needs more space than a `Vec` and search performance is not an issue
+//! - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
 
 #[doc(hidden)]
 #[cfg(feature = "std")]
@@ -10,7 +13,6 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{borrow::ToOwned, boxed::Box, string::String, sync::Arc, vec::Vec};
-use hashbrown::HashMap;
 use libloading::Library;
 
 use crate::new_behavior::{BehaviorCreationFn, BehaviorTreeMethods, NewBehaviorType};
@@ -22,22 +24,30 @@ use super::error::Error;
 /// A registry for [`Behavior`]s used by the [`BehaviorTreeFactory`] for creation of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	behaviors: HashMap<String, (NewBehaviorType, Arc<BehaviorCreationFn>)>,
+	behaviors: Vec<(String, NewBehaviorType, Arc<BehaviorCreationFn>)>,
 	librarys: Vec<Library>,
 }
 
 impl BehaviorRegistry {
 	/// Add a behavior to the registry
+	/// # Errors
+	/// - if the entry alreeady exists
 	pub fn add_behavior<F>(
 		&mut self,
 		name: impl Into<String>,
 		bhvr_creation_fn: F,
 		bhvr_type: NewBehaviorType,
-	) where
+	) -> Result<(), Error>
+	where
 		F: Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static,
 	{
+		let name = name.into();
+		if self.contains(&name) {
+			return Err(Error::BehaviorAlreadyRegistered(name));
+		}
 		self.behaviors
-			.insert(name.into(), (bhvr_type, Arc::new(bhvr_creation_fn)));
+			.push((name, bhvr_type, Arc::from(bhvr_creation_fn)));
+		Ok(())
 	}
 
 	/// The Library must be kept in storage until the [`BehaviorTree`] is destroyed.
@@ -60,39 +70,50 @@ impl BehaviorRegistry {
 	}
 
 	/// Register a behavior from a `dylib` in the registry
+	/// # Errors
+	/// - if the entry alreeady exists
 	pub extern "Rust" fn register_behavior(
 		&mut self,
 		name: &str,
 		bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static>,
 		bhvr_type: NewBehaviorType,
-	) {
+	) -> Result<(), Error> {
+		if self.contains(name) {
+			return Err(Error::BehaviorAlreadyRegistered(name.into()));
+		}
 		self.behaviors
-			.insert(name.into(), (bhvr_type, Arc::from(bhvr_creation_fn)));
+			.push((name.into(), bhvr_type, Arc::from(bhvr_creation_fn)));
+		Ok(())
 	}
 
-	/// Get a reference to the behaviors
-	#[must_use]
-	pub fn behaviors(&self) -> &HashMap<String, (NewBehaviorType, Arc<BehaviorCreationFn>)> {
-		&self.behaviors
+	/// Check whether registry contains an entry.
+	fn contains(&self, id: &str) -> bool {
+		for (name, _, _) in &self.behaviors {
+			if name == id {
+				return true;
+			}
+		}
+
+		false
 	}
-	/// Find a behavior in the registry
+
+	/// Fetch a behavior creation function from the registry
 	/// # Errors
 	/// - if the behavior is not found in the registry
-	pub fn find(&self, id: &str) -> Result<(NewBehaviorType, Arc<BehaviorCreationFn>), Error> {
-		// extern crate std;
-		// std::println!("find {id} in ");
-		// self.list_behaviors();
-		let (bhvr_type, creation_fn) = self
-			.behaviors
-			.get(id)
-			.ok_or_else(|| Error::BehaviorNotRegistered(id.into()))?;
-		Ok((bhvr_type.to_owned(), creation_fn.clone()))
+	pub fn fetch(&self, id: &str) -> Result<(NewBehaviorType, Arc<BehaviorCreationFn>), Error> {
+		for (name, bhvr_type, creation_fn) in &self.behaviors {
+			if name == id {
+				return Ok((bhvr_type.to_owned(), creation_fn.clone()));
+			}
+		}
+
+		Err(Error::BehaviorNotRegistered(id.into()))
 	}
 
 	/// Prints out the list of registered behaviors
 	#[cfg(feature = "std")]
 	pub fn list_behaviors(&self) {
-		for (key, _) in &self.behaviors {
+		for (key, _, _) in &self.behaviors {
 			std::println!("{key}");
 		}
 		std::println!();

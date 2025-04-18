@@ -25,7 +25,7 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-async fn manual_creation() -> anyhow::Result<()> {
+async fn build_your_first_tree() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
 
 	// The recommended way to create a Behavior is through inheritance/composition.
@@ -59,8 +59,7 @@ async fn manual_creation() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ignore = "registration from plugin destroys previous registrations"]
-async fn register_from_plugin() -> anyhow::Result<()> {
+async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors();
 
 	// Load a plugin and register the Behaviors it contains.

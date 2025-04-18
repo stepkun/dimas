@@ -20,6 +20,9 @@ use thiserror::Error;
 /// `dimas` error type
 #[derive(Error, Debug)]
 pub enum Error {
+	/// Behavior is already registered
+	#[error("behavior [{0}] is already registered")]
+	BehaviorAlreadyRegistered(String),
 	/// Behavior is not registered
 	#[error("behavior [{0}] is not registered")]
 	BehaviorNotRegistered(String),
@@ -40,7 +43,7 @@ pub enum Error {
 	ElementNotSupported(String),
 	/// Port not in defined port list
 	#[error("port name [{0}] does not match [{1}]s port list: {2:?}")]
-	PortInvalid(String, String, Vec<String>),
+	PortInvalid(String, String, String),
 	/// Loading a library failed
 	#[error("registering library [{0}] failed with [{0}]")]
 	RegisterLib(String, u32),

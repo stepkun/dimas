@@ -15,8 +15,8 @@ use core::{any::TypeId, str::FromStr};
 use crate::{
 	new_blackboard::NewBlackboard,
 	new_port::{
-		NewPortDirection, NewPortList, NewPortRemappings, get_remapped_key, is_bb_pointer,
-		strip_bb_pointer,
+		NewPortDirection, NewPortList, NewPortRemappings, find_in_port_list,
+		find_in_remapping_list, get_remapped_key, is_bb_pointer, strip_bb_pointer,
 	},
 };
 
@@ -62,9 +62,9 @@ pub struct BehaviorTickData {
 	/// [`Blackboard`] for this [`Behavior`]
 	pub(crate) blackboard: NewBlackboard,
 	/// In ports including remapping
-	pub(crate) input_ports: NewPortRemappings,
+	pub(crate) input_remappings: NewPortRemappings,
 	/// Out ports including remapping
-	pub(crate) output_ports: NewPortRemappings,
+	pub(crate) output_remappings: NewPortRemappings,
 }
 impl BehaviorTickData {
 	/// Constructor
@@ -80,15 +80,15 @@ impl BehaviorTickData {
 	pub fn add_port(&mut self, direction: &NewPortDirection, name: String, value: String) {
 		match direction {
 			NewPortDirection::In => {
-				self.input_ports.insert(name, value);
+				self.input_remappings.push((name, value));
 			}
 			NewPortDirection::Out => {
-				self.output_ports.insert(name, value);
+				self.output_remappings.push((name, value));
 			}
 			NewPortDirection::InOut => {
-				self.input_ports
-					.insert(name.clone(), value.clone());
-				self.output_ports.insert(name, value);
+				self.input_remappings
+					.push((name.clone(), value.clone()));
+				self.output_remappings.push((name, value));
 			}
 		}
 	}
@@ -101,40 +101,41 @@ impl BehaviorTickData {
 	where
 		T: FromStr + Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
+		// extern crate std;
+		// std::dbg!("test: {}", &self.blackboard);
 		let port_name = port.into();
-		match self.input_ports.get(&port_name) {
-			Some(port_remapped) => {
-				// Check if default is needed
-				if port_remapped.is_empty() {
-					todo!()
-				} else {
-					match get_remapped_key(&port_name, port_remapped) {
-						// Value is a Blackboard pointer
-						Some(key) => self
-							.blackboard
-							.get_stringy::<T>(&key)
-							.map_or_else(
-								|| Err(NewBehaviorError::NotInBlackboard(key)),
-								|val| Ok(val),
-							),
-						// Value is just a normal string
-						None => <T as FromStr>::from_str(port_remapped).map_or_else(
-							|_| {
-								Err(NewBehaviorError::ParsePortValue(
-									port_name,
-									format!("{:?}", TypeId::of::<T>()),
-								))
-							},
+		if let Some(remapped_name) = find_in_remapping_list(&self.input_remappings, &port_name) {
+			// entry found
+			if remapped_name.is_empty() {
+				todo!()
+			} else {
+				match get_remapped_key(&port_name, &remapped_name) {
+					// Value is a Blackboard pointer
+					Some(key) => self
+						.blackboard
+						.get_stringy::<T>(&key)
+						.map_or_else(
+							|| Err(NewBehaviorError::NotInBlackboard(key)),
 							|val| Ok(val),
 						),
-					}
+					// Value is just a normal string
+					None => <T as FromStr>::from_str(&remapped_name).map_or_else(
+						|_| {
+							Err(NewBehaviorError::ParsePortValue(
+								port_name,
+								format!("{:?}", TypeId::of::<T>()),
+							))
+						},
+						|val| Ok(val),
+					),
 				}
 			}
-			// Port not found in behaviors port list
-			None => Err(NewBehaviorError::PortNotDeclared(
+		} else {
+			// no entry found
+			Err(NewBehaviorError::PortNotDeclared(
 				port_name,
 				String::from("todo in behavior.rs get_input()"),
-			)),
+			))
 		}
 	}
 
@@ -146,26 +147,27 @@ impl BehaviorTickData {
 		T: Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
 		let port_name = port.into();
-		match self.output_ports.get(&port_name) {
-			Some(port_value) => {
-				let blackboard_key = match port_value.as_str() {
-					"=" => port_name,
-					value => {
-						if is_bb_pointer(value) {
-							strip_bb_pointer(value).unwrap_or_else(|| todo!())
-						} else {
-							value.to_string()
-						}
+		if let Some(remapped_name) = find_in_remapping_list(&self.output_remappings, &port_name) {
+			// entry found
+			let blackboard_key = match remapped_name.as_str() {
+				"=" => port_name,
+				value => {
+					if is_bb_pointer(value) {
+						strip_bb_pointer(value).unwrap_or_else(|| todo!())
+					} else {
+						value.to_string()
 					}
-				};
+				}
+			};
 
-				self.blackboard.set(blackboard_key, value);
+			self.blackboard.set(blackboard_key, value);
 
-				Ok(())
-			}
-			None => Err(NewBehaviorError::Internal(
-				port_name + "could not set in Blackboard, possibly not defined as output",
-			)),
+			Ok(())
+		} else {
+			// entry not found
+			Err(NewBehaviorError::Internal(
+				port_name + " could not set in Blackboard, possibly not defined as output",
+			))
 		}
 	}
 }

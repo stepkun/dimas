@@ -18,7 +18,7 @@ use crate::{
 		BehaviorConfigurationData, BehaviorTickData, BehaviorTreeMethods, NewBehaviorType,
 	},
 	new_blackboard::NewBlackboard,
-	new_port::NewPortRemappings,
+	new_port::{NewPortRemappings, find_in_port_list, port_list_entries},
 	tree::{BehaviorTree, BehaviorTreeComponent},
 };
 
@@ -82,8 +82,13 @@ impl XmlParser {
 		element: Node,
 		id: impl Into<String>,
 	) -> Result<(), Error> {
+		let id = id.into();
 		// A subtreee gets a new [`Blackboard`] with parent trees [`Blackboard`] as parent
-		let blackboard = NewBlackboard::new(blackboard);
+		let blackboard = if id == "MainTree" {
+			blackboard.clone()
+		} else {
+			NewBlackboard::new(blackboard)
+		};
 		let children = Self::build_children(&blackboard, registry, tree, element)?;
 		let tick_data = BehaviorTickData::new(blackboard);
 		let config_data = BehaviorConfigurationData::default();
@@ -143,7 +148,7 @@ impl XmlParser {
 			}
 		} else {
 			// look for the behavior in the [`BehaviorRegisty`]
-			let (bhvr_type, bhvr_creation_fn) = registry.find(bhvr_name)?;
+			let (bhvr_type, bhvr_creation_fn) = registry.fetch(bhvr_name)?;
 			let mut bhvr = bhvr_creation_fn();
 			let tree_node = match bhvr_type {
 				NewBehaviorType::Action | NewBehaviorType::Condition => {
@@ -192,17 +197,19 @@ impl XmlParser {
 				config_data.set_name(name);
 			} else {
 				// fetch found port name from list of provided ports
-				if let Some(port) = bhvr.static_provided_ports().get(&name) {
-					//remappings.insert(name, value);
-					// add ports and remapping to [`BehaviorTickData`]/[`BehaviorConfigurationData`]
-					tick_data.add_port(&port.direction, name, value);
-					//todo!();
-				} else {
-					return Err(Error::PortInvalid(
-						name,
-						config_data.name().into(),
-						bhvr.static_provided_ports().into_keys().collect(),
-					));
+				let port_list = bhvr.static_provided_ports();
+				match find_in_port_list(&port_list, &name) {
+					Ok(port_definition) => {
+						tick_data.add_port(&port_definition.direction, name, value);
+						//todo!();
+					}
+					Err(_) => {
+						return Err(Error::PortInvalid(
+							name,
+							config_data.name().into(),
+							port_list_entries(&port_list),
+						));
+					}
 				}
 			}
 		}

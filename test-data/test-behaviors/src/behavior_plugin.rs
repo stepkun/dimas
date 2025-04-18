@@ -7,9 +7,12 @@ use alloc::sync::Arc;
 use dimas_behavior::{
 	factory::BehaviorRegistry,
 	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
+	new_port::{input_port, port_list},
 };
 
-use crate::test_nodes::{ApproachObject, GripperInterface, SaySomething, check_battery};
+use crate::test_nodes::{
+	ApproachObject, GripperInterface, SaySomething, check_battery, say_something_simple,
+};
 
 /// Registration function for all external symbols
 #[allow(unsafe_code)]
@@ -44,6 +47,17 @@ extern "Rust" fn register(registry: &mut BehaviorRegistry) -> u32 {
 	registry.register_behavior(
 		"SaySomething",
 		SaySomething::create(),
+		NewBehaviorType::Action,
+	);
+
+	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
+	// we have to pass the PortsList explicitly if we want the Action to use get_input()
+	// or set_output();
+	let mut say_something_ports =
+		port_list(input_port::<String>("message", "", "").expect("snh")).expect("snh");
+	registry.register_behavior(
+		"SaySomething2",
+		SimpleBehavior::create_with_ports(Arc::new(say_something_simple), say_something_ports),
 		NewBehaviorType::Action,
 	);
 

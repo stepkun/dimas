@@ -51,7 +51,7 @@ impl BehaviorRedirectionMethods for SimpleBehavior {
 	}
 }
 
-impl BehaviorStaticMethods for SimpleBehavior {}
+//impl BehaviorStaticMethods for SimpleBehavior {}
 
 /// Implementation resembles the macro generated impl code
 impl SimpleBehavior {

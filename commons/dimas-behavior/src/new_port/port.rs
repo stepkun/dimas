@@ -10,7 +10,10 @@ extern crate alloc;
 use core::any::TypeId;
 
 // region:      --- modules
-use alloc::string::{String, ToString};
+use alloc::{
+	string::{String, ToString},
+	vec,
+};
 
 use super::{NewPortList, error::Error};
 // endregion:   --- modules
@@ -70,8 +73,7 @@ pub fn is_bb_pointer(port: &str) -> bool {
 /// # Errors
 /// - if a name of a port violates the conventions.
 pub fn port_list(port: NewPortDefinition) -> Result<NewPortList, Error> {
-	let mut port_list = NewPortList::default();
-	port_list.insert(port.name.clone(), port);
+	let mut port_list = vec![port];
 	Ok(port_list)
 }
 
@@ -95,7 +97,7 @@ fn create_port<T: 'static>(
 			description: description.into(),
 		})
 	} else {
-		Err(Error::Name(name))
+		Err(Error::NameNotAllowed(name))
 	}
 }
 
@@ -162,7 +164,7 @@ impl NewPort {
 				description: description.into(),
 			})
 		} else {
-			Err(Error::Name(name))
+			Err(Error::NameNotAllowed(name))
 		}
 	}
 }
@@ -227,7 +229,7 @@ impl NewPortDefinition {
 				description: description.into(),
 			})
 		} else {
-			Err(Error::Name(name))
+			Err(Error::NameNotAllowed(name))
 		}
 	}
 }
