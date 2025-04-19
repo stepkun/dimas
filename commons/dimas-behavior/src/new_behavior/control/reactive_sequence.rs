@@ -30,15 +30,15 @@ use crate::{
 ///            asynchronous child.
 #[derive(Behavior, Debug, Default)]
 pub struct ReactiveSequence {
+	/// Defaults to 'false'
+	running: bool,
 	/// Defaults to '0'
 	child_idx: usize,
-	/// Defaults to 'false'
-	all_skipped: bool,
 }
 
 impl BehaviorInstanceMethods for ReactiveSequence {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let mut failure = false;
+		let mut all_skipped = true;
 
 		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
@@ -46,12 +46,12 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 			let child = &mut tree_node.children[counter];
 			let new_status = child.execute_tick()?;
 
-			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
+			all_skipped &= new_status == NewBehaviorStatus::Skipped;
 
 			match new_status {
 				NewBehaviorStatus::Failure => {
-					failure = true;
-					break;
+					tree_node.reset_children()?;
+					return Ok(NewBehaviorStatus::Failure);
 				}
 				NewBehaviorStatus::Idle => {
 					return Err(NewBehaviorError::Status(
@@ -59,8 +59,24 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 						"Idle".to_string(),
 					));
 				}
-				NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
+				NewBehaviorStatus::Running => {
+					for i in 0..counter {
+						tree_node.children[i].execute_halt()?;
+					}
+					if !self.running {
+						self.child_idx = counter;
+						self.running = true;
+					} else if self.child_idx != counter {
+						// Multiple children running at the same time
+						return Err(NewBehaviorError::Composition(
+							"[ReactiveSequence]: Only a single child can return Running."
+								.to_string(),
+						));
+					}
+					return Ok(NewBehaviorStatus::Running);
+				}
 				NewBehaviorStatus::Skipped => {
+					// halt current child
 					child.execute_halt()?;
 				}
 				NewBehaviorStatus::Success => {}
@@ -69,11 +85,7 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 
 		// Reset children on failure
 		tree_node.reset_children()?;
-		self.child_idx = 0;
-
-		if failure {
-			Ok(NewBehaviorStatus::Failure)
-		} else if self.all_skipped {
+		if all_skipped {
 			Ok(NewBehaviorStatus::Skipped)
 		} else {
 			Ok(NewBehaviorStatus::Success)

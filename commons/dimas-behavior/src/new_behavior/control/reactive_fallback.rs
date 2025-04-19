@@ -31,25 +31,18 @@ use crate::{
 /// IMPORTANT: to work properly, this node should not have more than
 ///            a single asynchronous child.
 #[derive(Behavior, Debug, Default)]
-pub struct ReactiveFallback {
-	/// Defaults to '0'
-	child_idx: usize,
-	/// Defaults to 'false'
-	all_skipped: bool,
-}
+pub struct ReactiveFallback {}
 
 impl BehaviorInstanceMethods for ReactiveFallback {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let mut success = false;
-
-		self.all_skipped = true;
+		let mut all_skipped = true;
 		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
 		for index in 0..tree_node.children.len() {
-			let child = &mut tree_node.children[self.child_idx];
+			let child = &mut tree_node.children[index];
 			let new_status = child.execute_tick()?;
 
-			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
+			all_skipped &= new_status == NewBehaviorStatus::Skipped;
 
 			match new_status {
 				NewBehaviorStatus::Failure => {}
@@ -60,6 +53,7 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 					));
 				}
 				NewBehaviorStatus::Running => {
+					// stop later children
 					for i in 0..index {
 						let cd = &mut tree_node.children[i];
 						cd.execute_halt()?;
@@ -70,18 +64,15 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 					child.execute_halt()?;
 				}
 				NewBehaviorStatus::Success => {
-					success = true;
-					break;
+					tree_node.reset_children()?;
+					return Ok(NewBehaviorStatus::Success);
 				}
 			}
 		}
 
 		tree_node.reset_children()?;
-		self.child_idx = 0;
 
-		if success {
-			Ok(NewBehaviorStatus::Success)
-		} else if self.all_skipped {
+		if all_skipped {
 			Ok(NewBehaviorStatus::Skipped)
 		} else {
 			Ok(NewBehaviorStatus::Failure)

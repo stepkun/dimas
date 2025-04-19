@@ -37,16 +37,13 @@ pub struct SequenceWithMemory {
 
 impl BehaviorInstanceMethods for SequenceWithMemory {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let mut failure = false;
-
 		if tree_node.tick_data.status == NewBehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
 		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
-		let children_len = tree_node.children.len();
-		while self.child_idx < children_len {
+		while self.child_idx < tree_node.children.len() {
 			let child = &mut tree_node.children[self.child_idx];
 			let new_status = child.execute_tick()?;
 
@@ -54,8 +51,10 @@ impl BehaviorInstanceMethods for SequenceWithMemory {
 
 			match new_status {
 				NewBehaviorStatus::Failure => {
-					failure = true;
-					break;
+					// Do NOT reset children on failure
+					// Halt children at and after current index
+					tree_node.halt_children(self.child_idx)?;
+					return Ok(NewBehaviorStatus::Failure);
 				}
 				NewBehaviorStatus::Idle => {
 					return Err(NewBehaviorError::Status(
@@ -70,13 +69,8 @@ impl BehaviorInstanceMethods for SequenceWithMemory {
 			}
 		}
 
-		if failure {
-			// Do NOT reset children on failure
-			// Halt children at and after current index
-			tree_node.halt_children(self.child_idx)?;
-		}
 		// All children returned Success
-		else if self.child_idx == children_len {
+		if self.child_idx >= tree_node.children.len() {
 			// Reset children
 			tree_node.reset_children()?;
 			self.child_idx = 0;
@@ -85,7 +79,7 @@ impl BehaviorInstanceMethods for SequenceWithMemory {
 		if self.all_skipped {
 			Ok(NewBehaviorStatus::Skipped)
 		} else {
-			Ok(NewBehaviorStatus::Failure)
+			Ok(NewBehaviorStatus::Success)
 		}
 	}
 

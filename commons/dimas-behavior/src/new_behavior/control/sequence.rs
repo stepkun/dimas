@@ -36,16 +36,13 @@ pub struct Sequence {
 
 impl BehaviorInstanceMethods for Sequence {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let mut failure = false;
-
 		if tree_node.tick_data.status == NewBehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
 		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
-		let children_len = tree_node.children.len();
-		while self.child_idx < children_len {
+		while self.child_idx < tree_node.children.len() {
 			let child = &mut tree_node.children[self.child_idx];
 			let new_status = child.execute_tick()?;
 
@@ -53,8 +50,9 @@ impl BehaviorInstanceMethods for Sequence {
 
 			match new_status {
 				NewBehaviorStatus::Failure => {
-					failure = true;
-					break;
+					tree_node.reset_children()?;
+					self.child_idx = 0;
+					return Ok(NewBehaviorStatus::Failure);
 				}
 				NewBehaviorStatus::Idle => {
 					return Err(NewBehaviorError::Status(
@@ -69,14 +67,15 @@ impl BehaviorInstanceMethods for Sequence {
 			}
 		}
 
-		// All children returned Success or Failure
-		if failure || self.child_idx == children_len {
+		// All children returned Success
+		if self.child_idx >= tree_node.children.len() {
 			// Reset children
 			tree_node.reset_children()?;
 			self.child_idx = 0;
 		}
-		if failure {
-			Ok(NewBehaviorStatus::Failure)
+
+		if self.all_skipped {
+			Ok(NewBehaviorStatus::Skipped)
 		} else {
 			Ok(NewBehaviorStatus::Success)
 		}

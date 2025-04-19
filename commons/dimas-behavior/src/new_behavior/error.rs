@@ -15,6 +15,9 @@ use thiserror::Error;
 #[allow(clippy::module_name_repetitions)]
 #[derive(Error, Debug)]
 pub enum NewBehaviorError {
+	/// Error in structural composition of a behaviors children
+	#[error("{0}")]
+	Composition(String),
 	/// Pass through executtion error
 	#[error("{0}")]
 	Execution(#[from] dimas_scripting::execution::error::Error),

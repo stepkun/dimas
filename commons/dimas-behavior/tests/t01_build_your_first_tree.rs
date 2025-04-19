@@ -8,6 +8,7 @@
 use std::sync::Arc;
 
 use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
 
 const XML: &str = r#"
@@ -25,6 +26,7 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
+#[serial]
 async fn build_your_first_tree() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
@@ -59,6 +61,7 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+#[serial]
 async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 

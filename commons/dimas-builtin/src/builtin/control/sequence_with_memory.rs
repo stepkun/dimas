@@ -75,7 +75,7 @@ impl SequenceWithMemory {
 		if self.all_skipped {
 			Ok(BehaviorStatus::Skipped)
 		} else {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorStatus::Success)
 		}
 	}
 

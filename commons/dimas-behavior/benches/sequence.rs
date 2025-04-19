@@ -56,7 +56,7 @@ const REACTIVE_SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<ReactiveSequence name="root_sequence">
+		<ReactiveSequence name="root_reactive_sequence">
 			<AlwaysSuccess	name="step1"/>
 			<AlwaysSuccess	name="step2"/>
 			<AlwaysSuccess	name="step3"/>
@@ -96,7 +96,7 @@ const SEQUENCE_WITH_MEMORY: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<SequenceWithMemory name="root_sequence">
+		<SequenceWithMemory name="root_sequence_with_memory">
 			<AlwaysSuccess	name="step1"/>
 			<AlwaysSuccess	name="step2"/>
 			<AlwaysSuccess	name="step3"/>

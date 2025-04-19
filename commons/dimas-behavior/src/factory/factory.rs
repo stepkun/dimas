@@ -18,9 +18,9 @@ use crate::{
 		action::Script,
 		condition::script_condition::ScriptCondition,
 		control::{
-			fallback::Fallback, reactive_fallback::ReactiveFallback,
-			reactive_sequence::ReactiveSequence, sequence::Sequence,
-			sequence_with_memory::SequenceWithMemory,
+			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
+			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
+			sequence::Sequence, sequence_with_memory::SequenceWithMemory,
 		},
 	},
 	new_blackboard::NewBlackboard,
@@ -54,6 +54,8 @@ impl NewBehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		self.register_node_type::<Fallback>("Fallback")?;
+		self.register_node_type::<Parallel>("Parallel")?;
+		self.register_node_type::<ParallelAll>("ParallelAll")?;
 		self.register_node_type::<ReactiveFallback>("ReactiveFallback")?;
 		self.register_node_type::<ReactiveSequence>("ReactiveSequence")?;
 		self.register_node_type::<Sequence>("Sequence")?;
@@ -79,8 +81,7 @@ impl NewBehaviorTreeFactory {
 			}
 		}
 		let mut tree = BehaviorTree::default();
-		if let Some(id) = root.attribute("main_tree_to_execute") {
-			tree.set_root_id(id);
+		if root.attribute("main_tree_to_execute").is_some() {
 			XmlParser::parse_root_element(
 				&self.blackboard,
 				&mut self.registry,

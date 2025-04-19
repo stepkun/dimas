@@ -24,7 +24,7 @@ use super::{BehaviorResult, NewBehaviorStatus, error::NewBehaviorError};
 // region:		--- BehaviorConfigurationData
 /// Holds the Behavior data used during configuration
 /// and on other rare occasions.
-#[derive(Default, Debug)]
+#[derive(Debug, Default)]
 pub struct BehaviorConfigurationData {
 	name: String,
 }

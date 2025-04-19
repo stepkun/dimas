@@ -13,6 +13,7 @@ use std::sync::Arc;
 use dimas_behavior::{
 	factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus, new_port::input_port,
 };
+use serial_test::serial;
 use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, say_something_simple};
 
 const XML: &str = r#"
@@ -31,6 +32,7 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
+#[serial]
 async fn basic_ports() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
@@ -60,6 +62,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+#[serial]
 async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	extern crate std;
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;

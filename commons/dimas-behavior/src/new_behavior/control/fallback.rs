@@ -35,7 +35,6 @@ pub struct Fallback {
 extern crate std;
 impl BehaviorInstanceMethods for Fallback {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let mut success = false;
 		if tree_node.tick_data.status == NewBehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
@@ -60,18 +59,19 @@ impl BehaviorInstanceMethods for Fallback {
 				}
 				NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
 				NewBehaviorStatus::Success => {
-					success = true;
-					break;
+					tree_node.reset_children()?;
+					self.child_idx = 0;
+					return Ok(NewBehaviorStatus::Success);
 				}
 			}
 		}
 
-		tree_node.reset_children()?;
-		self.child_idx = 0;
+		if self.child_idx >= tree_node.children.len() {
+			tree_node.reset_children()?;
+			self.child_idx = 0;
+		}
 
-		if success {
-			Ok(NewBehaviorStatus::Success)
-		} else if self.all_skipped {
+		if self.all_skipped {
 			Ok(NewBehaviorStatus::Skipped)
 		} else {
 			Ok(NewBehaviorStatus::Failure)

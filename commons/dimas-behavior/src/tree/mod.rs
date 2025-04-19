@@ -8,4 +8,4 @@ pub mod error;
 mod tree;
 
 // flatten
-pub use tree::{BehaviorTree, BehaviorTreeComponent, BehaviorTreeComponentOuter};
+pub use tree::{BehaviorTree, BehaviorTreeComponent, BehaviorTreeComponentContainer};

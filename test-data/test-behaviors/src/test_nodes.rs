@@ -9,6 +9,7 @@ extern crate alloc;
 // region:		--- modules
 use alloc::str::FromStr;
 use core::num::ParseFloatError;
+use std::time::{Duration, Instant};
 
 use dimas_behavior::{
 	new_behavior::{
@@ -225,5 +226,86 @@ impl BehaviorInstanceMethods for PrintTarget {
 impl BehaviorStaticMethods for PrintTarget {
 	fn provided_ports() -> NewPortList {
 		vec![input_port::<String>("target", "", "").expect("snh")]
+	}
+}
+
+/// `Position2D`
+#[derive(Clone, Debug, Default)]
+struct Pose2D {
+	x: f64,
+	y: f64,
+	theta: f64,
+}
+
+impl FromStr for Pose2D {
+	type Err = ParseFloatError;
+
+	fn from_str(value: &str) -> Result<Self, Self::Err> {
+		// remove redundant ' and &apos; from string
+		let s = value
+			.replace('\'', "")
+			.trim()
+			.replace("&apos;", "")
+			.trim()
+			.to_string();
+		let v: Vec<&str> = s.split(';').collect();
+		let x = f64::from_str(v[0])?;
+		let y = f64::from_str(v[1])?;
+		let theta = f64::from_str(v[2])?;
+		Ok(Self { x, y, theta })
+	}
+}
+
+/// Behavior `MoveBase`
+#[derive(Behavior, Debug)]
+pub struct MoveBaseAction {
+	start_time: Instant,
+	completion_time: Duration,
+}
+
+impl Default for MoveBaseAction {
+	fn default() -> Self {
+		Self {
+			start_time: Instant::now(),
+			completion_time: Duration::default(),
+		}
+	}
+}
+
+impl BehaviorCreationMethods for MoveBaseAction {
+	fn create() -> Box<BehaviorCreationFn> {
+		Box::new(|| Box::new(Self::default()))
+	}
+
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+}
+
+impl BehaviorInstanceMethods for MoveBaseAction {
+	fn start(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+		let pose = tree_node.tick_data.get_input::<Pose2D>("goal")?;
+		println!(
+			"[ MoveBase: SEND REQUEST ]. goal: x={} y={} theta={}",
+			pose.x, pose.y, pose.theta
+		);
+		self.start_time = Instant::now();
+		self.completion_time = Duration::from_millis(220);
+		Ok(NewBehaviorStatus::Running)
+	}
+
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+		if Instant::now().duration_since(self.start_time) >= self.completion_time {
+			println!("[ MoveBase: FINISHED ]");
+			return Ok(NewBehaviorStatus::Success);
+		}
+
+		Ok(NewBehaviorStatus::Running)
+	}
+}
+
+impl BehaviorStaticMethods for MoveBaseAction {
+	fn provided_ports() -> NewPortList {
+		vec![input_port::<Pose2D>("goal", "", "").expect("snh")]
 	}
 }
