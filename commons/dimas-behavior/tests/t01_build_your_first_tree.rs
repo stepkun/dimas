@@ -8,6 +8,7 @@
 use std::sync::Arc;
 
 use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use parking_lot::Mutex;
 use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
 
@@ -40,11 +41,11 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 
 	// You can also create SimpleAction/SimpleCondition using methods of a struct.
 	// In Rust this needs to be done with Closures and an Arc to the struct.
-	let gripper1 = Arc::new(GripperInterface::default());
+	let gripper1 = Arc::new(Mutex::new(GripperInterface::default()));
 	let gripper2 = gripper1.clone();
 	// @TODO: replace the workaround with a solution!
-	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.open()))?;
-	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.close()))?;
+	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.lock().open()))?;
+	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.lock().close()))?;
 
 	// Trees are created at run-time, but only once at the beginning).
 	// The currently supported format is XML.
@@ -67,11 +68,7 @@ async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 
 	// Load a plugin and register the Behaviors it contains.
 	// This automates the registering step.
-	// std::println!("before registration");
-	// factory.list_behaviors();
 	factory.register_from_plugin("libtest_behaviors")?;
-	// std::println!("after registration");
-	// factory.list_behaviors();
 
 	let mut tree = factory.create_from_text(XML)?;
 

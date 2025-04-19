@@ -1,14 +1,16 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(unused)]
+#![allow(clippy::unwrap_used)]
 
 //! A library with test behaviors
 
 use alloc::sync::Arc;
 use dimas_behavior::{
-	factory::BehaviorRegistry,
+	factory::{BehaviorRegistry, NewBehaviorTreeFactory},
 	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
 	new_port::input_port,
 };
+use parking_lot::Mutex;
 
 use crate::test_nodes::{
 	ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction, PrintTarget, SaySomething,
@@ -18,77 +20,58 @@ use crate::test_nodes::{
 /// Registration function for all external symbols
 #[allow(unsafe_code)]
 #[unsafe(no_mangle)]
-extern "Rust" fn register(registry: &mut BehaviorRegistry) -> u32 {
-	registry.register_behavior(
-		"CheckBattery",
-		SimpleBehavior::create(Arc::new(check_battery)),
-		NewBehaviorType::Condition,
-	);
-
-	registry.register_behavior(
-		"ApproachObject",
-		ApproachObject::create(),
-		NewBehaviorType::Action,
-	);
-
-	let gripper1 = Arc::new(GripperInterface::default());
+extern "Rust" fn register(factory: &mut NewBehaviorTreeFactory) -> u32 {
+	// t01
+	factory
+		.register_simple_condition("CheckBattery", Arc::new(check_battery))
+		.unwrap();
+	factory
+		.register_node_type::<ApproachObject>("ApproachObject")
+		.unwrap();
+	let gripper1 = Arc::new(Mutex::new(GripperInterface::default()));
 	let gripper2 = gripper1.clone();
-	registry.register_behavior(
-		"OpenGripper",
-		SimpleBehavior::create(Arc::new(move || gripper1.open())),
-		NewBehaviorType::Action,
-	);
+	// @TODO: replace the workaround with a solution!
+	factory
+		.register_simple_action("OpenGripper", Arc::new(move || gripper1.lock().open()))
+		.unwrap();
+	factory
+		.register_simple_action("CloseGripper", Arc::new(move || gripper2.lock().close()))
+		.unwrap();
 
-	registry.register_behavior(
-		"CloseGripper",
-		SimpleBehavior::create(Arc::new(move || gripper2.close())),
-		NewBehaviorType::Action,
-	);
-
-	registry.register_behavior(
-		"SaySomething",
-		SaySomething::create(),
-		NewBehaviorType::Action,
-	);
-
-	registry.register_behavior(
-		"ThinkWhatToSay",
-		ThinkWhatToSay::create(),
-		NewBehaviorType::Action,
-	);
-
+	// t02
+	factory
+		.register_node_type::<SaySomething>("SaySomething")
+		.unwrap();
+	factory
+		.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay")
+		.unwrap();
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let mut say_something_ports = vec![input_port::<String>("message", "", "").expect("snh")];
-	registry.register_behavior(
-		"SaySomething2",
-		SimpleBehavior::create_with_ports(Arc::new(say_something_simple), say_something_ports),
-		NewBehaviorType::Action,
-	);
+	let say_something_ports = vec![input_port::<String>("message", "", "").unwrap()];
+	factory
+		.register_simple_action_with_ports(
+			"SaySomething2",
+			Arc::new(say_something_simple),
+			say_something_ports,
+		)
+		.unwrap();
 
-	registry.register_behavior(
-		"CalculateGoal",
-		CalculateGoal::create(),
-		NewBehaviorType::Action,
-	);
+	// t03
+	factory
+		.register_node_type::<CalculateGoal>("CalculateGoal")
+		.unwrap();
+	factory
+		.register_node_type::<PrintTarget>("PrintTarget")
+		.unwrap();
 
-	registry.register_behavior(
-		"PrintTarget",
-		PrintTarget::create(),
-		NewBehaviorType::Action,
-	);
-
-	registry.register_behavior(
-		"BatteryOK",
-		SimpleBehavior::create(Arc::new(check_battery)),
-		NewBehaviorType::Condition,
-	);
-	registry.register_behavior(
-		"MoveBase",
-		MoveBaseAction::create(),
-		NewBehaviorType::Action,
-	);
+	// t04
+	factory
+		.register_simple_condition("BatteryOK", Arc::new(check_battery))
+		.unwrap();
+	factory
+		.register_node_type::<MoveBaseAction>("MoveBase")
+		.unwrap();
 
 	// A return value of 0 signals success
 	0

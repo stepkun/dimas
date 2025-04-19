@@ -14,14 +14,14 @@ use std::time::{Duration, Instant};
 use dimas_behavior::{
 	new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
-		BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType, SimpleBehavior,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
+		NewBehaviorStatus, NewBehaviorType,
 	},
-	new_port::{NewPortList, add_to_port_list, input_port, output_port},
+	new_port::{NewPortList, input_port, output_port},
 	tree::BehaviorTreeComponent,
 };
 use dimas_behavior_derive::Behavior;
-//  endregion:	--- modules
+// endregion:	--- modules
 
 /// Behavior `ApproachObject`
 /// Example of custom `SyncActionNode` (synchronous action) without ports.
@@ -39,7 +39,7 @@ impl BehaviorCreationMethods for ApproachObject {
 }
 
 impl BehaviorInstanceMethods for ApproachObject {
-	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
 		Ok(NewBehaviorStatus::Success)
 	}
@@ -63,14 +63,14 @@ impl GripperInterface {
 	/// Open the gripper.
 	/// # Errors
 	/// In this case never :-)
-	pub fn open(&self) -> BehaviorResult {
+	pub fn open(&mut self) -> BehaviorResult {
 		println!("GripperInterface::open");
 		Ok(NewBehaviorStatus::Success)
 	}
 	/// Close the gripper.
 	/// # Errors
 	/// In this case never :-)
-	pub fn close(&self) -> BehaviorResult {
+	pub fn close(&mut self) -> BehaviorResult {
 		println!("GripperInterface::close");
 		Ok(NewBehaviorStatus::Success)
 	}
@@ -294,7 +294,7 @@ impl BehaviorInstanceMethods for MoveBaseAction {
 		Ok(NewBehaviorStatus::Running)
 	}
 
-	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		if Instant::now().duration_since(self.start_time) >= self.completion_time {
 			println!("[ MoveBase: FINISHED ]");
 			return Ok(NewBehaviorStatus::Success);

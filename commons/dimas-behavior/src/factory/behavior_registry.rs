@@ -53,20 +53,8 @@ impl BehaviorRegistry {
 	/// The Library must be kept in storage until the [`BehaviorTree`] is destroyed.
 	/// Therefore the library is stored in the behavior registry, which is later owned by tree.
 	/// The `add_library(..)` function also takes care of registering all 'symbols'.
-	/// # Errors
-	#[allow(unsafe_code)]
-	pub fn add_library(&mut self, name: impl Into<String>, library: Library) -> Result<(), Error> {
-		unsafe {
-			let registration_fn: libloading::Symbol<unsafe extern "Rust" fn(&mut Self) -> u32> =
-				library.get(b"register")?;
-			let res = registration_fn(self);
-			if res != 0 {
-				return Err(Error::RegisterLib(name.into(), res));
-			}
-		}
-
+	pub fn add_library(&mut self, library: Library) {
 		self.librarys.push(library);
-		Ok(())
 	}
 
 	/// Register a behavior from a `dylib` in the registry

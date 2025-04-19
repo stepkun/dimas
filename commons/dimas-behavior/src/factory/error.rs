@@ -41,18 +41,21 @@ pub enum Error {
 	/// Unsupported XML element:
 	#[error("element [{0}] is not supported")]
 	ElementNotSupported(String),
-	/// Port not in defined port list
-	#[error("port name [{0}] does not match [{1}]s port list: {2:?}")]
-	PortInvalid(String, String, String),
-	/// Loading a library failed
-	#[error("registering library [{0}] failed with [{0}]")]
-	RegisterLib(String, u32),
+	/// Missing a corresponing end tag
+	#[error("missing end tag for [{0}]")]
+	MissingEndTag(String),
 	/// Attribut 'ID' is missing
 	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(String),
 	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' provided")]
 	NoTreeToExecute,
+	/// Port not in defined port list
+	#[error("port name [{0}] does not match [{1}]s port list: {2:?}")]
+	PortInvalid(String, String, String),
+	/// Loading a library failed
+	#[error("registering library [{0}] failed with [{0}]")]
+	RegisterLib(String, u32),
 	/// Processing instruction
 	#[error("processing instruction [{0}] is not supported")]
 	UnsupportedProcessingInstruction(String),

@@ -7,6 +7,7 @@
 // region:      --- modules
 use alloc::{
 	boxed::Box,
+	format,
 	string::{String, ToString},
 	vec::Vec,
 };
@@ -32,10 +33,16 @@ impl XmlParser {
 		blackboard: &NewBlackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
-		root: Node,
-		main_tree: bool,
+		element: Node,
+		// A reference to the name of the main_tree_to_execute.
+		main_tree_name: &str,
+		// Signals whether to parse or to store the main_tree_to_execute.
+		parse_main_tree: bool,
+		// A reference to store the XML for the main_tree_to_execute.
+		// this can be parsed later by create_tree().
+		main_tree_xml: &mut String,
 	) -> Result<(), Error> {
-		for element in root.children() {
+		for element in element.children() {
 			match element.node_type() {
 				NodeType::Comment | NodeType::Text => {} // ignore
 				NodeType::Root => {
@@ -48,14 +55,25 @@ impl XmlParser {
 				}
 				NodeType::Element => {
 					// only 'BehaviorTree' or 'TreeNodesModel' are valid
-					match element.tag_name().name() {
+					let name = element.tag_name().name();
+					match name {
 						"TreeNodesModel" => {} // ignore
 						"BehaviorTree" => {
 							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
-								Self::build_subtree(
-									blackboard, registry, tree, element, id, main_tree,
-								)?;
+								if id == main_tree_name && !parse_main_tree {
+									*main_tree_xml = Self::get_build_instructions(element, id)?;
+								} else {
+									Self::build_subtree(
+										blackboard,
+										registry,
+										tree,
+										main_tree_name,
+										element,
+										id,
+										parse_main_tree,
+									)?;
+								}
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
 							}
@@ -77,17 +95,41 @@ impl XmlParser {
 		Ok(())
 	}
 
-	fn build_subtree(
+	/// Extract the build sequence of a `BehaviorTree`
+	/// # Errors
+	fn get_build_instructions(element: Node, id: &str) -> Result<String, Error> {
+		extern crate std;
+		let source = element.document().input_text();
+		let startpattern = format!("BehaviorTree ID=\"{id}\"");
+
+		let start = source
+			.find(&startpattern)
+			.ok_or_else(|| Error::MissingId(id.into()))?;
+
+		let endpattern = String::from("/BehaviorTree");
+		let end = source
+				.find(&endpattern)
+				.ok_or_else(|| Error::MissingEndTag(endpattern.clone()))?
+				+ endpattern.len();
+
+		let res = String::from("<") + &source[start..end] + ">";
+		std::dbg!(&res);
+		Ok(res)
+	}
+
+	pub(crate) fn build_subtree(
 		blackboard: &NewBlackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
+		main_tree_name: &str,
 		element: Node,
-		id: impl Into<String>,
+		id: &str,
 		main_tree: bool,
 	) -> Result<(), Error> {
-		let id = id.into();
+		let id = id.to_string();
+		let id2 = id.clone();
 		// A subtreee gets a new [`Blackboard`] with parent trees [`Blackboard`] as parent
-		let blackboard = if main_tree {
+		let blackboard = if id == main_tree_name {
 			blackboard.clone()
 		} else {
 			NewBlackboard::new(blackboard)
@@ -98,16 +140,9 @@ impl XmlParser {
 		let mut subtree =
 			BehaviorTreeComponentContainer::create_node(None, tick_data, children, config_data);
 		// minimize size of subtree
-		subtree.tick_data.input_remappings.shrink_to_fit();
-		subtree
-			.tick_data
-			.output_remappings
-			.shrink_to_fit();
-
-		//subtree.config_data.lock().?.shrink_to_fit()
-		subtree.children.shrink_to_fit();
+		subtree.shrink();
 		tree.add(subtree);
-		if main_tree {
+		if id2 == main_tree_name {
 			tree.set_root_index();
 		}
 		Ok(())

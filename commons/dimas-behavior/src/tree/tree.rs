@@ -33,7 +33,13 @@ pub struct BehaviorTreeComponent {
 }
 
 impl BehaviorTreeComponent {
-	/// reset all children
+	/// Reset all children for single child components.
+	/// # Errors
+	pub fn reset_child(&mut self) -> BehaviorResult {
+		self.halt_child(0)
+	}
+
+	/// Reset all children for multi child components.
 	/// # Errors
 	pub fn reset_children(&mut self) -> BehaviorResult {
 		self.halt_children(0)
@@ -187,6 +193,13 @@ impl BehaviorTreeComponentContainer {
 	pub fn status(&self) -> NewBehaviorStatus {
 		self.tick_data.status
 	}
+
+	/// Minimize memory footprint
+	pub fn shrink(&mut self) {
+		self.tick_data.input_remappings.shrink_to_fit();
+		self.tick_data.output_remappings.shrink_to_fit();
+		self.children.shrink_to_fit();
+	}
 }
 // endregion:	--- BehaviorTreeComponentContainer
 
@@ -236,6 +249,12 @@ impl BehaviorTree {
 	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
 		self.subtrees[self.root_index].execute_tick()
+	}
+
+	/// Get root of tree
+	#[must_use]
+	pub fn root_node(&self) -> &BehaviorTreeComponentContainer {
+		&self.subtrees[self.root_index]
 	}
 }
 // endregion:   --- BehaviorTree

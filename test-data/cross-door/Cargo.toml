@@ -1,7 +1,7 @@
 # Copyright © 2025 Stephan Kunz
 
 [package]
-name = "test-behaviors"
+name = "cross-door"
 rust-version.workspace = true
 edition.workspace = true
 version.workspace = true
@@ -11,7 +11,7 @@ keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
 repository.workspace = true
-description = "Test behaviors for DiMAS"
+description = "CrossDoor behavior for DiMAS"
 readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,7 +19,7 @@ readme = "README.md"
 workspace = true
 
 [lib]
-name = "test_behaviors"
+name = "cross_door"
 #crate-type = ["cdylib"]
 crate-type = ["dylib", "rlib"]
 

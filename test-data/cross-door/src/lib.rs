@@ -5,5 +5,5 @@
 #[doc(hidden)]
 extern crate alloc;
 
-pub mod behavior_plugin;
-pub mod test_nodes;
+pub mod cross_door;
+pub mod cross_door_plugin;
