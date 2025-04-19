@@ -39,16 +39,14 @@ pub struct ReactiveFallback {
 }
 
 impl BehaviorInstanceMethods for ReactiveFallback {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let mut success = false;
-		let mut tick_data = tree_node.tick_data.lock();
 
 		self.all_skipped = true;
-		tick_data.status = NewBehaviorStatus::Running;
+		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
-		let children = tree_node.children.lock();
-		for index in 0..children.len() {
-			let child = &children[self.child_idx];
+		for index in 0..tree_node.children.len() {
+			let child = &mut tree_node.children[self.child_idx];
 			let new_status = child.execute_tick()?;
 
 			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
@@ -63,7 +61,7 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 				}
 				NewBehaviorStatus::Running => {
 					for i in 0..index {
-						let cd = &children[i];
+						let cd = &mut tree_node.children[i];
 						cd.execute_halt()?;
 					}
 					return Ok(NewBehaviorStatus::Running);
@@ -77,8 +75,6 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 				}
 			}
 		}
-		drop(children);
-		drop(tick_data);
 
 		tree_node.reset_children()?;
 		self.child_idx = 0;
@@ -92,7 +88,7 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 		}
 	}
 
-	fn halt(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn halt(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		tree_node.halt_children(0)
 	}
 }

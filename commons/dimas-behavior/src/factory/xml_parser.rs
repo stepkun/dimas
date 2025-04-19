@@ -18,7 +18,7 @@ use crate::{
 	},
 	new_blackboard::NewBlackboard,
 	new_port::{find_in_port_list, port_list_entries},
-	tree::{BehaviorTree, BehaviorTreeComponent},
+	tree::{BehaviorTree, BehaviorTreeComponentOuter},
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -95,19 +95,15 @@ impl XmlParser {
 		let children = Self::build_children(&blackboard, registry, tree, element)?;
 		let tick_data = BehaviorTickData::new(blackboard);
 		let config_data = BehaviorConfigurationData::default();
-		let subtree = BehaviorTreeComponent::create_node(None, tick_data, children, config_data);
+		let mut subtree =
+			BehaviorTreeComponentOuter::create_node(None, tick_data, children, config_data);
 		// minimize size of subtree
+		subtree.tick_data.input_remappings.shrink_to_fit();
 		subtree
 			.tick_data
-			.lock()
-			.input_remappings
-			.shrink_to_fit();
-		subtree
-			.tick_data
-			.lock()
 			.output_remappings
 			.shrink_to_fit();
-		subtree.children.lock().shrink_to_fit();
+		subtree.children.shrink_to_fit();
 		//subtree.config_data.lock().?.shrink_to_fit()
 		tree.add(id, subtree);
 		Ok(())
@@ -118,7 +114,7 @@ impl XmlParser {
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
-	) -> Result<Vec<BehaviorTreeComponent>, Error> {
+	) -> Result<Vec<BehaviorTreeComponentOuter>, Error> {
 		let mut children = Vec::new();
 
 		for child in element.children() {
@@ -154,7 +150,7 @@ impl XmlParser {
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
-	) -> Result<BehaviorTreeComponent, Error> {
+	) -> Result<BehaviorTreeComponentOuter, Error> {
 		let bhvr_name = element.tag_name().name();
 		if bhvr_name == "SubTree" {
 			if let Some(id) = element.attribute("ID") {
@@ -175,7 +171,7 @@ impl XmlParser {
 					let mut tick_data = BehaviorTickData::new(blackboard);
 					let mut config_data = BehaviorConfigurationData::new(bhvr_name);
 					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
-					BehaviorTreeComponent::create_leaf(bhvr, tick_data, config_data)
+					BehaviorTreeComponentOuter::create_leaf(bhvr, tick_data, config_data)
 				}
 				NewBehaviorType::Control | NewBehaviorType::Decorator => {
 					let blackboard = blackboard.clone();
@@ -188,7 +184,12 @@ impl XmlParser {
 					let mut tick_data = BehaviorTickData::new(blackboard);
 					let mut config_data = BehaviorConfigurationData::default();
 					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
-					BehaviorTreeComponent::create_node(Some(bhvr), tick_data, children, config_data)
+					BehaviorTreeComponentOuter::create_node(
+						Some(bhvr),
+						tick_data,
+						children,
+						config_data,
+					)
 				}
 				NewBehaviorType::SubTree => {
 					todo!()

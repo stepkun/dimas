@@ -32,16 +32,13 @@ impl BehaviorCreationMethods for Script {
 }
 
 impl BehaviorInstanceMethods for Script {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
-		let code = tree_node
-			.tick_data
-			.lock()
-			.get_input::<String>("code")?;
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+		let code = tree_node.tick_data.get_input::<String>("code")?;
 
 		let mut parser = Parser::new(&code);
 		let chunk = parser.parse()?;
 
-		let env = tree_node.tick_data.lock().blackboard.clone();
+		let env = tree_node.tick_data.blackboard.clone();
 		let mut vm = VM::default();
 		let mut out = Vec::new();
 		let value = vm.run(&chunk, &env, &mut out)?;

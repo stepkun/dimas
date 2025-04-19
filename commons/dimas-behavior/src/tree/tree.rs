@@ -8,6 +8,8 @@
 //! using a `struct` instead of a `trait` to improve performance.
 //!
 
+use core::ops::{Deref, DerefMut};
+
 // region:      --- modules
 use alloc::{boxed::Box, string::String, vec::Vec};
 use hashbrown::HashMap;
@@ -21,21 +23,78 @@ use crate::new_behavior::{
 // endregion:   --- modules
 
 // region:      --- BehaviorTreeComponent
-/// Component within the [`BehaviorTree`]
+/// The non [`Behavior`] data of a [`BehaviorTreeComponent`]
 #[derive(Debug)]
 pub struct BehaviorTreeComponent {
-	/// Behavior of this node
-	behavior: Option<Mutex<Box<dyn BehaviorTreeMethods>>>,
 	/// Data needed in every tick
-	pub tick_data: Mutex<BehaviorTickData>,
+	pub tick_data: BehaviorTickData,
 	/// Children
-	pub children: Mutex<Vec<BehaviorTreeComponent>>,
+	pub children: Vec<BehaviorTreeComponentOuter>,
+}
+
+impl BehaviorTreeComponent {
+	/// reset all children
+	/// # Errors
+	pub fn reset_children(&mut self) -> BehaviorResult {
+		self.halt_children(0)
+	}
+
+	/// halt all children at and beyond `index`
+	/// # Errors
+	/// - if index is out of childrens bounds
+	pub fn halt_children(&mut self, index: usize) -> BehaviorResult {
+		if index > self.children.len() {
+			return Err(NewBehaviorError::IndexOutOfBounds(index));
+		}
+
+		for child in &mut *self.children {
+			child.execute_halt()?;
+		}
+		Ok(NewBehaviorStatus::Idle)
+	}
+
+	/// halt all children at `index`
+	/// # Errors
+	/// - if index is out of childrens bounds
+	pub fn halt_child(&mut self, index: usize) -> BehaviorResult {
+		if index > self.children.len() {
+			return Err(NewBehaviorError::IndexOutOfBounds(index));
+		}
+
+		self.children[index].execute_halt()?;
+		Ok(NewBehaviorStatus::Idle)
+	}
+}
+// endregion:   --- BehaviorTreeComponentInner
+
+// region:      --- BehaviorTreeComponentOuter
+/// Component within the [`BehaviorTree`]
+#[derive(Debug)]
+pub struct BehaviorTreeComponentOuter {
+	/// Behavior of this node
+	behavior: Option<Box<dyn BehaviorTreeMethods>>,
+	/// tick tree component data
+	inner: BehaviorTreeComponent,
 	/// Data needed on rare occasions
-	pub config_data: Mutex<BehaviorConfigurationData>,
+	pub config_data: BehaviorConfigurationData,
+}
+
+impl Deref for BehaviorTreeComponentOuter {
+	type Target = BehaviorTreeComponent;
+
+	fn deref(&self) -> &Self::Target {
+		&self.inner
+	}
+}
+
+impl DerefMut for BehaviorTreeComponentOuter {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.inner
+	}
 }
 
 /// Methods needed for running a [`BehaviorTree`]
-impl BehaviorTreeComponent {
+impl BehaviorTreeComponentOuter {
 	/// Constructor for a leaf
 	#[must_use]
 	pub fn create_leaf(
@@ -44,10 +103,12 @@ impl BehaviorTreeComponent {
 		config_data: BehaviorConfigurationData,
 	) -> Self {
 		Self {
-			behavior: Some(Mutex::new(behavior)),
-			tick_data: Mutex::new(tick_data),
-			children: Mutex::new(Vec::default()),
-			config_data: Mutex::new(config_data),
+			behavior: Some(behavior),
+			inner: BehaviorTreeComponent {
+				tick_data,
+				children: Vec::default(),
+			},
+			config_data,
 		}
 	}
 
@@ -61,27 +122,30 @@ impl BehaviorTreeComponent {
 		children: Vec<Self>,
 		config_data: BehaviorConfigurationData,
 	) -> Self {
-		let behavior = behavior.map_or_else(|| None, |bhvr| Some(Mutex::new(bhvr)));
+		let behavior = behavior.map_or_else(|| None, Some);
 		Self {
 			behavior,
-			tick_data: Mutex::new(tick_data),
-			children: Mutex::new(children),
-			config_data: Mutex::new(config_data),
+			inner: BehaviorTreeComponent {
+				tick_data,
+				children,
+			},
+			config_data,
 		}
 	}
 
 	/// Method called to tick a node in the [`Tree`].
 	/// # Errors
 	#[allow(unsafe_code)]
-	pub fn execute_tick(&self) -> BehaviorResult {
-		if let Some(bhvr) = &self.behavior {
-			if self.tick_data.lock().status == NewBehaviorStatus::Idle {
-				bhvr.lock().start(self)
+	pub fn execute_tick(&mut self) -> BehaviorResult {
+		let status = self.tick_data.status;
+		if let Some(bhvr) = &mut self.behavior {
+			if status == NewBehaviorStatus::Idle {
+				bhvr.start(&mut self.inner)
 			} else {
-				bhvr.lock().tick(self)
+				bhvr.tick(&mut self.inner)
 			}
 		} else {
-			for child in &*self.children.lock() {
+			for child in &mut *self.children {
 				match child.execute_tick()? {
 					NewBehaviorStatus::Success => {}
 					NewBehaviorStatus::Running => return Ok(NewBehaviorStatus::Running),
@@ -96,55 +160,26 @@ impl BehaviorTreeComponent {
 
 	/// Method called to stop a node in the [`Tree`].
 	/// # Errors
-	pub fn execute_halt(&self) -> BehaviorResult {
+	pub fn execute_halt(&mut self) -> BehaviorResult {
 		self.behavior
-			.as_ref()
-			.map_or(Ok(NewBehaviorStatus::Idle), |bhvr| bhvr.lock().halt(self))
+			.as_mut()
+			.map_or(Ok(NewBehaviorStatus::Idle), |bhvr| {
+				bhvr.halt(&mut self.inner)
+			})
 	}
 
 	/// Set status of component
 	pub fn set_status(&mut self, status: NewBehaviorStatus) {
-		self.tick_data.lock().status = status;
+		self.tick_data.status = status;
 	}
 
 	/// Get current status of component
 	#[must_use]
 	pub fn status(&self) -> NewBehaviorStatus {
-		self.tick_data.lock().status
-	}
-
-	/// reset all children
-	/// # Errors
-	pub fn reset_children(&self) -> BehaviorResult {
-		self.halt_children(0)
-	}
-
-	/// halt all children at and beyond `index`
-	/// # Errors
-	/// - if index is out of childrens bounds
-	pub fn halt_children(&self, index: usize) -> BehaviorResult {
-		if index > self.children.lock().len() {
-			return Err(NewBehaviorError::IndexOutOfBounds(index));
-		}
-
-		for child in &*self.children.lock() {
-			child.execute_halt()?;
-		}
-		Ok(NewBehaviorStatus::Idle)
-	}
-
-	/// halt all children at `index`
-	/// # Errors
-	/// - if index is out of childrens bounds
-	pub fn halt_child(&self, index: usize) -> BehaviorResult {
-		if index > self.children.lock().len() {
-			return Err(NewBehaviorError::IndexOutOfBounds(index));
-		}
-
-		self.children.lock()[index].execute_halt()?;
-		Ok(NewBehaviorStatus::Idle)
+		self.tick_data.status
 	}
 }
+// endregion:	--- BehaviorTreeComponentOuter
 
 // region:		--- TickOption
 /// Tick options
@@ -164,11 +199,11 @@ pub struct BehaviorTree {
 	root_id: String,
 	/// Map of direct accessible [`BehaviorTreeComponent`]s. These are `SubTree`s
 	/// @TODO: replace with a vec and maybe use references
-	subtrees: HashMap<String, BehaviorTreeComponent, FxBuildHasher>,
+	subtrees: HashMap<String, BehaviorTreeComponentOuter, FxBuildHasher>,
 }
 
 impl BehaviorTree {
-	pub(crate) fn add(&mut self, id: impl Into<String>, subtree: BehaviorTreeComponent) {
+	pub(crate) fn add(&mut self, id: impl Into<String>, subtree: BehaviorTreeComponentOuter) {
 		self.subtrees.insert(id.into(), subtree);
 	}
 

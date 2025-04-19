@@ -34,18 +34,16 @@ pub struct Fallback {
 
 extern crate std;
 impl BehaviorInstanceMethods for Fallback {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let mut success = false;
-		let mut tick_data = tree_node.tick_data.lock();
-		if tick_data.status == NewBehaviorStatus::Idle {
+		if tree_node.tick_data.status == NewBehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
-		tick_data.status = NewBehaviorStatus::Running;
+		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
-		let children = tree_node.children.lock();
-		while self.child_idx < children.len() {
-			let child = &children[self.child_idx];
+		while self.child_idx < tree_node.children.len() {
+			let child = &mut tree_node.children[self.child_idx];
 			let new_status = child.execute_tick()?;
 
 			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
@@ -67,8 +65,6 @@ impl BehaviorInstanceMethods for Fallback {
 				}
 			}
 		}
-		drop(children);
-		drop(tick_data);
 
 		tree_node.reset_children()?;
 		self.child_idx = 0;
@@ -82,7 +78,7 @@ impl BehaviorInstanceMethods for Fallback {
 		}
 	}
 
-	fn halt(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn halt(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		tree_node.halt_children(0)
 	}
 }

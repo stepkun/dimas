@@ -19,7 +19,7 @@ pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'stat
 
 /// Signature of a registered behavior function called by `SimpleBehavior`'s tick
 pub type ComplexBhvrTickFn =
-	Arc<dyn Fn(&BehaviorTreeComponent) -> BehaviorResult + Send + Sync + 'static>;
+	Arc<dyn Fn(&mut BehaviorTreeComponent) -> BehaviorResult + Send + Sync + 'static>;
 // endregion:   --- types
 
 // region:      --- BehaviorFunction
@@ -44,7 +44,7 @@ impl core::fmt::Debug for SimpleBehavior {
 impl BehaviorTreeMethods for SimpleBehavior {}
 
 impl BehaviorInstanceMethods for SimpleBehavior {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		if self.provided_ports.is_some() {
 			self.complex_tick_fn.as_ref().expect("snh")(tree_node)
 		} else {

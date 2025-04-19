@@ -7,6 +7,9 @@
 extern crate alloc;
 
 // region:		--- modules
+use alloc::str::FromStr;
+use core::num::ParseFloatError;
+
 use dimas_behavior::{
 	new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
@@ -35,7 +38,7 @@ impl BehaviorCreationMethods for ApproachObject {
 }
 
 impl BehaviorInstanceMethods for ApproachObject {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
 		Ok(NewBehaviorStatus::Success)
 	}
@@ -87,10 +90,9 @@ impl BehaviorCreationMethods for SaySomething {
 }
 
 impl BehaviorInstanceMethods for SaySomething {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let msg = tree_node
 			.tick_data
-			.lock()
 			.get_input::<String>("message")?;
 		println!("Robot says: {msg}");
 		Ok(NewBehaviorStatus::Success)
@@ -118,10 +120,9 @@ impl BehaviorCreationMethods for ThinkWhatToSay {
 }
 
 impl BehaviorInstanceMethods for ThinkWhatToSay {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		tree_node
 			.tick_data
-			.lock()
 			.set_output("text", "The answer is 42")?;
 		Ok(NewBehaviorStatus::Success)
 	}
@@ -135,11 +136,94 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn say_something_simple(tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+pub fn say_something_simple(tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 	let msg = tree_node
 		.tick_data
-		.lock()
 		.get_input::<String>("message")?;
 	println!("Robot says: {msg}");
 	Ok(NewBehaviorStatus::Success)
+}
+
+/// `Position2D`
+#[derive(Clone, Debug, Default)]
+struct Position2D {
+	x: f64,
+	y: f64,
+}
+
+impl FromStr for Position2D {
+	type Err = ParseFloatError;
+
+	fn from_str(value: &str) -> Result<Self, Self::Err> {
+		println!("Converting string: \"{value}\"");
+		// remove redundant ' and &apos; from string
+		let s = value
+			.replace('\'', "")
+			.trim()
+			.replace("&apos;", "")
+			.trim()
+			.to_string();
+		let v: Vec<&str> = s.split(';').collect();
+		let x = f64::from_str(v[0])?;
+		let y = f64::from_str(v[1])?;
+		Ok(Self { x, y })
+	}
+}
+
+/// Behavior `CalculateGoal`
+#[derive(Behavior, Debug)]
+pub struct CalculateGoal {}
+
+impl BehaviorCreationMethods for CalculateGoal {
+	fn create() -> Box<BehaviorCreationFn> {
+		Box::new(|| Box::new(Self {}))
+	}
+
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+}
+
+impl BehaviorInstanceMethods for CalculateGoal {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+		let mygoal = Position2D { x: 1.1, y: 2.3 };
+		tree_node.tick_data.set_output("goal", mygoal)?;
+		Ok(NewBehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for CalculateGoal {
+	fn provided_ports() -> NewPortList {
+		vec![output_port::<Position2D>("goal", "", "").expect("snh")]
+	}
+}
+
+/// Behavior `PrintTarget`
+#[derive(Behavior, Debug)]
+pub struct PrintTarget {}
+
+impl BehaviorCreationMethods for PrintTarget {
+	fn create() -> Box<BehaviorCreationFn> {
+		Box::new(|| Box::new(Self {}))
+	}
+
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+}
+
+impl BehaviorInstanceMethods for PrintTarget {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+		let pos = tree_node
+			.tick_data
+			.get_input::<Position2D>("target")?;
+		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
+		Ok(NewBehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for PrintTarget {
+	fn provided_ports() -> NewPortList {
+		vec![input_port::<String>("target", "", "").expect("snh")]
+	}
 }

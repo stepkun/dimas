@@ -35,20 +35,18 @@ pub struct Sequence {
 }
 
 impl BehaviorInstanceMethods for Sequence {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let mut failure = false;
-		let mut tick_data = tree_node.tick_data.lock();
 
-		if tick_data.status == NewBehaviorStatus::Idle {
+		if tree_node.tick_data.status == NewBehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
-		tick_data.status = NewBehaviorStatus::Running;
+		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
-		let children = tree_node.children.lock();
-		let children_len = children.len();
+		let children_len = tree_node.children.len();
 		while self.child_idx < children_len {
-			let child = &children[self.child_idx];
+			let child = &mut tree_node.children[self.child_idx];
 			let new_status = child.execute_tick()?;
 
 			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
@@ -70,8 +68,6 @@ impl BehaviorInstanceMethods for Sequence {
 				}
 			}
 		}
-		drop(children);
-		drop(tick_data);
 
 		// All children returned Success or Failure
 		if failure || self.child_idx == children_len {
@@ -86,7 +82,7 @@ impl BehaviorInstanceMethods for Sequence {
 		}
 	}
 
-	fn halt(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn halt(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		tree_node.halt_children(0)
 	}
 }

@@ -37,16 +37,13 @@ pub struct ReactiveSequence {
 }
 
 impl BehaviorInstanceMethods for ReactiveSequence {
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let mut failure = false;
 
-		let mut tick_data = tree_node.tick_data.lock();
+		tree_node.tick_data.status = NewBehaviorStatus::Running;
 
-		tick_data.status = NewBehaviorStatus::Running;
-
-		let children = tree_node.children.lock();
-		for counter in 0..children.len() {
-			let child = &children[counter];
+		for counter in 0..tree_node.children.len() {
+			let child = &mut tree_node.children[counter];
 			let new_status = child.execute_tick()?;
 
 			self.all_skipped &= new_status == NewBehaviorStatus::Skipped;
@@ -69,8 +66,6 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 				NewBehaviorStatus::Success => {}
 			}
 		}
-		drop(children);
-		drop(tick_data);
 
 		// Reset children on failure
 		tree_node.reset_children()?;
@@ -85,7 +80,7 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 		}
 	}
 
-	fn halt(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn halt(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		tree_node.halt_children(0)
 	}
 }

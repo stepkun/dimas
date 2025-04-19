@@ -24,7 +24,7 @@ use dimas_behavior_derive::Behavior;
 pub struct AlwaysSuccess {}
 
 impl BehaviorInstanceMethods for AlwaysSuccess {
-	fn tick(&mut self, _tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		Ok(NewBehaviorStatus::Success)
 	}
 }
@@ -46,7 +46,7 @@ impl BehaviorStaticMethods for AlwaysSuccess {}
 pub struct AlwaysFailure {}
 
 impl BehaviorInstanceMethods for AlwaysFailure {
-	fn tick(&mut self, _tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		Ok(NewBehaviorStatus::Success)
 	}
 }

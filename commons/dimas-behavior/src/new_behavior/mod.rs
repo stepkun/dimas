@@ -60,19 +60,19 @@ pub trait BehaviorInstanceMethods: core::fmt::Debug + Send + Sync {
 	/// Method called to start ticking a [`Behavior`].
 	/// Defaults to calling `self.tick(...)`
 	/// # Errors
-	fn start(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn start(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		self.tick(tree_node)
 	}
 
 	/// Method called to tick a [`Behavior`].
 	/// # Errors
-	fn tick(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult;
+	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult;
 
 	/// Method called to stop/cancel/halt a [`Behavior`].
 	/// Default implementation just returns [`BehaviorStatus::Idle`]
 	/// # Errors
 	#[allow(unused_variables)]
-	fn halt(&mut self, tree_node: &BehaviorTreeComponent) -> BehaviorResult {
+	fn halt(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		Ok(NewBehaviorStatus::Idle)
 	}
 }
