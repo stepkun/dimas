@@ -197,8 +197,7 @@ impl BehaviorTreeComponentContainer {
 
 	/// Minimize memory footprint
 	pub fn shrink(&mut self) {
-		self.tick_data.input_remappings.shrink_to_fit();
-		self.tick_data.output_remappings.shrink_to_fit();
+		self.tick_data.remappings.shrink_to_fit();
 		self.children.shrink_to_fit();
 	}
 }

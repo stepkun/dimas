@@ -7,8 +7,8 @@
 use alloc::sync::Arc;
 use dimas_behavior::{
 	factory::{BehaviorRegistry, NewBehaviorTreeFactory},
-	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
-	new_port::input_port,
+	input_port_macro,
+	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior}, port_list,
 };
 use parking_lot::Mutex;
 
@@ -48,7 +48,7 @@ extern "Rust" fn register(factory: &mut NewBehaviorTreeFactory) -> u32 {
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let say_something_ports = vec![input_port::<String>("message", "", "").unwrap()];
+	let say_something_ports = port_list![input_port_macro!(String, "message")];
 	factory
 		.register_simple_action_with_ports(
 			"SaySomething2",

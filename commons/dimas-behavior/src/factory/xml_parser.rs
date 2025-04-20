@@ -18,7 +18,6 @@ use crate::{
 		BehaviorConfigurationData, BehaviorTickData, BehaviorTreeMethods, NewBehaviorType,
 	},
 	new_blackboard::NewBlackboard,
-	new_port::{find_in_port_list, port_list_entries},
 	tree::{BehaviorTree, BehaviorTreeComponentContainer},
 };
 
@@ -252,16 +251,16 @@ impl XmlParser {
 			} else {
 				// fetch found port name from list of provided ports
 				let port_list = bhvr.static_provided_ports();
-				match find_in_port_list(&port_list, &name) {
+				match port_list.find(&name) {
 					Ok(port_definition) => {
-						tick_data.add_port(&port_definition.direction, name, value);
+						tick_data.add_port(name, port_definition.direction, value);
 						//todo!();
 					}
 					Err(_) => {
 						return Err(Error::PortInvalid(
 							name,
 							config_data.name().into(),
-							port_list_entries(&port_list),
+							port_list.entries(),
 						));
 					}
 				}

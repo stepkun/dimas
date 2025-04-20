@@ -12,13 +12,11 @@ use core::num::ParseFloatError;
 use std::time::{Duration, Instant};
 
 use dimas_behavior::{
-	new_behavior::{
+	input_port_macro, new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
 		NewBehaviorStatus, NewBehaviorType,
-	},
-	new_port::{NewPortList, input_port, output_port},
-	tree::BehaviorTreeComponent,
+	}, new_port::NewPortList, output_port_macro, port_list, tree::BehaviorTreeComponent
 };
 use dimas_behavior_derive::Behavior;
 // endregion:	--- modules
@@ -90,7 +88,7 @@ impl BehaviorStaticMethods for SaySomething {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![input_port::<String>("message", "hello", "").expect("snh")]
+		port_list!{input_port_macro!(String, "message", "hello")}
 	}
 }
 
@@ -113,7 +111,7 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![output_port::<String>("text", "", "").expect("snh")]
+		port_list![output_port_macro!(String, "text")]
 	}
 }
 
@@ -171,7 +169,7 @@ impl BehaviorStaticMethods for CalculateGoal {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![output_port::<Position2D>("goal", "", "").expect("snh")]
+		port_list![output_port_macro!(Position2D, "goal")]
 	}
 }
 
@@ -195,7 +193,7 @@ impl BehaviorStaticMethods for PrintTarget {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![input_port::<String>("target", "", "").expect("snh")]
+		port_list![input_port_macro!(String, "target")]
 	}
 }
 
@@ -270,6 +268,6 @@ impl BehaviorStaticMethods for MoveBaseAction {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![input_port::<Pose2D>("goal", "", "").expect("snh")]
+		port_list![input_port_macro!(Pose2D, "goal")]
 	}
 }

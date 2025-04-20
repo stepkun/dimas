@@ -8,13 +8,9 @@ use alloc::{boxed::Box, string::ToString, vec};
 use dimas_behavior_derive::Behavior;
 
 use crate::{
-	new_behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
-		NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
-	},
-	new_port::{NewPortList, input_port},
-	tree::BehaviorTreeComponent,
+	input_port_macro, new_behavior::{
+		error::NewBehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType
+	}, new_port::NewPortList, port_list, tree::BehaviorTreeComponent
 };
 // endregeion:  --- modules
 
@@ -122,7 +118,7 @@ impl BehaviorStaticMethods for RetryUntilSuccessful {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![input_port::<i32>("num_attempts", "", "").expect("snh")]
+		port_list![input_port_macro!(i32, "num_attempts")]
 	}
 }
 // endregion:   --- RetryUntilSuccessful

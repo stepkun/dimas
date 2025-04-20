@@ -4,13 +4,11 @@
 
 // region:      --- modules
 use crate::{
-	new_behavior::{
+	input_port_macro, new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
 		NewBehaviorStatus, NewBehaviorType,
-	},
-	new_port::{NewPortList, input_port},
-	tree::BehaviorTreeComponent,
+	}, new_port::NewPortList, port_list, tree::BehaviorTreeComponent
 };
 use alloc::{boxed::Box, string::String, vec, vec::Vec};
 use dimas_behavior_derive::Behavior;
@@ -55,6 +53,11 @@ impl BehaviorStaticMethods for Script {
 	}
 
 	fn provided_ports() -> NewPortList {
-		vec![input_port::<String>("code", "", "Piece of code that can be parsed.").expect("snh")]
+		port_list![input_port_macro!(
+			String,
+			"code",
+			"",
+			"Piece of code that can be parsed."
+		)]
 	}
 }

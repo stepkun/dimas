@@ -13,7 +13,7 @@ use core::{any::TypeId, str::FromStr};
 use crate::{
 	new_blackboard::NewBlackboard,
 	new_port::{
-		NewPortDirection, NewPortRemappings, find_in_remapping_list, get_remapped_key,
+		NewPortDirection, NewPortRemappings, get_remapped_key,
 		is_bb_pointer, strip_bb_pointer,
 	},
 };
@@ -57,10 +57,8 @@ pub struct BehaviorTickData {
 	pub(crate) status: NewBehaviorStatus,
 	/// [`Blackboard`] for this [`Behavior`]
 	pub(crate) blackboard: NewBlackboard,
-	/// In ports including remapping
-	pub(crate) input_remappings: NewPortRemappings,
-	/// Out ports including remapping
-	pub(crate) output_remappings: NewPortRemappings,
+	/// Ports including remapping
+	pub(crate) remappings: NewPortRemappings,
 }
 impl BehaviorTickData {
 	/// Constructor
@@ -73,20 +71,8 @@ impl BehaviorTickData {
 	}
 
 	/// Adds a port to the config based on the direction
-	pub fn add_port(&mut self, direction: &NewPortDirection, name: String, value: String) {
-		match direction {
-			NewPortDirection::In => {
-				self.input_remappings.push((name, value));
-			}
-			NewPortDirection::Out => {
-				self.output_remappings.push((name, value));
-			}
-			NewPortDirection::InOut => {
-				self.input_remappings
-					.push((name.clone(), value.clone()));
-				self.output_remappings.push((name, value));
-			}
-		}
+	pub fn add_port(&mut self, name: String, direction: NewPortDirection, value: String) {
+		self.remappings.push((name, (direction, value)));
 	}
 
 	/// Get value of an input port.
@@ -100,7 +86,7 @@ impl BehaviorTickData {
 		// extern crate std;
 		// std::dbg!("test: {}", &self.blackboard);
 		let port_name = port.into();
-		if let Some(remapped_name) = find_in_remapping_list(&self.input_remappings, &port_name) {
+		if let Some(remapped_name) = self.remappings.find(&port_name, NewPortDirection::In) {
 			// entry found
 			if remapped_name.is_empty() {
 				todo!()
@@ -143,7 +129,7 @@ impl BehaviorTickData {
 		T: Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
 		let port_name = port.into();
-		if let Some(remapped_name) = find_in_remapping_list(&self.output_remappings, &port_name) {
+		if let Some(remapped_name) = self.remappings.find(&port_name, NewPortDirection::Out) {
 			// entry found
 			let blackboard_key = match remapped_name.as_str() {
 				"=" => port_name,

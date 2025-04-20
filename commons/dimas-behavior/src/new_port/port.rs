@@ -6,10 +6,10 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use core::any::TypeId;
+use core::{any::TypeId, ops::{Deref, DerefMut}};
 
 // region:      --- modules
-use alloc::string::{String, ToString};
+use alloc::{string::{String, ToString}, vec::Vec};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -68,7 +68,7 @@ pub fn is_bb_pointer(port: &str) -> bool {
 /// Create a [`PortDefinition`]
 /// # Errors
 /// - if the name violates the conventions.
-fn create_port<T: 'static>(
+pub fn create_port<T: 'static>(
 	direction: NewPortDirection,
 	name: impl Into<String>,
 	default: impl Into<String>,
@@ -89,28 +89,6 @@ fn create_port<T: 'static>(
 	}
 }
 
-/// Create an input [`PortDefinition`]
-/// # Errors
-/// - if the name violates the conventions.
-pub fn input_port<T: 'static>(
-	name: impl Into<String>,
-	default: impl Into<String>,
-	description: impl Into<String>,
-) -> Result<NewPortDefinition, Error> {
-	create_port::<T>(NewPortDirection::In, name, default, description)
-}
-
-/// Create an output [`PortDefinition`]
-/// # Errors
-/// - if the name violates the conventions.
-pub fn output_port<T: 'static>(
-	name: impl Into<String>,
-	default: impl Into<String>,
-	description: impl Into<String>,
-) -> Result<NewPortDefinition, Error> {
-	create_port::<T>(NewPortDirection::Out, name, default, description)
-}
-
 fn is_allowed_name(name: &str) -> bool {
 	if name.is_empty() {
 		return false;
@@ -126,6 +104,129 @@ fn is_allowed_name(name: &str) -> bool {
 	true
 }
 // endregion:   --- helper
+
+// region:      --- PortList
+/// List of ports
+/// The `PortList` is not using a `HashMap` but a `Vec` due to two reasons:
+/// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
+/// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Default)]
+pub struct NewPortList(pub Vec<NewPortDefinition>);
+
+impl Deref for NewPortList {
+	type Target = Vec<NewPortDefinition>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for NewPortList {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl NewPortList {
+	/// Add an entry to the [`PortList`]
+	/// # Errors
+	/// - if entry already exists
+	pub fn add(
+		&mut self,
+		port_definition: NewPortDefinition,
+	) -> Result<(), Error> {
+		for entry in &mut *self.0 {
+			if entry.name == port_definition.name {
+				return Err(Error::AlreadyInPortList(entry.name.clone()));
+			}
+		}
+		self.0.push(port_definition);
+		Ok(())
+	}
+
+	/// Create a list of the [`Port`] names in the list
+	#[must_use]
+	pub fn entries(&self) -> String {
+		let comma = false;
+		let mut result = String::new();
+		for entry in &self.0 {
+			if comma {
+				result += ", ";
+			}
+			result += &entry.name;
+		}
+		result
+	}
+
+	/// Lookup a [`PortDefinition`]
+	/// # Errors
+	/// - if no [`PortDefinition`] is found
+	pub fn find(&self, name: &str) -> Result<NewPortDefinition, Error> {
+		for entry in &self.0 {
+			if entry.name == name {
+				return Ok(entry.clone());
+			}
+		}
+		Err(Error::NotFoundInPortList(name.into()))
+	}
+}
+// endregion:	--- PortList
+
+// region:		--- PortRemappings
+/// Remapping list
+/// `PortRemappings` is not using a `HashMap` but a `Vec` due to two reasons:
+/// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
+/// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Default)]
+pub struct NewPortRemappings(Vec<(String, (NewPortDirection, String))>);
+
+impl Deref for NewPortRemappings {
+	type Target = Vec<(String, (NewPortDirection, String))>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for NewPortRemappings {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl NewPortRemappings {
+	/// Add an entry to the [`PortRemappings`]
+	/// # Errors
+	/// - if entry already exists
+	pub fn add(
+		&mut self,
+		name: &str,
+		direction: NewPortDirection,
+		remapped_name: &str,
+	) -> Result<(), Error> {
+		for (original, _) in &mut *self.0 {
+			if original == name {
+				return Err(Error::AlreadyInRemappings(name.into()));
+			}
+		}
+		self.push((name.into(), (direction, remapped_name.into())));
+		Ok(())
+	}
+
+	/// Lookup the remaped name
+	#[must_use]
+	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<String> {
+		for (original, remapped) in &self.0 {
+			if original == name && ((direction == remapped.0) || (remapped.0 == NewPortDirection::InOut)) {
+				return Some((remapped.1).clone());
+			}
+		}
+		None
+	}
+}
+// endregion:   --- PortRemappings
 
 // region:      --- PortDirection
 /// A [`Port`]

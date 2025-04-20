@@ -30,7 +30,7 @@ pub struct SimpleBehavior {
 	/// the function to be called on tick
 	pub(crate) complex_tick_fn: Option<ComplexBhvrTickFn>,
 	/// list of provided ports
-	pub(crate) provided_ports: Option<NewPortList>,
+	pub(crate) provided_ports: NewPortList,
 }
 
 impl core::fmt::Debug for SimpleBehavior {
@@ -45,7 +45,7 @@ impl BehaviorTreeMethods for SimpleBehavior {}
 
 impl BehaviorInstanceMethods for SimpleBehavior {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		if self.provided_ports.is_some() {
+		if self.complex_tick_fn.is_some() {
 			self.complex_tick_fn.as_ref().expect("snh")(tree_node)
 		} else {
 			(self.simple_tick_fn.as_ref().expect("snh"))()
@@ -56,11 +56,7 @@ impl BehaviorInstanceMethods for SimpleBehavior {
 impl BehaviorRedirectionMethods for SimpleBehavior {
 	#[allow(clippy::option_if_let_else)]
 	fn static_provided_ports(&self) -> NewPortList {
-		if let Some(port_list) = &self.provided_ports {
-			port_list.clone()
-		} else {
-			NewPortList::default()
-		}
+		NewPortList(self.provided_ports.clone())
 	}
 }
 
@@ -74,7 +70,7 @@ impl SimpleBehavior {
 			Box::new(Self {
 				simple_tick_fn: Some(tick_fn.clone()),
 				complex_tick_fn: None,
-				provided_ports: None,
+				provided_ports: NewPortList::default(),
 			})
 		})
 	}
@@ -88,7 +84,7 @@ impl SimpleBehavior {
 			Box::new(Self {
 				simple_tick_fn: None,
 				complex_tick_fn: Some(tick_fn.clone()),
-				provided_ports: Some(port_list.clone()),
+				provided_ports: NewPortList(port_list.clone()),
 			})
 		})
 	}
