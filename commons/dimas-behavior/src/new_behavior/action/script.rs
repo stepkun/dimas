@@ -18,12 +18,12 @@ use dimas_scripting::{Parser, VM};
 //endregion:    --- modules
 
 /// The Script behavior returns Success or Failure depending on the result of the scripted code
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct Script {}
 
 impl BehaviorCreationMethods for Script {
 	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
+		Box::new(|| Box::new(Self::default()))
 	}
 
 	fn kind() -> NewBehaviorType {

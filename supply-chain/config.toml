@@ -59,10 +59,6 @@ criteria = "safe-to-deploy"
 version = "1.6.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.cc]]
-version = "1.0.89"
-criteria = "safe-to-deploy"
-
 [[exemptions.concurrent-queue]]
 version = "2.4.0"
 criteria = "safe-to-deploy"
@@ -445,10 +441,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.validated_struct_macros]]
 version = "2.1.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.webpki-roots]]
-version = "0.26.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.winapi]]

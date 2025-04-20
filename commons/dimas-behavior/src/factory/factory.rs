@@ -117,9 +117,7 @@ impl NewBehaviorTreeFactory {
 	/// # Errors
 	/// - if behaviors are missing
 	pub fn create_tree(&mut self) -> Result<BehaviorTree, Error> {
-		extern crate std;
 		let input = self.main_tree_xml.clone();
-		std::dbg!(&input);
 		self.main_tree_xml = String::new();
 		let doc = Document::parse(&input)?;
 		let root = doc.root_element();
@@ -175,21 +173,33 @@ impl NewBehaviorTreeFactory {
 	}
 
 	/// Register a behavior plugin.
+	/// For now ot is  recommended, that
+	/// - the plugin resides in the executables directory and
+	/// - is compiled with the same tust version.
 	/// # Errors
+	/// - if library is not found ore does not found
+	/// - if library does not provide the `extern "Rust" register(&mut BehaviorTreeFactory) -> i32` function
+	/// # Panics
+	/// - on OS other than `Windows` and `Linux`,
+	/// - should not panic on supported OS unless some weird constellation is happening.
+	#[cfg(feature = "std")]
 	#[allow(unsafe_code)]
-	pub fn register_from_plugin(&mut self, name: impl Into<String>) -> Result<(), Error> {
-		let name = name.into();
-		// @TODO: handle multiplattform and multipath
-		// for now the path is hardcoded
-		// /home/stephan/dbx/dimas-fw/dimas/target/debug/libtest_behaviors.so
-		//let libname = String::from("./") + name + ".so";
-		let libname = if name == "libtest_behaviors" {
-			"/home/stephan/dbx/dimas-fw/dimas/target/debug/libtest_behaviors.so"
-		} else if name == "libcross_door" {
-			"/home/stephan/dbx/dimas-fw/dimas/target/debug/libcross_door.so"
-		} else {
-			""
-		};
+	pub fn register_from_plugin(&mut self, name: &str) -> Result<(), Error> {
+		// create path from exe path
+		// in dev environment we have tp remove a '/deps'
+		let exe_path = std::env::current_exe()?
+			.parent()
+			.expect("snh")
+			.to_str()
+			.expect("snh")
+			.replace("/deps", "");
+		//std::dbg!(exe_path);
+		#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+		todo!();
+		#[cfg(target_os = "linux")]
+		let libname = exe_path + "/" + name + ".so";
+		#[cfg(target_os = "windows")]
+		let libname = exe_path + "/" + name + ".dll";
 
 		let lib = unsafe {
 			let lib = libloading::Library::new(libname)?;
@@ -197,7 +207,7 @@ impl NewBehaviorTreeFactory {
 				lib.get(b"register")?;
 			let res = registration_fn(&mut *self);
 			if res != 0 {
-				return Err(Error::RegisterLib(name, res));
+				return Err(Error::RegisterLib(name.into(), res));
 			}
 			lib
 		};

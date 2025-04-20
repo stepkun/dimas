@@ -98,7 +98,6 @@ impl XmlParser {
 	/// Extract the build sequence of a `BehaviorTree`
 	/// # Errors
 	fn get_build_instructions(element: Node, id: &str) -> Result<String, Error> {
-		extern crate std;
 		let source = element.document().input_text();
 		let startpattern = format!("BehaviorTree ID=\"{id}\"");
 
@@ -108,12 +107,11 @@ impl XmlParser {
 
 		let endpattern = String::from("/BehaviorTree");
 		let end = source
-				.find(&endpattern)
-				.ok_or_else(|| Error::MissingEndTag(endpattern.clone()))?
-				+ endpattern.len();
+			.find(&endpattern)
+			.ok_or_else(|| Error::MissingEndTag(endpattern.clone()))?
+			+ endpattern.len();
 
 		let res = String::from("<") + &source[start..end] + ">";
-		std::dbg!(&res);
 		Ok(res)
 	}
 

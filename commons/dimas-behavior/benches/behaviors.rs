@@ -20,7 +20,7 @@ use dimas_behavior::{
 use dimas_behavior_derive::Behavior;
 
 /// Action `AlwaysSuccess`
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct AlwaysSuccess {}
 
 impl BehaviorInstanceMethods for AlwaysSuccess {
@@ -42,7 +42,7 @@ impl BehaviorCreationMethods for AlwaysSuccess {
 impl BehaviorStaticMethods for AlwaysSuccess {}
 
 /// Action `AlwaysFailure`
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct AlwaysFailure {}
 
 impl BehaviorInstanceMethods for AlwaysFailure {

@@ -30,6 +30,16 @@ pub struct VM {
 	stack_top: usize,
 }
 
+impl core::fmt::Debug for VM {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		f.debug_struct("VM")
+			.field("ip", &self.ip)
+			.field("stack", &self.stack)
+			.field("stack_top", &self.stack_top)
+			.finish()
+	}
+}
+
 impl Default for VM {
 	fn default() -> Self {
 		Self {

@@ -12,6 +12,7 @@ use core::ops::{Deref, DerefMut};
 
 // region:      --- modules
 use alloc::{boxed::Box, string::String, vec, vec::Vec};
+use dimas_scripting::{Parser, VM};
 use hashbrown::HashMap;
 use parking_lot::Mutex;
 use rustc_hash::FxBuildHasher;

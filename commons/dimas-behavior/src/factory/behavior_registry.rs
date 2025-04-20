@@ -57,22 +57,22 @@ impl BehaviorRegistry {
 		self.librarys.push(library);
 	}
 
-	/// Register a behavior from a `dylib` in the registry
-	/// # Errors
-	/// - if the entry alreeady exists
-	pub extern "Rust" fn register_behavior(
-		&mut self,
-		name: &str,
-		bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static>,
-		bhvr_type: NewBehaviorType,
-	) -> Result<(), Error> {
-		if self.contains(name) {
-			return Err(Error::BehaviorAlreadyRegistered(name.into()));
-		}
-		self.behaviors
-			.push((name.into(), bhvr_type, Arc::from(bhvr_creation_fn)));
-		Ok(())
-	}
+	// /// Register a behavior from a `dylib` in the registry
+	// /// # Errors
+	// /// - if the entry alreeady exists
+	// pub extern "Rust" fn register_behavior(
+	// 	&mut self,
+	// 	name: &str,
+	// 	bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static>,
+	// 	bhvr_type: NewBehaviorType,
+	// ) -> Result<(), Error> {
+	// 	if self.contains(name) {
+	// 		return Err(Error::BehaviorAlreadyRegistered(name.into()));
+	// 	}
+	// 	self.behaviors
+	// 		.push((name.into(), bhvr_type, Arc::from(bhvr_creation_fn)));
+	// 	Ok(())
+	// }
 
 	/// Check whether registry contains an entry.
 	fn contains(&self, id: &str) -> bool {

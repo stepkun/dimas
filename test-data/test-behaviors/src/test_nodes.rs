@@ -25,7 +25,7 @@ use dimas_behavior_derive::Behavior;
 
 /// Behavior `ApproachObject`
 /// Example of custom `SyncActionNode` (synchronous action) without ports.
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct ApproachObject {}
 
 impl BehaviorCreationMethods for ApproachObject {
@@ -77,7 +77,7 @@ impl GripperInterface {
 }
 /// Behavior `SaySomething`
 /// Example of custom `SyncActionNode` (synchronous action) with an input port.
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct SaySomething {}
 
 impl BehaviorCreationMethods for SaySomething {
@@ -107,7 +107,7 @@ impl BehaviorStaticMethods for SaySomething {
 }
 
 /// Behavior `ThinkWhatToSay`
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct ThinkWhatToSay {}
 
 impl BehaviorCreationMethods for ThinkWhatToSay {
@@ -172,7 +172,7 @@ impl FromStr for Position2D {
 }
 
 /// Behavior `CalculateGoal`
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct CalculateGoal {}
 
 impl BehaviorCreationMethods for CalculateGoal {
@@ -200,7 +200,7 @@ impl BehaviorStaticMethods for CalculateGoal {
 }
 
 /// Behavior `PrintTarget`
-#[derive(Behavior, Debug)]
+#[derive(Behavior, Debug, Default)]
 pub struct PrintTarget {}
 
 impl BehaviorCreationMethods for PrintTarget {

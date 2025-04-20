@@ -40,6 +40,19 @@ pub struct Parser<'a> {
 	next: Token,
 }
 
+#[allow(clippy::needless_lifetimes)]
+impl<'a> core::fmt::Debug for Parser<'a> {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		f.debug_struct("Parser")
+			// .field("lexer", &self.lexer)
+			// .field("prefix_parselets", &self.prefix_parselets)
+			// .field("infix_parselets", &self.infix_parselets)
+			.field("current", &self.current)
+			.field("next", &self.next)
+			.finish()
+	}
+}
+
 impl<'a> Parser<'a> {
 	/// Create a Parser with all the necessary ingredients
 	#[must_use]

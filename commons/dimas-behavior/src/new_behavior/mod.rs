@@ -43,10 +43,11 @@ pub trait BehaviorTreeMethods: BehaviorInstanceMethods + BehaviorRedirectionMeth
 
 // region:      --- BehaviorCreationMethods
 /// Methods needed for [`Behavior`] creation
-pub trait BehaviorCreationMethods {
+pub trait BehaviorCreationMethods: Default {
 	/// Provide the boxed creation function
 	#[must_use]
 	fn create() -> Box<BehaviorCreationFn>;
+
 	/// Get the kind of the [`Behavior`] that shall become a Node in a [`BehaviorSubTree`]
 	#[must_use]
 	fn kind() -> NewBehaviorType;

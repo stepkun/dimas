@@ -7,6 +7,10 @@
 #[doc(hidden)]
 extern crate alloc;
 
+#[doc(hidden)]
+#[cfg(feature = "std")]
+extern crate std;
+
 // region		--- modules
 use alloc::{
 	boxed::Box,
@@ -32,6 +36,10 @@ pub enum Error {
 	/// Children are not allowed for some types of behaviors
 	#[error("children are not allowed for behavior category [{0}]")]
 	ChildrenNotAllowed(String),
+	/// Passthrough for libloading Errors
+	#[cfg(feature = "std")]
+	#[error("{0}")]
+	Env(#[from] std::io::Error),
 	/// Passthrough for libloading Errors
 	#[error("{0}")]
 	Libloading(#[from] libloading::Error),
