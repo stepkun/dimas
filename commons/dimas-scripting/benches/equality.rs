@@ -12,8 +12,10 @@ fn boolean_equality(c: &mut Criterion) {
 	let env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
-	let mut parser = Parser::new("true==true; true==false; false==true; false==false;");
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser
+		.parse("true==true; true==false; false==true; false==false;")
+		.unwrap();
 
 	c.bench_function("boolean equality", |b| {
 		b.iter(|| {
@@ -28,10 +30,10 @@ fn double_equality(c: &mut Criterion) {
 	let env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
-	let mut parser = Parser::new(
-		"1==1; 3.1475==4.99999; -3.00987654321234==-3.00987654321234; 3.00987654321234==4;",
-	);
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser
+		.parse("1==1; 3.1475==4.99999; -3.00987654321234==-3.00987654321234; 3.00987654321234==4;")
+		.unwrap();
 
 	c.bench_function("double equality", |b| {
 		b.iter(|| {
@@ -46,8 +48,10 @@ fn integer_equality(c: &mut Criterion) {
 	let env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
-	let mut parser = Parser::new("0x1==0x1; 0xFF321==0x56adf; -0x34==-0x34; 0xabcdef==0x1;");
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser
+		.parse("0x1==0x1; 0xFF321==0x56adf; -0x34==-0x34; 0xabcdef==0x1;")
+		.unwrap();
 
 	c.bench_function("integer equality", |b| {
 		b.iter(|| {
@@ -62,10 +66,8 @@ fn string_equality(c: &mut Criterion) {
 	let env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
-	let mut parser = Parser::new(
-		"'short'=='short'; 'short'=='sho'; 'medium'=='this is a little bit longer'; 'this is a little bit longer'=='this is a little bit longer';",
-	);
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser.parse("'short'=='short'; 'short'=='sho'; 'medium'=='this is a little bit longer'; 'this is a little bit longer'=='this is a little bit longer';").unwrap();
 
 	c.bench_function("string equality", |b| {
 		b.iter(|| {
@@ -81,10 +83,10 @@ fn mixed_equality(c: &mut Criterion) {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
-	let mut parser = Parser::new(
-		"'short'==true; 'short'==1; 'medium'==nil; 'this is a little bit longer'==0x15;",
-	);
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser
+		.parse("'short'==true; 'short'==1; 'medium'==nil; 'this is a little bit longer'==0x15;")
+		.unwrap();
 
 	c.bench_function("mixed equality", |b| {
 		b.iter(|| {

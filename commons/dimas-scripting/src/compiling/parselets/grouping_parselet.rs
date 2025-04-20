@@ -4,7 +4,7 @@
 //!
 
 use crate::{
-	Parser,
+	Lexer, Parser,
 	compiling::{
 		error::Error,
 		token::{Token, TokenKind},
@@ -17,8 +17,14 @@ use super::PrefixParselet;
 pub struct GroupingParselet;
 
 impl PrefixParselet for GroupingParselet {
-	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
-		parser.expression(chunk)?;
-		parser.consume(TokenKind::RightParen)
+	fn parse(
+		&self,
+		lexer: &mut Lexer,
+		parser: &mut Parser,
+		chunk: &mut Chunk,
+		_token: Token,
+	) -> Result<(), Error> {
+		parser.expression(lexer, chunk)?;
+		parser.consume(lexer, TokenKind::RightParen)
 	}
 }

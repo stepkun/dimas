@@ -11,20 +11,20 @@ fn expressions() {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
-	let mut parser = Parser::new("print (5 - (3 - 1)) + -1;");
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser.parse("print (5 - (3 - 1)) + -1;").unwrap();
 	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"2\n");
 
 	stdout.clear();
-	let mut parser = Parser::new("print (5 - (3 - 1)) + +1;");
-	let chunk = parser.parse().unwrap();
+	let chunk = parser.parse("print (5 - (3 - 1)) + +1;").unwrap();
 	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"4\n");
 
 	stdout.clear();
-	let mut parser = Parser::new("print !(5 - 4 > 3 * 2 == !nil);");
-	let chunk = parser.parse().unwrap();
+	let chunk = parser
+		.parse("print !(5 - 4 > 3 * 2 == !nil);")
+		.unwrap();
 	vm.run(&chunk, &env, &mut stdout).unwrap();
 	assert_eq!(stdout, b"true\n");
 }

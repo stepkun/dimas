@@ -6,7 +6,7 @@
 use alloc::string::ToString;
 
 use crate::{
-	Parser,
+	Lexer, Parser,
 	compiling::{
 		error::Error,
 		precedence::Precedence,
@@ -20,14 +20,20 @@ use super::PrefixParselet;
 pub struct UnaryParselet;
 
 impl PrefixParselet for UnaryParselet {
-	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
+	fn parse(
+		&self,
+		lexer: &mut Lexer,
+		parser: &mut Parser,
+		chunk: &mut Chunk,
+		_token: Token,
+	) -> Result<(), Error> {
 		let token = parser.current();
 		// there must be a current token
 		if parser.next().kind == TokenKind::None {
 			return Err(Error::ExpressionExpected(parser.next().line));
 		}
 		// compile the operand
-		parser.with_precedence(Precedence::Unary, chunk)?;
+		parser.with_precedence(lexer, Precedence::Unary, chunk)?;
 		match token.kind {
 			TokenKind::Bang => {
 				// add the logical not

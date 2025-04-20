@@ -19,7 +19,9 @@ use dimas_scripting::{Parser, VM};
 
 /// The Script behavior returns Success or Failure depending on the result of the scripted code
 #[derive(Behavior, Debug, Default)]
-pub struct ScriptCondition {}
+pub struct ScriptCondition {
+	parser: Parser,
+}
 
 impl BehaviorCreationMethods for ScriptCondition {
 	fn create() -> Box<BehaviorCreationFn> {
@@ -35,8 +37,7 @@ impl BehaviorInstanceMethods for ScriptCondition {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let code = tree_node.tick_data.get_input::<String>("code")?;
 
-		let mut parser = Parser::new(&code);
-		let chunk = parser.parse()?;
+		let chunk = self.parser.parse(&code)?;
 
 		let env = tree_node.tick_data.blackboard.clone();
 		let mut vm = VM::default();

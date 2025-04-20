@@ -37,7 +37,7 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-	/// Create a Lexer for a certain input str
+	/// Create a Lexer for a certain input str.
 	#[must_use]
 	pub const fn new(source_code: &'a str) -> Self {
 		Self {
@@ -46,6 +46,14 @@ impl<'a> Lexer<'a> {
 			pos: 0,
 			line: 1,
 		}
+	}
+
+	/// Set a new input str (source code).
+	pub const fn set_input(&mut self, source_code: &'a str) {
+		self.whole = source_code;
+		self.rest = source_code;
+		self.pos = 0;
+		self.line = 1;
 	}
 }
 

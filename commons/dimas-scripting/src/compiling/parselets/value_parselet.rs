@@ -7,7 +7,7 @@
 use alloc::string::ToString;
 
 use crate::{
-	Parser,
+	Lexer, Parser,
 	compiling::{
 		error::Error,
 		token::{Token, TokenKind},
@@ -21,7 +21,13 @@ use super::PrefixParselet;
 pub struct ValueParselet;
 
 impl PrefixParselet for ValueParselet {
-	fn parse(&self, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
+	fn parse(
+		&self,
+		_lexer: &mut Lexer,
+		parser: &mut Parser,
+		chunk: &mut Chunk,
+		token: Token,
+	) -> Result<(), Error> {
 		match token.kind {
 			TokenKind::FloatNumber => {
 				let double: f64 = match token.origin.parse() {

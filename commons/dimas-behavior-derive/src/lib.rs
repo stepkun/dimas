@@ -66,12 +66,19 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 	let generics = &ast.generics.params;
 	let where_clause = &ast.generics.where_clause;
 
+	let derived: proc_macro2::TokenStream = "#[automatically_derived]"
+		.parse()
+		.expect("derive(Behavior)");
+
 	quote! {
-		impl<#generics> BehaviorAllMethods for #ident #generics #where_clause {}
+		#derived
+		impl<#generics> BehaviorAllMethods for #ident<#generics> #where_clause {}
 
-		impl<#generics> BehaviorTreeMethods for #ident #generics #where_clause {}
+		#derived
+		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {}
 
-		impl<#generics> BehaviorRedirectionMethods for #ident #generics #where_clause {
+		#derived
+		impl<#generics> BehaviorRedirectionMethods for #ident<#generics> #where_clause {
 			fn static_provided_ports(&self) -> NewPortList {
 				Self::provided_ports()
 			}

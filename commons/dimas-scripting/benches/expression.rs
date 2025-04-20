@@ -13,8 +13,8 @@ fn simple_expression(c: &mut Criterion) {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
-	let mut parser = Parser::new("(3 + 2) * (4 - 1);");
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser.parse("(3 + 2) * (4 - 1);").unwrap();
 
 	c.bench_function("simple expression", |b| {
 		b.iter(|| {
@@ -30,8 +30,8 @@ fn moderate_expression(c: &mut Criterion) {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
-	let mut parser = Parser::new("!(5 - 4 > 3 * 2 == !nil);");
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser.parse("!(5 - 4 > 3 * 2 == !nil);").unwrap();
 
 	c.bench_function("moderate expression", |b| {
 		b.iter(|| {
@@ -47,8 +47,10 @@ fn string_addition(c: &mut Criterion) {
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
-	let mut parser = Parser::new("'this is a ' + 'test string';");
-	let chunk = parser.parse().unwrap();
+	let mut parser = Parser::new();
+	let chunk = parser
+		.parse("'this is a ' + 'test string';")
+		.unwrap();
 
 	c.bench_function("string addition", |b| {
 		b.iter(|| {

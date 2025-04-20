@@ -31,8 +31,8 @@ impl ScriptCondition {
 
 	async fn tick(&mut self) -> BehaviorResult {
 		let code = bhvr_.config_mut().get_input::<String>("code")?;
-		let mut parser = Parser::new(&code);
-		let chunk = parser.parse()?;
+		let mut parser = Parser::new();
+		let chunk = parser.parse(&code)?;
 
 		let env = bhvr_.config().blackboard();
 		let mut vm = VM::default();

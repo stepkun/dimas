@@ -19,8 +19,8 @@ fn repl() {
 					// ignore CR/LF only input
 					if input.len() > 1 {
 						// print!("{}", &input);
-						let mut parser = Parser::new(&input);
-						parser.parse().map_or_else(
+						let mut parser = Parser::new();
+						parser.parse(&input).map_or_else(
 							|err| {
 								println!("parsing error: {err}");
 							},

@@ -30,8 +30,7 @@ use super::{
 };
 
 /// Parser
-pub struct Parser<'a> {
-	lexer: Lexer<'a>,
+pub struct Parser {
 	prefix_parselets: HashMap<TokenKind, Arc<dyn PrefixParselet>>,
 	infix_parselets: HashMap<TokenKind, Arc<dyn InfixParselet>>,
 	/// current handled Token
@@ -41,7 +40,7 @@ pub struct Parser<'a> {
 }
 
 #[allow(clippy::needless_lifetimes)]
-impl<'a> core::fmt::Debug for Parser<'a> {
+impl core::fmt::Debug for Parser {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		f.debug_struct("Parser")
 			// .field("lexer", &self.lexer)
@@ -49,17 +48,23 @@ impl<'a> core::fmt::Debug for Parser<'a> {
 			// .field("infix_parselets", &self.infix_parselets)
 			.field("current", &self.current)
 			.field("next", &self.next)
-			.finish()
+			.finish_non_exhaustive()
 	}
 }
 
-impl<'a> Parser<'a> {
+#[allow(clippy::needless_lifetimes)]
+impl Default for Parser {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
+impl Parser {
 	/// Create a Parser with all the necessary ingredients
 	#[must_use]
 	#[allow(clippy::too_many_lines)]
-	pub fn new(source_code: &'a str) -> Self {
+	pub fn new() -> Self {
 		let mut parser = Self {
-			lexer: Lexer::new(source_code),
 			prefix_parselets: HashMap::default(),
 			infix_parselets: HashMap::default(),
 			current: Token::none(),
@@ -178,20 +183,21 @@ impl<'a> Parser<'a> {
 	/// # Errors
 	/// - passes [`Lexer`] errors through
 	/// - if it could not create a proper [`Chunk`]
-	pub fn parse(&mut self) -> Result<Chunk, Error> {
+	pub fn parse(&mut self, source_code: &str) -> Result<Chunk, Error> {
 		let mut chunk = Chunk::default();
+		let mut lexer = Lexer::new(source_code);
 
-		self.advance()?;
+		self.advance(&mut lexer)?;
 		while !self.check_next(TokenKind::None) {
 			//std::println!("{}", self.current.kind);
 			// in case of error try to synchronize to next statement
-			if let Err(error) = self.statement(&mut chunk) {
+			if let Err(error) = self.statement(&mut lexer, &mut chunk) {
 				std::println!("{error}");
 				while !(self.check_next(TokenKind::Semicolon)
 					|| self.check_next(TokenKind::Print)
 					|| self.check_next(TokenKind::None))
 				{
-					self.advance()?;
+					self.advance(&mut lexer)?;
 				}
 			}
 		}
@@ -213,9 +219,9 @@ impl<'a> Parser<'a> {
 	/// Advance to the next token
 	/// # Errors
 	/// passthrough of [`Lexer`] errors
-	pub(crate) fn advance(&mut self) -> Result<(), Error> {
+	pub(crate) fn advance(&mut self, lexer: &mut Lexer) -> Result<(), Error> {
 		self.current = self.next.clone();
-		let tmp = self.lexer.next();
+		let tmp = lexer.next();
 		if let Some(token) = tmp {
 			// passthrough of lexer errors
 			self.next = token?;
@@ -229,9 +235,9 @@ impl<'a> Parser<'a> {
 	/// Consume the next token if it has the expected kind
 	/// # Errors
 	/// if next token does not have the expected kind
-	pub(crate) fn consume(&mut self, expected: TokenKind) -> Result<(), Error> {
+	pub(crate) fn consume(&mut self, lexer: &mut Lexer, expected: TokenKind) -> Result<(), Error> {
 		if self.next.kind == expected {
-			self.advance()
+			self.advance(lexer)
 		} else {
 			Err(Error::ExpectedToken(
 				expected.to_string(),
@@ -273,35 +279,36 @@ impl<'a> Parser<'a> {
 		chunk.patch(byte2, patch_pos + 1);
 	}
 
-	pub(crate) fn statement(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
+	pub(crate) fn statement(&mut self, lexer: &mut Lexer, chunk: &mut Chunk) -> Result<(), Error> {
 		if self.next.kind == TokenKind::Print {
-			self.advance()?;
-			self.expression(chunk)?;
+			self.advance(lexer)?;
+			self.expression(lexer, chunk)?;
 			// a statement my also be finished by EOF
 			if !self.check_next(TokenKind::None) {
-				self.consume(TokenKind::Semicolon)?;
+				self.consume(lexer, TokenKind::Semicolon)?;
 			}
 			self.emit_byte(OpCode::Print as u8, chunk);
 		} else {
-			self.expression(chunk)?;
+			self.expression(lexer, chunk)?;
 			if !self.check_next(TokenKind::None) {
-				self.consume(TokenKind::Semicolon)?;
+				self.consume(lexer, TokenKind::Semicolon)?;
 			}
 			//self.emit_byte(OP_POP, chunk);
 		}
 		Ok(())
 	}
 
-	pub(crate) fn expression(&mut self, chunk: &mut Chunk) -> Result<(), Error> {
-		self.with_precedence(Precedence::Assignment, chunk)
+	pub(crate) fn expression(&mut self, lexer: &mut Lexer, chunk: &mut Chunk) -> Result<(), Error> {
+		self.with_precedence(lexer, Precedence::Assignment, chunk)
 	}
 
 	pub(crate) fn with_precedence(
 		&mut self,
+		lexer: &mut Lexer,
 		precedence: Precedence,
 		chunk: &mut Chunk,
 	) -> Result<(), Error> {
-		self.advance()?;
+		self.advance(lexer)?;
 
 		let token = self.current();
 		let prefix_opt = self.prefix_parselets.get(&token.kind);
@@ -309,18 +316,18 @@ impl<'a> Parser<'a> {
 			return Err(Error::ExpressionExpected(token.line));
 		}
 		let prefix_parselet = prefix_opt.expect("should not fail").clone();
-		prefix_parselet.parse(self, chunk, token)?;
+		prefix_parselet.parse(lexer, self, chunk, token)?;
 
 		while precedence <= self.get_precedence() {
-			self.advance()?;
+			self.advance(lexer)?;
 			let token = self.current();
 			let infix_opt = self.infix_parselets.get(&token.kind);
 			if let Some(infix) = infix_opt {
-				infix.clone().parse(self, chunk, token)?;
+				infix.clone().parse(lexer, self, chunk, token)?;
 			} else {
 				let _prefix_opt = self.prefix_parselets.get(&token.kind);
 				match infix_opt {
-					Some(prefix) => prefix.clone().parse(self, chunk, token)?,
+					Some(prefix) => prefix.clone().parse(lexer, self, chunk, token)?,
 					None => {
 						break;
 					}
