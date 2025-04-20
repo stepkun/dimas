@@ -68,7 +68,7 @@ async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 
 	// Load a plugin and register the Behaviors it contains.
 	// This automates the registering step.
-	factory.register_from_plugin("libtest_behaviors")?;
+	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 

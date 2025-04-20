@@ -186,20 +186,21 @@ impl NewBehaviorTreeFactory {
 	#[allow(unsafe_code)]
 	pub fn register_from_plugin(&mut self, name: &str) -> Result<(), Error> {
 		// create path from exe path
-		// in dev environment we have tp remove a '/deps'
+		// in dev environment maybe we have to remove a '/deps'
 		let exe_path = std::env::current_exe()?
 			.parent()
 			.expect("snh")
 			.to_str()
 			.expect("snh")
-			.replace("/deps", "");
-		//std::dbg!(exe_path);
+			.trim_end_matches("/deps")
+			.to_string();
+
 		#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-		todo!();
+		todo!("This plattform is not upported!");
 		#[cfg(target_os = "linux")]
-		let libname = exe_path + "/" + name + ".so";
+		let libname = exe_path + "/lib" + name + ".so";
 		#[cfg(target_os = "windows")]
-		let libname = exe_path + "/" + name + ".dll";
+		let libname = exe_path + "\\" + name + ".dll";
 
 		let lib = unsafe {
 			let lib = libloading::Library::new(libname)?;

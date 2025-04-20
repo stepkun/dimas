@@ -66,7 +66,7 @@ async fn crossdoor() -> anyhow::Result<()> {
 async fn crossdoor_with_plugin() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("libcross_door")?;
+	factory.register_from_plugin("cross_door")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_tree()?;

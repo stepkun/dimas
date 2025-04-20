@@ -47,7 +47,7 @@ async fn generic_ports() -> anyhow::Result<()> {
 async fn generic_ports_with_plugin() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("libtest_behaviors")?;
+	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 

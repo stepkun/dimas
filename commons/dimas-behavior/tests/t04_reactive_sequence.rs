@@ -92,7 +92,7 @@ async fn reactive_sequence() -> anyhow::Result<()> {
 async fn std_sequence_with_plugin() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("libtest_behaviors")?;
+	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
@@ -111,7 +111,7 @@ async fn std_sequence_with_plugin() -> anyhow::Result<()> {
 async fn reactive_sequence_with_plugin() -> anyhow::Result<()> {
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("libtest_behaviors")?;
+	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML_REACTIVE)?;
 

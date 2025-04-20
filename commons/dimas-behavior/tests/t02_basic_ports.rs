@@ -67,7 +67,7 @@ async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	extern crate std;
 	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("libtest_behaviors")?;
+	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
