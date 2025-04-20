@@ -88,15 +88,9 @@ impl BehaviorInstanceMethods for SequenceWithMemory {
 	}
 }
 
-impl BehaviorCreationMethods for SequenceWithMemory {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for SequenceWithMemory {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
-
-impl BehaviorStaticMethods for SequenceWithMemory {}
 // endregion:   --- SequenceWithMemory

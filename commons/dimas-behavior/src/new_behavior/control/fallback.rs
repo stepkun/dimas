@@ -82,15 +82,9 @@ impl BehaviorInstanceMethods for Fallback {
 	}
 }
 
-impl BehaviorCreationMethods for Fallback {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for Fallback {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
-
-impl BehaviorStaticMethods for Fallback {}
 // endregion:   --- Fallback

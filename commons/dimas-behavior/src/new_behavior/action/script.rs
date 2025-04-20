@@ -22,15 +22,6 @@ use dimas_scripting::{Parser, VM};
 pub struct Script {
 	parser: Parser,
 }
-impl BehaviorCreationMethods for Script {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
 
 impl BehaviorInstanceMethods for Script {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
@@ -59,6 +50,10 @@ impl BehaviorInstanceMethods for Script {
 }
 
 impl BehaviorStaticMethods for Script {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![input_port::<String>("code", "", "Piece of code that can be parsed.").expect("snh")]
 	}

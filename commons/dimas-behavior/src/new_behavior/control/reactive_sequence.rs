@@ -97,15 +97,9 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 	}
 }
 
-impl BehaviorCreationMethods for ReactiveSequence {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for ReactiveSequence {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
-
-impl BehaviorStaticMethods for ReactiveSequence {}
 // endregion:   --- ReactiveSequence

@@ -34,15 +34,9 @@ impl BehaviorInstanceMethods for ParallelAll {
 	}
 }
 
-impl BehaviorCreationMethods for ParallelAll {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for ParallelAll {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
-
-impl BehaviorStaticMethods for ParallelAll {}
 // endregion:   --- ParallelAll

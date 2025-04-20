@@ -86,15 +86,9 @@ impl BehaviorInstanceMethods for Sequence {
 	}
 }
 
-impl BehaviorCreationMethods for Sequence {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for Sequence {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
-
-impl BehaviorStaticMethods for Sequence {}
 // endregion:   --- Sequence

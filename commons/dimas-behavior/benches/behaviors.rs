@@ -29,17 +29,11 @@ impl BehaviorInstanceMethods for AlwaysSuccess {
 	}
 }
 
-impl BehaviorCreationMethods for AlwaysSuccess {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
+impl BehaviorStaticMethods for AlwaysSuccess {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Action
 	}
 }
-
-impl BehaviorStaticMethods for AlwaysSuccess {}
 
 /// Action `AlwaysFailure`
 #[derive(Behavior, Debug, Default)]
@@ -51,14 +45,8 @@ impl BehaviorInstanceMethods for AlwaysFailure {
 	}
 }
 
-impl BehaviorCreationMethods for AlwaysFailure {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
+impl BehaviorStaticMethods for AlwaysFailure {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Action
 	}
 }
-
-impl BehaviorStaticMethods for AlwaysFailure {}

@@ -37,6 +37,7 @@ pub trait BehaviorAllMethods:
 	BehaviorTreeMethods + BehaviorStaticMethods + BehaviorCreationMethods
 {
 }
+
 /// Supertrait for execution of a [`Behavior`]
 pub trait BehaviorTreeMethods: BehaviorInstanceMethods + BehaviorRedirectionMethods {}
 // endregion:   --- supertraits
@@ -47,10 +48,6 @@ pub trait BehaviorCreationMethods: Default {
 	/// Provide the boxed creation function
 	#[must_use]
 	fn create() -> Box<BehaviorCreationFn>;
-
-	/// Get the kind of the [`Behavior`] that shall become a Node in a [`BehaviorSubTree`]
-	#[must_use]
-	fn kind() -> NewBehaviorType;
 }
 // endregion:   --- BehaviorCreationMethods
 
@@ -91,7 +88,16 @@ pub trait BehaviorRedirectionMethods: core::fmt::Debug + Send + Sync {
 
 // region:      --- BehaviorStaticMethods
 /// Static methods of [`Behavior`]s
-pub trait BehaviorStaticMethods {
+pub trait BehaviorStaticMethods: Default {
+	// This does not work, because self does not know its correct type
+	// fn create() -> Box<BehaviorCreationFn> {
+	// 	Box::new(|| Box::new(Self::default()))
+	// }
+
+	/// Get the kind of the [`Behavior`] that shall become a Node in a [`BehaviorSubTree`]
+	#[must_use]
+	fn kind() -> NewBehaviorType;
+
 	/// Provide the list of defined [`Port`]s.
 	/// Default implementation returns an empty list.
 	#[must_use]

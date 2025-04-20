@@ -116,17 +116,11 @@ impl BehaviorInstanceMethods for RetryUntilSuccessful {
 	}
 }
 
-impl BehaviorCreationMethods for RetryUntilSuccessful {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for RetryUntilSuccessful {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Decorator
 	}
-}
 
-impl BehaviorStaticMethods for RetryUntilSuccessful {
 	fn provided_ports() -> NewPortList {
 		vec![input_port::<i32>("num_attempts", "", "").expect("snh")]
 	}

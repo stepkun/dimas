@@ -28,16 +28,6 @@ use dimas_behavior_derive::Behavior;
 #[derive(Behavior, Debug, Default)]
 pub struct ApproachObject {}
 
-impl BehaviorCreationMethods for ApproachObject {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
-
 impl BehaviorInstanceMethods for ApproachObject {
 	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
@@ -45,7 +35,11 @@ impl BehaviorInstanceMethods for ApproachObject {
 	}
 }
 
-impl BehaviorStaticMethods for ApproachObject {}
+impl BehaviorStaticMethods for ApproachObject {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+}
 
 /// Function for behavior `CheckBattery`
 /// # Errors
@@ -80,16 +74,6 @@ impl GripperInterface {
 #[derive(Behavior, Debug, Default)]
 pub struct SaySomething {}
 
-impl BehaviorCreationMethods for SaySomething {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
-
 impl BehaviorInstanceMethods for SaySomething {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let msg = tree_node
@@ -101,6 +85,10 @@ impl BehaviorInstanceMethods for SaySomething {
 }
 
 impl BehaviorStaticMethods for SaySomething {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![input_port::<String>("message", "hello", "").expect("snh")]
 	}
@@ -109,16 +97,6 @@ impl BehaviorStaticMethods for SaySomething {
 /// Behavior `ThinkWhatToSay`
 #[derive(Behavior, Debug, Default)]
 pub struct ThinkWhatToSay {}
-
-impl BehaviorCreationMethods for ThinkWhatToSay {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
 
 impl BehaviorInstanceMethods for ThinkWhatToSay {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
@@ -130,6 +108,10 @@ impl BehaviorInstanceMethods for ThinkWhatToSay {
 }
 
 impl BehaviorStaticMethods for ThinkWhatToSay {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![output_port::<String>("text", "", "").expect("snh")]
 	}
@@ -175,16 +157,6 @@ impl FromStr for Position2D {
 #[derive(Behavior, Debug, Default)]
 pub struct CalculateGoal {}
 
-impl BehaviorCreationMethods for CalculateGoal {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
-
 impl BehaviorInstanceMethods for CalculateGoal {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
@@ -194,6 +166,10 @@ impl BehaviorInstanceMethods for CalculateGoal {
 }
 
 impl BehaviorStaticMethods for CalculateGoal {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![output_port::<Position2D>("goal", "", "").expect("snh")]
 	}
@@ -202,16 +178,6 @@ impl BehaviorStaticMethods for CalculateGoal {
 /// Behavior `PrintTarget`
 #[derive(Behavior, Debug, Default)]
 pub struct PrintTarget {}
-
-impl BehaviorCreationMethods for PrintTarget {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self {}))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
 
 impl BehaviorInstanceMethods for PrintTarget {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
@@ -224,6 +190,10 @@ impl BehaviorInstanceMethods for PrintTarget {
 }
 
 impl BehaviorStaticMethods for PrintTarget {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![input_port::<String>("target", "", "").expect("snh")]
 	}
@@ -272,16 +242,6 @@ impl Default for MoveBaseAction {
 	}
 }
 
-impl BehaviorCreationMethods for MoveBaseAction {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
-	}
-}
-
 impl BehaviorInstanceMethods for MoveBaseAction {
 	fn start(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let pose = tree_node.tick_data.get_input::<Pose2D>("goal")?;
@@ -305,6 +265,10 @@ impl BehaviorInstanceMethods for MoveBaseAction {
 }
 
 impl BehaviorStaticMethods for MoveBaseAction {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Action
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![input_port::<Pose2D>("goal", "", "").expect("snh")]
 	}

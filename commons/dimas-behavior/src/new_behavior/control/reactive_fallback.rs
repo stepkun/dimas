@@ -84,15 +84,9 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 	}
 }
 
-impl BehaviorCreationMethods for ReactiveFallback {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for ReactiveFallback {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Control
 	}
 }
-
-impl BehaviorStaticMethods for ReactiveFallback {}
 // endregion:   --- ReactiveFallback

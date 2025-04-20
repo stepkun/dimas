@@ -57,15 +57,9 @@ impl BehaviorInstanceMethods for Inverter {
 	}
 }
 
-impl BehaviorCreationMethods for Inverter {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
+impl BehaviorStaticMethods for Inverter {
 	fn kind() -> NewBehaviorType {
 		NewBehaviorType::Decorator
 	}
 }
-
-impl BehaviorStaticMethods for Inverter {}
 // endregion:   --- Inverter

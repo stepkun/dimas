@@ -42,6 +42,12 @@ use syn::DeriveInput;
 ///
 /// impl BehaviorAllMethods for MyBehavior {}
 ///
+/// impl BehaviorCreationMethods for Fallback {
+///     fn create() -> Box<BehaviorCreationFn> {
+///         Box::new(|| Box::new(Self::default()))
+///     }
+/// }
+///
 /// impl BehaviorTreeMethods for MyBehavior {}
 ///
 /// impl BehaviorRedirectionMethods for MyBehavior {
@@ -73,6 +79,13 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 	quote! {
 		#derived
 		impl<#generics> BehaviorAllMethods for #ident<#generics> #where_clause {}
+
+		#derived
+		impl<#generics> BehaviorCreationMethods for #ident<#generics> #where_clause {
+			fn create() -> Box<BehaviorCreationFn> {
+				Box::new(|| Box::new(Self::default()))
+			}
+		}
 
 		#derived
 		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {}

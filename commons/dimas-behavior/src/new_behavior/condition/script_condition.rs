@@ -23,16 +23,6 @@ pub struct ScriptCondition {
 	parser: Parser,
 }
 
-impl BehaviorCreationMethods for ScriptCondition {
-	fn create() -> Box<BehaviorCreationFn> {
-		Box::new(|| Box::new(Self::default()))
-	}
-
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Condition
-	}
-}
-
 impl BehaviorInstanceMethods for ScriptCondition {
 	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
 		let code = tree_node.tick_data.get_input::<String>("code")?;
@@ -60,6 +50,10 @@ impl BehaviorInstanceMethods for ScriptCondition {
 }
 
 impl BehaviorStaticMethods for ScriptCondition {
+	fn kind() -> NewBehaviorType {
+		NewBehaviorType::Condition
+	}
+
 	fn provided_ports() -> NewPortList {
 		vec![
 			input_port::<String>(
