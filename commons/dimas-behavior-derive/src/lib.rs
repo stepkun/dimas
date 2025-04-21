@@ -43,7 +43,7 @@ use syn::DeriveInput;
 /// impl BehaviorAllMethods for MyBehavior {}
 ///
 /// impl BehaviorCreationMethods for Fallback {
-///     fn create() -> Box<BehaviorCreationFn> {
+///     fn creation_fn() -> Box<BehaviorCreationFn> {
 ///         Box::new(|| Box::new(Self::default()))
 ///     }
 /// }
@@ -74,23 +74,30 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 
 	let derived: proc_macro2::TokenStream = "#[automatically_derived]"
 		.parse()
-		.expect("derive(Behavior)");
+		.expect("derive(Behavior) - derived");
+	let diagnostic: proc_macro2::TokenStream = "#[diagnostic::do_not_recommend]"
+		.parse()
+		.expect("derive(Behavior) - diagnostic");
 
 	quote! {
 		#derived
+		#diagnostic
 		impl<#generics> BehaviorAllMethods for #ident<#generics> #where_clause {}
 
 		#derived
+		#diagnostic
 		impl<#generics> BehaviorCreationMethods for #ident<#generics> #where_clause {
-			fn create() -> Box<BehaviorCreationFn> {
+			fn creation_fn() -> Box<BehaviorCreationFn> {
 				Box::new(|| Box::new(Self::default()))
 			}
 		}
 
 		#derived
+		#diagnostic
 		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {}
 
 		#derived
+		#diagnostic
 		impl<#generics> BehaviorRedirectionMethods for #ident<#generics> #where_clause {
 			fn static_provided_ports(&self) -> NewPortList {
 				Self::provided_ports()

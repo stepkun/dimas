@@ -8,7 +8,8 @@ use alloc::sync::Arc;
 use dimas_behavior::{
 	factory::{BehaviorRegistry, NewBehaviorTreeFactory},
 	input_port_macro,
-	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior}, port_list,
+	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
+	port_list,
 };
 use parking_lot::Mutex;
 

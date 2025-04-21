@@ -56,6 +56,9 @@ pub enum Error {
 	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(String),
 	/// The main tree information is missing
+	#[error("no 'main_tree_to_execute' with name {0} provided")]
+	NoMainTree(String),
+	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' provided")]
 	NoTreeToExecute,
 	/// Port not in defined port list
@@ -64,6 +67,9 @@ pub enum Error {
 	/// Loading a library failed
 	#[error("registering library [{0}] failed with [{0}]")]
 	RegisterLib(String, u32),
+	/// Passthrough for behavior tree Errors
+	#[error("{0}")]
+	Tree(#[from] crate::tree::error::Error),
 	/// Processing instruction
 	#[error("processing instruction [{0}] is not supported")]
 	UnsupportedProcessingInstruction(String),

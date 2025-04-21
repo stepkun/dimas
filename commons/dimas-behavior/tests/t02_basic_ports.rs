@@ -1,6 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 
 //! This test implements the second tutorial/example from [BehaviorTree.CPP](https://www.behaviortree.dev)
+//!
 //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_02_basic_ports)
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t02_basic_ports.cpp)
 //!
@@ -47,7 +48,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let say_something_ports = port_list!{input_port_macro!(String, "message")};
+	let say_something_ports = port_list! {input_port_macro!(String, "message")};
 	factory.register_simple_action_with_ports(
 		"SaySomething2",
 		Arc::new(say_something_simple),

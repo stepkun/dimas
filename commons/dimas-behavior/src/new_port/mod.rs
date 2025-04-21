@@ -8,8 +8,8 @@ mod port;
 
 // flatten
 pub use port::{
-	NewPortDefinition, NewPortDirection, NewPortList, create_port, get_remapped_key, is_bb_pointer,
-	strip_bb_pointer, NewPortRemappings,
+	NewPortDefinition, NewPortDirection, NewPortList, NewPortRemappings, create_port,
+	get_remapped_key, is_bb_pointer, strip_bb_pointer,
 };
 
 // region:		---macros

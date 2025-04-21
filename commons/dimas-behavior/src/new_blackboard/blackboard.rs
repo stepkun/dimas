@@ -218,6 +218,12 @@ impl NewBlackboard {
 		self.data.write().auto_remapping = use_remapping;
 	}
 
+	/// Print the content of the blackboard for debugging purpose
+	#[cfg(feature = "std")]
+	pub fn debug_message(&self) {
+		std::println!("BB content");
+	}
+
 	/// Version of `get<T>` that does _not_ try to convert from string if the type
 	/// doesn't match. This method has the benefit of not requiring the trait
 	/// '[`From`] for [`str`]', which allows to avoid implementing the trait for

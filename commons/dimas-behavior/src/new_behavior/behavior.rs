@@ -13,8 +13,7 @@ use core::{any::TypeId, str::FromStr};
 use crate::{
 	new_blackboard::NewBlackboard,
 	new_port::{
-		NewPortDirection, NewPortRemappings, get_remapped_key,
-		is_bb_pointer, strip_bb_pointer,
+		NewPortDirection, NewPortRemappings, get_remapped_key, is_bb_pointer, strip_bb_pointer,
 	},
 };
 
@@ -24,9 +23,15 @@ use super::{BehaviorResult, NewBehaviorStatus, error::NewBehaviorError};
 // region:		--- BehaviorConfigurationData
 /// Holds the Behavior data used during configuration
 /// and on other rare occasions.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct BehaviorConfigurationData {
 	name: String,
+}
+
+impl Default for BehaviorConfigurationData {
+	fn default() -> Self {
+		Self { name: String::from("uninitialized") }
+	}
 }
 
 impl BehaviorConfigurationData {
@@ -86,7 +91,10 @@ impl BehaviorTickData {
 		// extern crate std;
 		// std::dbg!("test: {}", &self.blackboard);
 		let port_name = port.into();
-		if let Some(remapped_name) = self.remappings.find(&port_name, NewPortDirection::In) {
+		if let Some(remapped_name) = self
+			.remappings
+			.find(&port_name, NewPortDirection::In)
+		{
 			// entry found
 			if remapped_name.is_empty() {
 				todo!()
@@ -129,7 +137,10 @@ impl BehaviorTickData {
 		T: Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
 		let port_name = port.into();
-		if let Some(remapped_name) = self.remappings.find(&port_name, NewPortDirection::Out) {
+		if let Some(remapped_name) = self
+			.remappings
+			.find(&port_name, NewPortDirection::Out)
+		{
 			// entry found
 			let blackboard_key = match remapped_name.as_str() {
 				"=" => port_name,

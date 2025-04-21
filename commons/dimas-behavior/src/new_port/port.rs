@@ -6,10 +6,16 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use core::{any::TypeId, ops::{Deref, DerefMut}};
+use core::{
+	any::TypeId,
+	ops::{Deref, DerefMut},
+};
 
 // region:      --- modules
-use alloc::{string::{String, ToString}, vec::Vec};
+use alloc::{
+	string::{String, ToString},
+	vec::Vec,
+};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -132,10 +138,7 @@ impl NewPortList {
 	/// Add an entry to the [`PortList`]
 	/// # Errors
 	/// - if entry already exists
-	pub fn add(
-		&mut self,
-		port_definition: NewPortDefinition,
-	) -> Result<(), Error> {
+	pub fn add(&mut self, port_definition: NewPortDefinition) -> Result<(), Error> {
 		for entry in &mut *self.0 {
 			if entry.name == port_definition.name {
 				return Err(Error::AlreadyInPortList(entry.name.clone()));
@@ -219,7 +222,9 @@ impl NewPortRemappings {
 	#[must_use]
 	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<String> {
 		for (original, remapped) in &self.0 {
-			if original == name && ((direction == remapped.0) || (remapped.0 == NewPortDirection::InOut)) {
+			if original == name
+				&& ((direction == remapped.0) || (remapped.0 == NewPortDirection::InOut))
+			{
 				return Some((remapped.1).clone());
 			}
 		}

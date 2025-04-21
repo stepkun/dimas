@@ -4,11 +4,15 @@
 
 // region:      --- modules
 use crate::{
-	input_port_macro, new_behavior::{
+	input_port_macro,
+	new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
 		NewBehaviorStatus, NewBehaviorType,
-	}, new_port::NewPortList, port_list, tree::BehaviorTreeComponent
+	},
+	new_port::NewPortList,
+	port_list,
+	tree::BehaviorTreeComponent,
 };
 use alloc::{boxed::Box, string::String, vec, vec::Vec};
 use dimas_behavior_derive::Behavior;

@@ -12,11 +12,15 @@ use core::num::ParseFloatError;
 use std::time::{Duration, Instant};
 
 use dimas_behavior::{
-	input_port_macro, new_behavior::{
+	input_port_macro,
+	new_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
 		NewBehaviorStatus, NewBehaviorType,
-	}, new_port::NewPortList, output_port_macro, port_list, tree::BehaviorTreeComponent
+	},
+	new_port::NewPortList,
+	output_port_macro, port_list,
+	tree::BehaviorTreeComponent,
 };
 use dimas_behavior_derive::Behavior;
 // endregion:	--- modules
@@ -88,7 +92,7 @@ impl BehaviorStaticMethods for SaySomething {
 	}
 
 	fn provided_ports() -> NewPortList {
-		port_list!{input_port_macro!(String, "message", "hello")}
+		port_list! {input_port_macro!(String, "message", "hello")}
 	}
 }
 

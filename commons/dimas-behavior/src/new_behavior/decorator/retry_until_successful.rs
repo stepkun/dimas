@@ -8,9 +8,15 @@ use alloc::{boxed::Box, string::ToString, vec};
 use dimas_behavior_derive::Behavior;
 
 use crate::{
-	input_port_macro, new_behavior::{
-		error::NewBehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods, NewBehaviorStatus, NewBehaviorType
-	}, new_port::NewPortList, port_list, tree::BehaviorTreeComponent
+	input_port_macro,
+	new_behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
+		NewBehaviorStatus, NewBehaviorType, error::NewBehaviorError,
+	},
+	new_port::NewPortList,
+	port_list,
+	tree::BehaviorTreeComponent,
 };
 // endregeion:  --- modules
 

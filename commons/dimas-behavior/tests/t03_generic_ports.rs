@@ -1,6 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 
 //! This test implements the third tutorial/example from [BehaviorTree.CPP](https://www.behaviortree.dev)
+//!
 //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_03_generic_ports)
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t03_generic_ports.cpp)
 //!

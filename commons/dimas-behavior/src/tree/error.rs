@@ -18,10 +18,12 @@ pub enum Error {
 	/// Pass through behavior error
 	#[error("{0}")]
 	Behavior(#[from] crate::new_behavior::error::NewBehaviorError),
-
 	/// The root of the tree s not properly created
-	#[error("tree root [{0}] not found")]
+	#[error("root tree [{0}] not found in behavior tree")]
 	RootNotFound(String),
+	/// The root of the tree s not properly created
+	#[error("(sub)tree [{0}] not found in behavior tree")]
+	SubtreeNotFound(String),
 
 	/// Something happened that should not have been possible
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]

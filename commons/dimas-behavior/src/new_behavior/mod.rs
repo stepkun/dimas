@@ -11,10 +11,14 @@ pub mod control;
 pub mod decorator;
 pub mod error;
 mod simple_behavior;
+mod subtree_callee;
+mod subtree_caller;
 
 // flatten
 pub use behavior::{BehaviorConfigurationData, BehaviorTickData};
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
+pub use subtree_callee::SubtreeCallee;
+pub use subtree_caller::SubtreeCaller;
 
 // region:      --- modules
 use alloc::boxed::Box;
@@ -47,7 +51,7 @@ pub trait BehaviorTreeMethods: BehaviorInstanceMethods + BehaviorRedirectionMeth
 pub trait BehaviorCreationMethods: Default {
 	/// Provide the boxed creation function
 	#[must_use]
-	fn create() -> Box<BehaviorCreationFn>;
+	fn creation_fn() -> Box<BehaviorCreationFn>;
 }
 // endregion:   --- BehaviorCreationMethods
 

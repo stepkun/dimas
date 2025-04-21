@@ -8,19 +8,24 @@
 //! using a `struct` instead of a `trait` to improve performance.
 //!
 
-use core::ops::{Deref, DerefMut};
-
 // region:      --- modules
-use alloc::{boxed::Box, string::String, vec, vec::Vec};
+use alloc::{
+	borrow::ToOwned, boxed::Box, string::String, sync::Arc, vec::{self, Vec}
+};
+use core::{any::{Any, TypeId}, ops::{Deref, DerefMut}};
 use dimas_scripting::{Parser, VM};
 use hashbrown::HashMap;
 use parking_lot::Mutex;
 use rustc_hash::FxBuildHasher;
 
-use crate::new_behavior::{
-	BehaviorConfigurationData, BehaviorResult, BehaviorTickData, BehaviorTreeMethods,
-	NewBehaviorStatus, error::NewBehaviorError,
+use crate::{
+	new_behavior::{
+		error::NewBehaviorError, BehaviorConfigurationData, BehaviorResult, BehaviorTickData, BehaviorTreeMethods, NewBehaviorStatus, SubtreeCallee, SubtreeCaller
+	},
+	new_blackboard::NewBlackboard,
 };
+
+use super::error::Error;
 // endregion:   --- modules
 
 // region:      --- BehaviorTreeComponent
@@ -79,9 +84,9 @@ impl BehaviorTreeComponent {
 #[derive(Debug)]
 pub struct BehaviorTreeComponentContainer {
 	/// Behavior of this node
-	behavior: Option<Box<dyn BehaviorTreeMethods>>,
+	pub(crate) behavior: Box<dyn BehaviorTreeMethods>,
 	/// tick tree component data
-	inner: BehaviorTreeComponent,
+	pub(crate) inner: BehaviorTreeComponent,
 	/// Data needed on rare occasions
 	pub config_data: BehaviorConfigurationData,
 }
@@ -110,7 +115,7 @@ impl BehaviorTreeComponentContainer {
 		config_data: BehaviorConfigurationData,
 	) -> Self {
 		Self {
-			behavior: Some(behavior),
+			behavior,
 			inner: BehaviorTreeComponent {
 				tick_data,
 				children: Vec::default(),
@@ -124,12 +129,11 @@ impl BehaviorTreeComponentContainer {
 	/// - if after `is_some()` == true an unwrap fails
 	#[must_use]
 	pub fn create_node(
-		behavior: Option<Box<dyn BehaviorTreeMethods>>,
+		behavior: Box<dyn BehaviorTreeMethods>,
 		tick_data: BehaviorTickData,
 		children: Vec<Self>,
 		config_data: BehaviorConfigurationData,
 	) -> Self {
-		let behavior = behavior.map_or_else(|| None, Some);
 		Self {
 			behavior,
 			inner: BehaviorTreeComponent {
@@ -140,34 +144,21 @@ impl BehaviorTreeComponentContainer {
 		}
 	}
 
+	/// Access the Blackboard
+	#[must_use]
+	pub fn blackboard(&self) -> NewBlackboard {
+		self.inner.tick_data.blackboard.clone()
+	}
+
 	/// Method called to tick a node in the [`Tree`].
 	/// # Errors
 	#[allow(unsafe_code)]
 	pub fn execute_tick(&mut self) -> BehaviorResult {
 		let mut status = self.tick_data.status;
-		if let Some(bhvr) = &mut self.behavior {
-			if status == NewBehaviorStatus::Idle {
-				status = bhvr.start(&mut self.inner)?;
-			} else {
-				status = bhvr.tick(&mut self.inner)?;
-			}
+		if status == NewBehaviorStatus::Idle {
+			status = self.behavior.start(&mut self.inner)?;
 		} else {
-			for child in &mut *self.children {
-				match child.execute_tick()? {
-					NewBehaviorStatus::Success => {}
-					NewBehaviorStatus::Running => {
-						self.set_status(NewBehaviorStatus::Running);
-						return Ok(NewBehaviorStatus::Running);
-					}
-					NewBehaviorStatus::Failure => {
-						self.set_status(NewBehaviorStatus::Failure);
-						return Ok(NewBehaviorStatus::Failure);
-					}
-					NewBehaviorStatus::Idle => todo!(),
-					NewBehaviorStatus::Skipped => todo!(),
-				}
-			}
-			status = NewBehaviorStatus::Success;
+			status = self.behavior.tick(&mut self.inner)?;
 		}
 		self.set_status(status);
 		Ok(status)
@@ -179,9 +170,7 @@ impl BehaviorTreeComponentContainer {
 		self.set_status(NewBehaviorStatus::Idle);
 		self.behavior
 			.as_mut()
-			.map_or(Ok(NewBehaviorStatus::Idle), |bhvr| {
-				bhvr.halt(&mut self.inner)
-			})
+			.halt(&mut self.inner)
 	}
 
 	/// Set status of component
@@ -210,17 +199,28 @@ pub struct BehaviorTree {
 	/// Index of the root node in the vec below.
 	root_index: usize,
 	/// Map of direct accessible [`BehaviorTreeComponent`]s. These are `SubTree`s
-	/// @TODO: replace with a vec and maybe use references
-	subtrees: Vec<BehaviorTreeComponentContainer>,
+	subtrees: Vec<Arc<Mutex<SubtreeCallee>>>,
 }
 
 impl BehaviorTree {
-	pub(crate) fn add(&mut self, subtree: BehaviorTreeComponentContainer) {
+	pub(crate) fn add(&mut self, subtree: Arc<Mutex<SubtreeCallee>>) {
 		self.subtrees.push(subtree);
 	}
 
 	pub(crate) fn set_root_index(&mut self) {
 		self.root_index = self.subtrees.len() - 1;
+	}
+
+	/// Access a subtree in the subtree list by index
+	#[must_use]
+	pub fn subtree(&self, index: usize) -> Arc<Mutex<SubtreeCallee>> {
+		self.subtrees[index].clone()
+	}
+
+	/// Access the subtreee list
+	#[must_use]
+	pub const fn subtrees(&self) -> &Vec<Arc<Mutex<SubtreeCallee>>> {
+		&self.subtrees
 	}
 
 	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`]
@@ -229,10 +229,10 @@ impl BehaviorTree {
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
 		let mut status = NewBehaviorStatus::Idle;
 
-		let root = &mut self.subtrees[self.root_index];
+		let mut root = self.subtrees[self.root_index].clone();
 
 		while status == NewBehaviorStatus::Idle || matches!(status, NewBehaviorStatus::Running) {
-			status = root.execute_tick()?;
+			status = root.lock().execute_tick()?;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 
@@ -248,13 +248,39 @@ impl BehaviorTree {
 	/// # Errors
 	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.subtrees[self.root_index].execute_tick()
+		self.subtrees[self.root_index]
+			.lock().execute_tick()
 	}
 
 	/// Get root of tree
 	#[must_use]
-	pub fn root_node(&self) -> &BehaviorTreeComponentContainer {
-		&self.subtrees[self.root_index]
+	pub fn root_node(&self) -> Arc<Mutex<SubtreeCallee>> {
+		self.subtrees[self.root_index].clone()
+	}
+
+	/// Find a subtree by id
+	/// # Errors
+	/// - if the subtree is not within of the tree
+	pub fn find_by_name(&self, id: &str) -> Result<Arc<Mutex<SubtreeCallee>>, Error> {
+		for sub in &self.subtrees {
+			if sub.lock().id() == id {
+				return Ok(sub.clone());
+			}
+		}
+		Err(Error::SubtreeNotFound(id.into()))
+	}
+	
+	pub(crate) fn link_subtrees(&self) -> Result<(), Error> {
+		let subtree = self.subtree(self.root_index);
+		for child in subtree.lock().children() {
+			if (child.type_id() == TypeId::of::<SubtreeCaller>()) {
+				//let caller = todo!();
+				let id = "t";
+					let target = self.find_by_name(id)?;
+				child.status();
+			}
+		}	
+		Ok(())
 	}
 }
 // endregion:   --- BehaviorTree
