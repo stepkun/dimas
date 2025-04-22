@@ -17,15 +17,15 @@ extern crate alloc;
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");
 
-mod agent;
-mod com;
-mod error;
-mod timer;
+// mod agent;
+// mod com;
+// mod error;
+// mod timer;
 
-pub use agent::Agent;
+// pub use agent::Agent;
 
 // mostly needed stuff
-pub mod prelude;
+// pub mod prelude;
 
 // macro reexport
-pub use dimas_macros::main;
+// pub use dimas_macros::main;

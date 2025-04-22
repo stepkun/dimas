@@ -9,7 +9,7 @@
 use serial_test::serial;
 use test_behaviors::test_nodes::{CalculateGoal, PrintTarget};
 
-use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -31,7 +31,7 @@ const XML: &str = r#"
 #[tokio::test]
 #[serial]
 async fn generic_ports() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_node_type::<CalculateGoal>("CalculateGoal")?;
 	factory.register_node_type::<PrintTarget>("PrintTarget")?;
@@ -39,20 +39,20 @@ async fn generic_ports() -> anyhow::Result<()> {
 	let mut tree = factory.create_from_text(XML)?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 
 #[tokio::test]
 #[serial]
 async fn generic_ports_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }

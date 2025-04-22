@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t07_load_multiple_xml.cpp)
 //!
 
-use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 
@@ -42,7 +42,7 @@ const XML_SUB_B: &str = r#"
 #[serial]
 #[ignore]
 async fn load_multiple_xml() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_node_type::<SaySomething>("SaySomething")?;
 
@@ -62,7 +62,7 @@ async fn load_multiple_xml() -> anyhow::Result<()> {
 	println!("----- MainTree tick ----");
 	let mut tree = factory.create_tree("MainTree")?;
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 
 	// ... or you can create only one of the subtree
 	println!("----- SubA tick ----");

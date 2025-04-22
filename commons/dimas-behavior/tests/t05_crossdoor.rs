@@ -7,7 +7,7 @@
 //!
 
 use cross_door::cross_door::CrossDoor;
-use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use serial_test::serial;
 
 const XML: &str = r#"
@@ -40,7 +40,7 @@ const XML: &str = r#"
 #[serial]
 #[ignore]
 async fn crossdoor() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	let cross_door = CrossDoor::default();
 	cross_door.register_nodes(&mut factory)?;
@@ -52,7 +52,7 @@ async fn crossdoor() -> anyhow::Result<()> {
 	let mut tree = factory.create_main_tree()?;
 
 	// helper function to print the tree
-	NewBehaviorTreeFactory::print_tree_recursively(tree.root_node());
+	// BehaviorTreeFactory::print_tree_recursively(tree.root_node());
 
 	// Tick multiple times, until either FAILURE of SUCCESS is returned
 	let _result = tree.tick_while_running().await?;
@@ -64,16 +64,16 @@ async fn crossdoor() -> anyhow::Result<()> {
 #[serial]
 #[ignore]
 async fn crossdoor_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("cross_door")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_main_tree()?;
 
-	NewBehaviorTreeFactory::print_tree_recursively(tree.root_node());
+	// BehaviorTreeFactory::print_tree_recursively(tree.root_node());
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }

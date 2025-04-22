@@ -6,7 +6,6 @@ resolver="3"
 members = [
 	"commons/dimas-behavior",
 	"commons/dimas-behavior-derive",
-	"commons/dimas-builtin",
 	"commons/dimas-com",
 	"commons/dimas-commands",
 	"commons/dimas-config",
@@ -61,8 +60,6 @@ dimas-behavior = { path = "commons/dimas-behavior" }
 #dimas-behavior = "0.5.0"
 dimas-behavior-derive = { path = "commons/dimas-behavior-derive" }
 #dimas-behavior-derive = "0.5.0"
-dimas-builtin = { path = "commons/dimas-builtin" }
-#dimas-builtin = "0.5.0"
 dimas-com = { path = "commons/dimas-com" }
 #dimas-com = "0.5.0"
 dimas-commands = { path = "commons/dimas-commands" }

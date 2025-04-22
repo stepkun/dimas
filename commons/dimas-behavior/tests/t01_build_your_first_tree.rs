@@ -8,7 +8,7 @@
 
 use std::sync::Arc;
 
-use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use parking_lot::Mutex;
 use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
@@ -30,7 +30,7 @@ const XML: &str = r#"
 #[tokio::test]
 #[serial]
 async fn build_your_first_tree() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities
@@ -58,14 +58,14 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 	// In this case, the entire sequence is executed, because all the children
 	// of the Sequence return SUCCESS.
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 
 #[tokio::test]
 #[serial]
 async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	// Load a plugin and register the Behaviors it contains.
 	// This automates the registering step.
@@ -74,6 +74,6 @@ async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 	let mut tree = factory.create_from_text(XML)?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }

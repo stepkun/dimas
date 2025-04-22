@@ -1,6 +1,6 @@
 // Copyright © 2024 Stephan Kunz
 
-//! `dimas-core` behavior errors
+//! `dimas-behavior` behavior errors
 
 #[doc(hidden)]
 extern crate alloc;
@@ -11,69 +11,46 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- BehaviorError
-/// `dimas-core` behavior error type
+/// `dimas-behavior` behavior error type
 #[allow(clippy::module_name_repetitions)]
 #[derive(Error, Debug)]
 pub enum BehaviorError {
-	/// Pass through blackboard error
-	#[error("{0}")]
-	Blackboard(#[from] crate::blackboard::error::Error),
-
-	/// Pass through `dimas_core` error
-	#[error("{0}")]
-	Core(#[from] dimas_core::error::Error),
-
 	/// Error in structural composition of a behaviors children
 	#[error("{0}")]
 	Composition(String),
-
-	/// Pass through float parsing error
-	#[error("{0}")]
-	FloatParse(#[from] core::num::ParseFloatError),
-
 	/// Pass through executtion error
 	#[error("{0}")]
 	Execution(#[from] dimas_scripting::execution::error::Error),
-
-	/// Pass through parsing error
+	/// Pass through float parsing error
 	#[error("{0}")]
-	Parsing(#[from] dimas_scripting::compiling::error::Error),
-
-	/// Evaluation of a scripting expression failed
-	#[error("evaluating expression [{0}] failed")]
-	ExpressionEvaluation(String),
-
-	/// Port is not in port list
-	#[error("could not find port [{0}]")]
-	FindPort(String),
-
-	/// Port is not in port list
-	#[error("could not find default for port [{0}]")]
-	FindPortDefault(String),
-
-	/// The index is out of bounds
+	FloatParse(#[from] core::num::ParseFloatError),
+	/// The index of a behavior is out of bounds
 	#[error("index [{0}] out of bounds")]
-	Index(usize),
-
+	IndexOutOfBounds(usize),
 	/// Error in internal composition of a behavior
 	#[error("{0}")]
 	Internal(String),
-
-	/// Variable is not in Blackboard
+	/// Variable/Port is not in Blackboard
 	#[error("could not find entry [{0}] in blackboard")]
 	NotInBlackboard(String),
-
-	/// Port has not been defined in behavior
-	#[error("port [{0}] is not declared in behavior [{1}]")]
-	PortNotDeclared(String, String),
-
 	/// Type mismatch between port definiton and found value
 	#[error("could not parse value for port [{0}] into specified type [{1}]")]
 	ParsePortValue(String, String),
-
-	/// Behavior returns a status that is not allowed in this situation
+	/// Pass through parsing error
+	#[error("{0}")]
+	Parsing(#[from] dimas_scripting::compiling::error::Error),
+	/// Port has not been defined in behavior
+	#[error("port [{0}] is not declared in behavior [{1}]")]
+	PortNotDeclared(String, String),
+	/// The root of the tree is not properly created
+	#[error("tree root [{0}] not found")]
+	RootNotFound(String),
+	/// An illegal [`BehaviorStatus`] is reached
 	#[error("child node of [{0}] returned status [{1}] when not allowed")]
 	Status(String, String),
+	/// The tree is not properly created
+	#[error("(sub)tree [{0}] not found in behavior tree")]
+	SubtreeNotFound(String),
 
 	/// Something happened that should not have been possible
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]

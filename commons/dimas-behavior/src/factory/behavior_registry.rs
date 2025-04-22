@@ -15,7 +15,7 @@ extern crate std;
 use alloc::{borrow::ToOwned, boxed::Box, string::String, sync::Arc, vec::Vec};
 use libloading::Library;
 
-use crate::new_behavior::{BehaviorCreationFn, BehaviorTreeMethods, NewBehaviorType};
+use crate::behavior::{BehaviorCreationFn, BehaviorTreeMethods, BehaviorType};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -24,7 +24,7 @@ use super::error::Error;
 /// A registry for [`Behavior`]s used by the [`BehaviorTreeFactory`] for creation of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	behaviors: Vec<(String, NewBehaviorType, Arc<BehaviorCreationFn>)>,
+	behaviors: Vec<(String, BehaviorType, Arc<BehaviorCreationFn>)>,
 	librarys: Vec<Library>,
 }
 
@@ -36,7 +36,7 @@ impl BehaviorRegistry {
 		&mut self,
 		name: impl Into<String>,
 		bhvr_creation_fn: F,
-		bhvr_type: NewBehaviorType,
+		bhvr_type: BehaviorType,
 	) -> Result<(), Error>
 	where
 		F: Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static,
@@ -88,7 +88,7 @@ impl BehaviorRegistry {
 	/// Fetch a behavior creation function from the registry
 	/// # Errors
 	/// - if the behavior is not found in the registry
-	pub fn fetch(&self, id: &str) -> Result<(NewBehaviorType, Arc<BehaviorCreationFn>), Error> {
+	pub fn fetch(&self, id: &str) -> Result<(BehaviorType, Arc<BehaviorCreationFn>), Error> {
 		for (name, bhvr_type, creation_fn) in &self.behaviors {
 			if name == id {
 				return Ok((bhvr_type.to_owned(), creation_fn.clone()));

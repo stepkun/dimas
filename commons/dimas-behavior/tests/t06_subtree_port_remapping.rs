@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t06_subtree_port_remapping.cpp)
 //!
 
-use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething};
 
@@ -38,7 +38,7 @@ const XML: &str = r#"
 #[serial]
 #[ignore]
 async fn subtree_port_remapping() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_node_type::<SaySomething>("SaySomething")?;
 	factory.register_node_type::<MoveBaseAction>("MoveBase")?;
@@ -47,17 +47,17 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ First BB ------");
-	tree.subtree(0)
-		.lock()
-		.blackboard()
-		.debug_message();
-	println!("\n------ Second BB------");
-	tree.subtree(1)
-		.lock()
-		.blackboard()
-		.debug_message();
+	// tree.subtree(0)
+	// 	.lock()
+	// 	.blackboard()
+	// 	.debug_message();
+	// println!("\n------ Second BB------");
+	// tree.subtree(1)
+	// 	.lock()
+	// 	.blackboard()
+	// 	.debug_message();
 	Ok(())
 }
 
@@ -65,7 +65,7 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 #[serial]
 #[ignore]
 async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;
 
@@ -73,16 +73,16 @@ async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ First BB ------");
-	tree.subtree(0)
-		.lock()
-		.blackboard()
-		.debug_message();
-	println!("\n------ Second BB------");
-	tree.subtree(1)
-		.lock()
-		.blackboard()
-		.debug_message();
+	// tree.subtree(0)
+	// 	.lock()
+	// 	.blackboard()
+	// 	.debug_message();
+	// println!("\n------ Second BB------");
+	// tree.subtree(1)
+	// 	.lock()
+	// 	.blackboard()
+	// 	.debug_message();
 	Ok(())
 }

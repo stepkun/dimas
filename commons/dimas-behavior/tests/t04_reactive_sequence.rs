@@ -11,7 +11,7 @@ use std::{sync::Arc, time::Duration};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething, check_battery};
 
-use dimas_behavior::{factory::NewBehaviorTreeFactory, new_behavior::NewBehaviorStatus};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -49,7 +49,7 @@ const XML_REACTIVE: &str = r#"
 #[tokio::test]
 #[serial]
 async fn std_sequence() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_simple_condition("BatteryOK", Arc::new(check_battery))?;
 	factory.register_node_type::<MoveBaseAction>("MoveBase")?;
@@ -59,39 +59,39 @@ async fn std_sequence() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == NewBehaviorStatus::Running {
+	while result == BehaviorStatus::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 
 #[tokio::test]
 #[serial]
 async fn reactive_sequence() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_simple_condition("BatteryOK", Arc::new(check_battery))?;
 	factory.register_node_type::<MoveBaseAction>("MoveBase")?;
 	factory.register_node_type::<SaySomething>("SaySomething")?;
 
-	let mut tree = factory.create_from_text(XML_REACTIVE)?;
+	let mut tree = factory.create_from_text(XML)?;
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == NewBehaviorStatus::Running {
+	while result == BehaviorStatus::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 
 #[tokio::test]
 #[serial]
 async fn std_sequence_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;
 
@@ -99,18 +99,18 @@ async fn std_sequence_with_plugin() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == NewBehaviorStatus::Running {
+	while result == BehaviorStatus::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 
 #[tokio::test]
 #[serial]
 async fn reactive_sequence_with_plugin() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;
 
@@ -118,10 +118,10 @@ async fn reactive_sequence_with_plugin() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == NewBehaviorStatus::Running {
+	while result == BehaviorStatus::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }

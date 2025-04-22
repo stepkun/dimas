@@ -9,13 +9,13 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	new_behavior::{
+	behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
-		NewBehaviorStatus, NewBehaviorType,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
 	},
-	new_port::NewPortList,
-	tree::BehaviorTreeComponent,
+	port::PortList,
+	tree::BehaviorTreeComponentList,
 };
 use dimas_behavior_derive::Behavior;
 
@@ -24,14 +24,18 @@ use dimas_behavior_derive::Behavior;
 pub struct AlwaysSuccess {}
 
 impl BehaviorInstanceMethods for AlwaysSuccess {
-	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		Ok(NewBehaviorStatus::Success)
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for AlwaysSuccess {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 }
 
@@ -40,13 +44,17 @@ impl BehaviorStaticMethods for AlwaysSuccess {
 pub struct AlwaysFailure {}
 
 impl BehaviorInstanceMethods for AlwaysFailure {
-	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		Ok(NewBehaviorStatus::Success)
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for AlwaysFailure {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 }

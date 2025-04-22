@@ -1,120 +1,256 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
+#![allow(unused)]
 
-//! `dimas-behaviortree` port
+//! `dimas-behavior` Port implementation
 
 #[doc(hidden)]
 extern crate alloc;
 
+use core::{
+	any::TypeId,
+	ops::{Deref, DerefMut},
+};
+
 // region:      --- modules
 use alloc::{
-	boxed::Box,
 	string::{String, ToString},
+	vec::Vec,
 };
-use core::{
-	any::Any,
-	fmt::{Debug, Display, Formatter},
-};
-use hashbrown::HashMap;
 
-use crate::blackboard::BlackboardString;
+use super::error::Error;
 // endregion:   --- modules
 
+// region:      --- types
+const FORBIDDEN_NAMES: &[&str] = &[
+	"name",
+	"ID",
+	"_autoremap",
+	"_failureIf",
+	"_successIf",
+	"_skipIf",
+	"_while",
+	"_onHalted",
+	"_onFailure",
+	"_onSuccess",
+	"_post",
+];
+// endregion:   --- types
+
 // region:      --- helper
-/// @TODO:
-pub fn get_remapped_key(
-	port_name: impl AsRef<str>,
-	remapped_port: impl AsRef<str>,
-) -> Option<String> {
-	if port_name.as_ref() == "{=}" || remapped_port.as_ref() == "{=}" {
-		Some(port_name.as_ref().to_string())
+/// Function handles the special remapping cases
+#[must_use]
+pub fn get_remapped_key(port_name: &str, remapped_port: &str) -> Option<String> {
+	// is the shortcut '{=}' used?
+	if port_name == "{=}" || remapped_port == "{=}" {
+		Some(port_name.to_string())
 	} else {
-		remapped_port.as_ref().strip_bb_pointer()
+		strip_bb_pointer(remapped_port)
 	}
+}
+
+/// Remove all 'decoration' from port name
+#[must_use]
+pub fn strip_bb_pointer(port: &str) -> Option<String> {
+	// Is bb pointer
+	if port.starts_with('{') && port.ends_with('}') {
+		Some(
+			port.strip_prefix('{')
+				.unwrap_or_else(|| todo!())
+				.strip_suffix('}')
+				.unwrap_or_else(|| todo!())
+				.to_string(),
+		)
+	} else {
+		None
+	}
+}
+
+/// Check if it is a port
+#[must_use]
+pub fn is_bb_pointer(port: &str) -> bool {
+	port.starts_with('{') && port.ends_with('}')
+}
+
+/// Create a [`PortDefinition`]
+/// # Errors
+/// - if the name violates the conventions.
+pub fn create_port<T: 'static>(
+	direction: NewPortDirection,
+	name: impl Into<String>,
+	default: impl Into<String>,
+	description: impl Into<String>,
+) -> Result<NewPortDefinition, Error> {
+	let name = name.into();
+	if is_allowed_name(&name) {
+		let type_id = TypeId::of::<T>();
+		Ok(NewPortDefinition {
+			direction,
+			type_id,
+			name,
+			default_value: default.into(),
+			description: description.into(),
+		})
+	} else {
+		Err(Error::NameNotAllowed(name))
+	}
+}
+
+fn is_allowed_name(name: &str) -> bool {
+	if name.is_empty() {
+		return false;
+	}
+	let first = name.chars().next().expect("snh");
+	if !first.is_alphabetic() {
+		return false;
+	}
+
+	if FORBIDDEN_NAMES.contains(&name) {
+		return false;
+	}
+	true
 }
 // endregion:   --- helper
 
-// region:      --- traits
-/// Trait for checking a port
-#[allow(clippy::module_name_repetitions)]
-pub trait PortChecks {
-	/// @TODO:
-	fn is_allowed_port_name(&self) -> bool;
-}
-
-impl<T: AsRef<str>> PortChecks for T {
-	fn is_allowed_port_name(&self) -> bool {
-		let name = self.as_ref();
-
-		if name.is_empty() {
-			false
-		} else if name == "_autoremap" {
-			true
-		} else if !name
-			.chars()
-			.next()
-			.unwrap_or_else(|| todo!())
-			.is_ascii_alphabetic()
-		{
-			false
-		} else {
-			// If the name isn't name or ID, it's valid
-			!(name == "name" || name == "ID")
-		}
-	}
-}
-
-/// Trait for cloning of ports
-#[allow(clippy::module_name_repetitions)]
-pub trait PortClone {
-	/// @TODO:
-	fn clone_port(&self) -> Box<dyn PortValue>;
-}
-
-impl<T> PortClone for T
-where
-	T: 'static + Any + Clone + Debug + ToString,
-{
-	fn clone_port(&self) -> Box<dyn PortValue> {
-		Box::new(self.clone())
-	}
-}
-
-/// Trait to ensure properties of a port
-#[allow(clippy::module_name_repetitions)]
-pub trait PortValue: Any + PortClone + Debug + ToString {}
-
-impl<T> PortValue for T where T: Any + PortClone + Debug + ToString {}
-// endregion:   --- traits
-
-// region:      --- types
+// region:      --- PortList
 /// List of ports
+/// The `PortList` is not using a `HashMap` but a `Vec` due to two reasons:
+/// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
+/// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
 #[allow(clippy::module_name_repetitions)]
-pub type PortList = HashMap<String, Port>;
+#[derive(Debug, Default)]
+pub struct PortList(pub Vec<NewPortDefinition>);
 
+impl Deref for PortList {
+	type Target = Vec<NewPortDefinition>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for PortList {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl PortList {
+	/// Add an entry to the [`PortList`]
+	/// # Errors
+	/// - if entry already exists
+	pub fn add(&mut self, port_definition: NewPortDefinition) -> Result<(), Error> {
+		for entry in &mut *self.0 {
+			if entry.name == port_definition.name {
+				return Err(Error::AlreadyInPortList(entry.name.clone()));
+			}
+		}
+		self.0.push(port_definition);
+		Ok(())
+	}
+
+	/// Create a list of the [`Port`] names in the list
+	#[must_use]
+	pub fn entries(&self) -> String {
+		let comma = false;
+		let mut result = String::new();
+		for entry in &self.0 {
+			if comma {
+				result += ", ";
+			}
+			result += &entry.name;
+		}
+		result
+	}
+
+	/// Lookup a [`PortDefinition`]
+	/// # Errors
+	/// - if no [`PortDefinition`] is found
+	pub fn find(&self, name: &str) -> Result<NewPortDefinition, Error> {
+		for entry in &self.0 {
+			if entry.name == name {
+				return Ok(entry.clone());
+			}
+		}
+		Err(Error::NotFoundInPortList(name.into()))
+	}
+}
+// endregion:	--- PortList
+
+// region:		--- PortRemappings
 /// Remapping list
+/// `PortRemappings` is not using a `HashMap` but a `Vec` due to two reasons:
+/// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
+/// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
 #[allow(clippy::module_name_repetitions)]
-pub type PortRemapping = HashMap<String, String>;
-// endregion:   --- types
+#[derive(Debug, Default)]
+pub struct PortRemappings(Vec<(String, (NewPortDirection, String))>);
+
+impl Deref for PortRemappings {
+	type Target = Vec<(String, (NewPortDirection, String))>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for PortRemappings {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl PortRemappings {
+	/// Add an entry to the [`PortRemappings`]
+	/// # Errors
+	/// - if entry already exists
+	pub fn add(
+		&mut self,
+		name: &str,
+		direction: NewPortDirection,
+		remapped_name: &str,
+	) -> Result<(), Error> {
+		for (original, _) in &mut *self.0 {
+			if original == name {
+				return Err(Error::AlreadyInRemappings(name.into()));
+			}
+		}
+		self.push((name.into(), (direction, remapped_name.into())));
+		Ok(())
+	}
+
+	/// Lookup the remaped name
+	#[must_use]
+	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<String> {
+		for (original, remapped) in &self.0 {
+			if original == name
+				&& ((direction == remapped.0) || (remapped.0 == NewPortDirection::InOut))
+			{
+				return Some((remapped.1).clone());
+			}
+		}
+		None
+	}
+}
+// endregion:   --- PortRemappings
 
 // region:      --- PortDirection
-/// @TODO:
-#[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// A [`Port`]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-pub enum PortDirection {
-	/// @TODO:
-	Input,
-	/// @TODO:
-	Output,
-	/// @TODO:
+pub enum NewPortDirection {
+	/// Input port
+	In,
+	/// Output port
+	Out,
+	/// Bidirecional port
 	InOut,
 }
 
-impl Display for PortDirection {
-	fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+impl core::fmt::Display for NewPortDirection {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		let text = match self {
-			Self::Input => "Input",
-			Self::Output => "Output",
+			Self::In => "Input",
+			Self::Out => "Output",
 			Self::InOut => "InOut",
 		};
 
@@ -123,57 +259,41 @@ impl Display for PortDirection {
 }
 // endregion:   --- PortDirection
 
-// region:      --- Port
+// region:      --- PortDefinition
+/// A static [`PortDefinition`], which is used for configuration.
+/// Access to members is public within crate to maximize performance
 #[derive(Clone, Debug)]
-/// @TODO:
-pub struct Port {
-	r#type: PortDirection,
-	description: String,
-	default_value: Option<String>,
+pub struct NewPortDefinition {
+	pub(crate) direction: NewPortDirection,
+	pub(crate) type_id: TypeId,
+	pub(crate) name: String,
+	pub(crate) default_value: String,
+	pub(crate) description: String,
 }
 
-impl Port {
-	/// @TODO:
-	#[must_use]
-	pub const fn new(direction: PortDirection) -> Self {
-		Self {
-			r#type: direction,
-			description: String::new(),
-			default_value: None,
+impl NewPortDefinition {
+	/// Constructor
+	/// # Errors
+	/// - if the name violates the conventions.
+	pub fn new(
+		direction: NewPortDirection,
+		type_id: TypeId,
+		name: impl Into<String>,
+		default_value: impl Into<String>,
+		description: impl Into<String>,
+	) -> Result<Self, Error> {
+		let name = name.into();
+		if is_allowed_name(&name) {
+			Ok(Self {
+				direction,
+				type_id,
+				name,
+				default_value: default_value.into(),
+				description: description.into(),
+			})
+		} else {
+			Err(Error::NameNotAllowed(name))
 		}
-	}
-
-	/// @TODO:
-	#[must_use]
-	pub const fn default_value(&self) -> Option<&String> {
-		match &self.default_value {
-			Some(v) => Some(v),
-			None => None,
-		}
-	}
-
-	/// @TODO:
-	#[allow(clippy::redundant_closure_for_method_calls)]
-	#[must_use]
-	pub fn default_value_str(&self) -> Option<String> {
-		self.default_value.as_ref().map(|v| v.to_string())
-	}
-
-	/// @TODO:
-	#[must_use]
-	pub const fn direction(&self) -> &PortDirection {
-		&self.r#type
-	}
-
-	/// @TODO:
-	#[allow(clippy::needless_pass_by_value)]
-	pub fn set_default(&mut self, default: impl ToString) {
-		self.default_value = Some(default.to_string());
-	}
-
-	/// @TODO:
-	pub fn set_description(&mut self, description: String) {
-		self.description = description;
 	}
 }
-// endregion:   --- Port
+// endregion:   --- PortDefinition

@@ -1,4 +1,4 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
 
 //! Blackboard of `DiMAS`
 
@@ -24,6 +24,7 @@ use dimas_scripting::{
 };
 use hashbrown::HashMap;
 use parking_lot::{Mutex, RwLock};
+use rustc_hash::FxBuildHasher;
 
 use super::ParseStr;
 // endregion:   --- modules
@@ -215,6 +216,12 @@ impl Blackboard {
 	/// explicit remapping rule.
 	pub fn enable_auto_remapping(&mut self, use_remapping: bool) {
 		self.data.write().auto_remapping = use_remapping;
+	}
+
+	/// Print the content of the blackboard for debugging purpose
+	#[cfg(feature = "std")]
+	pub fn debug_message(&self) {
+		std::println!("BB content");
 	}
 
 	/// Version of `get<T>` that does _not_ try to convert from string if the type
@@ -423,10 +430,13 @@ impl Blackboard {
 // endregion:   --- Blackboard
 
 // region:      --- BlackboardData
-/// @TODO:
+/// The key value store for the Blackboard.
+///
+/// It is using the `FxHasher` from `rustc-hash`, because the default `SipHash`
+/// can not be used across loaded libraries
 #[derive(Default)]
 struct BlackboardData {
-	storage: HashMap<String, Arc<Mutex<Entry>>>,
+	storage: HashMap<String, Arc<Mutex<Entry>>, FxBuildHasher>,
 	internal_to_external: HashMap<String, String>,
 	auto_remapping: bool,
 }

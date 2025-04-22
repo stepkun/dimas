@@ -16,12 +16,15 @@ use parking_lot::Mutex;
 use roxmltree::{Node, NodeType};
 
 use crate::{
-	new_behavior::{
+	behavior::{
 		BehaviorConfigurationData, BehaviorCreationMethods, BehaviorTickData, BehaviorTreeMethods,
-		NewBehaviorType, SubtreeCallee, SubtreeCaller,
+		BehaviorType,
 	},
-	new_blackboard::NewBlackboard,
-	tree::{BehaviorTree, BehaviorTreeComponentContainer},
+	blackboard::Blackboard,
+	tree::{
+		BehaviorTree, BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf,
+		BehaviorTreeNode, BehaviorTreeProxy,
+	},
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -32,7 +35,7 @@ pub struct XmlParser {}
 
 impl XmlParser {
 	pub(crate) fn parse_root_element(
-		blackboard: &NewBlackboard,
+		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
@@ -64,9 +67,9 @@ impl XmlParser {
 								let blackboard = if id == main_tree_name && !parse_main_tree {
 									blackboard.clone()
 								} else {
-									NewBlackboard::new(blackboard)
+									Blackboard::new(blackboard)
 								};
-								let subtree = Self::handle_subtree(
+								let new_subtree = Self::handle_subtree(
 									&blackboard,
 									registry,
 									tree,
@@ -75,7 +78,11 @@ impl XmlParser {
 									false,
 								)?;
 								// store subtree for later usage
-								tree.add(subtree);
+								if id == main_tree_name {
+									tree.add_root(new_subtree);
+								} else {
+									tree.add_subtree(new_subtree);
+								}
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
 							}
@@ -98,10 +105,12 @@ impl XmlParser {
 	}
 
 	pub(crate) fn register_root_element(
-		blackboard: &NewBlackboard,
+		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
+		// A reference to the name of the main_tree_to_execute.
+		main_tree_name: &str,
 	) -> Result<(), Error> {
 		for element in element.children() {
 			match element.node_type() {
@@ -124,7 +133,7 @@ impl XmlParser {
 							if let Some(id) = element.attribute("ID") {
 								// A subtreee gets a new [`Blackboard`] with parent trees [`Blackboard`] as parent
 								let blackboard = blackboard.clone();
-								let subtree = Self::handle_subtree(
+								let new_subtree = Self::handle_subtree(
 									&blackboard,
 									registry,
 									tree,
@@ -133,7 +142,11 @@ impl XmlParser {
 									true,
 								)?;
 								// store subtree for later usage
-								tree.add(subtree);
+								if id == main_tree_name {
+									tree.add_root(new_subtree);
+								} else {
+									tree.add_subtree(new_subtree);
+								}
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
 							}
@@ -156,13 +169,13 @@ impl XmlParser {
 	}
 
 	fn build_children(
-		blackboard: &NewBlackboard,
+		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
 		register_only: bool,
-	) -> Result<Vec<BehaviorTreeComponentContainer>, Error> {
-		let mut children = Vec::new();
+	) -> Result<BehaviorTreeComponentList, Error> {
+		let mut children = BehaviorTreeComponentList::default();
 
 		for child in element.children() {
 			match child.node_type() {
@@ -188,74 +201,76 @@ impl XmlParser {
 			}
 		}
 
-		children.shrink_to_fit();
+		// @TODO: children.shrink_to_fit();
 		Ok(children)
 	}
 
 	#[allow(clippy::option_if_let_else)]
 	fn build_child(
-		blackboard: &NewBlackboard,
+		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
 		// if true, only registration of subtrees happens
 		register_only: bool,
-	) -> Result<BehaviorTreeComponentContainer, Error> {
-		let bhvr_name = element.tag_name().name();
-		if bhvr_name == "SubTree" {
+	) -> Result<Box<dyn BehaviorTreeComponent>, Error> {
+		let element_name = element.tag_name().name();
+		if element_name == "SubTree" {
 			if let Some(id) = element.attribute("ID") {
 				let tick_data = BehaviorTickData::default();
 				let config_data = BehaviorConfigurationData::new(id);
+				let behavior = BehaviorTreeProxy::create(id, BehaviorTickData::default());
 				if register_only {
-					Ok(SubtreeCaller::create_node(id, None, tick_data, config_data))
+					Ok(behavior)
 				} else {
 					// use subtree from list
-					let subtree = tree.find_by_name(id)?;
-					Ok(SubtreeCaller::create_node(
-						id,
-						Some(subtree),
-						tick_data,
-						config_data,
-					))
+					todo!()
+					// let subtree = tree.find_by_name(id)?;
+					// Ok(behavior)
 				}
 			} else {
 				Err(Error::MissingId(element.tag_name().name().into()))
 			}
 		} else {
 			// look for the behavior in the [`BehaviorRegisty`]
-			let (bhvr_type, bhvr_creation_fn) = registry.fetch(bhvr_name)?;
+			let (bhvr_type, bhvr_creation_fn) = registry.fetch(element_name)?;
 			let mut bhvr = bhvr_creation_fn();
+			let id = bhvr_type.to_string() + ": ";
 			let tree_node = match bhvr_type {
-				NewBehaviorType::Action | NewBehaviorType::Condition => {
+				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
 						return Err(Error::ChildrenNotAllowed(bhvr_type.to_string()));
 					}
-					let blackboard = blackboard.clone();
-					let mut tick_data = BehaviorTickData::new(blackboard);
-					let mut config_data = BehaviorConfigurationData::new(bhvr_name);
-					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
-					BehaviorTreeComponentContainer::create_leaf(bhvr, tick_data, config_data)
+					let mut tick_data = BehaviorTickData::new(blackboard.clone());
+					let mut config_data = BehaviorConfigurationData::new(element_name);
+					let mut tick_data = BehaviorTickData::new(blackboard.clone());
+					Self::create_ports(
+						&mut bhvr,
+						&mut tick_data,
+						&mut config_data,
+						&element,
+					)?;
+					BehaviorTreeLeaf::create(id, tick_data, bhvr)
 				}
-				NewBehaviorType::Control | NewBehaviorType::Decorator => {
-					let blackboard = blackboard.clone();
-					let children =
-						Self::build_children(&blackboard, registry, tree, element, register_only)?;
-					if bhvr_type == NewBehaviorType::Decorator && children.len() > 1 {
+				BehaviorType::Control | BehaviorType::Decorator => {
+					let new_children =
+						Self::build_children(blackboard, registry, tree, element, register_only)?;
+					if bhvr_type == BehaviorType::Decorator && new_children.len() > 1 {
 						return Err(Error::DecoratorOnlyOneChild(
 							element.tag_name().name().into(),
 						));
 					}
-					let mut tick_data = BehaviorTickData::new(blackboard);
+					let mut tick_data = BehaviorTickData::new(blackboard.clone());
 					let mut config_data = BehaviorConfigurationData::default();
 					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
-					BehaviorTreeComponentContainer::create_node(
+					BehaviorTreeNode::create(
+						id,
+						new_children,
+						BehaviorTickData::new(blackboard.clone()),
 						bhvr,
-						tick_data,
-						children,
-						config_data,
 					)
 				}
-				NewBehaviorType::SubTree => {
+				BehaviorType::SubTree => {
 					todo!()
 				}
 			};
@@ -299,20 +314,29 @@ impl XmlParser {
 
 	#[allow(clippy::unnecessary_wraps)]
 	pub(crate) fn handle_subtree(
-		blackboard: &NewBlackboard,
+		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		tree: &mut BehaviorTree,
 		element: Node,
 		id: &str,
 		// if true, only registering happens
 		register_only: bool,
-	) -> Result<Arc<Mutex<SubtreeCallee>>, Error> {
-		let id = id.to_string();
-		let blackboard = NewBlackboard::default();
+	) -> Result<BehaviorTreeNode, Error> {
+		let id_string = id.to_string();
+		let blackboard = Blackboard::default();
+		// look for the behavior in the [`BehaviorRegisty`]
+		let (bhvr_type, bhvr_creation_fn) = registry.fetch("Subtree")?;
+		let mut bhvr = bhvr_creation_fn();
+
 		let children = Self::build_children(&blackboard, registry, tree, element, register_only)?;
 		// let tick_data = BehaviorTickData::new(blackboard);
-		let config_data = BehaviorConfigurationData::new(&id);
-		let subtree = SubtreeCallee::create(id, blackboard, children, config_data);
+		let config_data = BehaviorConfigurationData::new(id);
+		let subtree = BehaviorTreeNode::new(
+			id,
+			children,
+			BehaviorTickData::new(Blackboard::default()),
+			bhvr,
+		);
 		Ok(subtree)
 	}
 }

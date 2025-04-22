@@ -12,15 +12,15 @@ use core::num::ParseFloatError;
 use std::time::{Duration, Instant};
 
 use dimas_behavior::{
-	input_port_macro,
-	new_behavior::{
+	behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTreeMethods,
-		NewBehaviorStatus, NewBehaviorType,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
 	},
-	new_port::NewPortList,
-	output_port_macro, port_list,
-	tree::BehaviorTreeComponent,
+	input_port_macro, output_port_macro,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
 };
 use dimas_behavior_derive::Behavior;
 // endregion:	--- modules
@@ -31,15 +31,19 @@ use dimas_behavior_derive::Behavior;
 pub struct ApproachObject {}
 
 impl BehaviorInstanceMethods for ApproachObject {
-	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
-		Ok(NewBehaviorStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for ApproachObject {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 }
 
@@ -48,7 +52,7 @@ impl BehaviorStaticMethods for ApproachObject {
 /// In this case never :-)
 pub fn check_battery() -> BehaviorResult {
 	println!("[ Battery: OK ]");
-	Ok(NewBehaviorStatus::Success)
+	Ok(BehaviorStatus::Success)
 }
 
 /// Struct for behaviors `OpenGripper` and `CloseGripper`
@@ -61,14 +65,14 @@ impl GripperInterface {
 	/// In this case never :-)
 	pub fn open(&mut self) -> BehaviorResult {
 		println!("GripperInterface::open");
-		Ok(NewBehaviorStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 	/// Close the gripper.
 	/// # Errors
 	/// In this case never :-)
 	pub fn close(&mut self) -> BehaviorResult {
 		println!("GripperInterface::close");
-		Ok(NewBehaviorStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 }
 /// Behavior `SaySomething`
@@ -77,21 +81,23 @@ impl GripperInterface {
 pub struct SaySomething {}
 
 impl BehaviorInstanceMethods for SaySomething {
-	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let msg = tree_node
-			.tick_data
-			.get_input::<String>("message")?;
+	fn tick(
+		&mut self,
+		tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		let msg = tick_data.get_input::<String>("message")?;
 		println!("Robot says: {msg}");
-		Ok(NewBehaviorStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for SaySomething {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 
-	fn provided_ports() -> NewPortList {
+	fn provided_ports() -> PortList {
 		port_list! {input_port_macro!(String, "message", "hello")}
 	}
 }
@@ -101,32 +107,32 @@ impl BehaviorStaticMethods for SaySomething {
 pub struct ThinkWhatToSay {}
 
 impl BehaviorInstanceMethods for ThinkWhatToSay {
-	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		tree_node
-			.tick_data
-			.set_output("text", "The answer is 42")?;
-		Ok(NewBehaviorStatus::Success)
+	fn tick(
+		&mut self,
+		tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		tick_data.set_output("text", "The answer is 42")?;
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for ThinkWhatToSay {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 
-	fn provided_ports() -> NewPortList {
+	fn provided_ports() -> PortList {
 		port_list![output_port_macro!(String, "text")]
 	}
 }
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn say_something_simple(tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-	let msg = tree_node
-		.tick_data
-		.get_input::<String>("message")?;
+pub fn new_say_something_simple(tick_data: &mut BehaviorTickData) -> BehaviorResult {
+	let msg = tick_data.get_input::<String>("message")?;
 	println!("Robot says: {msg}");
-	Ok(NewBehaviorStatus::Success)
+	Ok(BehaviorStatus::Success)
 }
 
 /// `Position2D`
@@ -160,19 +166,23 @@ impl FromStr for Position2D {
 pub struct CalculateGoal {}
 
 impl BehaviorInstanceMethods for CalculateGoal {
-	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(
+		&mut self,
+		tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
-		tree_node.tick_data.set_output("goal", mygoal)?;
-		Ok(NewBehaviorStatus::Success)
+		tick_data.set_output("goal", mygoal)?;
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for CalculateGoal {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 
-	fn provided_ports() -> NewPortList {
+	fn provided_ports() -> PortList {
 		port_list![output_port_macro!(Position2D, "goal")]
 	}
 }
@@ -182,21 +192,23 @@ impl BehaviorStaticMethods for CalculateGoal {
 pub struct PrintTarget {}
 
 impl BehaviorInstanceMethods for PrintTarget {
-	fn tick(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let pos = tree_node
-			.tick_data
-			.get_input::<Position2D>("target")?;
+	fn tick(
+		&mut self,
+		tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		let pos = tick_data.get_input::<Position2D>("target")?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
-		Ok(NewBehaviorStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 }
 
 impl BehaviorStaticMethods for PrintTarget {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 
-	fn provided_ports() -> NewPortList {
+	fn provided_ports() -> PortList {
 		port_list![input_port_macro!(String, "target")]
 	}
 }
@@ -245,33 +257,41 @@ impl Default for MoveBaseAction {
 }
 
 impl BehaviorInstanceMethods for MoveBaseAction {
-	fn start(&mut self, tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
-		let pose = tree_node.tick_data.get_input::<Pose2D>("goal")?;
+	fn start(
+		&mut self,
+		tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		let pose = tick_data.get_input::<Pose2D>("goal")?;
 		println!(
 			"[ MoveBase: SEND REQUEST ]. goal: x={} y={} theta={}",
 			pose.x, pose.y, pose.theta
 		);
 		self.start_time = Instant::now();
 		self.completion_time = Duration::from_millis(220);
-		Ok(NewBehaviorStatus::Running)
+		Ok(BehaviorStatus::Running)
 	}
 
-	fn tick(&mut self, _tree_node: &mut BehaviorTreeComponent) -> BehaviorResult {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		if Instant::now().duration_since(self.start_time) >= self.completion_time {
 			println!("[ MoveBase: FINISHED ]");
-			return Ok(NewBehaviorStatus::Success);
+			return Ok(BehaviorStatus::Success);
 		}
 
-		Ok(NewBehaviorStatus::Running)
+		Ok(BehaviorStatus::Running)
 	}
 }
 
 impl BehaviorStaticMethods for MoveBaseAction {
-	fn kind() -> NewBehaviorType {
-		NewBehaviorType::Action
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 
-	fn provided_ports() -> NewPortList {
+	fn provided_ports() -> PortList {
 		port_list![input_port_macro!(Pose2D, "goal")]
 	}
 }

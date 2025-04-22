@@ -17,7 +17,10 @@ use thiserror::Error;
 pub enum Error {
 	/// Pass through behavior error
 	#[error("{0}")]
-	Behavior(#[from] crate::new_behavior::error::NewBehaviorError),
+	Behavior(#[from] crate::behavior::error::BehaviorError),
+	/// The index of a behavior is out of bounds
+	#[error("index [{0}] out of bounds")]
+	IndexOutOfBounds(usize),
 	/// The root of the tree s not properly created
 	#[error("root tree [{0}] not found in behavior tree")]
 	RootNotFound(String),

@@ -12,10 +12,10 @@ extern crate alloc;
 use std::sync::Arc;
 
 use dimas_behavior::{
-	factory::NewBehaviorTreeFactory, input_port_macro, new_behavior::NewBehaviorStatus, port_list,
+	behavior::BehaviorStatus, factory::BehaviorTreeFactory, input_port_macro, port_list,
 };
 use serial_test::serial;
-use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, say_something_simple};
+use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, new_say_something_simple};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -35,7 +35,7 @@ const XML: &str = r#"
 #[tokio::test]
 #[serial]
 async fn basic_ports() -> anyhow::Result<()> {
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.
 	// In this case, it requires an input called "message"
@@ -51,14 +51,14 @@ async fn basic_ports() -> anyhow::Result<()> {
 	let say_something_ports = port_list! {input_port_macro!(String, "message")};
 	factory.register_simple_action_with_ports(
 		"SaySomething2",
-		Arc::new(say_something_simple),
+		Arc::new(new_say_something_simple),
 		say_something_ports,
 	)?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 
@@ -66,13 +66,13 @@ async fn basic_ports() -> anyhow::Result<()> {
 #[serial]
 async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	extern crate std;
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, NewBehaviorStatus::Success);
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }

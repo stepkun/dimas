@@ -13,26 +13,20 @@ use alloc::{
 	sync::Arc,
 	vec::Vec,
 };
-use parking_lot::Mutex;
 use roxmltree::Document;
 
 use crate::{
-	factory::xml_parser::XmlParser,
-	new_behavior::{
-		BehaviorAllMethods, ComplexBhvrTickFn, NewBehaviorType, SimpleBehavior, SimpleBhvrTickFn,
-		SubtreeCallee,
-		action::Script,
-		condition::script_condition::ScriptCondition,
-		control::{
+	behavior::{
+		action::Script, condition::script_condition::ScriptCondition, control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
 			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
-			sequence::Sequence, sequence_with_memory::SequenceWithMemory,
-		},
-		decorator::{inverter::Inverter, retry_until_successful::RetryUntilSuccessful},
+			sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree,
+		}, decorator::{inverter::Inverter, retry_until_successful::RetryUntilSuccessful}, BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
 	},
-	new_blackboard::NewBlackboard,
-	new_port::NewPortList,
-	tree::BehaviorTree,
+	blackboard::Blackboard,
+	factory::xml_parser::XmlParser,
+	port::PortList,
+	tree::{BehaviorTree, BehaviorTreeComponent},
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -41,14 +35,14 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 // region:      --- BehaviorTreeFactory
 /// Factory for creation and modification of [`BehaviorTree`]s
 #[derive(Default)]
-pub struct NewBehaviorTreeFactory {
-	blackboard: NewBlackboard,
+pub struct BehaviorTreeFactory {
+	blackboard: Blackboard,
 	registry: BehaviorRegistry,
 	main_tree_name: String,
 	main_tree: Option<BehaviorTree>,
 }
 
-impl NewBehaviorTreeFactory {
+impl BehaviorTreeFactory {
 	/// Create a factory with registered core behaviors
 	/// # Errors
 	/// - if core behaviors cannot be registered
@@ -70,6 +64,7 @@ impl NewBehaviorTreeFactory {
 		self.register_node_type::<ReactiveSequence>("ReactiveSequence")?;
 		self.register_node_type::<Sequence>("Sequence")?;
 		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory")?;
+		self.register_node_type::<Subtree>("Subtree")?;
 
 		// core conditions
 		self.register_node_type::<ScriptCondition>("ScriptCondition")?;
@@ -98,7 +93,7 @@ impl NewBehaviorTreeFactory {
 			}
 		}
 		let mut tree = BehaviorTree::default();
-		// handle the attribute 'main_tree_to_execute with a default "MainTree" 
+		// handle the attribute 'main_tree_to_execute with a default "MainTree"
 		self.main_tree_name = root
 			.attribute("main_tree_to_execute")
 			.unwrap_or("MainTree")
@@ -129,8 +124,8 @@ impl NewBehaviorTreeFactory {
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
 		if self.main_tree.is_some() {
 			let tree = self.main_tree.take().expect("missing tree");
-			tree.link_subtrees()?;
-			Ok(tree)
+			// todo!(); //tree.link_subtrees()?;
+		    Ok(tree)
 		} else {
 			Err(Error::NoMainTree(name.into()))
 		}
@@ -157,18 +152,20 @@ impl NewBehaviorTreeFactory {
 				return Err(Error::BtCppFormat);
 			}
 		}
-		// handle the attribute 'main_tree_to_execute with a default "MainTree" 
+		// handle the attribute 'main_tree_to_execute with a default "MainTree"
 		self.main_tree_name = root
 			.attribute("main_tree_to_execute")
 			.unwrap_or("MainTree")
 			.to_string();
 		// on first run there is no tree stored
 		let mut tree = if self.main_tree.is_some() {
-			self.main_tree.take().expect("build error: tree is missing!")
+			self.main_tree
+				.take()
+				.expect("build error: tree is missing!")
 		} else {
 			BehaviorTree::default()
 		};
-		XmlParser::register_root_element(&self.blackboard, &mut self.registry, &mut tree, root)?;
+		XmlParser::register_root_element(&self.blackboard, &mut self.registry, &mut tree, root, &self.main_tree_name)?;
 		self.main_tree = Some(tree);
 		Ok(())
 	}
@@ -176,11 +173,12 @@ impl NewBehaviorTreeFactory {
 	/// Get the name list of registered (sub)trees
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<String> {
-		let mut res = Vec::new();
-		if let Some(tree) = &self.main_tree {
-			for subtree in tree.subtrees() {
-				res.push(subtree.lock().id().to_string());
-			}
+		let res = Vec::new();
+		if let Some(_tree) = &self.main_tree {
+			todo!()
+			// for subtree in tree.subtrees() {
+			// 	res.push(subtree.lock().id().to_string());
+			// }
 		}
 		res
 	}
@@ -254,7 +252,7 @@ impl NewBehaviorTreeFactory {
 		tick_fn: SimpleBhvrTickFn,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
-		let bhvr_type = NewBehaviorType::Action;
+		let bhvr_type = BehaviorType::Action;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
@@ -266,10 +264,10 @@ impl NewBehaviorTreeFactory {
 		&mut self,
 		name: impl Into<String>,
 		tick_fn: ComplexBhvrTickFn,
-		port_list: NewPortList,
+		port_list: PortList,
 	) -> Result<(), Error> {
-		let bhvr_creation_fn = SimpleBehavior::create_with_ports(tick_fn, port_list);
-		let bhvr_type = NewBehaviorType::Action;
+		let bhvr_creation_fn = SimpleBehavior::new_create_with_ports(tick_fn, port_list);
+		let bhvr_type = BehaviorType::Action;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
@@ -283,7 +281,7 @@ impl NewBehaviorTreeFactory {
 		tick_fn: SimpleBhvrTickFn,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
-		let bhvr_type = NewBehaviorType::Condition;
+		let bhvr_type = BehaviorType::Condition;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
@@ -297,22 +295,21 @@ impl NewBehaviorTreeFactory {
 		tick_fn: SimpleBhvrTickFn,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
-		let bhvr_type = NewBehaviorType::Decorator;
+		let bhvr_type = BehaviorType::Decorator;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
 	/// Print the tree structure
-	pub fn print_tree(&self) {
-		if let Some(tree) = &self.main_tree {
-			Self::print_tree_recursively(tree.root_node());
+	pub const fn print_tree(&self) {
+		if let Some(_tree) = &self.main_tree {
+			// todo!()Self::print_tree_recursively(tree.root_node());
 		}
 	}
 
 	/// Helper function to print a (sub)tree recursively
 	#[cfg(feature = "std")]
-	pub fn print_tree_recursively(root_node: Arc<Mutex<SubtreeCallee>>) {
-
+	pub fn print_tree_recursively(root_node: Arc<dyn BehaviorTreeComponent>) {
 		Self::print_recursively(0, root_node);
 	}
 
@@ -320,20 +317,21 @@ impl NewBehaviorTreeFactory {
 	/// Limit is a tree-depth of 127
 	#[cfg(feature = "std")]
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn print_recursively(level: i8, root_node: Arc<Mutex<SubtreeCallee>>) {
-		if level == i8::MAX {
-			return
-		}
-		std::println!("- {}", root_node.lock().id());
-		let next_level = level + 1;
-		let mut indentation = String::new();
-		for _ in 0..next_level {
-			indentation.push_str("   |");
-		}
-		for child in root_node.as_ref().lock().children() {
-			std::println!("{}- {}", indentation, child.config_data.name());
-			// @TODO: Self::print_recursively(next_level, child.);
-		}
+	pub fn print_recursively(_level: i8, _root_node: Arc<dyn BehaviorTreeComponent>) {
+		todo!()
+		// if level == i8::MAX {
+		// 	return;
+		// }
+		// std::println!("- {}", root_node.lock().id());
+		// let next_level = level + 1;
+		// let mut indentation = String::new();
+		// for _ in 0..next_level {
+		// 	indentation.push_str("   |");
+		// }
+		// for child in root_node.as_ref().lock().children() {
+		// 	std::println!("{}- {}", indentation, child.config_data.name());
+		// 	// @TODO: Self::print_recursively(next_level, child.);
+		// }
 	}
 }
 // endregion:   --- BehaviorTreeFactory

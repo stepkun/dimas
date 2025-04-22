@@ -6,8 +6,8 @@
 use std::{sync::Arc, thread, time::Duration};
 
 use dimas_behavior::{
-	factory::{NewBehaviorTreeFactory, error::Error},
-	new_behavior::{BehaviorResult, NewBehaviorStatus},
+	behavior::{BehaviorResult, BehaviorStatus},
+	factory::{BehaviorTreeFactory, error::Error},
 };
 use parking_lot::Mutex;
 
@@ -45,9 +45,9 @@ impl CrossDoor {
 	pub fn is_door_closed(&mut self) -> BehaviorResult {
 		sleep_ms(200);
 		if self.door_open {
-			Ok(NewBehaviorStatus::Failure)
+			Ok(BehaviorStatus::Failure)
 		} else {
-			Ok(NewBehaviorStatus::Success)
+			Ok(BehaviorStatus::Success)
 		}
 	}
 
@@ -57,10 +57,10 @@ impl CrossDoor {
 	pub fn open_door(&mut self) -> BehaviorResult {
 		sleep_ms(500);
 		if self.door_locked {
-			Ok(NewBehaviorStatus::Failure)
+			Ok(BehaviorStatus::Failure)
 		} else {
 			self.door_open = true;
-			Ok(NewBehaviorStatus::Success)
+			Ok(BehaviorStatus::Success)
 		}
 	}
 
@@ -70,9 +70,9 @@ impl CrossDoor {
 	pub fn pass_through_door(&mut self) -> BehaviorResult {
 		sleep_ms(500);
 		if self.door_open {
-			Ok(NewBehaviorStatus::Success)
+			Ok(BehaviorStatus::Success)
 		} else {
-			Ok(NewBehaviorStatus::Failure)
+			Ok(BehaviorStatus::Failure)
 		}
 	}
 
@@ -86,9 +86,9 @@ impl CrossDoor {
 		if self.pick_attempts > 3 {
 			self.door_locked = false;
 			self.door_open = true;
-			Ok(NewBehaviorStatus::Success)
+			Ok(BehaviorStatus::Success)
 		} else {
-			Ok(NewBehaviorStatus::Failure)
+			Ok(BehaviorStatus::Failure)
 		}
 	}
 
@@ -99,12 +99,12 @@ impl CrossDoor {
 		self.door_locked = false;
 		self.door_open = true;
 		// smash always works
-		Ok(NewBehaviorStatus::Success)
+		Ok(BehaviorStatus::Success)
 	}
 
 	/// Registration function for the `CrossDoor` interface
 	/// # Errors
-	pub fn register_nodes(&self, factory: &mut NewBehaviorTreeFactory) -> Result<(), Error> {
+	pub fn register_nodes(&self, factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
 		// @TODO: replace the workaround with a solution!
 		let cross_door1 = Arc::new(Mutex::new(Self::default()));
 		let cross_door2 = cross_door1.clone();

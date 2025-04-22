@@ -6,22 +6,21 @@
 
 use alloc::sync::Arc;
 use dimas_behavior::{
-	factory::{BehaviorRegistry, NewBehaviorTreeFactory},
-	input_port_macro,
-	new_behavior::{BehaviorCreationMethods, NewBehaviorType, SimpleBehavior},
-	port_list,
+	behavior::{BehaviorCreationMethods, BehaviorType, SimpleBehavior},
+	factory::{BehaviorRegistry, BehaviorTreeFactory},
+	input_port_macro, port_list,
 };
 use parking_lot::Mutex;
 
 use crate::test_nodes::{
 	ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction, PrintTarget, SaySomething,
-	ThinkWhatToSay, check_battery, say_something_simple,
+	ThinkWhatToSay, check_battery, new_say_something_simple,
 };
 
 /// Registration function for all external symbols
 #[allow(unsafe_code)]
 #[unsafe(no_mangle)]
-extern "Rust" fn register(factory: &mut NewBehaviorTreeFactory) -> u32 {
+extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	// t01
 	factory
 		.register_simple_condition("CheckBattery", Arc::new(check_battery))
@@ -53,7 +52,7 @@ extern "Rust" fn register(factory: &mut NewBehaviorTreeFactory) -> u32 {
 	factory
 		.register_simple_action_with_ports(
 			"SaySomething2",
-			Arc::new(say_something_simple),
+			Arc::new(new_say_something_simple),
 			say_something_ports,
 		)
 		.unwrap();

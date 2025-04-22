@@ -11,4 +11,4 @@ mod xml_parser;
 
 // flatten
 pub use behavior_registry::BehaviorRegistry;
-pub use factory::NewBehaviorTreeFactory;
+pub use factory::BehaviorTreeFactory;

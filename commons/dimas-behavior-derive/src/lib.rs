@@ -99,7 +99,7 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 		#derived
 		#diagnostic
 		impl<#generics> BehaviorRedirectionMethods for #ident<#generics> #where_clause {
-			fn static_provided_ports(&self) -> NewPortList {
+			fn static_provided_ports(&self) -> PortList {
 				Self::provided_ports()
 			}
 		}

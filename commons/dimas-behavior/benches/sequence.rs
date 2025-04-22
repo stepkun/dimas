@@ -12,7 +12,7 @@ mod behaviors;
 
 use behaviors::AlwaysSuccess;
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::factory::NewBehaviorTreeFactory;
+use dimas_behavior::factory::BehaviorTreeFactory;
 
 const SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
@@ -33,7 +33,7 @@ fn sequence(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
 		.unwrap();
@@ -71,7 +71,7 @@ fn reactive_sequence(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
 		.unwrap();
@@ -111,7 +111,7 @@ fn sequence_with_memory(c: &mut Criterion) {
 		.build()
 		.unwrap();
 
-	let mut factory = NewBehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
 		.unwrap();
