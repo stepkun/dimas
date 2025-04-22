@@ -131,7 +131,7 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 /// # Errors
 pub fn new_say_something_simple(tick_data: &mut BehaviorTickData) -> BehaviorResult {
 	let msg = tick_data.get_input::<String>("message")?;
-	println!("Robot says: {msg}");
+	println!("Robot2 says: {msg}");
 	Ok(BehaviorStatus::Success)
 }
 

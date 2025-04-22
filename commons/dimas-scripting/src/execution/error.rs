@@ -18,16 +18,16 @@ pub enum Error {
 	#[error("Boolean values do not allow arithmetic operations")]
 	BoolNoArithmetic,
 	/// @TODO:
-	#[error("The Variable[{0}] exceeds type limits")]
+	#[error("Variable [{0}] exceeds type limits")]
 	GlobalExceedsLimits(String),
 	/// @TODO:
-	#[error("The Variable[{0}] has an unknown type")]
+	#[error("Variable [{0}] has an unknown type")]
 	GlobalHasUnknownType(String),
 	/// @TODO:
-	#[error("The Variable[{0}] has not been defined")]
+	#[error("Variable [{0}] has not been defined")]
 	GlobalNotDefined(String),
 	/// @TODO:
-	#[error("The Variable[{0}] has a wrong type")]
+	#[error("Variable [{0}] has a wrong type")]
 	GlobalWrongType(String),
 	/// @TODO:
 	#[error("Value is 'Nil' which does not allow any operation")]

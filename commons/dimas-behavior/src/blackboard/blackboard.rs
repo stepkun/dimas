@@ -221,7 +221,7 @@ impl Blackboard {
 	/// Print the content of the blackboard for debugging purpose
 	#[cfg(feature = "std")]
 	pub fn debug_message(&self) {
-		std::println!("BB content");
+		std::println!("{self:?}");
 	}
 
 	/// Version of `get<T>` that does _not_ try to convert from string if the type

@@ -10,13 +10,17 @@ mod tree;
 // flatten
 pub use tree::{
 	BehaviorTree, BehaviorTreeComponentList, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy,
+	print_tree,
 };
 
 // region:      --- modules
-use alloc::sync::Arc;
+use alloc::{string::String, sync::Arc};
 use parking_lot::Mutex;
 
-use crate::behavior::{BehaviorResult, error::BehaviorError};
+use crate::{
+	behavior::{BehaviorResult, error::BehaviorError},
+	blackboard::Blackboard,
+};
 // endregion:   --- modules
 
 //  region:		--- types
@@ -29,6 +33,15 @@ pub type BehaviorSubTree = Arc<Mutex<BehaviorTreeNode>>;
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]
 pub trait BehaviorTreeComponent: Send + Sync {
+	/// Get the id
+	fn id(&self) -> String;
+
+	/// Get the blackboard
+	fn blackboard(&self) -> Blackboard;
+
+	/// Get the children
+	fn children(&self) -> &BehaviorTreeComponentList;
+
 	/// Halt the component
 	/// # Errors
 	fn execute_halt(&mut self) -> Result<(), BehaviorError> {

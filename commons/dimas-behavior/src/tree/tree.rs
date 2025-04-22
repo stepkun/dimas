@@ -8,14 +8,15 @@
 //! together with a [`proxy pattern`](https://en.wikipedia.org/wiki/Proxy_pattern)
 //!
 
-// @TODO: remove
+#[cfg(feature = "std")]
 extern crate std;
 
 // region:      --- modules
 use alloc::{
 	borrow::ToOwned,
 	boxed::Box,
-	string::String,
+	format,
+	string::{String, ToString},
 	sync::Arc,
 	vec::{self, Vec},
 };
@@ -39,21 +40,83 @@ use crate::{
 use super::{BehaviorSubTree, BehaviorTreeComponent, error::Error};
 // endregion:   --- modules
 
+// region:		--- helper
+/// Helper function to print a (sub)tree recursively
+#[cfg(feature = "std")]
+pub fn print_tree(root_node: &dyn BehaviorTreeComponent) {
+	std::println!("{}", root_node.id());
+	print_recursively(0, root_node);
+}
+
+/// Helper function to print a (sub)tree recursively
+/// Recursion function to print a (sub)tree recursively
+/// # Errors
+/// - Limit is a tree-depth of 127
+#[cfg(feature = "std")]
+#[allow(clippy::needless_pass_by_value)]
+fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), Error> {
+	if level == i8::MAX {
+		return Err(Error::Unexpected(
+			"recursion limit reached".into(),
+			file!().into(),
+			line!(),
+		));
+	}
+
+	let next_level = level + 1;
+	let mut indentation = String::new();
+	for _ in 0..next_level {
+		indentation.push_str("   |");
+	}
+	for child in &**node.children() {
+		std::println!("{}- {}", indentation, child.id());
+		print_recursively(next_level, child.as_ref());
+	}
+	Ok(())
+}
+
+// endregion:	--- helper
+
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeComponent`]s
 #[derive(Default)]
 pub struct BehaviorTree {
-	root: Option<BehaviorTreeNode>,
-	subtrees: Vec<BehaviorSubTree>,
+	pub(crate) root: Option<BehaviorSubTree>,
+	pub(crate) subtrees: Vec<BehaviorSubTree>,
 }
 
 impl BehaviorTree {
 	pub(crate) fn add_root(&mut self, root: BehaviorTreeNode) {
-		self.root = Some(root);
+		self.root = Some(Arc::new(Mutex::new(root)));
 	}
 
 	pub(crate) fn add_subtree(&mut self, subtree: BehaviorTreeNode) {
 		self.subtrees.push(Arc::new(Mutex::new(subtree)));
+	}
+
+	/// Get a (sub)tree where index 0 is root tree
+	/// # Panics
+	/// - if no root tree is set
+	#[must_use]
+	pub fn subtree(&self, index: usize) -> BehaviorSubTree {
+		if index == 0 {
+			self.root.as_ref().expect("snh)").clone()
+		} else {
+			self.subtrees[index - 1].clone()
+		}
+	}
+
+	/// Pretty print the tree
+	/// # Errors
+	/// - if root tree is not yet set
+	#[allow(clippy::option_if_let_else)]
+	pub fn print(&self) -> Result<(), Error> {
+		if let Some(node) = &self.root {
+			std::println!("{}", node.lock().id());
+			print_recursively(0, node.lock().as_ref())
+		} else {
+			Err(Error::RootNotFound("TODO!".into()))
+		}
 	}
 
 	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`]
@@ -64,7 +127,7 @@ impl BehaviorTree {
 
 		if let Some(root) = &mut self.root {
 			while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
-				status = root.execute_tick()?;
+				status = root.lock().execute_tick()?;
 
 				// Not implemented: Check for wake-up conditions and tick again if so
 
@@ -82,9 +145,9 @@ impl BehaviorTree {
 	/// # Errors
 	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.as_mut().map_or_else(
+		self.root.as_ref().map_or_else(
 			|| Err(BehaviorError::RootNotFound("@TODO: 2".into())),
-			BehaviorTreeComponent::execute_tick,
+			|root| root.lock().execute_tick(),
 		)
 	}
 }
@@ -110,6 +173,18 @@ impl DerefMut for BehaviorTreeComponentList {
 }
 
 impl BehaviorTreeComponent for BehaviorTreeComponentList {
+	fn id(&self) -> String {
+		String::from("BehaviorTreeComponentList")
+	}
+
+	fn blackboard(&self) -> Blackboard {
+		Blackboard::default()
+	}
+
+	fn children(&self) -> &BehaviorTreeComponentList {
+		self
+	}
+
 	fn execute_tick(&mut self) -> BehaviorResult {
 		for item in &mut self.0 {
 			item.execute_tick()?;
@@ -160,6 +235,18 @@ pub struct BehaviorTreeLeaf {
 }
 
 impl BehaviorTreeComponent for BehaviorTreeLeaf {
+	fn id(&self) -> String {
+		self.id.to_string()
+	}
+
+	fn blackboard(&self) -> Blackboard {
+		self.tick_data.blackboard.clone()
+	}
+
+	fn children(&self) -> &BehaviorTreeComponentList {
+		&self.children
+	}
+
 	fn execute_tick(&mut self) -> BehaviorResult {
 		let mut status = self.tick_data.status;
 		if status == BehaviorStatus::Idle {
@@ -225,7 +312,25 @@ pub struct BehaviorTreeNode {
 	behavior: Box<dyn BehaviorTreeMethods>,
 }
 
+impl AsRef<dyn BehaviorTreeComponent + 'static> for BehaviorTreeNode {
+	fn as_ref(&self) -> &(dyn BehaviorTreeComponent + 'static) {
+		self
+	}
+}
+
 impl BehaviorTreeComponent for BehaviorTreeNode {
+	fn id(&self) -> String {
+		self.id.to_string()
+	}
+
+	fn blackboard(&self) -> Blackboard {
+		self.tick_data.blackboard.clone()
+	}
+
+	fn children(&self) -> &BehaviorTreeComponentList {
+		&self.children
+	}
+
 	fn execute_tick(&mut self) -> BehaviorResult {
 		let mut status = self.tick_data.status;
 		if status == BehaviorStatus::Idle {
@@ -277,6 +382,12 @@ impl BehaviorTreeNode {
 	) -> Box<dyn BehaviorTreeComponent> {
 		Box::new(Self::new(id, children, tick_data, behavior))
 	}
+
+	/// Get the id
+	#[must_use]
+	pub fn id(&self) -> &str {
+		&self.id
+	}
 }
 // endregion:	--- BehaviorTreeNode
 
@@ -289,13 +400,29 @@ pub struct BehaviorTreeProxy {
 	subtree: Option<BehaviorSubTree>,
 	/// Data needed in every tick
 	tick_data: BehaviorTickData,
+	/// dummy list
+	children: BehaviorTreeComponentList,
 }
 
 impl BehaviorTreeComponent for BehaviorTreeProxy {
+	fn id(&self) -> String {
+		self.id.to_string()
+	}
+
+	fn blackboard(&self) -> Blackboard {
+		self.tick_data.blackboard.clone()
+	}
+
+	fn children(&self) -> &BehaviorTreeComponentList {
+		&self.children
+	}
+
 	fn execute_tick(&mut self) -> BehaviorResult {
-		std::println!("-- Proxy {}--", &self.id);
 		self.subtree.as_ref().map_or_else(
-			|| Err(BehaviorError::Composition("@TODO:".into())),
+			|| {
+				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id);
+				Err(BehaviorError::Composition(msg))
+			},
 			|subtree| subtree.lock().execute_tick(),
 		)
 	}
@@ -306,7 +433,10 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 		}
 
 		self.subtree.as_ref().map_or_else(
-			|| Err(BehaviorError::SubtreeNotFound("@TODO:".into())),
+			|| {
+				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id);
+				Err(BehaviorError::Composition(msg))
+			},
 			|subtree| subtree.lock().execute_halt(),
 		)
 	}
@@ -317,7 +447,10 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 		}
 
 		self.subtree.as_ref().map_or_else(
-			|| Err(BehaviorError::SubtreeNotFound("@TODO:".into())),
+			|| {
+				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id);
+				Err(BehaviorError::Composition(msg))
+			},
 			|subtree| subtree.lock().execute_halt(),
 		)
 	}
@@ -331,6 +464,7 @@ impl BehaviorTreeProxy {
 			id: id.into(),
 			subtree: None,
 			tick_data,
+			children: BehaviorTreeComponentList::default(),
 		}
 	}
 

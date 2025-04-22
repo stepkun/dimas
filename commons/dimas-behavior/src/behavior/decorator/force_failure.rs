@@ -25,10 +25,10 @@ use crate::{
 /// - If a child returns RUNNING, this node returns RUNNING.
 /// - If a child returns SUCCESS, stop the loop and return SUCCESS.
 #[derive(Behavior, Debug, Default)]
-pub struct Inverter {}
+pub struct ForceFailure {}
 
 extern crate std;
-impl BehaviorInstanceMethods for Inverter {
+impl BehaviorInstanceMethods for ForceFailure {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
@@ -42,7 +42,7 @@ impl BehaviorInstanceMethods for Inverter {
 		match new_status {
 			BehaviorStatus::Failure => {
 				children.reset()?;
-				Ok(BehaviorStatus::Success)
+				Ok(BehaviorStatus::Failure)
 			}
 			BehaviorStatus::Idle => Err(BehaviorError::Status(
 				"Inverter".to_string(),
@@ -57,7 +57,7 @@ impl BehaviorInstanceMethods for Inverter {
 	}
 }
 
-impl BehaviorStaticMethods for Inverter {
+impl BehaviorStaticMethods for ForceFailure {
 	fn kind() -> BehaviorType {
 		BehaviorType::Decorator
 	}

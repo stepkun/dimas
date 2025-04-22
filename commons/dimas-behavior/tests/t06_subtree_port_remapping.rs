@@ -6,7 +6,9 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t06_subtree_port_remapping.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{
+	behavior::BehaviorStatus, factory::BehaviorTreeFactory, tree::BehaviorTreeComponent,
+};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething};
 
@@ -14,7 +16,7 @@ const XML: &str = r#"
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-            <Script code=" move_goal='1;2;3' " />
+            <Script code=" move_goal:='1;2;3' " />
             <SubTree ID="MoveRobot" target="{move_goal}" result="{move_result}" />
             <SaySomething message="{move_result}"/>
         </Sequence>
@@ -48,16 +50,14 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
-	println!("\n------ First BB ------");
-	// tree.subtree(0)
-	// 	.lock()
-	// 	.blackboard()
-	// 	.debug_message();
-	// println!("\n------ Second BB------");
-	// tree.subtree(1)
-	// 	.lock()
-	// 	.blackboard()
-	// 	.debug_message();
+	println!("\n------ Root BB ------");
+	(*tree.subtree(0).lock())
+		.blackboard()
+		.debug_message();
+	println!("\n----- Second BB -----");
+	(*tree.subtree(1).lock())
+		.blackboard()
+		.debug_message();
 	Ok(())
 }
 
@@ -74,15 +74,13 @@ async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
-	println!("\n------ First BB ------");
-	// tree.subtree(0)
-	// 	.lock()
-	// 	.blackboard()
-	// 	.debug_message();
-	// println!("\n------ Second BB------");
-	// tree.subtree(1)
-	// 	.lock()
-	// 	.blackboard()
-	// 	.debug_message();
+	println!("\n------ Root BB ------");
+	(*tree.subtree(0).lock())
+		.blackboard()
+		.debug_message();
+	println!("\n----- Second BB -----");
+	(*tree.subtree(1).lock())
+		.blackboard()
+		.debug_message();
 	Ok(())
 }

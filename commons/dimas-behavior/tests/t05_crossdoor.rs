@@ -52,7 +52,7 @@ async fn crossdoor() -> anyhow::Result<()> {
 	let mut tree = factory.create_main_tree()?;
 
 	// helper function to print the tree
-	// BehaviorTreeFactory::print_tree_recursively(tree.root_node());
+	tree.print()?;
 
 	// Tick multiple times, until either FAILURE of SUCCESS is returned
 	let _result = tree.tick_while_running().await?;
@@ -71,7 +71,7 @@ async fn crossdoor_with_plugin() -> anyhow::Result<()> {
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_main_tree()?;
 
-	// BehaviorTreeFactory::print_tree_recursively(tree.root_node());
+	tree.print()?;
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

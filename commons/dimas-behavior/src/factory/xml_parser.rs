@@ -12,8 +12,10 @@ use alloc::{
 	sync::Arc,
 	vec::{self, Vec},
 };
+use hashbrown::HashMap;
 use parking_lot::Mutex;
-use roxmltree::{Node, NodeType};
+use roxmltree::{Attributes, Node, NodeType};
+use rustc_hash::FxBuildHasher;
 
 use crate::{
 	behavior::{
@@ -29,6 +31,19 @@ use crate::{
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
 // endregion:   --- modules
+
+// region:		--- helper
+fn attrs_to_map(attrs: Attributes) -> HashMap<String, String, FxBuildHasher> {
+	let mut map = HashMap::default();
+	//dbg!(self);
+	for attr in attrs {
+		let name = attr.name().into();
+		let value = attr.value().to_string();
+		map.insert(name, value);
+	}
+	map
+}
+// endregion:	--- helper
 
 // region:      --- XmlParser
 pub struct XmlParser {}
@@ -215,11 +230,13 @@ impl XmlParser {
 		register_only: bool,
 	) -> Result<Box<dyn BehaviorTreeComponent>, Error> {
 		let element_name = element.tag_name().name();
+		let attrs = attrs_to_map(element.attributes());
 		if element_name == "SubTree" {
-			if let Some(id) = element.attribute("ID") {
+			if let Some(id) = attrs.get("ID") {
 				let tick_data = BehaviorTickData::default();
-				let config_data = BehaviorConfigurationData::new(id);
-				let behavior = BehaviorTreeProxy::create(id, BehaviorTickData::default());
+				let nid = element_name.to_string() + ": " + id;
+				let behavior = BehaviorTreeProxy::create(&nid, BehaviorTickData::default());
+				let config_data = BehaviorConfigurationData::new(&nid);
 				if register_only {
 					Ok(behavior)
 				} else {
@@ -235,22 +252,22 @@ impl XmlParser {
 			// look for the behavior in the [`BehaviorRegisty`]
 			let (bhvr_type, bhvr_creation_fn) = registry.fetch(element_name)?;
 			let mut bhvr = bhvr_creation_fn();
-			let id = bhvr_type.to_string() + ": ";
+			let mut nid = element_name.to_string();
+			if let Some(name) = attrs.get("name") {
+				if name != element_name {
+					nid = nid + ": " + name;
+				}
+			};
 			let tree_node = match bhvr_type {
 				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
-						return Err(Error::ChildrenNotAllowed(bhvr_type.to_string()));
+						return Err(Error::ChildrenNotAllowed(nid));
 					}
 					let mut tick_data = BehaviorTickData::new(blackboard.clone());
 					let mut config_data = BehaviorConfigurationData::new(element_name);
 					let mut tick_data = BehaviorTickData::new(blackboard.clone());
-					Self::create_ports(
-						&mut bhvr,
-						&mut tick_data,
-						&mut config_data,
-						&element,
-					)?;
-					BehaviorTreeLeaf::create(id, tick_data, bhvr)
+					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
+					BehaviorTreeLeaf::create(nid, tick_data, bhvr)
 				}
 				BehaviorType::Control | BehaviorType::Decorator => {
 					let new_children =
@@ -264,7 +281,7 @@ impl XmlParser {
 					let mut config_data = BehaviorConfigurationData::default();
 					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
 					BehaviorTreeNode::create(
-						id,
+						nid,
 						new_children,
 						BehaviorTickData::new(blackboard.clone()),
 						bhvr,
@@ -322,17 +339,23 @@ impl XmlParser {
 		// if true, only registering happens
 		register_only: bool,
 	) -> Result<BehaviorTreeNode, Error> {
-		let id_string = id.to_string();
+		let mut nid = id.to_string();
 		let blackboard = Blackboard::default();
 		// look for the behavior in the [`BehaviorRegisty`]
 		let (bhvr_type, bhvr_creation_fn) = registry.fetch("Subtree")?;
 		let mut bhvr = bhvr_creation_fn();
+		let attrs = attrs_to_map(element.attributes());
+		if let Some(name) = attrs.get("name") {
+			if name != &nid {
+				nid = nid + ": " + name;
+			}
+		};
 
 		let children = Self::build_children(&blackboard, registry, tree, element, register_only)?;
 		// let tick_data = BehaviorTickData::new(blackboard);
-		let config_data = BehaviorConfigurationData::new(id);
+		let config_data = BehaviorConfigurationData::new(&nid);
 		let subtree = BehaviorTreeNode::new(
-			id,
+			nid,
 			children,
 			BehaviorTickData::new(Blackboard::default()),
 			bhvr,

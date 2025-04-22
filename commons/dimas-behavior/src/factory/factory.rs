@@ -10,23 +10,29 @@ extern crate std;
 // region:      --- modules
 use alloc::{
 	string::{String, ToString},
-	sync::Arc,
 	vec::Vec,
 };
 use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		action::Script, condition::script_condition::ScriptCondition, control::{
+		BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		action::Script,
+		condition::script_condition::ScriptCondition,
+		control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
 			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
 			sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree,
-		}, decorator::{inverter::Inverter, retry_until_successful::RetryUntilSuccessful}, BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
+		},
+		decorator::{
+			force_failure::ForceFailure, inverter::Inverter,
+			retry_until_successful::RetryUntilSuccessful,
+		},
 	},
 	blackboard::Blackboard,
 	factory::xml_parser::XmlParser,
 	port::PortList,
-	tree::{BehaviorTree, BehaviorTreeComponent},
+	tree::BehaviorTree,
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -70,6 +76,7 @@ impl BehaviorTreeFactory {
 		self.register_node_type::<ScriptCondition>("ScriptCondition")?;
 
 		// core decorators
+		self.register_node_type::<ForceFailure>("ForceFailure")?;
 		self.register_node_type::<Inverter>("Inverter")?;
 		self.register_node_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
 
@@ -125,7 +132,7 @@ impl BehaviorTreeFactory {
 		if self.main_tree.is_some() {
 			let tree = self.main_tree.take().expect("missing tree");
 			// todo!(); //tree.link_subtrees()?;
-		    Ok(tree)
+			Ok(tree)
 		} else {
 			Err(Error::NoMainTree(name.into()))
 		}
@@ -165,7 +172,13 @@ impl BehaviorTreeFactory {
 		} else {
 			BehaviorTree::default()
 		};
-		XmlParser::register_root_element(&self.blackboard, &mut self.registry, &mut tree, root, &self.main_tree_name)?;
+		XmlParser::register_root_element(
+			&self.blackboard,
+			&mut self.registry,
+			&mut tree,
+			root,
+			&self.main_tree_name,
+		)?;
 		self.main_tree = Some(tree);
 		Ok(())
 	}
@@ -173,12 +186,14 @@ impl BehaviorTreeFactory {
 	/// Get the name list of registered (sub)trees
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<String> {
-		let res = Vec::new();
-		if let Some(_tree) = &self.main_tree {
-			todo!()
-			// for subtree in tree.subtrees() {
-			// 	res.push(subtree.lock().id().to_string());
-			// }
+		let mut res = Vec::new();
+		if let Some(tree) = &self.main_tree {
+			if let Some(root) = &tree.root {
+				res.push(root.lock().id().to_string());
+			}
+			for subtree in &tree.subtrees {
+				res.push(subtree.lock().id().to_string());
+			}
 		}
 		res
 	}
@@ -298,40 +313,6 @@ impl BehaviorTreeFactory {
 		let bhvr_type = BehaviorType::Decorator;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
-	}
-
-	/// Print the tree structure
-	pub const fn print_tree(&self) {
-		if let Some(_tree) = &self.main_tree {
-			// todo!()Self::print_tree_recursively(tree.root_node());
-		}
-	}
-
-	/// Helper function to print a (sub)tree recursively
-	#[cfg(feature = "std")]
-	pub fn print_tree_recursively(root_node: Arc<dyn BehaviorTreeComponent>) {
-		Self::print_recursively(0, root_node);
-	}
-
-	/// Recursion function to print a (sub)tree recursively
-	/// Limit is a tree-depth of 127
-	#[cfg(feature = "std")]
-	#[allow(clippy::needless_pass_by_value)]
-	pub fn print_recursively(_level: i8, _root_node: Arc<dyn BehaviorTreeComponent>) {
-		todo!()
-		// if level == i8::MAX {
-		// 	return;
-		// }
-		// std::println!("- {}", root_node.lock().id());
-		// let next_level = level + 1;
-		// let mut indentation = String::new();
-		// for _ in 0..next_level {
-		// 	indentation.push_str("   |");
-		// }
-		// for child in root_node.as_ref().lock().children() {
-		// 	std::println!("{}- {}", indentation, child.config_data.name());
-		// 	// @TODO: Self::print_recursively(next_level, child.);
-		// }
 	}
 }
 // endregion:   --- BehaviorTreeFactory
