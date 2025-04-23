@@ -313,11 +313,11 @@ impl XmlParser {
 				// fetch found port name from list of provided ports
 				let port_list = bhvr.static_provided_ports();
 				match port_list.find(name) {
-					Ok(port_definition) => {
+					Some(port_definition) => {
 						tick_data.add_port(name, port_definition.direction, value);
 						//todo!();
 					}
-					Err(_) => {
+					None => {
 						return Err(Error::PortInvalid(
 							name.into(),
 							config_data.name().into(),

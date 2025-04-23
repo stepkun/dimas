@@ -44,10 +44,7 @@ impl BehaviorInstanceMethods for ForceFailure {
 				children.reset()?;
 				Ok(BehaviorStatus::Failure)
 			}
-			BehaviorStatus::Idle => Err(BehaviorError::Status(
-				"Inverter".into(),
-				"Idle".into(),
-			)),
+			BehaviorStatus::Idle => Err(BehaviorError::Status("Inverter".into(), "Idle".into())),
 			status @ (BehaviorStatus::Running | BehaviorStatus::Skipped) => Ok(status),
 			BehaviorStatus::Success => {
 				children.reset()?;

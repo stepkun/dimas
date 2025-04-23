@@ -15,8 +15,9 @@ description = "dimas - a framework for Distributed Multi Agent Systems"
 documentation = "https://docs.rs/dimas/latest/dimas/"
 readme = "README.md"
 exclude = [
-    "tests/**",
+    "benches/**",
     "examples/**",
+    "tests/**",
 ]
 
 [lints.rust]
@@ -36,6 +37,7 @@ unwrap_used = "deny"
 [dependencies]
 anyhow = { workspace = true }
 dimas-behavior = { workspace = true }
+dimas-behavior-derive = { workspace = true }
 dimas-com = { workspace = true }
 dimas-commands = { workspace = true }
 dimas-config = { workspace = true }

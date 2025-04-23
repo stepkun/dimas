@@ -55,10 +55,7 @@ impl BehaviorInstanceMethods for Fallback {
 					self.child_idx += 1;
 				}
 				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status(
-						"Fallback".into(),
-						"Idle".into(),
-					));
+					return Err(BehaviorError::Status("Fallback".into(), "Idle".into()));
 				}
 				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
 				BehaviorStatus::Success => {

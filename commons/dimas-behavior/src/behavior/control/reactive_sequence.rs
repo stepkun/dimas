@@ -73,8 +73,7 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 					} else if self.child_idx != counter {
 						// Multiple children running at the same time
 						return Err(BehaviorError::Composition(
-							"[ReactiveSequence]: Only a single child can return Running."
-								.into(),
+							"[ReactiveSequence]: Only a single child can return Running.".into(),
 						));
 					}
 					return Ok(BehaviorStatus::Running);

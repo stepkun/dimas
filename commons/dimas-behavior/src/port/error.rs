@@ -15,23 +15,13 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Port already in [`PortList`]
-	#[error("name [{0}] is already in port list")]
+	#[error("name [{0}] already in port list")]
 	AlreadyInPortList(ConstString),
 	/// Port already in [`PortRemappings`]
-	#[error("name [{0}] is already in remappings")]
+	#[error("name [{0}] already in remapping list")]
 	AlreadyInRemappings(ConstString),
 	/// Name for a port is not allowed
-	#[error("name [{0}] is not allowed for a port")]
+	#[error("name [{0}] not allowed for a port")]
 	NameNotAllowed(ConstString),
-	/// Port not in [`PortList`]
-	#[error("name [{0}] is not in list of ports")]
-	NotFoundInPortList(ConstString),
-	/// Port not in [`PortRemappings`]
-	#[error("name [{0}] is not in remappings")]
-	NotFoundInRemappings(ConstString),
-
-	/// @TODO:
-	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(ConstString, ConstString, u32),
 }
 // region:		--- Error

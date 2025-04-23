@@ -59,10 +59,7 @@ impl BehaviorInstanceMethods for Sequence {
 					return Ok(BehaviorStatus::Failure);
 				}
 				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status(
-						"Sequence".into(),
-						"Idle".into(),
-					));
+					return Err(BehaviorError::Status("Sequence".into(), "Idle".into()));
 				}
 				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
 				BehaviorStatus::Skipped | BehaviorStatus::Success => {

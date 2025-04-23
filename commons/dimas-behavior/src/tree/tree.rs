@@ -20,11 +20,11 @@ use alloc::{
 	sync::Arc,
 	vec::{self, Vec},
 };
-use dimas_core::ConstString;
 use core::{
 	any::{Any, TypeId},
 	ops::{Deref, DerefMut},
 };
+use dimas_core::ConstString;
 use dimas_scripting::{Parser, VM};
 use hashbrown::HashMap;
 use parking_lot::Mutex;
@@ -471,10 +471,7 @@ impl BehaviorTreeProxy {
 
 	/// Create a `Box<dyn BehaviorTreeComponent>`]
 	#[must_use]
-	pub fn create(
-		id: &str,
-		tick_data: BehaviorTickData,
-	) -> Box<dyn BehaviorTreeComponent> {
+	pub fn create(id: &str, tick_data: BehaviorTickData) -> Box<dyn BehaviorTreeComponent> {
 		Box::new(Self::new(id, tick_data))
 	}
 }

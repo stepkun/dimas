@@ -105,8 +105,8 @@ async fn main() -> Result<()> {
 	let mut agent = Agent::create()?;
 
 	// nodes must be registered before they are addressed in a behavior tree
-	agent.register_behavior(IntervalTimer::register);
-	agent.register_behavior(Publisher::register);
+	// agent.register_behavior(IntervalTimer::register);
+	// agent.register_behavior(Publisher::register);
 
 	agent.set_behavior(XML);
 
@@ -140,7 +140,7 @@ async fn main() -> Result<()> {
 	let mut agent = Agent::create()?;
 
 	// nodes must be registered before they are addressed in a behavior tree
-	agent.register_behavior(Subscriber::register);
+	//agent.register_behavior(Subscriber::register);
 
 	agent.set_behavior(XML);
 

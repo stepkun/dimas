@@ -1,44 +1,51 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
 
 //! Subscriber
 
 // region:      --- modules
-use dimas_behavior::behavior::{BehaviorResult, BehaviorStatus};
-use dimas_builtin::factory::BTFactory;
-use dimas_macros::{behavior, register_control};
+use dimas_behavior::{
+	behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+	},
+	input_port_macro,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
+};
+use dimas_behavior_derive::Behavior;
 // endregion:   --- modules
 
-// region:      --- behavior
-/// A [`Subscriber`]
-#[behavior(Control)]
+// region:      --- Subscriber
+/// A [`Publisher`]
+#[derive(Behavior, Debug, Default)]
 pub struct Subscriber {}
 
-#[allow(clippy::use_self)]
-#[behavior(Control)]
-impl Subscriber {
-	async fn on_start(&self) -> BehaviorResult {
-		println!("starting Subscriber");
-		Ok(BehaviorStatus::Running)
-	}
-
-	async fn on_running(&self) -> BehaviorResult {
+impl BehaviorInstanceMethods for Subscriber {
+	/// @TODO:
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		println!("ticking Subscriber");
-		Ok(BehaviorStatus::Running)
-	}
-
-	async fn halt(&self) {
-		bhvr_.reset_children().await;
-		// let handle = self.handle.take();
-		// if let Some(handle) = handle {
-		// 	handle.abort();
-		// };
-		// @TODO: clarify which status is best
-		bhvr_.set_status(BehaviorStatus::Success);
-	}
-
-	/// Registration function
-	pub fn register(factory: &mut BTFactory) {
-		register_control!(factory, "Subscriber", Subscriber,);
+		Ok(BehaviorStatus::Success)
 	}
 }
-// endregion:   --- behavior
+
+impl BehaviorStaticMethods for Subscriber {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![input_port_macro!(
+			String,
+			"topic",
+			"",
+			"Topic to subscribe."
+		)]
+	}
+}
+// endregion:   --- Subscriber

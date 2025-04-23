@@ -4,16 +4,16 @@
 //!
 
 // region:      --- modules
-use alloc::{
-	format,
-	string::ToString,
-};
-use dimas_core::ConstString;
+use alloc::{format, string::ToString};
 use core::{any::TypeId, str::FromStr};
+use dimas_core::ConstString;
 
 use crate::{
 	blackboard::Blackboard,
-	port::{error::Error, get_remapped_key, is_bb_pointer, strip_bb_pointer, NewPortDirection, PortRemappings},
+	port::{
+		NewPortDirection, PortRemappings, error::Error, get_remapped_key, is_bb_pointer,
+		strip_bb_pointer,
+	},
 };
 
 use super::{BehaviorResult, BehaviorStatus, error::BehaviorError};
@@ -61,7 +61,7 @@ impl BehaviorConfigurationData {
 #[derive(Debug, Default)]
 pub struct BehaviorTickData {
 	/// Current [`BehaviorStatus`]
-	pub(crate) status: BehaviorStatus,
+	pub status: BehaviorStatus,
 	/// [`Blackboard`] for this [`Behavior`]
 	pub(crate) blackboard: Blackboard,
 	/// Ports including remapping
@@ -80,7 +80,12 @@ impl BehaviorTickData {
 	/// Adds a port to the config based on the direction
 	/// # Errors
 	/// - if port is already in remappings
-	pub fn add_port(&mut self, name: &str, direction: NewPortDirection, value: &str) -> Result<(), Error>{
+	pub fn add_port(
+		&mut self,
+		name: &str,
+		direction: NewPortDirection,
+		value: &str,
+	) -> Result<(), Error> {
 		self.remappings.add(name, direction, value)
 	}
 
@@ -92,8 +97,6 @@ impl BehaviorTickData {
 	where
 		T: FromStr + Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
-		// extern crate std;
-		// std::dbg!("test: {}", &self.blackboard);
 		if let Some(remapped_name) = self
 			.remappings
 			.find(port_name, NewPortDirection::In)
@@ -137,16 +140,15 @@ impl BehaviorTickData {
 		T: Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
 		let port_name = port.to_string();
-		if let Some(remapped_name) = self
-			.remappings
-			.find(port, NewPortDirection::Out)
-		{
+		if let Some(remapped_name) = self.remappings.find(port, NewPortDirection::Out) {
 			// entry found
 			let blackboard_key = match &*remapped_name {
 				"=" => port_name,
 				value => {
 					if is_bb_pointer(value) {
-						strip_bb_pointer(value).unwrap_or_else(|| todo!()).to_string()
+						strip_bb_pointer(value)
+							.unwrap_or_else(|| todo!())
+							.to_string()
 					} else {
 						value.to_string()
 					}

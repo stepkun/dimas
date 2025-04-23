@@ -8,10 +8,7 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{
-	string::ToString,
-	vec::Vec,
-};
+use alloc::{string::ToString, vec::Vec};
 use dimas_core::ConstString;
 use roxmltree::Document;
 

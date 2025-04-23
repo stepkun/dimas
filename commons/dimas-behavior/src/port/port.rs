@@ -13,7 +13,10 @@ use core::{
 
 // region:      --- modules
 use alloc::{
-	boxed::Box, string::{String, ToString}, sync::Arc, vec::Vec
+	boxed::Box,
+	string::{String, ToString},
+	sync::Arc,
+	vec::Vec,
 };
 use dimas_core::ConstString;
 
@@ -164,16 +167,15 @@ impl PortList {
 		result.into()
 	}
 
-	/// Lookup a [`PortDefinition`]
-	/// # Errors
-	/// - if no [`PortDefinition`] is found
-	pub fn find(&self, name: &str) -> Result<NewPortDefinition, Error> {
+	/// Lookup a [`PortDefinition`].
+	#[must_use]
+	pub fn find(&self, name: &str) -> Option<NewPortDefinition> {
 		for entry in &self.0 {
 			if &*entry.name == name {
-				return Ok(entry.clone());
+				return Some(entry.clone());
 			}
 		}
-		Err(Error::NotFoundInPortList(name.into()))
+		None
 	}
 }
 // endregion:	--- PortList
@@ -202,11 +204,12 @@ impl PortRemappings {
 				return Err(Error::AlreadyInRemappings(name.into()));
 			}
 		}
-		self.0.push((name.into(), (direction, remapped_name.into())));
+		self.0
+			.push((name.into(), (direction, remapped_name.into())));
 		Ok(())
 	}
 
-	/// Lookup the remaped name
+	/// Lookup the remapped name.
 	#[must_use]
 	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<ConstString> {
 		for (original, remapped) in &self.0 {

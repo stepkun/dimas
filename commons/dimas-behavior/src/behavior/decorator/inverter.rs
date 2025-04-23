@@ -44,10 +44,7 @@ impl BehaviorInstanceMethods for Inverter {
 				children.reset()?;
 				Ok(BehaviorStatus::Success)
 			}
-			BehaviorStatus::Idle => Err(BehaviorError::Status(
-				"Inverter".into(),
-				"Idle".into(),
-			)),
+			BehaviorStatus::Idle => Err(BehaviorError::Status("Inverter".into(), "Idle".into())),
 			status @ (BehaviorStatus::Running | BehaviorStatus::Skipped) => Ok(status),
 			BehaviorStatus::Success => {
 				children.reset()?;

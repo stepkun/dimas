@@ -1,30 +1,51 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
 
 //! Publisher
 
 // region:      --- modules
-use dimas_behavior::behavior::{BehaviorResult, BehaviorStatus};
-use dimas_builtin::factory::BTFactory;
-use dimas_macros::{behavior, register_action};
+use dimas_behavior::{
+	behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+	},
+	input_port_macro,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
+};
+use dimas_behavior_derive::Behavior;
 // endregion:   --- modules
 
-// region:      --- behavior
+// region:      --- Publisher
 /// A [`Publisher`]
-#[behavior(SyncAction)]
+#[derive(Behavior, Debug, Default)]
 pub struct Publisher {}
 
-#[allow(clippy::use_self)]
-#[behavior(SyncAction)]
-impl Publisher {
+impl BehaviorInstanceMethods for Publisher {
 	/// @TODO:
-	async fn tick(&self) -> BehaviorResult {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		println!("ticking Publisher");
 		Ok(BehaviorStatus::Success)
 	}
+}
 
-	/// Registration function
-	pub fn register(factory: &mut BTFactory) {
-		register_action!(factory, "Publisher", Publisher);
+impl BehaviorStaticMethods for Publisher {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![input_port_macro!(
+			String,
+			"topic",
+			"",
+			"Topic to publish."
+		)]
 	}
 }
-// endregion:   --- behavior
+// endregion:   --- Publisher

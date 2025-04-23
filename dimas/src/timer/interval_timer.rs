@@ -1,45 +1,52 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
 
 //! Interval timer
 
 // region:      --- modules
 use core::time::Duration;
 use dimas_behavior::{
-	behavior::{Behavior, BehaviorResult, BehaviorStatus},
-	define_ports, input_port,
+	behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+	},
+	input_port_macro,
 	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
 };
-use dimas_builtin::factory::BTFactory;
-use dimas_macros::{behavior, register_control};
+use dimas_behavior_derive::Behavior;
 use tokio::{task::JoinHandle, time};
 // endregion:   --- modules
 
-// region:      --- behavior
+// region:      --- IntervalTimer
 /// An [`IntervalTimer`]
-#[behavior(Control)]
+#[derive(Behavior, Debug, Default)]
 pub struct IntervalTimer {
 	/// The handle to stop the Timer
-	#[bhvr(default = "None")]
 	handle: Option<JoinHandle<()>>,
 }
 
-#[behavior(Control)]
-impl IntervalTimer {
-	async fn on_start(&self) -> BehaviorResult {
+impl BehaviorInstanceMethods for IntervalTimer {
+	fn start(
+		&mut self,
+		tick_data: &mut BehaviorTickData,
+		children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		println!("start IntervalTimer");
 
 		// timer already started?
 		if self.handle.is_none() {
-			bhvr_.set_status(BehaviorStatus::Running);
+			tick_data.status = BehaviorStatus::Running;
 
-			let input = bhvr_.config_mut().get_input("interval")?;
+			let input = tick_data.get_input("interval")?;
 			let interval = Duration::from_millis(input);
-			let _children_count = bhvr_.children().len();
+			let _children_count = children.len();
 
 			// @TODO: Dirty way to move access to children into spawned task
 			//        The node is not restartable/recoverable
-			let mut children: Vec<Behavior> = Vec::default();
-			std::mem::swap(bhvr_.children_mut(), &mut children);
+			let mut my_children: BehaviorTreeComponentList = BehaviorTreeComponentList::default();
+			std::mem::swap(children, &mut my_children);
 
 			self.handle
 				.replace(tokio::task::spawn(async move {
@@ -48,43 +55,52 @@ impl IntervalTimer {
 						interval.tick().await;
 
 						// tick every child
-						for child in &mut children {
-							let _ = child.execute_tick().await;
+						for index in 0..my_children.len() {
+							let child = &mut my_children[index];
+							let _new_status = child.execute_tick();
 						}
 					}
 				}));
 		} else {
 			println!("already started IntervalTimer");
-			bhvr_.set_status(BehaviorStatus::Failure);
+			tick_data.status = BehaviorStatus::Failure;
 		}
 
-		Ok(bhvr_.status())
+		Ok(tick_data.status)
 		// Ok(BehaviorStatus::Running)
 	}
 
-	async fn on_running(&self) -> BehaviorResult {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		println!("ticking IntervalTimer");
 		Ok(BehaviorStatus::Running)
 	}
 
-	async fn halt(&self) {
-		bhvr_.reset_children().await;
+	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
+		children.reset()?;
 		let handle = self.handle.take();
 		if let Some(handle) = handle {
 			handle.abort();
 		}
-		// @TODO: clarify which status is best
-		bhvr_.set_status(BehaviorStatus::Success);
-	}
-
-	fn ports() -> PortList {
-		// input parameter "interval" with default of 1000ms
-		define_ports!(input_port!("interval", 1000))
-	}
-
-	/// Registration function
-	pub fn register(factory: &mut BTFactory) {
-		register_control!(factory, "IntervalTimer", IntervalTimer,);
+		Ok(())
 	}
 }
-// endregion:   --- behavior
+
+impl BehaviorStaticMethods for IntervalTimer {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![input_port_macro!(
+			i32,
+			"interval",
+			"1000",
+			"Default value in ms."
+		)]
+	}
+}
+// endregion:   --- IntervalTimer

@@ -1,13 +1,18 @@
-// Copyright © 2024 Stephan Kunz
+// Copyright © 2025 Stephan Kunz
 
 // region:      --- modules
 use anyhow::Result;
 use dimas_behavior::{
-	behavior::tree::BehaviorTree,
-	behavior::{BehaviorResult, BehaviorStatus},
+	behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+	},
+	factory::{BehaviorTreeFactory, error::Error},
+	port::PortList,
+	tree::{BehaviorTree, BehaviorTreeComponentList},
 };
-use dimas_builtin::factory::{BTFactory, Error};
-use dimas_macros::{behavior, register_action, register_condition};
+use dimas_behavior_derive::Behavior;
 use std::time::Duration;
 use tracing::{Level, event, instrument};
 // endregion:   --- modules
@@ -46,47 +51,69 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 </root>
 "#;
 
-/// Condition "NotInterrupted"
-#[behavior(SyncCondition)]
+/// Condition `NotInterrupted`
+#[derive(Behavior, Debug, Default)]
 struct NotInterrupted {}
 
-#[allow(clippy::use_self)]
-#[behavior(SyncCondition)]
-impl NotInterrupted {
-	async fn tick(&self) -> BehaviorResult {
-		//println!("ticking NotInterrupted");
+impl BehaviorInstanceMethods for NotInterrupted {
+	/// @TODO:
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		println!("ticking NotInterrupted");
 		Ok(BehaviorStatus::Success)
 	}
 }
 
-/// Action "AlwaysRunning"
-#[behavior(Action)]
+impl BehaviorStaticMethods for NotInterrupted {
+	fn kind() -> BehaviorType {
+		BehaviorType::Condition
+	}
+}
+
+/// Action `AlwaysRunning`
+#[derive(Behavior, Debug, Default)]
 struct AlwaysRunning {}
 
-#[allow(clippy::use_self)]
-#[behavior(Action)]
-impl AlwaysRunning {
-	async fn on_start(&self) -> BehaviorResult {
-		//println!("starting AlwaysRunning");
-		Ok(BehaviorStatus::Running)
-	}
-
-	async fn on_running(&self) -> BehaviorResult {
-		//println!("ticking AlwaysRunning");
+impl BehaviorInstanceMethods for AlwaysRunning {
+	/// @TODO:
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		println!("ticking AlwaysRunnin");
 		Ok(BehaviorStatus::Running)
 	}
 }
 
-/// SyncAction "Shutdown"
-#[behavior(SyncAction)]
+impl BehaviorStaticMethods for AlwaysRunning {
+	fn kind() -> BehaviorType {
+		BehaviorType::Decorator
+	}
+}
+
+/// Action `Shutdown`
+#[derive(Behavior, Debug, Default)]
 struct Shutdown {}
 
-#[allow(clippy::use_self)]
-#[behavior(SyncAction)]
-impl Shutdown {
-	async fn tick(&self) -> BehaviorResult {
+impl BehaviorInstanceMethods for Shutdown {
+	/// @TODO:
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
 		println!("ticking Shutdown");
 		Ok(BehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for Shutdown {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
 	}
 }
 // endregion:   --- behavior
@@ -95,7 +122,7 @@ impl Shutdown {
 /// Agent structure for std environment
 pub struct Agent {
 	/// The factory to create & register behavior
-	bt_factory: BTFactory,
+	factory: BehaviorTreeFactory,
 	/// The behavior tree
 	tree: Option<BehaviorTree>,
 }
@@ -108,23 +135,17 @@ impl Agent {
 	/// - if detection of program directory fails
 	pub fn create() -> Result<Self> {
 		// install core behavior
-		let mut bt_factory = BTFactory::default();
-		bt_factory.add_extensions();
+		let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 		// register core nodes
-		register_condition!(bt_factory, "NotInterrupted", NotInterrupted,);
-		register_action!(bt_factory, "AlwaysRunning", AlwaysRunning,);
-		register_action!(bt_factory, "Shutdown", Shutdown,);
+		factory.register_node_type::<NotInterrupted>("NotInterrupted")?;
+		factory.register_node_type::<AlwaysRunning>("AlwaysRunning")?;
+		factory.register_node_type::<Shutdown>("Shutdown")?;
 
 		Ok(Self {
-			bt_factory,
+			factory,
 			tree: None,
 		})
-	}
-
-	/// Register behavior
-	pub fn register_behavior(&mut self, reg_fn: impl Fn(&mut BTFactory)) {
-		reg_fn(&mut self.bt_factory);
 	}
 
 	/// Set the [`Agent`]s behavior
@@ -133,7 +154,7 @@ impl Agent {
 	/// # Panics
 	/// - ???
 	pub fn set_behavior(&mut self, xml: &str) -> Result<(), Error> {
-		self.bt_factory.register_subtree(xml)
+		self.factory.register_behavior_tree_from_text(xml)
 	}
 
 	/// Start the [`Agent`]
@@ -144,7 +165,7 @@ impl Agent {
 		event!(Level::INFO, "starting agent {}", "todo");
 
 		// create the tree
-		let tree = self.bt_factory.create_tree_from_xml(XML)?;
+		let tree = self.factory.create_from_text(XML)?;
 
 		self.tree = Some(tree);
 
