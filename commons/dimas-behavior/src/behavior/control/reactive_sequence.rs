@@ -4,7 +4,7 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString};
+use alloc::boxed::Box;
 use dimas_behavior_derive::Behavior;
 
 use crate::{
@@ -59,8 +59,8 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 				}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"ReactiveSequence".to_string(),
-						"Idle".to_string(),
+						"ReactiveSequence".into(),
+						"Idle".into(),
 					));
 				}
 				BehaviorStatus::Running => {
@@ -74,7 +74,7 @@ impl BehaviorInstanceMethods for ReactiveSequence {
 						// Multiple children running at the same time
 						return Err(BehaviorError::Composition(
 							"[ReactiveSequence]: Only a single child can return Running."
-								.to_string(),
+								.into(),
 						));
 					}
 					return Ok(BehaviorStatus::Running);

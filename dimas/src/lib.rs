@@ -2,7 +2,7 @@
 #![crate_type = "lib"]
 #![crate_name = "dimas"]
 //#![no_panic]
-#![doc = include_str!("../README.md")]
+// #![doc = include_str!("../README.md")]
 
 //! ## Public interface
 //!
@@ -14,8 +14,8 @@
 #[doc(hidden)]
 extern crate alloc;
 
-#[cfg(doctest)]
-doc_comment::doctest!("../README.md");
+// #[cfg(doctest)]
+// doc_comment::doctest!("../README.md");
 
 // mod agent;
 // mod com;

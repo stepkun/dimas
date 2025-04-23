@@ -12,6 +12,7 @@ use alloc::{
 	sync::Arc,
 	vec::{self, Vec},
 };
+use dimas_core::ConstString;
 use hashbrown::HashMap;
 use parking_lot::Mutex;
 use roxmltree::{Attributes, Node, NodeType};
@@ -33,12 +34,12 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
-fn attrs_to_map(attrs: Attributes) -> HashMap<String, String, FxBuildHasher> {
+fn attrs_to_map(attrs: Attributes) -> HashMap<ConstString, ConstString, FxBuildHasher> {
 	let mut map = HashMap::default();
 	//dbg!(self);
 	for attr in attrs {
 		let name = attr.name().into();
-		let value = attr.value().to_string();
+		let value = attr.value().into();
 		map.insert(name, value);
 	}
 	map
@@ -254,20 +255,20 @@ impl XmlParser {
 			let mut bhvr = bhvr_creation_fn();
 			let mut nid = element_name.to_string();
 			if let Some(name) = attrs.get("name") {
-				if name != element_name {
+				if name.as_ref() != element_name {
 					nid = nid + ": " + name;
 				}
 			};
 			let tree_node = match bhvr_type {
 				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
-						return Err(Error::ChildrenNotAllowed(nid));
+						return Err(Error::ChildrenNotAllowed(nid.into()));
 					}
 					let mut tick_data = BehaviorTickData::new(blackboard.clone());
 					let mut config_data = BehaviorConfigurationData::new(element_name);
 					let mut tick_data = BehaviorTickData::new(blackboard.clone());
 					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
-					BehaviorTreeLeaf::create(nid, tick_data, bhvr)
+					BehaviorTreeLeaf::create(&nid, tick_data, bhvr)
 				}
 				BehaviorType::Control | BehaviorType::Decorator => {
 					let new_children =
@@ -281,7 +282,7 @@ impl XmlParser {
 					let mut config_data = BehaviorConfigurationData::default();
 					Self::create_ports(&mut bhvr, &mut tick_data, &mut config_data, &element)?;
 					BehaviorTreeNode::create(
-						nid,
+						&nid,
 						new_children,
 						BehaviorTickData::new(blackboard.clone()),
 						bhvr,
@@ -303,22 +304,22 @@ impl XmlParser {
 	) -> Result<(), Error> {
 		//let mut remappings = NewPortRemappings::new();
 		for attribute in element.attributes() {
-			let name = attribute.name().to_string();
-			let value = attribute.value().to_string();
+			let name = attribute.name();
+			let value = attribute.value();
 			// port "name" is always available
 			if name == "name" {
 				config_data.set_name(value);
 			} else {
 				// fetch found port name from list of provided ports
 				let port_list = bhvr.static_provided_ports();
-				match port_list.find(&name) {
+				match port_list.find(name) {
 					Ok(port_definition) => {
 						tick_data.add_port(name, port_definition.direction, value);
 						//todo!();
 					}
 					Err(_) => {
 						return Err(Error::PortInvalid(
-							name,
+							name.into(),
 							config_data.name().into(),
 							port_list.entries(),
 						));
@@ -346,7 +347,7 @@ impl XmlParser {
 		let mut bhvr = bhvr_creation_fn();
 		let attrs = attrs_to_map(element.attributes());
 		if let Some(name) = attrs.get("name") {
-			if name != &nid {
+			if name.as_ref() != nid {
 				nid = nid + ": " + name;
 			}
 		};
@@ -355,7 +356,7 @@ impl XmlParser {
 		// let tick_data = BehaviorTickData::new(blackboard);
 		let config_data = BehaviorConfigurationData::new(&nid);
 		let subtree = BehaviorTreeNode::new(
-			nid,
+			&nid,
 			children,
 			BehaviorTickData::new(Blackboard::default()),
 			bhvr,

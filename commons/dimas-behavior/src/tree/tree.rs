@@ -20,6 +20,7 @@ use alloc::{
 	sync::Arc,
 	vec::{self, Vec},
 };
+use dimas_core::ConstString;
 use core::{
 	any::{Any, TypeId},
 	ops::{Deref, DerefMut},
@@ -173,8 +174,8 @@ impl DerefMut for BehaviorTreeComponentList {
 }
 
 impl BehaviorTreeComponent for BehaviorTreeComponentList {
-	fn id(&self) -> String {
-		String::from("BehaviorTreeComponentList")
+	fn id(&self) -> &'static str {
+		"BehaviorTreeComponentList"
 	}
 
 	fn blackboard(&self) -> Blackboard {
@@ -225,7 +226,7 @@ impl BehaviorTreeComponentList {
 /// Implementation of a trees leaf
 pub struct BehaviorTreeLeaf {
 	/// ID of the node
-	id: String,
+	id: ConstString,
 	/// Data needed in every tick
 	tick_data: BehaviorTickData,
 	/// The behavior of that leaf
@@ -235,8 +236,8 @@ pub struct BehaviorTreeLeaf {
 }
 
 impl BehaviorTreeComponent for BehaviorTreeLeaf {
-	fn id(&self) -> String {
-		self.id.to_string()
+	fn id(&self) -> &str {
+		&self.id
 	}
 
 	fn blackboard(&self) -> Blackboard {
@@ -275,7 +276,7 @@ impl BehaviorTreeLeaf {
 	/// Construct a [`BehaviorTreeNode`]
 	#[must_use]
 	pub fn new(
-		id: impl Into<String>,
+		id: &str,
 		tick_data: BehaviorTickData,
 		behavior: Box<dyn BehaviorTreeMethods>,
 	) -> Self {
@@ -290,7 +291,7 @@ impl BehaviorTreeLeaf {
 	/// Create a `Box<dyn BehaviorTreeComponent>`]
 	#[must_use]
 	pub fn create(
-		id: impl Into<String>,
+		id: &str,
 		tick_data: BehaviorTickData,
 		behavior: Box<dyn BehaviorTreeMethods>,
 	) -> Box<dyn BehaviorTreeComponent> {
@@ -303,7 +304,7 @@ impl BehaviorTreeLeaf {
 /// Implementation of a trees node
 pub struct BehaviorTreeNode {
 	/// ID of the node
-	id: String,
+	id: ConstString,
 	/// Children
 	children: BehaviorTreeComponentList,
 	/// Data needed in every tick
@@ -319,8 +320,8 @@ impl AsRef<dyn BehaviorTreeComponent + 'static> for BehaviorTreeNode {
 }
 
 impl BehaviorTreeComponent for BehaviorTreeNode {
-	fn id(&self) -> String {
-		self.id.to_string()
+	fn id(&self) -> &str {
+		&self.id
 	}
 
 	fn blackboard(&self) -> Blackboard {
@@ -359,7 +360,7 @@ impl BehaviorTreeNode {
 	/// Construct a [`BehaviorTreeNode`]
 	#[must_use]
 	pub fn new(
-		id: impl Into<String>,
+		id: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
 		behavior: Box<dyn BehaviorTreeMethods>,
@@ -375,7 +376,7 @@ impl BehaviorTreeNode {
 	/// Create a `Box<dyn BehaviorTreeComponent>`]
 	#[must_use]
 	pub fn create(
-		id: impl Into<String>,
+		id: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
 		behavior: Box<dyn BehaviorTreeMethods>,
@@ -385,7 +386,7 @@ impl BehaviorTreeNode {
 
 	/// Get the id
 	#[must_use]
-	pub fn id(&self) -> &str {
+	pub const fn id(&self) -> &str {
 		&self.id
 	}
 }
@@ -395,7 +396,7 @@ impl BehaviorTreeNode {
 /// Implementation of a trees proxy node
 pub struct BehaviorTreeProxy {
 	/// ID of the node
-	id: String,
+	id: ConstString,
 	/// The Subtree to call
 	subtree: Option<BehaviorSubTree>,
 	/// Data needed in every tick
@@ -405,8 +406,8 @@ pub struct BehaviorTreeProxy {
 }
 
 impl BehaviorTreeComponent for BehaviorTreeProxy {
-	fn id(&self) -> String {
-		self.id.to_string()
+	fn id(&self) -> &str {
+		&self.id
 	}
 
 	fn blackboard(&self) -> Blackboard {
@@ -420,7 +421,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 	fn execute_tick(&mut self) -> BehaviorResult {
 		self.subtree.as_ref().map_or_else(
 			|| {
-				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id);
+				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
 				Err(BehaviorError::Composition(msg))
 			},
 			|subtree| subtree.lock().execute_tick(),
@@ -434,7 +435,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 
 		self.subtree.as_ref().map_or_else(
 			|| {
-				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id);
+				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
 				Err(BehaviorError::Composition(msg))
 			},
 			|subtree| subtree.lock().execute_halt(),
@@ -448,7 +449,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 
 		self.subtree.as_ref().map_or_else(
 			|| {
-				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id);
+				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
 				Err(BehaviorError::Composition(msg))
 			},
 			|subtree| subtree.lock().execute_halt(),
@@ -459,7 +460,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 impl BehaviorTreeProxy {
 	/// Construct a [`BehaviorTreeProxy`]
 	#[must_use]
-	pub fn new(id: impl Into<String>, tick_data: BehaviorTickData) -> Self {
+	pub fn new(id: &str, tick_data: BehaviorTickData) -> Self {
 		Self {
 			id: id.into(),
 			subtree: None,
@@ -471,7 +472,7 @@ impl BehaviorTreeProxy {
 	/// Create a `Box<dyn BehaviorTreeComponent>`]
 	#[must_use]
 	pub fn create(
-		id: impl Into<String>,
+		id: &str,
 		tick_data: BehaviorTickData,
 	) -> Box<dyn BehaviorTreeComponent> {
 		Box::new(Self::new(id, tick_data))

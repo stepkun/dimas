@@ -6,7 +6,7 @@
 extern crate alloc;
 
 // region		--- modules
-use alloc::string::String;
+use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -23,13 +23,13 @@ pub enum Error {
 	IndexOutOfBounds(usize),
 	/// The root of the tree s not properly created
 	#[error("root tree [{0}] not found in behavior tree")]
-	RootNotFound(String),
+	RootNotFound(ConstString),
 	/// The root of the tree s not properly created
 	#[error("(sub)tree [{0}] not found in behavior tree")]
-	SubtreeNotFound(String),
+	SubtreeNotFound(ConstString),
 
 	/// Something happened that should not have been possible
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(String, String, u32),
+	Unexpected(ConstString, ConstString, u32),
 }
 // region:		--- Error

@@ -13,9 +13,9 @@ use core::{
 
 // region:      --- modules
 use alloc::{
-	string::{String, ToString},
-	vec::Vec,
+	boxed::Box, string::{String, ToString}, sync::Arc, vec::Vec
 };
+use dimas_core::ConstString;
 
 use super::error::Error;
 // endregion:   --- modules
@@ -34,15 +34,18 @@ const FORBIDDEN_NAMES: &[&str] = &[
 	"_onSuccess",
 	"_post",
 ];
+
+/// An immutable remapping entry
+type RemappingEntry = (ConstString, (NewPortDirection, ConstString));
 // endregion:   --- types
 
 // region:      --- helper
 /// Function handles the special remapping cases
 #[must_use]
-pub fn get_remapped_key(port_name: &str, remapped_port: &str) -> Option<String> {
+pub fn get_remapped_key(port_name: &str, remapped_port: &str) -> Option<ConstString> {
 	// is the shortcut '{=}' used?
 	if port_name == "{=}" || remapped_port == "{=}" {
-		Some(port_name.to_string())
+		Some(port_name.into())
 	} else {
 		strip_bb_pointer(remapped_port)
 	}
@@ -50,7 +53,7 @@ pub fn get_remapped_key(port_name: &str, remapped_port: &str) -> Option<String> 
 
 /// Remove all 'decoration' from port name
 #[must_use]
-pub fn strip_bb_pointer(port: &str) -> Option<String> {
+pub fn strip_bb_pointer(port: &str) -> Option<ConstString> {
 	// Is bb pointer
 	if port.starts_with('{') && port.ends_with('}') {
 		Some(
@@ -58,7 +61,7 @@ pub fn strip_bb_pointer(port: &str) -> Option<String> {
 				.unwrap_or_else(|| todo!())
 				.strip_suffix('}')
 				.unwrap_or_else(|| todo!())
-				.to_string(),
+				.into(),
 		)
 	} else {
 		None
@@ -76,22 +79,21 @@ pub fn is_bb_pointer(port: &str) -> bool {
 /// - if the name violates the conventions.
 pub fn create_port<T: 'static>(
 	direction: NewPortDirection,
-	name: impl Into<String>,
-	default: impl Into<String>,
-	description: impl Into<String>,
+	name: &str,
+	default: &str,
+	description: &str,
 ) -> Result<NewPortDefinition, Error> {
-	let name = name.into();
-	if is_allowed_name(&name) {
+	if is_allowed_name(name) {
 		let type_id = TypeId::of::<T>();
 		Ok(NewPortDefinition {
 			direction,
 			type_id,
-			name,
+			name: name.into(),
 			default_value: default.into(),
 			description: description.into(),
 		})
 	} else {
-		Err(Error::NameNotAllowed(name))
+		Err(Error::NameNotAllowed(name.into()))
 	}
 }
 
@@ -139,9 +141,9 @@ impl PortList {
 	/// # Errors
 	/// - if entry already exists
 	pub fn add(&mut self, port_definition: NewPortDefinition) -> Result<(), Error> {
-		for entry in &mut *self.0 {
+		for entry in &self.0 {
 			if entry.name == port_definition.name {
-				return Err(Error::AlreadyInPortList(entry.name.clone()));
+				return Err(Error::AlreadyInPortList(entry.name.as_ref().into()));
 			}
 		}
 		self.0.push(port_definition);
@@ -150,7 +152,7 @@ impl PortList {
 
 	/// Create a list of the [`Port`] names in the list
 	#[must_use]
-	pub fn entries(&self) -> String {
+	pub fn entries(&self) -> ConstString {
 		let comma = false;
 		let mut result = String::new();
 		for entry in &self.0 {
@@ -159,7 +161,7 @@ impl PortList {
 			}
 			result += &entry.name;
 		}
-		result
+		result.into()
 	}
 
 	/// Lookup a [`PortDefinition`]
@@ -167,7 +169,7 @@ impl PortList {
 	/// - if no [`PortDefinition`] is found
 	pub fn find(&self, name: &str) -> Result<NewPortDefinition, Error> {
 		for entry in &self.0 {
-			if entry.name == name {
+			if &*entry.name == name {
 				return Ok(entry.clone());
 			}
 		}
@@ -183,21 +185,7 @@ impl PortList {
 /// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default)]
-pub struct PortRemappings(Vec<(String, (NewPortDirection, String))>);
-
-impl Deref for PortRemappings {
-	type Target = Vec<(String, (NewPortDirection, String))>;
-
-	fn deref(&self) -> &Self::Target {
-		&self.0
-	}
-}
-
-impl DerefMut for PortRemappings {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.0
-	}
-}
+pub struct PortRemappings(Vec<RemappingEntry>);
 
 impl PortRemappings {
 	/// Add an entry to the [`PortRemappings`]
@@ -209,20 +197,20 @@ impl PortRemappings {
 		direction: NewPortDirection,
 		remapped_name: &str,
 	) -> Result<(), Error> {
-		for (original, _) in &mut *self.0 {
-			if original == name {
+		for (original, _) in &self.0 {
+			if original.as_ref() == name {
 				return Err(Error::AlreadyInRemappings(name.into()));
 			}
 		}
-		self.push((name.into(), (direction, remapped_name.into())));
+		self.0.push((name.into(), (direction, remapped_name.into())));
 		Ok(())
 	}
 
 	/// Lookup the remaped name
 	#[must_use]
-	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<String> {
+	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<ConstString> {
 		for (original, remapped) in &self.0 {
-			if original == name
+			if original.as_ref() == name
 				&& ((direction == remapped.0) || (remapped.0 == NewPortDirection::InOut))
 			{
 				return Some((remapped.1).clone());
@@ -266,9 +254,9 @@ impl core::fmt::Display for NewPortDirection {
 pub struct NewPortDefinition {
 	pub(crate) direction: NewPortDirection,
 	pub(crate) type_id: TypeId,
-	pub(crate) name: String,
-	pub(crate) default_value: String,
-	pub(crate) description: String,
+	pub(crate) name: ConstString,
+	pub(crate) default_value: ConstString,
+	pub(crate) description: ConstString,
 }
 
 impl NewPortDefinition {
@@ -278,21 +266,20 @@ impl NewPortDefinition {
 	pub fn new(
 		direction: NewPortDirection,
 		type_id: TypeId,
-		name: impl Into<String>,
-		default_value: impl Into<String>,
-		description: impl Into<String>,
+		name: &str,
+		default_value: &str,
+		description: &str,
 	) -> Result<Self, Error> {
-		let name = name.into();
-		if is_allowed_name(&name) {
+		if is_allowed_name(name) {
 			Ok(Self {
 				direction,
 				type_id,
-				name,
+				name: name.into(),
 				default_value: default_value.into(),
 				description: description.into(),
 			})
 		} else {
-			Err(Error::NameNotAllowed(name))
+			Err(Error::NameNotAllowed(name.into()))
 		}
 	}
 }

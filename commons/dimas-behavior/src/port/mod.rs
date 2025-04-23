@@ -2,7 +2,7 @@
 
 //! `dimas-behavior` Port module
 
-mod error;
+pub mod error;
 #[allow(clippy::module_inception)]
 mod port;
 

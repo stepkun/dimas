@@ -6,12 +6,19 @@
 #[doc(hidden)]
 extern crate alloc;
 
-// #[doc(hidden)]
-// #[cfg(feature = "std")]
-// extern crate std;
-
 // modules
 pub mod error;
 pub mod utils;
 
 // flatten:
+
+// region:      --- modules
+use alloc::boxed::Box;
+// endregion:   --- modules
+
+// region:      --- types
+/// An immutable `String` type
+/// see: [Logan Smith](https://www.youtube.com/watch?v=A4cKi7PTJSs)
+pub type ConstString = Box<str>;
+
+// endregion:   --- types

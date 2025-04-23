@@ -4,7 +4,7 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString, vec};
+use alloc::{boxed::Box, vec};
 use dimas_behavior_derive::Behavior;
 
 use crate::{
@@ -90,8 +90,8 @@ impl BehaviorInstanceMethods for RetryUntilSuccessful {
 				}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"RetryUntilSuccessful".to_string(),
-						"Idle".to_string(),
+						"RetryUntilSuccessful".into(),
+						"Idle".into(),
 					));
 				}
 				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),

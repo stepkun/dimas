@@ -4,7 +4,7 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString};
+use alloc::boxed::Box;
 use dimas_behavior_derive::Behavior;
 
 use crate::{
@@ -45,8 +45,8 @@ impl BehaviorInstanceMethods for Inverter {
 				Ok(BehaviorStatus::Success)
 			}
 			BehaviorStatus::Idle => Err(BehaviorError::Status(
-				"Inverter".to_string(),
-				"Idle".to_string(),
+				"Inverter".into(),
+				"Idle".into(),
 			)),
 			status @ (BehaviorStatus::Running | BehaviorStatus::Skipped) => Ok(status),
 			BehaviorStatus::Success => {

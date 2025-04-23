@@ -4,7 +4,7 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::ToString};
+use alloc::boxed::Box;
 use dimas_behavior_derive::Behavior;
 
 use crate::{
@@ -52,8 +52,8 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 				BehaviorStatus::Failure => {}
 				BehaviorStatus::Idle => {
 					return Err(BehaviorError::Status(
-						"ReactiveFallback".to_string(),
-						"Idle".to_string(),
+						"ReactiveFallback".into(),
+						"Idle".into(),
 					));
 				}
 				BehaviorStatus::Running => {

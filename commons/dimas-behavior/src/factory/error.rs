@@ -17,6 +17,7 @@ use alloc::{
 	string::{FromUtf8Error, String},
 	vec::Vec,
 };
+use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -26,16 +27,16 @@ use thiserror::Error;
 pub enum Error {
 	/// Behavior is already registered
 	#[error("behavior [{0}] is already registered")]
-	BehaviorAlreadyRegistered(String),
+	BehaviorAlreadyRegistered(ConstString),
 	/// Behavior is not registered
 	#[error("behavior [{0}] is not registered")]
-	BehaviorNotRegistered(String),
+	BehaviorNotRegistered(ConstString),
 	/// A wron BTCPP version is given
 	#[error("'BTCPP_format' must be '4'")]
 	BtCppFormat,
 	/// Children are not allowed for some types of behaviors
 	#[error("children are not allowed for behavior category [{0}]")]
-	ChildrenNotAllowed(String),
+	ChildrenNotAllowed(ConstString),
 	/// Passthrough for libloading Errors
 	#[cfg(feature = "std")]
 	#[error("{0}")]
@@ -45,34 +46,34 @@ pub enum Error {
 	Libloading(#[from] libloading::Error),
 	/// Decorator with more than 1 child
 	#[error("the Decorator [{0}] has more than 1 child")]
-	DecoratorOnlyOneChild(String),
+	DecoratorOnlyOneChild(ConstString),
 	/// Unsupported XML element:
 	#[error("element [{0}] is not supported")]
-	ElementNotSupported(String),
+	ElementNotSupported(ConstString),
 	/// Missing a corresponing end tag
 	#[error("missing end tag for [{0}]")]
-	MissingEndTag(String),
+	MissingEndTag(ConstString),
 	/// Attribut 'ID' is missing
 	#[error("missing attribute 'ID' in tag [{0}]")]
-	MissingId(String),
+	MissingId(ConstString),
 	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' with name {0} provided")]
-	NoMainTree(String),
+	NoMainTree(ConstString),
 	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' provided")]
 	NoTreeToExecute,
 	/// Port not in defined port list
 	#[error("port name [{0}] does not match [{1}]s port list: {2:?}")]
-	PortInvalid(String, String, String),
+	PortInvalid(ConstString, ConstString, ConstString),
 	/// Loading a library failed
 	#[error("registering library [{0}] failed with [{0}]")]
-	RegisterLib(String, u32),
+	RegisterLib(ConstString, u32),
 	/// Passthrough for behavior tree Errors
 	#[error("{0}")]
 	Tree(#[from] crate::tree::error::Error),
 	/// Processing instruction
 	#[error("processing instruction [{0}] is not supported")]
-	UnsupportedProcessingInstruction(String),
+	UnsupportedProcessingInstruction(ConstString),
 	/// Wrong name for the root element
 	#[error("root element must be named 'root'")]
 	WrongRootName,
@@ -82,6 +83,6 @@ pub enum Error {
 
 	/// @TODO:
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(String, String, u32),
+	Unexpected(ConstString, ConstString, u32),
 }
 // region:		--- Error

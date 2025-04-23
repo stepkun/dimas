@@ -5,8 +5,8 @@
 #[doc(hidden)]
 extern crate alloc;
 
+use dimas_core::ConstString;
 // region		--- modules
-use alloc::string::String;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -17,7 +17,7 @@ use thiserror::Error;
 pub enum BehaviorError {
 	/// Error in structural composition of a behaviors children
 	#[error("{0}")]
-	Composition(String),
+	Composition(ConstString),
 	/// Pass through executtion error
 	#[error("{0}")]
 	Execution(#[from] dimas_scripting::execution::error::Error),
@@ -29,31 +29,31 @@ pub enum BehaviorError {
 	IndexOutOfBounds(usize),
 	/// Error in internal composition of a behavior
 	#[error("{0}")]
-	Internal(String),
+	Internal(ConstString),
 	/// Variable/Port is not in Blackboard
 	#[error("could not find entry [{0}] in blackboard")]
-	NotInBlackboard(String),
+	NotInBlackboard(ConstString),
 	/// Type mismatch between port definiton and found value
 	#[error("could not parse value for port [{0}] into specified type [{1}]")]
-	ParsePortValue(String, String),
+	ParsePortValue(ConstString, ConstString),
 	/// Pass through parsing error
 	#[error("{0}")]
 	Parsing(#[from] dimas_scripting::compiling::error::Error),
 	/// Port has not been defined in behavior
 	#[error("port [{0}] is not declared in behavior [{1}]")]
-	PortNotDeclared(String, String),
+	PortNotDeclared(ConstString, ConstString),
 	/// The root of the tree is not properly created
 	#[error("tree root [{0}] not found")]
-	RootNotFound(String),
+	RootNotFound(ConstString),
 	/// An illegal [`BehaviorStatus`] is reached
 	#[error("child node of [{0}] returned status [{1}] when not allowed")]
-	Status(String, String),
+	Status(ConstString, ConstString),
 	/// The tree is not properly created
 	#[error("(sub)tree [{0}] not found in behavior tree")]
-	SubtreeNotFound(String),
+	SubtreeNotFound(ConstString),
 
 	/// Something happened that should not have been possible
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(String, String, u32),
+	Unexpected(ConstString, ConstString, u32),
 }
 // region:		--- BehaviorError

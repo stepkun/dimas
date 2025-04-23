@@ -14,7 +14,7 @@ pub use tree::{
 };
 
 // region:      --- modules
-use alloc::{string::String, sync::Arc};
+use alloc::sync::Arc;
 use parking_lot::Mutex;
 
 use crate::{
@@ -34,7 +34,7 @@ pub type BehaviorSubTree = Arc<Mutex<BehaviorTreeNode>>;
 /// Interface for an element in a [`BehaviorTree`]
 pub trait BehaviorTreeComponent: Send + Sync {
 	/// Get the id
-	fn id(&self) -> String;
+	fn id(&self) -> &str;
 
 	/// Get the blackboard
 	fn blackboard(&self) -> Blackboard;

@@ -12,7 +12,8 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{borrow::ToOwned, boxed::Box, string::String, sync::Arc, vec::Vec};
+use alloc::{borrow::ToOwned, boxed::Box, sync::Arc, vec::Vec};
+use dimas_core::ConstString;
 use libloading::Library;
 
 use crate::behavior::{BehaviorCreationFn, BehaviorTreeMethods, BehaviorType};
@@ -24,7 +25,7 @@ use super::error::Error;
 /// A registry for [`Behavior`]s used by the [`BehaviorTreeFactory`] for creation of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	behaviors: Vec<(String, BehaviorType, Arc<BehaviorCreationFn>)>,
+	behaviors: Vec<(ConstString, BehaviorType, Arc<BehaviorCreationFn>)>,
 	librarys: Vec<Library>,
 }
 
@@ -34,19 +35,18 @@ impl BehaviorRegistry {
 	/// - if the entry alreeady exists
 	pub fn add_behavior<F>(
 		&mut self,
-		name: impl Into<String>,
+		name: &str,
 		bhvr_creation_fn: F,
 		bhvr_type: BehaviorType,
 	) -> Result<(), Error>
 	where
 		F: Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static,
 	{
-		let name = name.into();
-		if self.contains(&name) {
-			return Err(Error::BehaviorAlreadyRegistered(name));
+		if self.contains(name) {
+			return Err(Error::BehaviorAlreadyRegistered(name.into()));
 		}
 		self.behaviors
-			.push((name, bhvr_type, Arc::from(bhvr_creation_fn)));
+			.push((name.into(), bhvr_type, Arc::from(bhvr_creation_fn)));
 		Ok(())
 	}
 
@@ -77,7 +77,7 @@ impl BehaviorRegistry {
 	/// Check whether registry contains an entry.
 	fn contains(&self, id: &str) -> bool {
 		for (name, _, _) in &self.behaviors {
-			if name == id {
+			if name.as_ref() == id {
 				return true;
 			}
 		}
@@ -90,7 +90,7 @@ impl BehaviorRegistry {
 	/// - if the behavior is not found in the registry
 	pub fn fetch(&self, id: &str) -> Result<(BehaviorType, Arc<BehaviorCreationFn>), Error> {
 		for (name, bhvr_type, creation_fn) in &self.behaviors {
-			if name == id {
+			if name.as_ref() == id {
 				return Ok((bhvr_type.to_owned(), creation_fn.clone()));
 			}
 		}

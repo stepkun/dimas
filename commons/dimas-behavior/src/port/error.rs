@@ -6,7 +6,7 @@
 extern crate alloc;
 
 // region		--- modules
-use alloc::string::String;
+use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -16,22 +16,22 @@ use thiserror::Error;
 pub enum Error {
 	/// Port already in [`PortList`]
 	#[error("name [{0}] is already in port list")]
-	AlreadyInPortList(String),
+	AlreadyInPortList(ConstString),
 	/// Port already in [`PortRemappings`]
 	#[error("name [{0}] is already in remappings")]
-	AlreadyInRemappings(String),
+	AlreadyInRemappings(ConstString),
 	/// Name for a port is not allowed
 	#[error("name [{0}] is not allowed for a port")]
-	NameNotAllowed(String),
+	NameNotAllowed(ConstString),
 	/// Port not in [`PortList`]
 	#[error("name [{0}] is not in list of ports")]
-	NotFoundInPortList(String),
+	NotFoundInPortList(ConstString),
 	/// Port not in [`PortRemappings`]
 	#[error("name [{0}] is not in remappings")]
-	NotFoundInRemappings(String),
+	NotFoundInRemappings(ConstString),
 
 	/// @TODO:
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(String, String, u32),
+	Unexpected(ConstString, ConstString, u32),
 }
 // region:		--- Error

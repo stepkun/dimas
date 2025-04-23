@@ -9,9 +9,10 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{
-	string::{String, ToString},
+	string::ToString,
 	vec::Vec,
 };
+use dimas_core::ConstString;
 use roxmltree::Document;
 
 use crate::{
@@ -44,7 +45,7 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 pub struct BehaviorTreeFactory {
 	blackboard: Blackboard,
 	registry: BehaviorRegistry,
-	main_tree_name: String,
+	main_tree_name: ConstString,
 	main_tree: Option<BehaviorTree>,
 }
 
@@ -104,7 +105,7 @@ impl BehaviorTreeFactory {
 		self.main_tree_name = root
 			.attribute("main_tree_to_execute")
 			.unwrap_or("MainTree")
-			.to_string();
+			.into();
 		XmlParser::parse_root_element(
 			&self.blackboard,
 			&mut self.registry,
@@ -163,7 +164,7 @@ impl BehaviorTreeFactory {
 		self.main_tree_name = root
 			.attribute("main_tree_to_execute")
 			.unwrap_or("MainTree")
-			.to_string();
+			.into();
 		// on first run there is no tree stored
 		let mut tree = if self.main_tree.is_some() {
 			self.main_tree
@@ -185,14 +186,14 @@ impl BehaviorTreeFactory {
 
 	/// Get the name list of registered (sub)trees
 	#[must_use]
-	pub fn registered_behavior_trees(&self) -> Vec<String> {
+	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		let mut res = Vec::new();
 		if let Some(tree) = &self.main_tree {
 			if let Some(root) = &tree.root {
-				res.push(root.lock().id().to_string());
+				res.push(root.lock().id().into());
 			}
 			for subtree in &tree.subtrees {
-				res.push(subtree.lock().id().to_string());
+				res.push(subtree.lock().id().into());
 			}
 		}
 		res
@@ -248,7 +249,7 @@ impl BehaviorTreeFactory {
 	/// Register a [`Behavior`] of type <T>.
 	/// # Errors
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn register_node_type<T>(&mut self, name: impl Into<String>) -> Result<(), Error>
+	pub fn register_node_type<T>(&mut self, name: &str) -> Result<(), Error>
 	where
 		T: BehaviorAllMethods,
 	{
@@ -263,7 +264,7 @@ impl BehaviorTreeFactory {
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_action(
 		&mut self,
-		name: impl Into<String>,
+		name: &str,
 		tick_fn: SimpleBhvrTickFn,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
@@ -277,7 +278,7 @@ impl BehaviorTreeFactory {
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_action_with_ports(
 		&mut self,
-		name: impl Into<String>,
+		name: &str,
 		tick_fn: ComplexBhvrTickFn,
 		port_list: PortList,
 	) -> Result<(), Error> {
@@ -292,7 +293,7 @@ impl BehaviorTreeFactory {
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_condition(
 		&mut self,
-		name: impl Into<String>,
+		name: &str,
 		tick_fn: SimpleBhvrTickFn,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
@@ -306,7 +307,7 @@ impl BehaviorTreeFactory {
 	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_decorator(
 		&mut self,
-		name: impl Into<String>,
+		name: &str,
 		tick_fn: SimpleBhvrTickFn,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);

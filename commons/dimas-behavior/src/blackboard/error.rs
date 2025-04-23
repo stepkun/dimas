@@ -5,8 +5,8 @@
 #[doc(hidden)]
 extern crate alloc;
 
+use dimas_core::ConstString;
 // region		--- modules
-use alloc::string::String;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -16,10 +16,10 @@ use thiserror::Error;
 pub enum Error {
 	/// @TODO:
 	#[error("Couldn't find port [{0}]")]
-	PortError(String),
+	PortError(ConstString),
 
 	/// @TODO:
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(String, String, u32),
+	Unexpected(ConstString, ConstString, u32),
 }
 // region:		--- Error
