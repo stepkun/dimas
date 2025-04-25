@@ -64,7 +64,7 @@ async fn load_multiple_xml() -> anyhow::Result<()> {
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 
-	// ... or you can create only one of the subtree
+	// ... or you can create only one of the subtrees
 	println!("----- SubA tick ----");
 	let mut sub_tree_a = factory.create_tree("SubA")?;
 	sub_tree_a.tick_while_running().await?;

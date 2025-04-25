@@ -209,7 +209,7 @@ impl BehaviorStaticMethods for PrintTarget {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(String, "target")]
+		port_list![input_port_macro!(Position2D, "target")]
 	}
 }
 

@@ -14,7 +14,7 @@ use crate::{
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
 	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::BehaviorTreeComponentList,
 };
 // endregion:   --- modules
 

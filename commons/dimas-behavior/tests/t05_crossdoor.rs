@@ -55,8 +55,8 @@ async fn crossdoor() -> anyhow::Result<()> {
 	tree.print()?;
 
 	// Tick multiple times, until either FAILURE of SUCCESS is returned
-	let _result = tree.tick_while_running().await?;
-	//assert_eq!(result, NewBehaviorStatus::Success);
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
 	Ok(())
 }
 

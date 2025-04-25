@@ -24,9 +24,7 @@ use crate::{
 	blackboard::Blackboard,
 };
 
-use super::{
-	BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, tree::TreeComponentIter,
-};
+use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeNode
@@ -41,19 +39,6 @@ pub struct BehaviorTreeNode {
 	/// The behavior of that leaf
 	behavior: BehaviorPtr,
 }
-
-// impl AsRef<dyn BehaviorTreeComponent> for BehaviorTreeNode {
-// 	fn as_ref(&self) -> &(dyn BehaviorTreeComponent + 'static) {
-// 		self
-// 	}
-// }
-
-// impl AsRef<Box<dyn BehaviorTreeComponent>> for Box<BehaviorTreeNode> {
-// 	fn as_ref(&self) -> &Box<dyn BehaviorTreeComponent> {
-// 		let x = self;
-// 		x
-// 	}
-// }
 
 impl BehaviorTreeComponent for BehaviorTreeNode {
 	fn id(&self) -> &str {
@@ -95,14 +80,13 @@ impl BehaviorTreeComponent for BehaviorTreeNode {
 		//self.behavior.halt(&mut self.children)
 		self.children.halt(index)
 	}
-}
 
-#[allow(clippy::needless_lifetimes)]
-impl Iterator for BehaviorTreeNode {
-	type Item = TreeComponentIter<'static>;
+	fn as_any(&self) -> &dyn Any {
+		self
+	}
 
-	fn next<'a>(&'a mut self) -> Option<Self::Item> {
-		todo!()
+	fn as_any_mut(&mut self) -> &mut dyn Any {
+		self
 	}
 }
 

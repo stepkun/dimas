@@ -49,9 +49,9 @@ use super::{
 // region:		--- helper
 /// Helper function to print a (sub)tree recursively
 #[cfg(feature = "std")]
-pub fn print_tree(root_node: &dyn BehaviorTreeComponent) {
-	std::println!("{}", root_node.id());
-	print_recursively(0, root_node);
+pub fn print_tree(start_node: &dyn BehaviorTreeComponent) {
+	std::println!("{}", start_node.id());
+	print_recursively(0, start_node);
 }
 
 /// Helper function to print a (sub)tree recursively
@@ -103,32 +103,37 @@ impl BehaviorTree {
 	}
 
 	/// Link each Proxy in a subtree to its subtree
+	#[allow(clippy::needless_pass_by_value)]
+	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
+		let mut node = &mut *subtree.lock();
+		for mut child in &mut node.children_mut().0 {
+			self.recursive_node(child.as_mut())?;
+		}
+		Ok(())
+	}
+
 	#[allow(clippy::unnecessary_wraps)]
 	#[allow(clippy::needless_pass_by_value)]
 	#[allow(clippy::unused_self)]
 	#[allow(clippy::match_bool)]
 	#[allow(clippy::single_match_else)]
 	#[allow(unsafe_code)]
-	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
-		let mut node = &mut *subtree.lock();
-
-		std::dbg!(node.id());
-
-		// let mut iter = subtree.lock();
-		// for mut child in iter.by_ref().next().expect("snh") {
-		// 	match child.deref().type_id() == TypeId::of::<BehaviorTreeProxy>() {
-		// 		true => {
-		// 			let component = &**child;
-
-		// 			return Err(Error::SubtreeNotFound("ToDo".into()));
-		// 		}
-		// 		false => {
-		// 			// ignore
-		// 		}
-		// 	};
-		// };
-		//drop(iter);
-
+	fn recursive_node(&self, node: &mut dyn BehaviorTreeComponent) -> Result<(), Error> {
+		if let Some(proxy) = node
+			.as_any_mut()
+			.downcast_mut::<BehaviorTreeProxy>()
+		{
+			let id = proxy.id();
+			let subtree = self.subtree_by_name(id)?;
+			proxy.set_subtree(subtree);
+		} else if let Some(node) = node
+			.as_any_mut()
+			.downcast_mut::<BehaviorTreeNode>()
+		{
+			for mut child in &mut node.children_mut().0 {
+				self.recursive_node(child.as_mut())?;
+			}
+		}
 		Ok(())
 	}
 
@@ -153,8 +158,9 @@ impl BehaviorTree {
 	#[allow(clippy::option_if_let_else)]
 	pub fn print(&self) -> Result<(), Error> {
 		if let Some(node) = &self.root {
-			std::println!("{}", node.lock().id());
-			print_recursively(0, node.lock().by_ref())
+			let guard = node.lock();
+			std::println!("{}", guard.id());
+			print_recursively(0, &*guard)
 		} else {
 			Err(Error::RootNotFound("TODO!".into()))
 		}
@@ -210,100 +216,24 @@ impl BehaviorTree {
 			|root| root.lock().execute_tick(),
 		)
 	}
+
+	/// Find a subtree in the list and return a reference to it
+	///
+	fn subtree_by_name(&self, id: &str) -> Result<BehaviorSubTree, Error> {
+		for subtree in &self.subtrees {
+			// if subtree contains himself, this will become a deadlock
+			if let Some(intern) = subtree.try_lock() {
+				if intern.id() == id {
+					return Ok(subtree.clone());
+				}
+			} else {
+				return Err(Error::DeadLock(id.into()));
+			}
+		}
+		Err(Error::SubtreeNotFound(id.into()))
+	}
 }
 // endregion:	--- BehaviorTree
-
-// region: 		--- TreeComponentIter
-/// Iterator over the [`BehaviorTreeComponentPtr`]
-/// @TODO:
-#[allow(clippy::borrowed_box)]
-pub struct TreeComponentIter<'a> {
-	/// stack to do a depth first search
-	stack: Vec<&'a Box<dyn BehaviorTreeComponent>>,
-	/// Lifetime marker
-	marker: PhantomData<Box<dyn BehaviorTreeComponent>>,
-}
-
-#[allow(clippy::borrowed_box)]
-impl<'a> TreeComponentIter<'a> {
-	/// @TODO:
-	#[must_use]
-	pub fn new(root: &'a Box<dyn BehaviorTreeComponent>) -> Self {
-		Self {
-			stack: vec![root],
-			marker: PhantomData,
-		}
-	}
-}
-
-#[allow(clippy::borrowed_box)]
-impl<'a> Iterator for TreeComponentIter<'a> {
-	type Item = &'a Box<dyn BehaviorTreeComponent>;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(component) = self.stack.pop() {
-			if component.deref().type_id() != TypeId::of::<BehaviorTreeLeaf>() {
-				// Push children in revers order to maintain left-to-right order
-				let list = component.children().deref().iter().rev();
-				for child in list {
-					self.stack.push(child);
-				}
-			}
-			return Some(component);
-		}
-		None
-	}
-}
-// endregion:	--- TreeComponentIter
-
-// region: 		--- TreeComponentIterMut
-/// Mutable Iterator over the [`BehaviorTree`]
-/// @TODO:
-pub struct TreeComponentIterMut<'a> {
-	/// stack to do a depth first search
-	stack: Vec<*mut Box<dyn BehaviorTreeComponent>>,
-	/// Lifetime marker
-	marker: PhantomData<&'a mut Box<dyn BehaviorTreeComponent>>,
-}
-
-#[allow(clippy::needless_lifetimes)]
-impl<'a> TreeComponentIterMut<'a> {
-	/// @TODO:
-	#[must_use]
-	pub fn new(root: *mut Box<dyn BehaviorTreeComponent>) -> Self {
-		Self {
-			stack: vec![root],
-			marker: PhantomData,
-		}
-	}
-}
-
-#[allow(clippy::needless_lifetimes)]
-#[allow(unsafe_code)]
-impl<'a> Iterator for TreeComponentIterMut<'a> {
-	type Item = *mut Box<dyn BehaviorTreeComponent>;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(component_ptr) = self.stack.pop() {
-			// we know this pointer is valid since the iterator owns the traversal
-			let component = unsafe { &mut *component_ptr };
-			if component.deref().deref().type_id() != TypeId::of::<BehaviorTreeLeaf>() {
-				// Push children in revers order to maintain left-to-right order
-				let iter = component
-					.children_mut()
-					.deref_mut()
-					.iter_mut()
-					.rev();
-				for child in iter.rev() {
-					self.stack.push(child);
-				}
-			}
-			return Some(&mut *component);
-		}
-		None
-	}
-}
-// endregion:	--- TreeComponentIterMut
 
 // region:		--- BehaviorTreeComponentList
 /// A List of tree components
@@ -324,58 +254,6 @@ impl DerefMut for BehaviorTreeComponentList {
 	}
 }
 
-impl BehaviorTreeComponent for BehaviorTreeComponentList {
-	fn id(&self) -> &'static str {
-		"BehaviorTreeComponentList"
-	}
-
-	fn blackboard(&self) -> Blackboard {
-		Blackboard::default()
-	}
-
-	fn children(&self) -> &BehaviorTreeComponentList {
-		self
-	}
-
-	fn children_mut(&mut self) -> &mut BehaviorTreeComponentList {
-		&mut *self
-	}
-
-	fn execute_tick(&mut self) -> BehaviorResult {
-		for item in &mut self.0 {
-			item.execute_tick()?;
-		}
-		Ok(BehaviorStatus::Success)
-	}
-
-	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
-		if index > self.0.len() {
-			return Err(BehaviorError::IndexOutOfBounds(index));
-		}
-
-		self.0[index].execute_halt()
-	}
-
-	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		if index > self.0.len() {
-			return Err(BehaviorError::IndexOutOfBounds(index));
-		}
-
-		for child in &mut *self.0 {
-			child.execute_halt()?;
-		}
-		Ok(())
-	}
-}
-
-impl Iterator for BehaviorTreeComponentList {
-	type Item = TreeComponentIter<'static>;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		todo!()
-	}
-}
-
 #[allow(clippy::needless_lifetimes)]
 impl<'a> BehaviorTreeComponentList {
 	/// Reset all children
@@ -386,6 +264,14 @@ impl<'a> BehaviorTreeComponentList {
 			child.halt(0)?;
 		}
 		Ok(())
+	}
+
+	pub(crate) fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
+		self.0[index].halt(0)
+	}
+
+	pub(crate) fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+		self.0[index].halt_child(0)
 	}
 }
 // endregion:	--- BehaviorTreeComponentList

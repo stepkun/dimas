@@ -10,7 +10,6 @@ mod tree_leaf;
 mod tree_node;
 mod tree_proxy;
 
-use tree::TreeComponentIter;
 // flatten
 pub use tree::{BehaviorTree, BehaviorTreeComponentList, print_tree};
 pub use tree_leaf::BehaviorTreeLeaf;
@@ -19,6 +18,7 @@ pub use tree_proxy::BehaviorTreeProxy;
 
 // region:      --- modules
 use alloc::sync::Arc;
+use core::any::Any;
 use parking_lot::Mutex;
 
 use crate::{
@@ -30,12 +30,12 @@ use crate::{
 //  region:		--- types
 /// Shorthand for a behavior subtree definition
 /// An `Arc` with `Mutex` to enable reusability in the tree.
-pub type BehaviorSubTree = Arc<Mutex<BehaviorTreeNode>>;
+pub type BehaviorSubTree = Arc<Mutex<dyn BehaviorTreeComponent>>;
 // endregion:	--- types
 
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]
-pub trait BehaviorTreeComponent: Iterator<Item = TreeComponentIter<'static>> + Send + Sync {
+pub trait BehaviorTreeComponent: Send + Sync {
 	/// Get the id
 	fn id(&self) -> &str;
 
@@ -79,5 +79,11 @@ pub trait BehaviorTreeComponent: Iterator<Item = TreeComponentIter<'static>> + S
 	fn reset_children(&mut self) -> Result<(), BehaviorError> {
 		self.halt(0)
 	}
+
+	/// Convert to any
+	fn as_any(&self) -> &dyn Any;
+
+	/// Convert to a mutable any
+	fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 // endregion:   --- BehaviorTreeComponent

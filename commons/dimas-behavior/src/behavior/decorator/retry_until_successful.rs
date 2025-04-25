@@ -65,7 +65,7 @@ impl BehaviorInstanceMethods for RetryUntilSuccessful {
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		// Load num_cycles from the port value
-		self.max_attempts = tick_data.get_input("num_attempts")?;
+		self.max_attempts = tick_data.get_input::<i32>("num_attempts")?;
 
 		let mut do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
 

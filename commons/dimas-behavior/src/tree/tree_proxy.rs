@@ -11,6 +11,8 @@
 #[cfg(feature = "std")]
 extern crate std;
 
+use core::any::Any;
+
 // region:      --- modules
 use alloc::{boxed::Box, format};
 use dimas_core::ConstString;
@@ -20,9 +22,7 @@ use crate::{
 	blackboard::Blackboard,
 };
 
-use super::{
-	BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeComponentList, tree::TreeComponentIter,
-};
+use super::{BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeComponentList};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeProxy
@@ -92,13 +92,13 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 			|subtree| subtree.lock().execute_halt(),
 		)
 	}
-}
 
-impl Iterator for BehaviorTreeProxy {
-	type Item = TreeComponentIter<'static>;
+	fn as_any(&self) -> &dyn Any {
+		self
+	}
 
-	fn next(&mut self) -> Option<Self::Item> {
-		todo!()
+	fn as_any_mut(&mut self) -> &mut dyn Any {
+		self
 	}
 }
 
@@ -118,6 +118,10 @@ impl BehaviorTreeProxy {
 	#[must_use]
 	pub fn create(id: &str, tick_data: BehaviorTickData) -> Box<dyn BehaviorTreeComponent> {
 		Box::new(Self::new(id, tick_data))
+	}
+
+	pub(crate) fn set_subtree(&mut self, subtree: BehaviorSubTree) {
+		self.subtree = Some(subtree);
 	}
 }
 // endregion:	--- BehaviorTreeProxy
