@@ -12,11 +12,11 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{borrow::ToOwned, boxed::Box, sync::Arc, vec::Vec};
+use alloc::{borrow::ToOwned, sync::Arc, vec::Vec};
 use dimas_core::ConstString;
 use libloading::Library;
 
-use crate::behavior::{BehaviorCreationFn, BehaviorTreeMethods, BehaviorType};
+use crate::behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -40,7 +40,7 @@ impl BehaviorRegistry {
 		bhvr_type: BehaviorType,
 	) -> Result<(), Error>
 	where
-		F: Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static,
+		F: Fn() -> BehaviorPtr + Send + Sync + 'static,
 	{
 		if self.contains(name) {
 			return Err(Error::BehaviorAlreadyRegistered(name.into()));
@@ -56,23 +56,6 @@ impl BehaviorRegistry {
 	pub fn add_library(&mut self, library: Library) {
 		self.librarys.push(library);
 	}
-
-	// /// Register a behavior from a `dylib` in the registry
-	// /// # Errors
-	// /// - if the entry alreeady exists
-	// pub extern "Rust" fn register_behavior(
-	// 	&mut self,
-	// 	name: &str,
-	// 	bhvr_creation_fn: Box<dyn Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync + 'static>,
-	// 	bhvr_type: NewBehaviorType,
-	// ) -> Result<(), Error> {
-	// 	if self.contains(name) {
-	// 		return Err(Error::BehaviorAlreadyRegistered(name.into()));
-	// 	}
-	// 	self.behaviors
-	// 		.push((name.into(), bhvr_type, Arc::from(bhvr_creation_fn)));
-	// 	Ok(())
-	// }
 
 	/// Check whether registry contains an entry.
 	fn contains(&self, id: &str) -> bool {

@@ -50,6 +50,7 @@ pub use execution::VM;
 use execution::{Error, ScriptingValue};
 use hashbrown::HashMap;
 use parking_lot::RwLock;
+use rustc_hash::FxBuildHasher;
 // endregion:	--- modules
 
 /// The trait for providing an [`Environment`] to a [`VM`] that stores variables persistently and externally available.
@@ -72,7 +73,7 @@ pub trait Environment: Send + Sync {
 /// A very simple default Environment for testing purpose and the REPL
 #[derive(Default)]
 pub struct DefaultEnvironment {
-	storage: RwLock<HashMap<String, ScriptingValue>>,
+	storage: RwLock<HashMap<String, ScriptingValue, FxBuildHasher>>,
 }
 
 impl Environment for DefaultEnvironment {

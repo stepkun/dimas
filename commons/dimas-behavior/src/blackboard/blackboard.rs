@@ -437,7 +437,7 @@ impl Blackboard {
 #[derive(Default)]
 struct BlackboardData {
 	storage: HashMap<String, Arc<Mutex<Entry>>, FxBuildHasher>,
-	internal_to_external: HashMap<String, String>,
+	internal_to_external: HashMap<String, String, FxBuildHasher>,
 	auto_remapping: bool,
 }
 

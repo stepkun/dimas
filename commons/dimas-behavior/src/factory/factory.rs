@@ -127,13 +127,13 @@ impl BehaviorTreeFactory {
 	/// - if behaviors are missing
 	/// # Panics
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
-		if self.main_tree.is_some() {
-			let tree = self.main_tree.take().expect("missing tree");
-			// todo!(); //tree.link_subtrees()?;
-			Ok(tree)
+		if let Some(tree) = &self.main_tree {
+			tree.link_tree()?;
 		} else {
-			Err(Error::NoMainTree(name.into()))
+			return Err(Error::NoMainTree(name.into()));
 		}
+		let tree = self.main_tree.take().expect("missing tree");
+		Ok(tree)
 	}
 
 	/// Prints out the list of registered behaviors

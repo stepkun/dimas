@@ -25,11 +25,14 @@ use crate::{port::PortList, tree::BehaviorTreeComponentList};
 // endregion:   --- modules
 
 // region:		--- types
+/// Pointer to a  [`Behavior`]
+pub type BehaviorPtr = Box<dyn BehaviorTreeMethods>;
+
 /// Result type definition for [`Behavior`]s
 pub type BehaviorResult<Output = BehaviorStatus> = Result<Output, BehaviorError>;
 
 /// Type alias for a [`Behavior`] creation function
-pub type BehaviorCreationFn = dyn Fn() -> Box<dyn BehaviorTreeMethods> + Send + Sync;
+pub type BehaviorCreationFn = dyn Fn() -> BehaviorPtr + Send + Sync;
 // endregion:	--- types
 
 // region:      --- supertraits

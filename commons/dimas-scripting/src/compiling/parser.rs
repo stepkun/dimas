@@ -13,6 +13,7 @@ extern crate std;
 
 use alloc::{string::ToString, sync::Arc};
 use hashbrown::HashMap;
+use rustc_hash::FxBuildHasher;
 
 use crate::{
 	Lexer,
@@ -31,8 +32,8 @@ use super::{
 
 /// Parser
 pub struct Parser {
-	prefix_parselets: HashMap<TokenKind, Arc<dyn PrefixParselet>>,
-	infix_parselets: HashMap<TokenKind, Arc<dyn InfixParselet>>,
+	prefix_parselets: HashMap<TokenKind, Arc<dyn PrefixParselet>, FxBuildHasher>,
+	infix_parselets: HashMap<TokenKind, Arc<dyn InfixParselet>, FxBuildHasher>,
 	/// current handled Token
 	current: Token,
 	/// preview on next Token

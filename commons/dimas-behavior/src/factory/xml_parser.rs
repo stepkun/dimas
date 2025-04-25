@@ -20,8 +20,8 @@ use rustc_hash::FxBuildHasher;
 
 use crate::{
 	behavior::{
-		BehaviorConfigurationData, BehaviorCreationMethods, BehaviorTickData, BehaviorTreeMethods,
-		BehaviorType,
+		BehaviorConfigurationData, BehaviorCreationMethods, BehaviorPtr, BehaviorTickData,
+		BehaviorTreeMethods, BehaviorType,
 	},
 	blackboard::Blackboard,
 	tree::{
@@ -95,7 +95,7 @@ impl XmlParser {
 								)?;
 								// store subtree for later usage
 								if id == main_tree_name {
-									tree.add_root(new_subtree);
+									tree.set_root(new_subtree);
 								} else {
 									tree.add_subtree(new_subtree);
 								}
@@ -159,7 +159,7 @@ impl XmlParser {
 								)?;
 								// store subtree for later usage
 								if id == main_tree_name {
-									tree.add_root(new_subtree);
+									tree.set_root(new_subtree);
 								} else {
 									tree.add_subtree(new_subtree);
 								}
@@ -297,7 +297,7 @@ impl XmlParser {
 	}
 
 	fn create_ports(
-		bhvr: &mut Box<dyn BehaviorTreeMethods>,
+		bhvr: &mut BehaviorPtr,
 		tick_data: &mut BehaviorTickData,
 		config_data: &mut BehaviorConfigurationData,
 		element: &Node,

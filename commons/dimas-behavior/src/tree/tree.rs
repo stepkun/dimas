@@ -18,10 +18,12 @@ use alloc::{
 	format,
 	string::{String, ToString},
 	sync::Arc,
-	vec::{self, Vec},
+	vec,
+	vec::Vec,
 };
 use core::{
 	any::{Any, TypeId},
+	marker::PhantomData,
 	ops::{Deref, DerefMut},
 };
 use dimas_core::ConstString;
@@ -38,7 +40,10 @@ use crate::{
 	blackboard::Blackboard,
 };
 
-use super::{BehaviorSubTree, BehaviorTreeComponent, error::Error};
+use super::{
+	BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy,
+	error::Error,
+};
 // endregion:   --- modules
 
 // region:		--- helper
@@ -87,24 +92,59 @@ pub struct BehaviorTree {
 }
 
 impl BehaviorTree {
-	pub(crate) fn add_root(&mut self, root: BehaviorTreeNode) {
+	/// Set the root of the tree
+	pub(crate) fn set_root(&mut self, root: BehaviorTreeNode) {
 		self.root = Some(Arc::new(Mutex::new(root)));
 	}
 
+	/// Add a subtree
 	pub(crate) fn add_subtree(&mut self, subtree: BehaviorTreeNode) {
 		self.subtrees.push(Arc::new(Mutex::new(subtree)));
 	}
 
-	/// Get a (sub)tree where index 0 is root tree
-	/// # Panics
-	/// - if no root tree is set
-	#[must_use]
-	pub fn subtree(&self, index: usize) -> BehaviorSubTree {
-		if index == 0 {
-			self.root.as_ref().expect("snh)").clone()
+	/// Link each Proxy in a subtree to its subtree
+	#[allow(clippy::unnecessary_wraps)]
+	#[allow(clippy::needless_pass_by_value)]
+	#[allow(clippy::unused_self)]
+	#[allow(clippy::match_bool)]
+	#[allow(clippy::single_match_else)]
+	#[allow(unsafe_code)]
+	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
+		let mut node = &mut *subtree.lock();
+
+		std::dbg!(node.id());
+
+		// let mut iter = subtree.lock();
+		// for mut child in iter.by_ref().next().expect("snh") {
+		// 	match child.deref().type_id() == TypeId::of::<BehaviorTreeProxy>() {
+		// 		true => {
+		// 			let component = &**child;
+
+		// 			return Err(Error::SubtreeNotFound("ToDo".into()));
+		// 		}
+		// 		false => {
+		// 			// ignore
+		// 		}
+		// 	};
+		// };
+		//drop(iter);
+
+		Ok(())
+	}
+
+	/// Link each Proxy in the tree to its subtree
+	pub(crate) fn link_tree(&self) -> Result<(), Error> {
+		if let Some(root) = self.root.clone() {
+			self.link_subtree(root)?;
 		} else {
-			self.subtrees[index - 1].clone()
+			return Err(Error::RootNotFound("Root".into()));
 		}
+
+		for subtree in self.subtrees.clone() {
+			self.link_subtree(subtree)?;
+		}
+
+		Ok(())
 	}
 
 	/// Pretty print the tree
@@ -114,9 +154,27 @@ impl BehaviorTree {
 	pub fn print(&self) -> Result<(), Error> {
 		if let Some(node) = &self.root {
 			std::println!("{}", node.lock().id());
-			print_recursively(0, node.lock().as_ref())
+			print_recursively(0, node.lock().by_ref())
 		} else {
 			Err(Error::RootNotFound("TODO!".into()))
+		}
+	}
+
+	/// Get a (sub)tree where index 0 is root tree
+	/// # Errors
+	/// - if no root tree is set
+	/// - if index is out of bounds
+	pub fn subtree(&self, index: usize) -> Result<BehaviorSubTree, Error> {
+		if index == 0 {
+			let res = self
+				.root
+				.as_ref()
+				.ok_or(Error::IndexOutOfBounds(0))?;
+			Ok(res.clone())
+		} else if (index - 1) > self.subtrees.len() {
+			Err(Error::IndexOutOfBounds(index))
+		} else {
+			Ok(self.subtrees[index - 1].clone())
 		}
 	}
 
@@ -133,7 +191,8 @@ impl BehaviorTree {
 				// Not implemented: Check for wake-up conditions and tick again if so
 
 				if status.is_completed() {
-					//root.reset_status();
+					root.lock().halt(0)?;
+					break;
 				}
 			}
 			Ok(status)
@@ -153,6 +212,98 @@ impl BehaviorTree {
 	}
 }
 // endregion:	--- BehaviorTree
+
+// region: 		--- TreeComponentIter
+/// Iterator over the [`BehaviorTreeComponentPtr`]
+/// @TODO:
+#[allow(clippy::borrowed_box)]
+pub struct TreeComponentIter<'a> {
+	/// stack to do a depth first search
+	stack: Vec<&'a Box<dyn BehaviorTreeComponent>>,
+	/// Lifetime marker
+	marker: PhantomData<Box<dyn BehaviorTreeComponent>>,
+}
+
+#[allow(clippy::borrowed_box)]
+impl<'a> TreeComponentIter<'a> {
+	/// @TODO:
+	#[must_use]
+	pub fn new(root: &'a Box<dyn BehaviorTreeComponent>) -> Self {
+		Self {
+			stack: vec![root],
+			marker: PhantomData,
+		}
+	}
+}
+
+#[allow(clippy::borrowed_box)]
+impl<'a> Iterator for TreeComponentIter<'a> {
+	type Item = &'a Box<dyn BehaviorTreeComponent>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if let Some(component) = self.stack.pop() {
+			if component.deref().type_id() != TypeId::of::<BehaviorTreeLeaf>() {
+				// Push children in revers order to maintain left-to-right order
+				let list = component.children().deref().iter().rev();
+				for child in list {
+					self.stack.push(child);
+				}
+			}
+			return Some(component);
+		}
+		None
+	}
+}
+// endregion:	--- TreeComponentIter
+
+// region: 		--- TreeComponentIterMut
+/// Mutable Iterator over the [`BehaviorTree`]
+/// @TODO:
+pub struct TreeComponentIterMut<'a> {
+	/// stack to do a depth first search
+	stack: Vec<*mut Box<dyn BehaviorTreeComponent>>,
+	/// Lifetime marker
+	marker: PhantomData<&'a mut Box<dyn BehaviorTreeComponent>>,
+}
+
+#[allow(clippy::needless_lifetimes)]
+impl<'a> TreeComponentIterMut<'a> {
+	/// @TODO:
+	#[must_use]
+	pub fn new(root: *mut Box<dyn BehaviorTreeComponent>) -> Self {
+		Self {
+			stack: vec![root],
+			marker: PhantomData,
+		}
+	}
+}
+
+#[allow(clippy::needless_lifetimes)]
+#[allow(unsafe_code)]
+impl<'a> Iterator for TreeComponentIterMut<'a> {
+	type Item = *mut Box<dyn BehaviorTreeComponent>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if let Some(component_ptr) = self.stack.pop() {
+			// we know this pointer is valid since the iterator owns the traversal
+			let component = unsafe { &mut *component_ptr };
+			if component.deref().deref().type_id() != TypeId::of::<BehaviorTreeLeaf>() {
+				// Push children in revers order to maintain left-to-right order
+				let iter = component
+					.children_mut()
+					.deref_mut()
+					.iter_mut()
+					.rev();
+				for child in iter.rev() {
+					self.stack.push(child);
+				}
+			}
+			return Some(&mut *component);
+		}
+		None
+	}
+}
+// endregion:	--- TreeComponentIterMut
 
 // region:		--- BehaviorTreeComponentList
 /// A List of tree components
@@ -186,6 +337,10 @@ impl BehaviorTreeComponent for BehaviorTreeComponentList {
 		self
 	}
 
+	fn children_mut(&mut self) -> &mut BehaviorTreeComponentList {
+		&mut *self
+	}
+
 	fn execute_tick(&mut self) -> BehaviorResult {
 		for item in &mut self.0 {
 			item.execute_tick()?;
@@ -213,266 +368,24 @@ impl BehaviorTreeComponent for BehaviorTreeComponentList {
 	}
 }
 
-impl BehaviorTreeComponentList {
+impl Iterator for BehaviorTreeComponentList {
+	type Item = TreeComponentIter<'static>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		todo!()
+	}
+}
+
+#[allow(clippy::needless_lifetimes)]
+impl<'a> BehaviorTreeComponentList {
 	/// Reset all children
 	/// # Errors
-	pub fn reset(&mut self) -> Result<(), BehaviorError> {
-		self.halt(0)
+	pub fn reset(&'a mut self) -> Result<(), BehaviorError> {
+		let x = &mut self.0;
+		for child in x {
+			child.halt(0)?;
+		}
+		Ok(())
 	}
 }
 // endregion:	--- BehaviorTreeComponentList
-
-// region:		--- BehaviorTreeLeaf
-/// Implementation of a trees leaf
-pub struct BehaviorTreeLeaf {
-	/// ID of the node
-	id: ConstString,
-	/// Data needed in every tick
-	tick_data: BehaviorTickData,
-	/// The behavior of that leaf
-	behavior: Box<dyn BehaviorTreeMethods>,
-	/// dummy children list
-	children: BehaviorTreeComponentList,
-}
-
-impl BehaviorTreeComponent for BehaviorTreeLeaf {
-	fn id(&self) -> &str {
-		&self.id
-	}
-
-	fn blackboard(&self) -> Blackboard {
-		self.tick_data.blackboard.clone()
-	}
-
-	fn children(&self) -> &BehaviorTreeComponentList {
-		&self.children
-	}
-
-	fn execute_tick(&mut self) -> BehaviorResult {
-		let mut status = self.tick_data.status;
-		if status == BehaviorStatus::Idle {
-			status = self
-				.behavior
-				.start(&mut self.tick_data, &mut self.children)?;
-		} else {
-			status = self
-				.behavior
-				.tick(&mut self.tick_data, &mut self.children)?;
-		}
-		self.tick_data.status = status;
-		Ok(status)
-	}
-
-	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.behavior.halt(&mut self.children)
-	}
-
-	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.behavior.halt(&mut self.children)
-	}
-}
-
-impl BehaviorTreeLeaf {
-	/// Construct a [`BehaviorTreeNode`]
-	#[must_use]
-	pub fn new(
-		id: &str,
-		tick_data: BehaviorTickData,
-		behavior: Box<dyn BehaviorTreeMethods>,
-	) -> Self {
-		Self {
-			id: id.into(),
-			tick_data,
-			behavior,
-			children: BehaviorTreeComponentList::default(),
-		}
-	}
-
-	/// Create a `Box<dyn BehaviorTreeComponent>`]
-	#[must_use]
-	pub fn create(
-		id: &str,
-		tick_data: BehaviorTickData,
-		behavior: Box<dyn BehaviorTreeMethods>,
-	) -> Box<dyn BehaviorTreeComponent> {
-		Box::new(Self::new(id, tick_data, behavior))
-	}
-}
-// endregion:	--- BehaviorTreeLeaf
-
-// region:		--- BehaviorTreeNode
-/// Implementation of a trees node
-pub struct BehaviorTreeNode {
-	/// ID of the node
-	id: ConstString,
-	/// Children
-	children: BehaviorTreeComponentList,
-	/// Data needed in every tick
-	tick_data: BehaviorTickData,
-	/// The behavior of that leaf
-	behavior: Box<dyn BehaviorTreeMethods>,
-}
-
-impl AsRef<dyn BehaviorTreeComponent + 'static> for BehaviorTreeNode {
-	fn as_ref(&self) -> &(dyn BehaviorTreeComponent + 'static) {
-		self
-	}
-}
-
-impl BehaviorTreeComponent for BehaviorTreeNode {
-	fn id(&self) -> &str {
-		&self.id
-	}
-
-	fn blackboard(&self) -> Blackboard {
-		self.tick_data.blackboard.clone()
-	}
-
-	fn children(&self) -> &BehaviorTreeComponentList {
-		&self.children
-	}
-
-	fn execute_tick(&mut self) -> BehaviorResult {
-		let mut status = self.tick_data.status;
-		if status == BehaviorStatus::Idle {
-			status = self
-				.behavior
-				.start(&mut self.tick_data, &mut self.children)?;
-		} else {
-			status = self
-				.behavior
-				.tick(&mut self.tick_data, &mut self.children)?;
-		}
-		self.tick_data.status = status;
-		Ok(status)
-	}
-
-	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.children.halt_child(index)
-	}
-
-	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.children.halt(index)
-	}
-}
-
-impl BehaviorTreeNode {
-	/// Construct a [`BehaviorTreeNode`]
-	#[must_use]
-	pub fn new(
-		id: &str,
-		children: BehaviorTreeComponentList,
-		tick_data: BehaviorTickData,
-		behavior: Box<dyn BehaviorTreeMethods>,
-	) -> Self {
-		Self {
-			id: id.into(),
-			children,
-			tick_data,
-			behavior,
-		}
-	}
-
-	/// Create a `Box<dyn BehaviorTreeComponent>`]
-	#[must_use]
-	pub fn create(
-		id: &str,
-		children: BehaviorTreeComponentList,
-		tick_data: BehaviorTickData,
-		behavior: Box<dyn BehaviorTreeMethods>,
-	) -> Box<dyn BehaviorTreeComponent> {
-		Box::new(Self::new(id, children, tick_data, behavior))
-	}
-
-	/// Get the id
-	#[must_use]
-	pub const fn id(&self) -> &str {
-		&self.id
-	}
-}
-// endregion:	--- BehaviorTreeNode
-
-// region:		--- BehaviorTreeProxy
-/// Implementation of a trees proxy node
-pub struct BehaviorTreeProxy {
-	/// ID of the node
-	id: ConstString,
-	/// The Subtree to call
-	subtree: Option<BehaviorSubTree>,
-	/// Data needed in every tick
-	tick_data: BehaviorTickData,
-	/// dummy list
-	children: BehaviorTreeComponentList,
-}
-
-impl BehaviorTreeComponent for BehaviorTreeProxy {
-	fn id(&self) -> &str {
-		&self.id
-	}
-
-	fn blackboard(&self) -> Blackboard {
-		self.tick_data.blackboard.clone()
-	}
-
-	fn children(&self) -> &BehaviorTreeComponentList {
-		&self.children
-	}
-
-	fn execute_tick(&mut self) -> BehaviorResult {
-		self.subtree.as_ref().map_or_else(
-			|| {
-				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
-				Err(BehaviorError::Composition(msg))
-			},
-			|subtree| subtree.lock().execute_tick(),
-		)
-	}
-
-	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
-		if index > 0 {
-			return Err(BehaviorError::IndexOutOfBounds(index));
-		}
-
-		self.subtree.as_ref().map_or_else(
-			|| {
-				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
-				Err(BehaviorError::Composition(msg))
-			},
-			|subtree| subtree.lock().execute_halt(),
-		)
-	}
-
-	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		if index > 0 {
-			return Err(BehaviorError::IndexOutOfBounds(index));
-		}
-
-		self.subtree.as_ref().map_or_else(
-			|| {
-				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
-				Err(BehaviorError::Composition(msg))
-			},
-			|subtree| subtree.lock().execute_halt(),
-		)
-	}
-}
-
-impl BehaviorTreeProxy {
-	/// Construct a [`BehaviorTreeProxy`]
-	#[must_use]
-	pub fn new(id: &str, tick_data: BehaviorTickData) -> Self {
-		Self {
-			id: id.into(),
-			subtree: None,
-			tick_data,
-			children: BehaviorTreeComponentList::default(),
-		}
-	}
-
-	/// Create a `Box<dyn BehaviorTreeComponent>`]
-	#[must_use]
-	pub fn create(id: &str, tick_data: BehaviorTickData) -> Box<dyn BehaviorTreeComponent> {
-		Box::new(Self::new(id, tick_data))
-	}
-}
-// endregion:	--- BehaviorTreeProxy

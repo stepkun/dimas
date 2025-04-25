@@ -6,12 +6,16 @@
 pub mod error;
 #[allow(clippy::module_inception)]
 mod tree;
+mod tree_leaf;
+mod tree_node;
+mod tree_proxy;
 
+use tree::TreeComponentIter;
 // flatten
-pub use tree::{
-	BehaviorTree, BehaviorTreeComponentList, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy,
-	print_tree,
-};
+pub use tree::{BehaviorTree, BehaviorTreeComponentList, print_tree};
+pub use tree_leaf::BehaviorTreeLeaf;
+pub use tree_node::BehaviorTreeNode;
+pub use tree_proxy::BehaviorTreeProxy;
 
 // region:      --- modules
 use alloc::sync::Arc;
@@ -27,12 +31,11 @@ use crate::{
 /// Shorthand for a behavior subtree definition
 /// An `Arc` with `Mutex` to enable reusability in the tree.
 pub type BehaviorSubTree = Arc<Mutex<BehaviorTreeNode>>;
-
 // endregion:	--- types
 
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]
-pub trait BehaviorTreeComponent: Send + Sync {
+pub trait BehaviorTreeComponent: Iterator<Item = TreeComponentIter<'static>> + Send + Sync {
 	/// Get the id
 	fn id(&self) -> &str;
 
@@ -41,6 +44,9 @@ pub trait BehaviorTreeComponent: Send + Sync {
 
 	/// Get the children
 	fn children(&self) -> &BehaviorTreeComponentList;
+
+	/// Get the children mutable
+	fn children_mut(&mut self) -> &mut BehaviorTreeComponentList;
 
 	/// Halt the component
 	/// # Errors

@@ -13,7 +13,7 @@ pub mod utils;
 // flatten:
 
 // region:      --- modules
-use alloc::boxed::Box;
+use alloc::{boxed::Box, rc::Rc, sync::Arc};
 // endregion:   --- modules
 
 // region:      --- types
@@ -21,4 +21,11 @@ use alloc::boxed::Box;
 /// see: [Logan Smith](https://www.youtube.com/watch?v=A4cKi7PTJSs)
 pub type ConstString = Box<str>;
 
+/// An immutable reference counted `String` type
+/// see: [Logan Smith](https://www.youtube.com/watch?v=A4cKi7PTJSs)
+pub type RcConstString = Rc<str>;
+
+/// An immutable thread safe `String` type
+/// see: [Logan Smith](https://www.youtube.com/watch?v=A4cKi7PTJSs)
+pub type ArcConstString = Arc<str>;
 // endregion:   --- types
