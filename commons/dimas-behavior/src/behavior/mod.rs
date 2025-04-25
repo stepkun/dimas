@@ -21,7 +21,7 @@ pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 use alloc::boxed::Box;
 use error::BehaviorError;
 
-use crate::{port::PortList, tree::BehaviorTreeComponentList};
+use crate::{port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}};
 // endregion:   --- modules
 
 // region:		--- types

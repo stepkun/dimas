@@ -9,7 +9,7 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{boxed::Box, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 use core::{
 	any::{Any, TypeId},
 	marker::PhantomData,
@@ -24,7 +24,7 @@ use crate::{
 	blackboard::Blackboard,
 };
 
-use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf};
+use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, TreeElement};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeNode
@@ -80,14 +80,6 @@ impl BehaviorTreeComponent for BehaviorTreeNode {
 		//self.behavior.halt(&mut self.children)
 		self.children.halt(index)
 	}
-
-	fn as_any(&self) -> &dyn Any {
-		self
-	}
-
-	fn as_any_mut(&mut self) -> &mut dyn Any {
-		self
-	}
 }
 
 impl BehaviorTreeNode {
@@ -107,15 +99,15 @@ impl BehaviorTreeNode {
 		}
 	}
 
-	/// Create a [`BehaviorTreeComponentPtr`]
+	/// Create a [`TreeElement`]`::Node`([`BehaviorTreeNode`])
 	#[must_use]
 	pub fn create(
 		id: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
 		behavior: BehaviorPtr,
-	) -> Box<dyn BehaviorTreeComponent> {
-		Box::new(Self::new(id, children, tick_data, behavior))
+	) -> TreeElement {
+		TreeElement::Node(Self::new(id, children, tick_data, behavior))
 	}
 
 	/// Get the id
@@ -221,7 +213,7 @@ impl<'a> Iterator for TreeNodeIterMut<'a> {
 				// Push children in reverse order to maintain left-to-right order
 				let iter = component.children_mut().deref_mut().iter_mut();
 				for child in iter.rev() {
-					self.stack.push(&mut (**child));
+					self.stack.push(&mut (*child));
 				}
 			};
 			return Some(component);

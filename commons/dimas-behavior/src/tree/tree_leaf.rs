@@ -8,10 +8,7 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-use core::any::Any;
-
 // region:      --- modules
-use alloc::boxed::Box;
 use dimas_core::ConstString;
 
 use crate::{
@@ -21,7 +18,7 @@ use crate::{
 	blackboard::Blackboard,
 };
 
-use super::{BehaviorTreeComponent, BehaviorTreeComponentList};
+use super::{BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeLeaf
@@ -76,14 +73,6 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 	fn halt(&mut self, _index: usize) -> Result<(), BehaviorError> {
 		self.behavior.halt(&mut self.children)
 	}
-
-	fn as_any(&self) -> &dyn Any {
-		self
-	}
-
-	fn as_any_mut(&mut self) -> &mut dyn Any {
-		self
-	}
 }
 
 impl BehaviorTreeLeaf {
@@ -98,14 +87,14 @@ impl BehaviorTreeLeaf {
 		}
 	}
 
-	/// Create a [`BehaviorTreeComponentPtr`]
+	/// Create a [`TreeElement`]`::Leaf`([`BehaviorTreeLeaf`])
 	#[must_use]
 	pub fn create(
 		id: &str,
 		tick_data: BehaviorTickData,
 		behavior: BehaviorPtr,
-	) -> Box<dyn BehaviorTreeComponent> {
-		Box::new(Self::new(id, tick_data, behavior))
+	) -> TreeElement {
+		TreeElement::Leaf(Self::new(id, tick_data, behavior))
 	}
 }
 // endregion:	--- BehaviorTreeLeaf

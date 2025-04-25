@@ -14,23 +14,19 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::Script,
-		condition::script_condition::ScriptCondition,
-		control::{
+		action::Script, condition::script_condition::ScriptCondition, control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
 			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
 			sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree,
-		},
-		decorator::{
+		}, decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
 			retry_until_successful::RetryUntilSuccessful,
-		},
+		}, BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
 	},
 	blackboard::Blackboard,
 	factory::xml_parser::XmlParser,
 	port::PortList,
-	tree::BehaviorTree,
+	tree::{BehaviorTree, BehaviorTreeComponent},
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -197,7 +193,7 @@ impl BehaviorTreeFactory {
 	}
 
 	/// Register a behavior plugin.
-	/// For now ot is  recommended, that
+	/// For now it is  recommended, that
 	/// - the plugin resides in the executables directory and
 	/// - is compiled with the same tust version.
 	/// # Errors

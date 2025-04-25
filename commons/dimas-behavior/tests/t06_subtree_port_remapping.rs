@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t06_subtree_port_remapping.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory, tree::BehaviorTreeComponent};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething};
 

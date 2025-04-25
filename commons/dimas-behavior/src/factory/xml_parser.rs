@@ -26,7 +26,7 @@ use crate::{
 	blackboard::Blackboard,
 	tree::{
 		BehaviorTree, BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf,
-		BehaviorTreeNode, BehaviorTreeProxy,
+		BehaviorTreeNode, BehaviorTreeProxy, TreeElement,
 	},
 };
 
@@ -229,7 +229,7 @@ impl XmlParser {
 		element: Node,
 		// if true, only registration of subtrees happens
 		register_only: bool,
-	) -> Result<Box<dyn BehaviorTreeComponent>, Error> {
+	) -> Result<TreeElement, Error> {
 		let element_name = element.tag_name().name();
 		let attrs = attrs_to_map(element.attributes());
 		if element_name == "SubTree" {
@@ -332,7 +332,7 @@ impl XmlParser {
 		id: &str,
 		// if true, only registering happens
 		register_only: bool,
-	) -> Result<BehaviorTreeNode, Error> {
+	) -> Result<TreeElement, Error> {
 		let blackboard = Blackboard::default();
 		// look for the behavior in the [`BehaviorRegisty`]
 		let (bhvr_type, bhvr_creation_fn) = registry.fetch("Subtree")?;
@@ -341,7 +341,7 @@ impl XmlParser {
 		let children = Self::build_children(&blackboard, registry, tree, element, register_only)?;
 		// let tick_data = BehaviorTickData::new(blackboard);
 		let config_data = BehaviorConfigurationData::new(id);
-		let subtree = BehaviorTreeNode::new(
+		let subtree = BehaviorTreeNode::create(
 			id,
 			children,
 			BehaviorTickData::new(Blackboard::default()),

@@ -41,8 +41,7 @@ use crate::{
 };
 
 use super::{
-	BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy,
-	error::Error,
+	error::Error, BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy, TreeElement
 };
 // endregion:   --- modules
 
@@ -76,7 +75,7 @@ fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), 
 	}
 	for child in &**node.children() {
 		std::println!("{}- {}", indentation, child.id());
-		print_recursively(next_level, child.as_ref());
+		print_recursively(next_level, child);
 	}
 	Ok(())
 }
@@ -93,12 +92,12 @@ pub struct BehaviorTree {
 
 impl BehaviorTree {
 	/// Set the root of the tree
-	pub(crate) fn set_root(&mut self, root: BehaviorTreeNode) {
+	pub(crate) fn set_root(&mut self, root: TreeElement) {
 		self.root = Some(Arc::new(Mutex::new(root)));
 	}
 
 	/// Add a subtree
-	pub(crate) fn add_subtree(&mut self, subtree: BehaviorTreeNode) {
+	pub(crate) fn add_subtree(&mut self, subtree: TreeElement) {
 		self.subtrees.push(Arc::new(Mutex::new(subtree)));
 	}
 
@@ -107,7 +106,7 @@ impl BehaviorTree {
 	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
 		let mut node = &mut *subtree.lock();
 		for mut child in &mut node.children_mut().0 {
-			self.recursive_node(child.as_mut())?;
+			self.recursive_node(child)?;
 		}
 		Ok(())
 	}
@@ -118,21 +117,19 @@ impl BehaviorTree {
 	#[allow(clippy::match_bool)]
 	#[allow(clippy::single_match_else)]
 	#[allow(unsafe_code)]
-	fn recursive_node(&self, node: &mut dyn BehaviorTreeComponent) -> Result<(), Error> {
-		if let Some(proxy) = node
-			.as_any_mut()
-			.downcast_mut::<BehaviorTreeProxy>()
-		{
-			let id = proxy.id();
-			let subtree = self.subtree_by_name(id)?;
-			proxy.set_subtree(subtree);
-		} else if let Some(node) = node
-			.as_any_mut()
-			.downcast_mut::<BehaviorTreeNode>()
-		{
-			for mut child in &mut node.children_mut().0 {
-				self.recursive_node(child.as_mut())?;
-			}
+	fn recursive_node(&self, node: &mut TreeElement) -> Result<(), Error> {
+		match node {
+			TreeElement::Leaf(_leaf) => {},
+			TreeElement::Node(node) => {
+				for mut child in &mut node.children_mut().0 {
+					self.recursive_node(child)?;
+				}
+			},
+			TreeElement::Proxy(proxy) => {
+				let id = proxy.id();
+				let subtree = self.subtree_by_name(id)?;
+				proxy.set_subtree(subtree);
+			},
 		}
 		Ok(())
 	}
@@ -238,10 +235,10 @@ impl BehaviorTree {
 // region:		--- BehaviorTreeComponentList
 /// A List of tree components
 #[derive(Default)]
-pub struct BehaviorTreeComponentList(Vec<Box<dyn BehaviorTreeComponent>>);
+pub struct BehaviorTreeComponentList(Vec<TreeElement>);
 
 impl Deref for BehaviorTreeComponentList {
-	type Target = Vec<Box<dyn BehaviorTreeComponent>>;
+	type Target = Vec<TreeElement>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.0

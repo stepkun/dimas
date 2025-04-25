@@ -18,7 +18,6 @@ pub use tree_proxy::BehaviorTreeProxy;
 
 // region:      --- modules
 use alloc::sync::Arc;
-use core::any::Any;
 use parking_lot::Mutex;
 
 use crate::{
@@ -30,8 +29,86 @@ use crate::{
 //  region:		--- types
 /// Shorthand for a behavior subtree definition
 /// An `Arc` with `Mutex` to enable reusability in the tree.
-pub type BehaviorSubTree = Arc<Mutex<dyn BehaviorTreeComponent>>;
+pub type BehaviorSubTree = Arc<Mutex<TreeElement>>;
 // endregion:	--- types
+
+// region:		--- TreeElement
+/// An enum with the different types of tree elements
+pub enum TreeElement {
+	/// A tree leaf
+	Leaf(BehaviorTreeLeaf),
+	/// An intermediate tree node
+	Node(BehaviorTreeNode),
+	/// A connector to subtrees
+	Proxy(BehaviorTreeProxy),
+}
+
+impl BehaviorTreeComponent for TreeElement {
+	fn id(&self) -> &str {
+		match self {
+			Self::Leaf(leaf) => leaf.id(),
+			Self::Node(node) => node.id(),
+			Self::Proxy(proxy) => proxy.id(),
+		}
+	}
+
+	fn blackboard(&self) -> Blackboard {
+		match self {
+			Self::Leaf(leaf) => leaf.blackboard(),
+			Self::Node(node) => node.blackboard(),
+			Self::Proxy(proxy) => proxy.blackboard(),
+		}
+	}
+
+	fn children(&self) -> &BehaviorTreeComponentList {
+		match self {
+			Self::Leaf(leaf) => leaf.children(),
+			Self::Node(node) => node.children(),
+			Self::Proxy(proxy) => proxy.children(),
+		}
+	}
+
+	fn children_mut(&mut self) -> &mut BehaviorTreeComponentList {
+		match self {
+			Self::Leaf(leaf) => leaf.children_mut(),
+			Self::Node(node) => node.children_mut(),
+			Self::Proxy(proxy) => proxy.children_mut(),
+		}
+	}
+
+	fn execute_halt(&mut self) -> Result<(), BehaviorError> {
+		match self {
+			Self::Leaf(leaf) => leaf.execute_halt(),
+			Self::Node(node) => node.execute_halt(),
+			Self::Proxy(proxy) => proxy.execute_halt(),
+		}
+	}
+
+	fn execute_tick(&mut self) -> BehaviorResult {
+		match self {
+			Self::Leaf(leaf) => leaf.execute_tick(),
+			Self::Node(node) => node.execute_tick(),
+			Self::Proxy(proxy) => proxy.execute_tick(),
+		}
+	}
+
+	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+		match self {
+			Self::Leaf(leaf) => leaf.halt_child(index),
+			Self::Node(node) => node.halt_child(index),
+			Self::Proxy(proxy) => proxy.halt_child(index),
+		}
+	}
+
+	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
+		match self {
+			Self::Leaf(leaf) => leaf.halt(index),
+			Self::Node(node) => node.halt(index),
+			Self::Proxy(proxy) => proxy.halt(index),
+		}
+	}
+}
+// endregion:	--- TreeElement
 
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]
@@ -79,11 +156,5 @@ pub trait BehaviorTreeComponent: Send + Sync {
 	fn reset_children(&mut self) -> Result<(), BehaviorError> {
 		self.halt(0)
 	}
-
-	/// Convert to any
-	fn as_any(&self) -> &dyn Any;
-
-	/// Convert to a mutable any
-	fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 // endregion:   --- BehaviorTreeComponent
