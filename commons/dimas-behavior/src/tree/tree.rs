@@ -21,6 +21,7 @@ use alloc::{
 	vec,
 	vec::Vec,
 };
+use libloading::Library;
 use core::{
 	any::{Any, TypeId},
 	marker::PhantomData,
@@ -84,13 +85,22 @@ fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), 
 
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeComponent`]s
-#[derive(Default)]
 pub struct BehaviorTree {
 	pub(crate) root: Option<BehaviorSubTree>,
 	pub(crate) subtrees: Vec<BehaviorSubTree>,
+	pub(crate) libraries: Arc<Mutex<Vec<Library>>>,
 }
 
 impl BehaviorTree {
+	/// create a Tree with reference to its libraries
+	pub fn new(libraries: Arc<Mutex<Vec<Library>>>) -> Self {
+		Self {
+			root: None,
+			subtrees: Vec::default(),
+			libraries,
+		}
+	}
+
 	/// Set the root of the tree
 	pub(crate) fn set_root(&mut self, root: TreeElement) {
 		self.root = Some(Arc::new(Mutex::new(root)));

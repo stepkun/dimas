@@ -82,32 +82,8 @@ impl BehaviorTreeFactory {
 	/// # Errors
 	/// - if XML is not well formatted
 	pub fn create_from_text(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
-		// general checks
-		let doc = Document::parse(xml)?;
-		let root = doc.root_element();
-		if root.tag_name().name() != "root" {
-			return Err(Error::WrongRootName);
-		}
-		if let Some(format) = root.attribute("BTCPP_format") {
-			if format != "4" {
-				return Err(Error::BtCppFormat);
-			}
-		}
-		let mut tree = BehaviorTree::default();
-		// handle the attribute 'main_tree_to_execute with a default "MainTree"
-		self.main_tree_name = root
-			.attribute("main_tree_to_execute")
-			.unwrap_or("MainTree")
-			.into();
-		XmlParser::parse_root_element(
-			&self.blackboard,
-			&mut self.registry,
-			&mut tree,
-			root,
-			&self.main_tree_name,
-			true,
-		)?;
-
+		self.register_behavior_tree_from_text(xml)?;
+		let tree = self.create_tree("MainTree")?;
 		Ok(tree)
 	}
 
@@ -164,7 +140,8 @@ impl BehaviorTreeFactory {
 				.take()
 				.expect("build error: tree is missing!")
 		} else {
-			BehaviorTree::default()
+			let libs = self.registry.libraries();
+			BehaviorTree::new(libs)
 		};
 		XmlParser::register_root_element(
 			&self.blackboard,

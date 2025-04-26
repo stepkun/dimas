@@ -15,6 +15,7 @@ extern crate std;
 use alloc::{borrow::ToOwned, sync::Arc, vec::Vec};
 use dimas_core::ConstString;
 use libloading::Library;
+use parking_lot::Mutex;
 
 use crate::behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType};
 
@@ -26,7 +27,7 @@ use super::error::Error;
 #[derive(Default)]
 pub struct BehaviorRegistry {
 	behaviors: Vec<(ConstString, BehaviorType, Arc<BehaviorCreationFn>)>,
-	librarys: Vec<Library>,
+	libraries: Arc<Mutex<Vec<Library>>>,
 }
 
 impl BehaviorRegistry {
@@ -54,7 +55,7 @@ impl BehaviorRegistry {
 	/// Therefore the library is stored in the behavior registry, which is later owned by tree.
 	/// The `add_library(..)` function also takes care of registering all 'symbols'.
 	pub fn add_library(&mut self, library: Library) {
-		self.librarys.push(library);
+		self.libraries.lock().push(library);
 	}
 
 	/// Check whether registry contains an entry.
@@ -88,6 +89,11 @@ impl BehaviorRegistry {
 			std::println!("{key}");
 		}
 		std::println!();
+	}
+	
+	/// Get aaa reference to the registered libraries
+	pub(crate) fn libraries(&self) -> Arc<Mutex<Vec<Library>>> {
+		self.libraries.clone()
 	}
 }
 // endregion:   --- BehaviorRegistry
