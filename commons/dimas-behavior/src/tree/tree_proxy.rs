@@ -32,7 +32,7 @@ pub struct BehaviorTreeProxy {
 	subtree: Option<BehaviorSubTree>,
 	/// Data needed in every tick
 	tick_data: BehaviorTickData,
-	/// dummy list
+	/// empty dummy list
 	children: BehaviorTreeComponentList,
 }
 
@@ -112,6 +112,11 @@ impl BehaviorTreeProxy {
 
 	pub(crate) fn set_subtree(&mut self, subtree: BehaviorSubTree) {
 		self.subtree = Some(subtree);
+	}
+
+	#[allow(clippy::redundant_closure_for_method_calls)]
+	pub(crate) fn subtree(&self) -> Option<BehaviorSubTree> {
+		self.subtree.as_ref().map(|sub| sub.clone())
 	}
 }
 // endregion:	--- BehaviorTreeProxy

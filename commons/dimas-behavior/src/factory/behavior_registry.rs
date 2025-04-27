@@ -154,7 +154,7 @@ impl BehaviorRegistry {
 		std::println!();
 	}
 	
-	/// Get aaa reference to the registered libraries
+	/// Get a reference to the registered libraries
 	#[must_use]
 	pub(crate) const fn libraries(&self) -> &Vec<Arc<Library>> {
 		&self.libraries
@@ -170,6 +170,12 @@ impl BehaviorRegistry {
 		res
 	}
 
+	/// Get a reference to the registered subtrees
+	#[must_use]
+	pub(crate) const fn subtrees(&self) -> &Vec<BehaviorSubTree> {
+		&self.subtrees
+	}
+	
 	/// Find a subtree in the list and return a reference to it
 	/// # Errors
 	/// - if subtree is not found

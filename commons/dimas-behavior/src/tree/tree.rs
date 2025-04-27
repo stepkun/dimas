@@ -1,6 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(clippy::unused_async)]
-#![allow(unused)]
 
 //! [`BehaviorTree`] implementation.
 //!
@@ -13,44 +12,33 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{
-	borrow::ToOwned,
-	boxed::Box,
-	format,
-	string::{String, ToString},
+	string::String,
 	sync::Arc,
-	vec,
 	vec::Vec,
 };
 use libloading::Library;
-use core::{
-	any::{Any, TypeId},
-	marker::PhantomData,
-	ops::{Deref, DerefMut},
-};
-use dimas_core::ConstString;
-use dimas_scripting::{Parser, VM};
-use hashbrown::HashMap;
-use parking_lot::Mutex;
-use rustc_hash::FxBuildHasher;
+use core::ops::{Deref, DerefMut};
 
 use crate::{
 	behavior::{
-		error::BehaviorError, BehaviorConfigurationData, BehaviorInstanceMethods, BehaviorResult, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods
+		error::BehaviorError, BehaviorResult, BehaviorStatus,
 	},
-	blackboard::Blackboard, factory::BehaviorRegistry,
+	factory::BehaviorRegistry,
 };
 
 use super::{
-	error::Error, BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy, TreeElement
+	error::Error, BehaviorSubTree, BehaviorTreeComponent, TreeElement
 };
 // endregion:   --- modules
 
 // region:		--- helper
 /// Helper function to print a (sub)tree recursively
+/// # Errors
+/// - if recursion is deeper than 127
 #[cfg(feature = "std")]
-pub fn print_tree(start_node: &dyn BehaviorTreeComponent) {
+pub fn print_tree(start_node: &TreeElement) -> Result<(), Error> {
 	std::println!("{}", start_node.id());
-	print_recursively(0, start_node);
+	print_recursively(0, start_node)
 }
 
 /// Helper function to print a (sub)tree recursively
@@ -58,8 +46,7 @@ pub fn print_tree(start_node: &dyn BehaviorTreeComponent) {
 /// # Errors
 /// - Limit is a tree-depth of 127
 #[cfg(feature = "std")]
-#[allow(clippy::needless_pass_by_value)]
-fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), Error> {
+fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 	if level == i8::MAX {
 		return Err(Error::Unexpected(
 			"recursion limit reached".into(),
@@ -73,13 +60,30 @@ fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), 
 	for _ in 0..next_level {
 		indentation.push_str("   |");
 	}
-	for child in &**node.children() {
-		std::println!("{}- {}", indentation, child.id());
-		print_recursively(next_level, child);
+	match node {
+		TreeElement::Leaf(leaf) => {
+			std::println!("{indentation}- {}", leaf.id());
+		},
+		TreeElement::Node(node) => {
+			std::println!("{indentation}- {}", node.id());
+			for child in &**node.children() {
+				print_recursively(next_level, child)?;
+			}		
+		},
+		TreeElement::Proxy(proxy) => {
+			std::println!("{indentation}- SubTree: {}", proxy.id());
+			if let Some(subtree) = proxy.subtree() {
+				for child in &**subtree.read().children() {
+					print_recursively(next_level, child)?;
+				}			
+			} else {
+				std::println!("{indentation}   |- missing!!");
+			}
+
+		},
 	}
 	Ok(())
 }
-
 // endregion:	--- helper
 
 // region:		--- BehaviorTree
@@ -87,14 +91,19 @@ fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), 
 pub struct BehaviorTree {
 	pub(crate) root: BehaviorSubTree,
 	pub(crate) subtrees: Vec<BehaviorSubTree>,
-	pub(crate) libraries: Vec<Arc<Library>>,
+	pub(crate) _libraries: Vec<Arc<Library>>,
 }
 
 impl BehaviorTree {
 	/// create a Tree with reference to its libraries
 	pub fn new(root: BehaviorSubTree, registry: &BehaviorRegistry) -> Self {
-		let subtrees = Vec::new();
 		// @TODO: create a list of all used subtrees
+		// for now its just a stupid copy of what is registered
+		let mut subtrees = Vec::new();
+		for sub in registry.subtrees() {
+			subtrees.push(sub.clone());
+		};
+
 		// clone the current state of registered libraries
 		let mut libraries = Vec::new();
 		for lib in registry.libraries() {
@@ -103,7 +112,7 @@ impl BehaviorTree {
 		Self {
 			root,
 			subtrees,
-			libraries,
+			_libraries: libraries,
 		}
 	}
 
@@ -112,9 +121,8 @@ impl BehaviorTree {
 	/// - if root tree is not yet set
 	#[allow(clippy::option_if_let_else)]
 	pub fn print(&self) -> Result<(), Error> {
-		let guard = self.root.read();
-		std::println!("{}", guard.id());
-		print_recursively(0, &*guard)
+		std::println!("{}", self.root.read().id());
+		print_recursively(0, &self.root.read())
 	}
 
 	/// Get a (sub)tree where index 0 is root tree
@@ -155,21 +163,6 @@ impl BehaviorTree {
 	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
 		self.root.write().execute_tick()
-	}
-
-	/// Find a subtree in the list and return a reference to it
-	fn subtree_by_name(&self, id: &str) -> Result<BehaviorSubTree, Error> {
-		for subtree in &self.subtrees {
-			// if subtree contains himself, this will become a deadlock
-			if let Some(intern) = subtree.try_read() {
-				if intern.id() == id {
-					return Ok(subtree.clone());
-				}
-			} else {
-				return Err(Error::DeadLock(id.into()));
-			}
-		}
-		Err(Error::SubtreeNotFound(id.into()))
 	}
 }
 // endregion:	--- BehaviorTree
