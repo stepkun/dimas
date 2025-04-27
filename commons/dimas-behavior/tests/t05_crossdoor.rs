@@ -50,6 +50,7 @@ async fn crossdoor() -> anyhow::Result<()> {
 	// the XML and then allocate a specific tree, using its ID
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_main_tree()?;
+	drop(factory);
 
 	// helper function to print the tree
 	tree.print()?;
@@ -70,6 +71,7 @@ async fn crossdoor_with_plugin() -> anyhow::Result<()> {
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_main_tree()?;
+	drop(factory);
 
 	tree.print()?;
 

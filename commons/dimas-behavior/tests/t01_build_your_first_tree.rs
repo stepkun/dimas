@@ -52,6 +52,8 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 	// The currently supported format is XML.
 	// IMPORTANT: When the object "tree" goes out of scope, all the tree components are destroyed
 	let mut tree = factory.create_from_text(XML)?;
+	// dropping the factory to free memory
+	drop(factory);
 
 	// To "execute" a Tree you need to "tick" it.
 	// The tick is propagated to the children based on the logic of the tree.
@@ -72,6 +74,8 @@ async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	// dropping the factory to free memory
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

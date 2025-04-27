@@ -35,10 +35,9 @@ use rustc_hash::FxBuildHasher;
 
 use crate::{
 	behavior::{
-		BehaviorConfigurationData, BehaviorInstanceMethods, BehaviorResult, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, error::BehaviorError,
+		error::BehaviorError, BehaviorConfigurationData, BehaviorInstanceMethods, BehaviorResult, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods
 	},
-	blackboard::Blackboard,
+	blackboard::Blackboard, factory::BehaviorRegistry,
 };
 
 use super::{
@@ -86,77 +85,26 @@ fn print_recursively(level: i8, node: &dyn BehaviorTreeComponent) -> Result<(), 
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeComponent`]s
 pub struct BehaviorTree {
-	pub(crate) root: Option<BehaviorSubTree>,
+	pub(crate) root: BehaviorSubTree,
 	pub(crate) subtrees: Vec<BehaviorSubTree>,
-	pub(crate) libraries: Arc<Mutex<Vec<Library>>>,
+	pub(crate) libraries: Vec<Arc<Library>>,
 }
 
 impl BehaviorTree {
 	/// create a Tree with reference to its libraries
-	pub fn new(libraries: Arc<Mutex<Vec<Library>>>) -> Self {
+	pub fn new(root: BehaviorSubTree, registry: &BehaviorRegistry) -> Self {
+		let subtrees = Vec::new();
+		// @TODO: create a list of all used subtrees
+		// clone the current state of registered libraries
+		let mut libraries = Vec::new();
+		for lib in registry.libraries() {
+			libraries.push(lib.clone());
+		};
 		Self {
-			root: None,
-			subtrees: Vec::default(),
+			root,
+			subtrees,
 			libraries,
 		}
-	}
-
-	/// Set the root of the tree
-	pub(crate) fn set_root(&mut self, root: TreeElement) {
-		self.root = Some(Arc::new(Mutex::new(root)));
-	}
-
-	/// Add a subtree
-	pub(crate) fn add_subtree(&mut self, subtree: TreeElement) {
-		self.subtrees.push(Arc::new(Mutex::new(subtree)));
-	}
-
-	/// Link each Proxy in a subtree to its subtree
-	#[allow(clippy::needless_pass_by_value)]
-	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
-		let mut node = &mut *subtree.lock();
-		for mut child in &mut node.children_mut().0 {
-			self.recursive_node(child)?;
-		}
-		Ok(())
-	}
-
-	#[allow(clippy::unnecessary_wraps)]
-	#[allow(clippy::needless_pass_by_value)]
-	#[allow(clippy::unused_self)]
-	#[allow(clippy::match_bool)]
-	#[allow(clippy::single_match_else)]
-	#[allow(unsafe_code)]
-	fn recursive_node(&self, node: &mut TreeElement) -> Result<(), Error> {
-		match node {
-			TreeElement::Leaf(_leaf) => {},
-			TreeElement::Node(node) => {
-				for mut child in &mut node.children_mut().0 {
-					self.recursive_node(child)?;
-				}
-			},
-			TreeElement::Proxy(proxy) => {
-				let id = proxy.id();
-				let subtree = self.subtree_by_name(id)?;
-				proxy.set_subtree(subtree);
-			},
-		}
-		Ok(())
-	}
-
-	/// Link each Proxy in the tree to its subtree
-	pub(crate) fn link_tree(&self) -> Result<(), Error> {
-		if let Some(root) = self.root.clone() {
-			self.link_subtree(root)?;
-		} else {
-			return Err(Error::RootNotFound("Root".into()));
-		}
-
-		for subtree in self.subtrees.clone() {
-			self.link_subtree(subtree)?;
-		}
-
-		Ok(())
 	}
 
 	/// Pretty print the tree
@@ -164,13 +112,9 @@ impl BehaviorTree {
 	/// - if root tree is not yet set
 	#[allow(clippy::option_if_let_else)]
 	pub fn print(&self) -> Result<(), Error> {
-		if let Some(node) = &self.root {
-			let guard = node.lock();
-			std::println!("{}", guard.id());
-			print_recursively(0, &*guard)
-		} else {
-			Err(Error::RootNotFound("TODO!".into()))
-		}
+		let guard = self.root.lock();
+		std::println!("{}", guard.id());
+		print_recursively(0, &*guard)
 	}
 
 	/// Get a (sub)tree where index 0 is root tree
@@ -179,11 +123,7 @@ impl BehaviorTree {
 	/// - if index is out of bounds
 	pub fn subtree(&self, index: usize) -> Result<BehaviorSubTree, Error> {
 		if index == 0 {
-			let res = self
-				.root
-				.as_ref()
-				.ok_or(Error::IndexOutOfBounds(0))?;
-			Ok(res.clone())
+			Ok(self.root.clone())
 		} else if (index - 1) > self.subtrees.len() {
 			Err(Error::IndexOutOfBounds(index))
 		} else {
@@ -197,35 +137,27 @@ impl BehaviorTree {
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
 		let mut status = BehaviorStatus::Idle;
 
-		if let Some(root) = &mut self.root {
-			while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
-				status = root.lock().execute_tick()?;
+		while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
+			status = self.root.lock().execute_tick()?;
 
-				// Not implemented: Check for wake-up conditions and tick again if so
+			// Not implemented: Check for wake-up conditions and tick again if so
 
-				if status.is_completed() {
-					root.lock().halt(0)?;
-					break;
-				}
+			if status.is_completed() {
+				self.root.lock().halt(0)?;
+				break;
 			}
-			Ok(status)
-		} else {
-			Err(BehaviorError::RootNotFound("@TODO: 1".into()))
 		}
+		Ok(status)
 	}
 
 	/// Ticks the tree exactly once
 	/// # Errors
 	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.as_ref().map_or_else(
-			|| Err(BehaviorError::RootNotFound("@TODO: 2".into())),
-			|root| root.lock().execute_tick(),
-		)
+		self.root.lock().execute_tick()
 	}
 
 	/// Find a subtree in the list and return a reference to it
-	///
 	fn subtree_by_name(&self, id: &str) -> Result<BehaviorSubTree, Error> {
 		for subtree in &self.subtrees {
 			// if subtree contains himself, this will become a deadlock
@@ -245,7 +177,7 @@ impl BehaviorTree {
 // region:		--- BehaviorTreeComponentList
 /// A List of tree components
 #[derive(Default)]
-pub struct BehaviorTreeComponentList(Vec<TreeElement>);
+pub struct BehaviorTreeComponentList(pub(crate) Vec<TreeElement>);
 
 impl Deref for BehaviorTreeComponentList {
 	type Target = Vec<TreeElement>;

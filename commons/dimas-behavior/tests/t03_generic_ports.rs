@@ -37,6 +37,7 @@ async fn generic_ports() -> anyhow::Result<()> {
 	factory.register_node_type::<PrintTarget>("PrintTarget")?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
@@ -51,6 +52,7 @@ async fn generic_ports_with_plugin() -> anyhow::Result<()> {
 	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

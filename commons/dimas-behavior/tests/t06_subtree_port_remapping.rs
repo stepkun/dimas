@@ -45,6 +45,7 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_tree("MainTree")?;
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
@@ -71,6 +72,7 @@ async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_tree("MainTree")?;
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

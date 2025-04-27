@@ -26,10 +26,10 @@ pub enum Error {
 	/// The index of a behavior is out of bounds
 	#[error("index [{0}] out of bounds")]
 	IndexOutOfBounds(usize),
-	/// The root of the tree s not properly created
+	/// The root of the tree is not properly created
 	#[error("root tree [{0}] not found in behavior tree")]
 	RootNotFound(ConstString),
-	/// The root of the tree s not properly created
+	/// The tree is not properly created
 	#[error("(sub)tree [{0}] not found in behavior tree")]
 	SubtreeNotFound(ConstString),
 

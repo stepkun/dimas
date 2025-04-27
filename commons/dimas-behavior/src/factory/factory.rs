@@ -26,7 +26,7 @@ use crate::{
 	blackboard::Blackboard,
 	factory::xml_parser::XmlParser,
 	port::PortList,
-	tree::{BehaviorTree, BehaviorTreeComponent},
+	tree::BehaviorTree,
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -38,8 +38,7 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 pub struct BehaviorTreeFactory {
 	blackboard: Blackboard,
 	registry: BehaviorRegistry,
-	main_tree_name: ConstString,
-	main_tree: Option<BehaviorTree>,
+	main_tree_name: Option<ConstString>,
 }
 
 impl BehaviorTreeFactory {
@@ -81,17 +80,27 @@ impl BehaviorTreeFactory {
 	/// Create a [`BehaviorTree`] from XML
 	/// # Errors
 	/// - if XML is not well formatted
+	/// # Panics
+	/// - if unexpectedly a Some option is not containig a value :-D
 	pub fn create_from_text(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
 		self.register_behavior_tree_from_text(xml)?;
-		let tree = self.create_tree("MainTree")?;
-		Ok(tree)
+		if self.main_tree_name.is_none() {
+			self.create_tree("MainTree")
+		} else {
+			let name = self.main_tree_name.as_ref().expect("snh").clone();
+			self.create_tree(&name)
+		}
 	}
 
 	/// Create a [`BehaviorTree`] with id `MainTree` from registration
 	/// # Errors
 	/// - if behaviors are missing
 	pub fn create_main_tree(&mut self) -> Result<BehaviorTree, Error> {
-		self.create_tree("MainTree")
+		let name = self.main_tree_name.clone().map_or_else(
+			|| "MainTree".into(),
+			|name| name,
+		);
+		self.create_tree(&name)
 	}
 
 	/// Create the named [`BehaviorTree`] from registration
@@ -99,13 +108,9 @@ impl BehaviorTreeFactory {
 	/// - if behaviors are missing
 	/// # Panics
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
-		if let Some(tree) = &self.main_tree {
-			tree.link_tree()?;
-		} else {
-			return Err(Error::NoMainTree(name.into()));
-		}
-		let tree = self.main_tree.take().expect("missing tree");
-		Ok(tree)
+		self.registry.link_subtrees()?;
+		let root = self.registry.subtree_by_name(name)?;
+		Ok(BehaviorTree::new(root, &self.registry))
 	}
 
 	/// Prints out the list of registered behaviors
@@ -117,6 +122,7 @@ impl BehaviorTreeFactory {
 	/// @TODO:
 	/// # Errors
 	/// # Panics
+	#[allow(clippy::redundant_closure_for_method_calls)]
 	pub fn register_behavior_tree_from_text(&mut self, xml: &str) -> Result<(), Error> {
 		// general checks
 		let doc = Document::parse(xml)?;
@@ -129,44 +135,22 @@ impl BehaviorTreeFactory {
 				return Err(Error::BtCppFormat);
 			}
 		}
-		// handle the attribute 'main_tree_to_execute with a default "MainTree"
+		// handle the attribute 'main_tree_to_execute`
 		self.main_tree_name = root
-			.attribute("main_tree_to_execute")
-			.unwrap_or("MainTree")
-			.into();
-		// on first run there is no tree stored
-		let mut tree = if self.main_tree.is_some() {
-			self.main_tree
-				.take()
-				.expect("build error: tree is missing!")
-		} else {
-			let libs = self.registry.libraries();
-			BehaviorTree::new(libs)
-		};
+		.attribute("main_tree_to_execute").map(|name| name.into());
+		
 		XmlParser::register_root_element(
 			&self.blackboard,
 			&mut self.registry,
-			&mut tree,
 			root,
-			&self.main_tree_name,
 		)?;
-		self.main_tree = Some(tree);
 		Ok(())
 	}
 
 	/// Get the name list of registered (sub)trees
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
-		let mut res = Vec::new();
-		if let Some(tree) = &self.main_tree {
-			if let Some(root) = &tree.root {
-				res.push(root.lock().id().into());
-			}
-			for subtree in &tree.subtrees {
-				res.push(subtree.lock().id().into());
-			}
-		}
-		res
+		self.registry.registered_behavior_trees()
 	}
 
 	/// Register a behavior plugin.

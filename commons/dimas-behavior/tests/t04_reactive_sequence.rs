@@ -56,6 +56,7 @@ async fn std_sequence() -> anyhow::Result<()> {
 	factory.register_node_type::<SaySomething>("SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
@@ -96,6 +97,7 @@ async fn std_sequence_with_plugin() -> anyhow::Result<()> {
 	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;

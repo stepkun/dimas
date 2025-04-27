@@ -56,6 +56,8 @@ async fn basic_ports() -> anyhow::Result<()> {
 	)?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	// dropping the factory to free memory
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
@@ -71,6 +73,8 @@ async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
+	// dropping the factory to free memory
+	drop(factory);
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

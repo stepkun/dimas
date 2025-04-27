@@ -37,6 +37,11 @@ pub enum Error {
 	/// Children are not allowed for some types of behaviors
 	#[error("children are not allowed for behavior category [{0}]")]
 	ChildrenNotAllowed(ConstString),
+	/// Deadlock situation
+	#[error(
+		"search for subtree in registry [{0}] caused a deadlock, most probably because this subtree contains himself"
+	)]
+	DeadLock(ConstString),
 	/// Passthrough for libloading Errors
 	#[cfg(feature = "std")]
 	#[error("{0}")]
@@ -57,6 +62,9 @@ pub enum Error {
 	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(ConstString),
 	/// The main tree information is missing
+	#[error("no 'main_tree_to_execute' name provided")]
+	NoMainTreeName,
+	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' with name {0} provided")]
 	NoMainTree(ConstString),
 	/// The main tree information is missing
@@ -68,6 +76,12 @@ pub enum Error {
 	/// Loading a library failed
 	#[error("registering library [{0}] failed with [{0}]")]
 	RegisterLib(ConstString, u32),
+	/// Subtree already registered
+	#[error("subtree with id [{0}] is already registered")]
+	SubtreeAlreadyRegistered(ConstString),
+	/// The tree is not properly created
+	#[error("(sub)tree [{0}] not found in behavior tree")]
+	SubtreeNotFound(ConstString),
 	/// Passthrough for behavior tree Errors
 	#[error("{0}")]
 	Tree(#[from] crate::tree::error::Error),
