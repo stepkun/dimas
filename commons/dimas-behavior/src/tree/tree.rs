@@ -112,7 +112,7 @@ impl BehaviorTree {
 	/// - if root tree is not yet set
 	#[allow(clippy::option_if_let_else)]
 	pub fn print(&self) -> Result<(), Error> {
-		let guard = self.root.lock();
+		let guard = self.root.read();
 		std::println!("{}", guard.id());
 		print_recursively(0, &*guard)
 	}
@@ -138,12 +138,12 @@ impl BehaviorTree {
 		let mut status = BehaviorStatus::Idle;
 
 		while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
-			status = self.root.lock().execute_tick()?;
+			status = self.root.write().execute_tick()?;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 
 			if status.is_completed() {
-				self.root.lock().halt(0)?;
+				self.root.write().halt(0)?;
 				break;
 			}
 		}
@@ -154,14 +154,14 @@ impl BehaviorTree {
 	/// # Errors
 	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.lock().execute_tick()
+		self.root.write().execute_tick()
 	}
 
 	/// Find a subtree in the list and return a reference to it
 	fn subtree_by_name(&self, id: &str) -> Result<BehaviorSubTree, Error> {
 		for subtree in &self.subtrees {
 			// if subtree contains himself, this will become a deadlock
-			if let Some(intern) = subtree.try_lock() {
+			if let Some(intern) = subtree.try_read() {
 				if intern.id() == id {
 					return Ok(subtree.clone());
 				}

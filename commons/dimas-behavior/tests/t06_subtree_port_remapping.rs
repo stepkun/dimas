@@ -51,12 +51,12 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ Root BB ------");
 	tree.subtree(0)?
-		.lock()
+		.read()
 		.blackboard()
 		.debug_message();
 	println!("\n----- Second BB -----");
 	tree.subtree(1)?
-		.lock()
+		.read()
 		.blackboard()
 		.debug_message();
 	Ok(())
@@ -78,12 +78,12 @@ async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ Root BB ------");
 	tree.subtree(0)?
-		.lock()
+		.read()
 		.blackboard()
 		.debug_message();
 	println!("\n----- Second BB -----");
 	tree.subtree(1)?
-		.lock()
+		.read()
 		.blackboard()
 		.debug_message();
 	Ok(())

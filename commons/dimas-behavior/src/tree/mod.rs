@@ -18,7 +18,7 @@ pub use tree_proxy::BehaviorTreeProxy;
 
 // region:      --- modules
 use alloc::sync::Arc;
-use parking_lot::Mutex;
+use parking_lot::RwLock;
 
 use crate::{
 	behavior::{BehaviorResult, error::BehaviorError},
@@ -29,7 +29,7 @@ use crate::{
 //  region:		--- types
 /// Shorthand for a behavior subtree definition
 /// An `Arc` with `Mutex` to enable reusability in the tree.
-pub type BehaviorSubTree = Arc<Mutex<TreeElement>>;
+pub type BehaviorSubTree = Arc<RwLock<TreeElement>>;
 // endregion:	--- types
 
 // region:		--- TreeElement

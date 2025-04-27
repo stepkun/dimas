@@ -59,7 +59,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
 				Err(BehaviorError::Composition(msg))
 			},
-			|subtree| subtree.lock().execute_tick(),
+			|subtree| subtree.write().execute_tick(),
 		)
 	}
 
@@ -73,7 +73,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
 				Err(BehaviorError::Composition(msg))
 			},
-			|subtree| subtree.lock().execute_halt(),
+			|subtree| subtree.write().execute_halt(),
 		)
 	}
 
@@ -87,7 +87,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 				let msg = format!("Proxy [{}] w/o linked Subtree", &self.id).into();
 				Err(BehaviorError::Composition(msg))
 			},
-			|subtree| subtree.lock().execute_halt(),
+			|subtree| subtree.write().execute_halt(),
 		)
 	}
 }

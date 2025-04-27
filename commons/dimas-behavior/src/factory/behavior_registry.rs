@@ -15,7 +15,7 @@ extern crate std;
 use alloc::{borrow::ToOwned, sync::Arc, vec::Vec};
 use dimas_core::ConstString;
 use libloading::Library;
-use parking_lot::Mutex;
+use parking_lot::RwLock;
 
 use crate::{behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType}, tree::{BehaviorSubTree, BehaviorTreeComponent, TreeElement}};
 
@@ -70,11 +70,11 @@ impl BehaviorRegistry {
 	/// Adding something to the subtree makes subtree 'dirty'.
 	pub(crate) fn add_subtree(&mut self, subtree: TreeElement) -> Result<(), Error> {
 		for item in &self.subtrees {
-			if item.lock().id() == subtree.id() {
+			if item.read().id() == subtree.id() {
 				return Err(Error::SubtreeAlreadyRegistered(subtree.id().into()));
 			}
 		}
-		self.subtrees.push(Arc::new(Mutex::new(subtree)));
+		self.subtrees.push(Arc::new(RwLock::new(subtree)));
 		self.is_clean = false;
 		Ok(())
 	}
@@ -115,7 +115,7 @@ impl BehaviorRegistry {
 	/// Link each Proxy in a subtree to its subtree
 	#[allow(clippy::needless_pass_by_value)]
 	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
-		let node = &mut *subtree.lock();
+		let node = &mut *subtree.write();
 		for child in &mut node.children_mut().0 {
 			self.recursive_node(child)?;
 		}
@@ -165,7 +165,7 @@ impl BehaviorRegistry {
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		let mut res = Vec::new();
 		for subtree in &self.subtrees {
-			res.push(subtree.lock().id().into());
+			res.push(subtree.read().id().into());
 		}
 		res
 	}
@@ -176,7 +176,7 @@ impl BehaviorRegistry {
 	pub fn subtree_by_name(&self, id: &str) -> Result<BehaviorSubTree, Error> {
 		for subtree in &self.subtrees {
 			// if we are working on a subtree this would become a deadlock
-			if let Some(intern) = subtree.try_lock() {
+			if let Some(intern) = subtree.try_read() {
 				if intern.id() == id {
 					return Ok(subtree.clone());
 				}
