@@ -12,7 +12,6 @@ use thiserror::Error;
 
 // region:		--- Error
 /// `dimas-core` behavior error type
-#[allow(clippy::module_name_repetitions)]
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Pass through behavior error

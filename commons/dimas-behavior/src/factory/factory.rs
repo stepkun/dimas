@@ -203,7 +203,6 @@ impl BehaviorTreeFactory {
 
 	/// Register a [`Behavior`] of type <T>.
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_node_type<T>(&mut self, name: &str) -> Result<(), Error>
 	where
 		T: BehaviorAllMethods,
@@ -216,7 +215,6 @@ impl BehaviorTreeFactory {
 
 	/// Register a function as [`Action`].
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_action(
 		&mut self,
 		name: &str,
@@ -230,7 +228,6 @@ impl BehaviorTreeFactory {
 
 	/// Register a function as [`Action`].
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_action_with_ports(
 		&mut self,
 		name: &str,
@@ -245,7 +242,6 @@ impl BehaviorTreeFactory {
 
 	/// Register a function as [`Condition`].
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_condition(
 		&mut self,
 		name: &str,
@@ -259,7 +255,6 @@ impl BehaviorTreeFactory {
 
 	/// Register a function as [`Decorator`].
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	pub fn register_simple_decorator(
 		&mut self,
 		name: &str,

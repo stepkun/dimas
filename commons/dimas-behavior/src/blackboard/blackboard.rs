@@ -331,7 +331,6 @@ impl Blackboard {
 	}
 
 	/// Get an Rc to the Entry
-	#[allow(clippy::significant_drop_tightening)]
 	fn get_entry<'a>(&'a self, key: &'a str) -> Option<EntryPtr> {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.strip_prefix('@') {
@@ -367,6 +366,7 @@ impl Blackboard {
 				return parent_bb.get_entry(key);
 			}
 		}
+		drop(blackboard);
 
 		// No matches
 		None

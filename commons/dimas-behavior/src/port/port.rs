@@ -115,7 +115,6 @@ fn is_allowed_name(name: &str) -> bool {
 /// The `PortList` is not using a `HashMap` but a `Vec` due to two reasons:
 /// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
 /// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
-#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default)]
 pub struct PortList(pub Vec<NewPortDefinition>);
 
@@ -179,7 +178,6 @@ impl PortList {
 /// `PortRemappings` is not using a `HashMap` but a `Vec` due to two reasons:
 /// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
 /// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
-#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default)]
 pub struct PortRemappings(Vec<RemappingEntry>);
 

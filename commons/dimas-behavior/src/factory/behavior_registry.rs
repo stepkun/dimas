@@ -106,7 +106,7 @@ impl BehaviorRegistry {
 
 	pub(crate) fn link_subtrees(&mut self) -> Result<(), Error> {
 		if !self.is_clean {
-			for subtree in self.subtrees.clone() {
+			for subtree in &self.subtrees {
 				self.link_subtree(subtree)?;
 			}
 			self.is_clean = true;
@@ -115,8 +115,7 @@ impl BehaviorRegistry {
 	}
 
 	/// Link each Proxy in a subtree to its subtree
-	#[allow(clippy::needless_pass_by_value)]
-	fn link_subtree(&self, subtree: BehaviorSubTree) -> Result<(), Error> {
+	fn link_subtree(&self, subtree: &BehaviorSubTree) -> Result<(), Error> {
 		let node = &mut *subtree.write();
 		for child in &mut node.children_mut().0 {
 			self.recursive_node(child)?;
@@ -124,12 +123,6 @@ impl BehaviorRegistry {
 		Ok(())
 	}
 
-	#[allow(clippy::unnecessary_wraps)]
-	#[allow(clippy::needless_pass_by_value)]
-	#[allow(clippy::unused_self)]
-	#[allow(clippy::match_bool)]
-	#[allow(clippy::single_match_else)]
-	#[allow(unsafe_code)]
 	fn recursive_node(&self, node: &mut TreeElement) -> Result<(), Error> {
 		match node {
 			TreeElement::Leaf(_leaf) => {}

@@ -12,7 +12,6 @@ use thiserror::Error;
 
 // region:		--- BehaviorError
 /// `dimas-behavior` behavior error type
-#[allow(clippy::module_name_repetitions)]
 #[derive(Error, Debug)]
 pub enum BehaviorError {
 	/// Error in structural composition of a behaviors children

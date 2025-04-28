@@ -40,7 +40,6 @@ pub struct Parser {
 	next: Token,
 }
 
-#[allow(clippy::needless_lifetimes)]
 impl core::fmt::Debug for Parser {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		f.debug_struct("Parser")
@@ -53,7 +52,6 @@ impl core::fmt::Debug for Parser {
 	}
 }
 
-#[allow(clippy::needless_lifetimes)]
 impl Default for Parser {
 	fn default() -> Self {
 		Self::new()

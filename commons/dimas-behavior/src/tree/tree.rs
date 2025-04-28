@@ -110,7 +110,6 @@ impl BehaviorTree {
 	/// Pretty print the tree
 	/// # Errors
 	/// - if root tree is not yet set
-	#[allow(clippy::option_if_let_else)]
 	pub fn print(&self) -> Result<(), Error> {
 		std::println!("{}", self.root.read().id());
 		print_recursively(0, &self.root.read())
@@ -177,11 +176,10 @@ impl DerefMut for BehaviorTreeComponentList {
 	}
 }
 
-#[allow(clippy::needless_lifetimes)]
-impl<'a> BehaviorTreeComponentList {
+impl BehaviorTreeComponentList {
 	/// Reset all children
 	/// # Errors
-	pub fn reset(&'a mut self) -> Result<(), BehaviorError> {
+	pub fn reset(&mut self) -> Result<(), BehaviorError> {
 		let x = &mut self.0;
 		for child in x {
 			child.halt(0)?;

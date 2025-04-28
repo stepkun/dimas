@@ -13,6 +13,7 @@ enum Color {
 }
 
 #[allow(clippy::cognitive_complexity)]
+#[allow(clippy::too_many_lines)]
 fn lexing_tokens(tokens: &str) {
 	let mut lexer = Lexer::new(tokens);
 	assert_eq!(

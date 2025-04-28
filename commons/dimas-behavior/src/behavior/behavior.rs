@@ -91,7 +91,6 @@ impl BehaviorTickData {
 
 	/// Get value of an input port.
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	#[allow(clippy::option_if_let_else)]
 	pub fn get_input<T>(&self, port_name: &str) -> BehaviorResult<T>
 	where
@@ -134,7 +133,6 @@ impl BehaviorTickData {
 
 	/// Set value of an output port.
 	/// # Errors
-	#[allow(clippy::needless_pass_by_value)]
 	pub fn set_output<T>(&self, port: &str, value: T) -> BehaviorResult<()>
 	where
 		T: Clone + core::fmt::Debug + Send + Sync + 'static,

@@ -226,7 +226,6 @@ impl XmlParser {
 		Ok(())
 	}
 
-	#[allow(clippy::unnecessary_wraps)]
 	pub(crate) fn handle_subtree(
 		_blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,

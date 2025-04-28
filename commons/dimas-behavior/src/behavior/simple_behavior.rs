@@ -58,7 +58,6 @@ impl BehaviorInstanceMethods for SimpleBehavior {
 }
 
 impl BehaviorRedirectionMethods for SimpleBehavior {
-	#[allow(clippy::option_if_let_else)]
 	fn static_provided_ports(&self) -> PortList {
 		PortList(self.provided_ports.clone())
 	}

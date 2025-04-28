@@ -3,7 +3,6 @@
 //! [`Behavior`] library
 //!
 
-// #[allow(clippy::module_inception)]
 pub mod action;
 #[allow(clippy::module_inception)]
 mod behavior;
@@ -65,7 +64,6 @@ pub trait BehaviorInstanceMethods: core::fmt::Debug + Send + Sync {
 	/// Method called to stop/cancel/halt a [`Behavior`].
 	/// Default implementation just returns [`BehaviorStatus::Idle`]
 	/// # Errors
-	#[allow(unused_variables)]
 	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
 		for child in &mut **children {
 			child.halt(0)?;
@@ -127,7 +125,6 @@ pub trait BehaviorStaticMethods: Default {
 
 // region:      --- BehaviorStatus
 /// Behavior status
-#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(u8)]
 pub enum BehaviorStatus {
