@@ -1,7 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
-#![allow(clippy::unit_arg)]
-#![allow(clippy::unwrap_used)]
 
 //! Benchmarks of Sequence behaviors
 
@@ -31,26 +29,27 @@ const FALLBACK: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn fallback(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<AlwaysFailure>("AlwaysFailure")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
-	let mut tree = factory.create_from_text(FALLBACK).unwrap();
+	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
 
 	c.bench_function("fallback", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -72,28 +71,29 @@ const REACTIVE_FALLBACK: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn reactive_fallback(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<AlwaysFailure>("AlwaysFailure")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory
 		.create_from_text(REACTIVE_FALLBACK)
-		.unwrap();
+		.expect("snh");
 
 	c.bench_function("reactive fallback", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }

@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unwrap_used)]
 
 //! A library with crosss door behaviors
 
@@ -12,6 +11,6 @@ use crate::cross_door::CrossDoor;
 #[unsafe(no_mangle)]
 extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	let cross_door = CrossDoor::default();
-	cross_door.register_nodes(factory).unwrap();
+	cross_door.register_nodes(factory).expect("snh");
 	0
 }

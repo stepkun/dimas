@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! [`BehaviorTreeFactory`] and [`XmlParser`] errors
 //!
@@ -12,11 +11,6 @@ extern crate alloc;
 extern crate std;
 
 // region		--- modules
-use alloc::{
-	boxed::Box,
-	string::{FromUtf8Error, String},
-	vec::Vec,
-};
 use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
@@ -70,6 +64,9 @@ pub enum Error {
 	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' provided")]
 	NoTreeToExecute,
+	/// Passthrough port error
+	#[error("{0}")]
+	Port(#[from] crate::port::error::Error),
 	/// Port not in defined port list
 	#[error("port name [{0}] does not match [{1}]s port list: {2:?}")]
 	PortInvalid(ConstString, ConstString, ConstString),

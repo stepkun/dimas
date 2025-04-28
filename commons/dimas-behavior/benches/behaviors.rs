@@ -1,7 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(missing_docs)]
-#![allow(clippy::unit_arg)]
-#![allow(clippy::unwrap_used)]
 
 //! Behaviors for benchmarks
 

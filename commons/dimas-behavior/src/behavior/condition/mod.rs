@@ -1,6 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unused_async)]
-#![allow(dead_code)]
 
 //! Condition behavior library
 //!

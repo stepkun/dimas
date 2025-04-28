@@ -1,5 +1,4 @@
 // Copyright © 2024 Stephan Kunz
-#![allow(clippy::needless_pass_by_value)]
 
 //! Macro `main` implementation
 //!

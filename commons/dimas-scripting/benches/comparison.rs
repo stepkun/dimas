@@ -1,7 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
-#![allow(clippy::unit_arg)]
-#![allow(clippy::unwrap_used)]
 
 //! Benchmarks of scripting comparison
 
@@ -15,13 +13,14 @@ fn double_comparison(c: &mut Criterion) {
 	let mut parser = Parser::new();
 	let chunk = parser
 		.parse("1<1; 3.1475<4.99999; -3.00987654321234>-3.00987654321234; 4>3.00987654321234;")
-		.unwrap();
+		.expect("snh");
 
 	c.bench_function("double comparison", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).unwrap();
-			});
+			for _ in 1..=100 {
+				vm.run(&chunk, &env, &mut stdout).expect("snh");
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -33,13 +32,14 @@ fn integer_comparison(c: &mut Criterion) {
 	let mut parser = Parser::new();
 	let chunk = parser
 		.parse("0x1<0x1; 0x1<0x2; 0x1>0x1; 0x2>0x1;")
-		.unwrap();
+		.expect("snh");
 
 	c.bench_function("integer comparison", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).unwrap();
-			});
+			for _ in 1..=100 {
+				vm.run(&chunk, &env, &mut stdout).expect("snh");
+			}
+			std::hint::black_box(());
 		});
 	});
 }

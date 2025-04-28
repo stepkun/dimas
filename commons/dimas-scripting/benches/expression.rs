@@ -1,7 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
-#![allow(clippy::unit_arg)]
-#![allow(clippy::unwrap_used)]
 
 //! Benchmarks of scripting expressions
 
@@ -14,13 +12,14 @@ fn simple_expression(c: &mut Criterion) {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("(3 + 2) * (4 - 1);").unwrap();
+	let chunk = parser.parse("(3 + 2) * (4 - 1);").expect("snh");
 
 	c.bench_function("simple expression", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).unwrap();
-			});
+			for _ in 1..=100 {
+				vm.run(&chunk, &env, &mut stdout).expect("snh");
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -31,13 +30,16 @@ fn moderate_expression(c: &mut Criterion) {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("!(5 - 4 > 3 * 2 == !nil);").unwrap();
+	let chunk = parser
+		.parse("!(5 - 4 > 3 * 2 == !nil);")
+		.expect("snh");
 
 	c.bench_function("moderate expression", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).unwrap();
-			});
+			for _ in 1..=100 {
+				vm.run(&chunk, &env, &mut stdout).expect("snh");
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -50,13 +52,14 @@ fn string_addition(c: &mut Criterion) {
 	let mut parser = Parser::new();
 	let chunk = parser
 		.parse("'this is a ' + 'test string';")
-		.unwrap();
+		.expect("snh");
 
 	c.bench_function("string addition", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).unwrap();
-			});
+			for _ in 1..=100 {
+				vm.run(&chunk, &env, &mut stdout).expect("snh");
+			}
+			std::hint::black_box(());
 		});
 	});
 }

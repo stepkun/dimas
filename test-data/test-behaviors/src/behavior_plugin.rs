@@ -1,15 +1,9 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
-#![allow(clippy::unwrap_used)]
 
 //! A library with test behaviors
 
 use alloc::sync::Arc;
-use dimas_behavior::{
-	behavior::{BehaviorCreationMethods, BehaviorType, SimpleBehavior},
-	factory::{BehaviorRegistry, BehaviorTreeFactory},
-	input_port_macro, port_list,
-};
+use dimas_behavior::{factory::BehaviorTreeFactory, input_port_macro, port_list};
 use parking_lot::Mutex;
 
 use crate::test_nodes::{
@@ -24,27 +18,27 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	// t01
 	factory
 		.register_simple_condition("CheckBattery", Arc::new(check_battery))
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<ApproachObject>("ApproachObject")
-		.unwrap();
+		.expect("snh");
 	let gripper1 = Arc::new(Mutex::new(GripperInterface::default()));
 	let gripper2 = gripper1.clone();
 	// @TODO: replace the workaround with a solution!
 	factory
 		.register_simple_action("OpenGripper", Arc::new(move || gripper1.lock().open()))
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_simple_action("CloseGripper", Arc::new(move || gripper2.lock().close()))
-		.unwrap();
+		.expect("snh");
 
 	// t02
 	factory
 		.register_node_type::<SaySomething>("SaySomething")
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay")
-		.unwrap();
+		.expect("snh");
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
@@ -55,23 +49,23 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 			Arc::new(new_say_something_simple),
 			say_something_ports,
 		)
-		.unwrap();
+		.expect("snh");
 
 	// t03
 	factory
 		.register_node_type::<CalculateGoal>("CalculateGoal")
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<PrintTarget>("PrintTarget")
-		.unwrap();
+		.expect("snh");
 
 	// t04
 	factory
 		.register_simple_condition("BatteryOK", Arc::new(check_battery))
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<MoveBaseAction>("MoveBase")
-		.unwrap();
+		.expect("snh");
 
 	// A return value of 0 signals success
 	0

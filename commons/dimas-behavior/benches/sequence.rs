@@ -1,7 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
-#![allow(clippy::unit_arg)]
-#![allow(clippy::unwrap_used)]
 
 //! Benchmarks of Sequence behaviors
 
@@ -31,23 +29,24 @@ const SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn sequence(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
-	let mut tree = factory.create_from_text(SEQUENCE).unwrap();
+	let mut tree = factory.create_from_text(SEQUENCE).expect("snh");
 
 	c.bench_function("sequence", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -69,25 +68,26 @@ const REACTIVE_SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn reactive_sequence(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory
 		.create_from_text(REACTIVE_SEQUENCE)
-		.unwrap();
+		.expect("snh");
 
 	c.bench_function("reactive sequence", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -109,25 +109,26 @@ const SEQUENCE_WITH_MEMORY: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn sequence_with_memory(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory
 		.create_from_text(SEQUENCE_WITH_MEMORY)
-		.unwrap();
+		.expect("snh");
 
 	c.bench_function("sequence with memory", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }

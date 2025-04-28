@@ -6,7 +6,9 @@
 use core::time::Duration;
 use dimas_behavior::{
 	behavior::{
-		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
 	input_port_macro,
 	port::PortList,

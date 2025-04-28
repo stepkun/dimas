@@ -9,7 +9,9 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
 	input_port_macro,
 	port::PortList,

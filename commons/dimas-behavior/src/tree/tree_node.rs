@@ -1,6 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-// #![allow(clippy::unused_async)]
-// #![allow(unused)]
 
 //! [`BehaviorTreeNode`] implementation.
 //!

@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! `dimas-behavior` Port implementation
 
@@ -12,12 +11,7 @@ use core::{
 };
 
 // region:      --- modules
-use alloc::{
-	boxed::Box,
-	string::{String, ToString},
-	sync::Arc,
-	vec::Vec,
-};
+use alloc::{string::String, vec::Vec};
 use dimas_core::ConstString;
 
 use super::error::Error;
@@ -90,10 +84,10 @@ pub fn create_port<T: 'static>(
 		let type_id = TypeId::of::<T>();
 		Ok(NewPortDefinition {
 			direction,
-			type_id,
+			_type_id: type_id,
 			name: name.into(),
-			default_value: default.into(),
-			description: description.into(),
+			_default_value: default.into(),
+			_description: description.into(),
 		})
 	} else {
 		Err(Error::NameNotAllowed(name.into()))
@@ -256,10 +250,10 @@ impl core::fmt::Display for NewPortDirection {
 #[derive(Clone, Debug)]
 pub struct NewPortDefinition {
 	pub(crate) direction: NewPortDirection,
-	pub(crate) type_id: TypeId,
+	pub(crate) _type_id: TypeId,
 	pub(crate) name: ConstString,
-	pub(crate) default_value: ConstString,
-	pub(crate) description: ConstString,
+	pub(crate) _default_value: ConstString,
+	pub(crate) _description: ConstString,
 }
 
 impl NewPortDefinition {
@@ -276,10 +270,10 @@ impl NewPortDefinition {
 		if is_allowed_name(name) {
 			Ok(Self {
 				direction,
-				type_id,
+				_type_id: type_id,
 				name: name.into(),
-				default_value: default_value.into(),
-				description: description.into(),
+				_default_value: default_value.into(),
+				_description: description.into(),
 			})
 		} else {
 			Err(Error::NameNotAllowed(name.into()))

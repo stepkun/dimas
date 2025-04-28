@@ -11,24 +11,16 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{
-	string::String,
-	sync::Arc,
-	vec::Vec,
-};
-use libloading::Library;
+use alloc::{string::String, sync::Arc, vec::Vec};
 use core::ops::{Deref, DerefMut};
+use libloading::Library;
 
 use crate::{
-	behavior::{
-		error::BehaviorError, BehaviorResult, BehaviorStatus,
-	},
+	behavior::{BehaviorResult, BehaviorStatus, error::BehaviorError},
 	factory::BehaviorRegistry,
 };
 
-use super::{
-	error::Error, BehaviorSubTree, BehaviorTreeComponent, TreeElement
-};
+use super::{BehaviorSubTree, BehaviorTreeComponent, TreeElement, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
@@ -63,24 +55,23 @@ fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 	match node {
 		TreeElement::Leaf(leaf) => {
 			std::println!("{indentation}- {}", leaf.id());
-		},
+		}
 		TreeElement::Node(node) => {
 			std::println!("{indentation}- {}", node.id());
 			for child in &**node.children() {
 				print_recursively(next_level, child)?;
-			}		
-		},
+			}
+		}
 		TreeElement::Proxy(proxy) => {
 			std::println!("{indentation}- SubTree: {}", proxy.id());
 			if let Some(subtree) = proxy.subtree() {
 				for child in &**subtree.read().children() {
 					print_recursively(next_level, child)?;
-				}			
+				}
 			} else {
 				std::println!("{indentation}   |- missing!!");
 			}
-
-		},
+		}
 	}
 	Ok(())
 }
@@ -102,13 +93,13 @@ impl BehaviorTree {
 		let mut subtrees = Vec::new();
 		for sub in registry.subtrees() {
 			subtrees.push(sub.clone());
-		};
+		}
 
 		// clone the current state of registered libraries
 		let mut libraries = Vec::new();
 		for lib in registry.libraries() {
 			libraries.push(lib.clone());
-		};
+		}
 		Self {
 			root,
 			subtrees,

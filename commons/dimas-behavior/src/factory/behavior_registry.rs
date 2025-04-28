@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(dead_code)]
 
 //! [`BehaviorRegistry`] library
 //!
@@ -17,7 +16,10 @@ use dimas_core::ConstString;
 use libloading::Library;
 use parking_lot::RwLock;
 
-use crate::{behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType}, tree::{BehaviorSubTree, BehaviorTreeComponent, TreeElement}};
+use crate::{
+	behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType},
+	tree::{BehaviorSubTree, BehaviorTreeComponent, TreeElement},
+};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -26,7 +28,7 @@ use super::error::Error;
 /// A registry for [`Behavior`]s used by the [`BehaviorTreeFactory`] for creation of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	/// Indicates tat the registry is properly setup, 
+	/// Indicates tat the registry is properly setup,
 	/// i.e. contains all necessary subtrees and the subtrees are linked together.
 	is_clean: bool,
 	/// List of availabble behaviors.
@@ -101,13 +103,13 @@ impl BehaviorRegistry {
 
 		Err(Error::BehaviorNotRegistered(id.into()))
 	}
-	
+
 	pub(crate) fn link_subtrees(&mut self) -> Result<(), Error> {
 		if !self.is_clean {
 			for subtree in self.subtrees.clone() {
 				self.link_subtree(subtree)?;
 			}
-			self.is_clean = true;	
+			self.is_clean = true;
 		}
 		Ok(())
 	}
@@ -130,21 +132,21 @@ impl BehaviorRegistry {
 	#[allow(unsafe_code)]
 	fn recursive_node(&self, node: &mut TreeElement) -> Result<(), Error> {
 		match node {
-			TreeElement::Leaf(_leaf) => {},
+			TreeElement::Leaf(_leaf) => {}
 			TreeElement::Node(node) => {
 				for child in &mut node.children_mut().0 {
 					self.recursive_node(child)?;
 				}
-			},
+			}
 			TreeElement::Proxy(proxy) => {
 				let id = proxy.id();
 				let subtree = self.subtree_by_name(id)?;
 				proxy.set_subtree(subtree);
-			},
+			}
 		}
 		Ok(())
 	}
-	
+
 	/// Prints out the list of registered behaviors
 	#[cfg(feature = "std")]
 	pub fn list_behaviors(&self) {
@@ -153,13 +155,13 @@ impl BehaviorRegistry {
 		}
 		std::println!();
 	}
-	
+
 	/// Get a reference to the registered libraries
 	#[must_use]
 	pub(crate) const fn libraries(&self) -> &Vec<Arc<Library>> {
 		&self.libraries
 	}
-	
+
 	/// Get the name list of registered (sub)trees
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
@@ -175,7 +177,7 @@ impl BehaviorRegistry {
 	pub(crate) const fn subtrees(&self) -> &Vec<BehaviorSubTree> {
 		&self.subtrees
 	}
-	
+
 	/// Find a subtree in the list and return a reference to it
 	/// # Errors
 	/// - if subtree is not found

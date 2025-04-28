@@ -8,7 +8,7 @@ const fn is_normal<T: Sized + Send + Sync>() {}
 
 #[test]
 const fn normal_types() {
-	// is_normal::<Behavior>();
+	//is_normal::<Behavior>();
 	// is_normal::<BehaviorFunction>();
 	// is_normal::<BehaviorTree>();
 	// is_normal::<Blackboard>();

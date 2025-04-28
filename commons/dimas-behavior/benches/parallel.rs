@@ -1,7 +1,5 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
-#![allow(clippy::unit_arg)]
-#![allow(clippy::unwrap_used)]
 
 //! Benchmarks of Sequence behaviors
 
@@ -31,26 +29,27 @@ const PARALLEL: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn parallel(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<AlwaysFailure>("AlwaysFailure")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
-	let mut tree = factory.create_from_text(PARALLEL).unwrap();
+	let mut tree = factory.create_from_text(PARALLEL).expect("snh");
 
 	c.bench_function("parallel", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }
@@ -72,26 +71,29 @@ const PARALLEL_ALL: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 fn parallel_all(c: &mut Criterion) {
 	let runtime = tokio::runtime::Builder::new_current_thread()
 		.build()
-		.unwrap();
+		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().unwrap();
+	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
 	factory
 		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.unwrap();
+		.expect("snh");
 	factory
 		.register_node_type::<AlwaysFailure>("AlwaysFailure")
-		.unwrap();
+		.expect("snh");
 
 	// create the BT
-	let mut tree = factory.create_from_text(PARALLEL_ALL).unwrap();
+	let mut tree = factory
+		.create_from_text(PARALLEL_ALL)
+		.expect("snh");
 
 	c.bench_function("parallel all", |b| {
 		b.iter(|| {
-			std::hint::black_box(for _ in 1..=100 {
+			for _ in 1..=100 {
 				runtime.block_on(async {
-					let _result = tree.tick_while_running().await.unwrap();
+					let _result = tree.tick_while_running().await.expect("snh");
 				});
-			});
+			}
+			std::hint::black_box(());
 		});
 	});
 }

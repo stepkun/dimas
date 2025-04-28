@@ -14,14 +14,18 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		action::Script, condition::script_condition::ScriptCondition, control::{
+		BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		action::Script,
+		condition::script_condition::ScriptCondition,
+		control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
 			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
 			sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree,
-		}, decorator::{
+		},
+		decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
 			retry_until_successful::RetryUntilSuccessful,
-		}, BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
+		},
 	},
 	blackboard::Blackboard,
 	factory::xml_parser::XmlParser,
@@ -96,10 +100,10 @@ impl BehaviorTreeFactory {
 	/// # Errors
 	/// - if behaviors are missing
 	pub fn create_main_tree(&mut self) -> Result<BehaviorTree, Error> {
-		let name = self.main_tree_name.clone().map_or_else(
-			|| "MainTree".into(),
-			|name| name,
-		);
+		let name = self
+			.main_tree_name
+			.clone()
+			.map_or_else(|| "MainTree".into(), |name| name);
 		self.create_tree(&name)
 	}
 
@@ -137,13 +141,10 @@ impl BehaviorTreeFactory {
 		}
 		// handle the attribute 'main_tree_to_execute`
 		self.main_tree_name = root
-		.attribute("main_tree_to_execute").map(|name| name.into());
-		
-		XmlParser::register_root_element(
-			&self.blackboard,
-			&mut self.registry,
-			root,
-		)?;
+			.attribute("main_tree_to_execute")
+			.map(|name| name.into());
+
+		XmlParser::register_root_element(&self.blackboard, &mut self.registry, root)?;
 		Ok(())
 	}
 

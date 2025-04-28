@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unwrap_used)]
 
 //! Tests of scripting logic operators
 
@@ -12,37 +11,39 @@ fn and() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("print false && false;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser
+		.parse("print false && false;")
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print true && false;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print true && false;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print true && true;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print true && true;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print false && true;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print false && true;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let chunk = parser
 		.parse("print true && true && false;")
-		.unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"false\n");
 
 	stdout.clear();
 	let chunk = parser
 		.parse("print true && true && true;")
-		.unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -53,13 +54,13 @@ fn or() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("print true || true;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print true || true;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print false || true;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print false || true;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -72,15 +73,15 @@ fn and_or() {
 	let mut parser = Parser::new();
 	let chunk = parser
 		.parse("print true || true && false;")
-		.unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let chunk = parser
 		.parse("print false || true && true;")
-		.unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 }
 
@@ -91,13 +92,13 @@ fn bitwise_and() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("print 0x1 & 0x1;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 & 0x1;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print 0x1 & 0x0;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 & 0x0;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"0\n");
 }
 
@@ -108,18 +109,18 @@ fn bitwise_or() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("print 0x1 | 0x1;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 | 0x1;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print 0x1 | 0x0;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 | 0x0;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print 0x1 | 0x2;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 | 0x2;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"3\n");
 }
 
@@ -130,18 +131,18 @@ fn bitwise_xor() {
 	let mut stdout: Vec<u8> = Vec::new();
 
 	let mut parser = Parser::new();
-	let chunk = parser.parse("print 0x1 ^ 0x1;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 ^ 0x1;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"0\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print 0x1 ^ 0x0;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 ^ 0x0;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"1\n");
 
 	stdout.clear();
-	let chunk = parser.parse("print 0x1 ^ 0x2;").unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+	let chunk = parser.parse("print 0x1 ^ 0x2;").expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"3\n");
 }
 
@@ -154,14 +155,14 @@ fn ternary() {
 	let mut parser = Parser::new();
 	let chunk = parser
 		.parse("print 1 < 2 ? true : false;")
-		.unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"true\n");
 
 	stdout.clear();
 	let chunk = parser
 		.parse("print 1 > 2 ? true : false;")
-		.unwrap();
-	vm.run(&chunk, &env, &mut stdout).unwrap();
+		.expect("snh");
+	vm.run(&chunk, &env, &mut stdout).expect("snh");
 	assert_eq!(stdout, b"false\n");
 }

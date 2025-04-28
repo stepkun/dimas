@@ -1,6 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-// #![allow(clippy::unused_async)]
-// #![allow(unused)]
 
 //! [`BehaviorTreeLeaf`] implementation.
 //!
@@ -89,11 +87,7 @@ impl BehaviorTreeLeaf {
 
 	/// Create a [`TreeElement`]`::Leaf`([`BehaviorTreeLeaf`])
 	#[must_use]
-	pub fn create(
-		id: &str,
-		tick_data: BehaviorTickData,
-		behavior: BehaviorPtr,
-	) -> TreeElement {
+	pub fn create(id: &str, tick_data: BehaviorTickData, behavior: BehaviorPtr) -> TreeElement {
 		TreeElement::Leaf(Self::new(id, tick_data, behavior))
 	}
 }

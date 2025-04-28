@@ -34,7 +34,7 @@ pub type BehaviorSubTree = Arc<RwLock<TreeElement>>;
 
 // region:		--- TreeElement
 /// An enum with the different types of tree elements.
-/// 
+///
 /// Using an enum makes sense, because there will most likely never be more than three kinds of elements.
 /// And it is not intended to give external access to the tree element type system.
 pub enum TreeElement {
