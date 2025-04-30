@@ -213,6 +213,11 @@ impl PortRemappings {
 		}
 		None
 	}
+
+	/// Optimize for size
+	pub fn shrink(&mut self) {
+		self.0.shrink_to_fit();
+	}
 }
 // endregion:   --- PortRemappings
 

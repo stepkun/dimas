@@ -28,15 +28,16 @@ use super::error::Error;
 /// A registry for [`Behavior`]s used by the [`BehaviorTreeFactory`] for creation of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	/// Indicates tat the registry is properly setup,
-	/// i.e. contains all necessary subtrees and the subtrees are linked together.
+	/// Indicates that the registry is properly setup,
+	/// i.e. contains all necessary subtrees and the subtrees are linked to sub-subtrees.
 	is_clean: bool,
-	/// List of availabble behaviors.
+	/// List of available behavior creation functions.
 	behaviors: Vec<(ConstString, BehaviorType, Arc<BehaviorCreationFn>)>,
 	/// List of available subtrees.
 	subtrees: Vec<BehaviorSubTree>,
 	/// List of loaded libraries.
-	/// Must be kept in storage until end of programm.
+	/// Every tree must keep a reference to its needed libraries to keep the libraries in memory
+	/// until end of programm.
 	libraries: Vec<Arc<Library>>,
 }
 
@@ -62,14 +63,19 @@ impl BehaviorRegistry {
 	}
 
 	/// The Library must be kept in storage until the [`BehaviorTree`] is destroyed.
-	/// Therefore the library is stored in the behavior registry, which is later owned by tree.
-	/// The `add_library(..)` function also takes care of registering all 'symbols'.
+	/// Therefore the library is stored in the behavior registry and later a cloned
+	/// reference is handed over to every created tree.
 	pub fn add_library(&mut self, library: Library) {
 		self.libraries.push(Arc::new(library));
 	}
 
-	/// Add a subtree to the registy.
-	/// Adding something to the subtree makes subtree 'dirty'.
+	/// Add a subtree to the registry.
+	/// # Errors
+	/// - if the subtree is already registered.
+	///
+	/// Adding a subtree to the registry makes the registry 'dirty'.
+	/// It is then necessary to run a `self.link_subtrees()` to ensure that all subtrees
+	/// are properly linked with the subtrees they rely on.
 	pub(crate) fn add_subtree(&mut self, subtree: TreeElement) -> Result<(), Error> {
 		for item in &self.subtrees {
 			if item.read().id() == subtree.id() {
@@ -91,7 +97,7 @@ impl BehaviorRegistry {
 		false
 	}
 
-	/// Fetch a behavior creation function from the registry
+	/// Fetch a behavior creation function from the registry.
 	/// # Errors
 	/// - if the behavior is not found in the registry
 	pub fn fetch(&self, id: &str) -> Result<(BehaviorType, Arc<BehaviorCreationFn>), Error> {
@@ -114,7 +120,7 @@ impl BehaviorRegistry {
 		Ok(())
 	}
 
-	/// Link each Proxy in a subtree to its subtree
+	/// Link each Proxy in a subtree to its corresponding subtree.
 	fn link_subtree(&self, subtree: &BehaviorSubTree) -> Result<(), Error> {
 		let node = &mut *subtree.write();
 		for child in &mut node.children_mut().0 {

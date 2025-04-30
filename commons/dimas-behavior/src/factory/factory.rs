@@ -81,51 +81,48 @@ impl BehaviorTreeFactory {
 		self.register_node_type::<Script>("Script")
 	}
 
-	/// Create a [`BehaviorTree`] from XML
+	/// Create a [`BehaviorTree`] directly from XML.
 	/// # Errors
 	/// - if XML is not well formatted
-	/// # Panics
-	/// - if unexpectedly a Some option is not containig a value :-D
+	/// - if no main tree is defined
+	/// - if behaviors or subtrees are missing
 	pub fn create_from_text(&mut self, xml: &str) -> Result<BehaviorTree, Error> {
 		self.register_behavior_tree_from_text(xml)?;
-		if self.main_tree_name.is_none() {
-			self.create_tree("MainTree")
-		} else {
-			let name = self.main_tree_name.as_ref().expect("snh").clone();
-			self.create_tree(&name)
-		}
+		self.create_main_tree()
 	}
 
-	/// Create a [`BehaviorTree`] with id `MainTree` from registration
+	/// Create a [`BehaviorTree`] from previous registration.
 	/// # Errors
-	/// - if behaviors are missing
+	/// - if no main tree has been defined during regisration
+	/// - if behaviors or subtrees are missing
 	pub fn create_main_tree(&mut self) -> Result<BehaviorTree, Error> {
-		let name = self
-			.main_tree_name
-			.clone()
-			.map_or_else(|| "MainTree".into(), |name| name);
-		self.create_tree(&name)
+		if let Some(name) = self.main_tree_name.clone() {
+			self.create_tree(&name)
+		} else {
+			self.create_tree("MainTree")
+		}
 	}
 
 	/// Create the named [`BehaviorTree`] from registration
 	/// # Errors
-	/// - if behaviors are missing
-	/// # Panics
+	/// - if no tree with `name` can be found
+	/// - if behaviors or subtrees are missing
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
 		self.registry.link_subtrees()?;
 		let root = self.registry.subtree_by_name(name)?;
 		Ok(BehaviorTree::new(root, &self.registry))
 	}
 
-	/// Prints out the list of registered behaviors
+	/// Prints out the list of registered behaviors.
 	#[cfg(feature = "std")]
 	pub fn list_behaviors(&self) {
 		self.registry.list_behaviors();
 	}
 
-	/// @TODO:
+	/// Register the behavior (sub)trees described by the XML. 
 	/// # Errors
-	/// # Panics
+	/// - on incorrect XML
+	/// - if tree description is not in BTCPP v4
 	#[allow(clippy::redundant_closure_for_method_calls)]
 	pub fn register_behavior_tree_from_text(&mut self, xml: &str) -> Result<(), Error> {
 		// general checks
@@ -139,6 +136,7 @@ impl BehaviorTreeFactory {
 				return Err(Error::BtCppFormat);
 			}
 		}
+
 		// handle the attribute 'main_tree_to_execute`
 		self.main_tree_name = root
 			.attribute("main_tree_to_execute")
@@ -148,7 +146,7 @@ impl BehaviorTreeFactory {
 		Ok(())
 	}
 
-	/// Get the name list of registered (sub)trees
+	/// Get the name list of registered (sub)trees.
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		self.registry.registered_behavior_trees()
@@ -157,7 +155,7 @@ impl BehaviorTreeFactory {
 	/// Register a behavior plugin.
 	/// For now it is  recommended, that
 	/// - the plugin resides in the executables directory and
-	/// - is compiled with the same tust version.
+	/// - is compiled with the same `Rust` version.
 	/// # Errors
 	/// - if library is not found ore does not found
 	/// - if library does not provide the `extern "Rust" register(&mut BehaviorTreeFactory) -> i32` function
@@ -196,13 +194,14 @@ impl BehaviorTreeFactory {
 		};
 
 		// The Library must be kept in storage until the [`BehaviorTree`] is destroyed.
-		// Therefore the library is handed over to the behavior registry, which is later owned by tree.
+		// Therefore the library is handed over to the behavior registry and later referenced by any tree.
 		self.registry.add_library(lib);
 		Ok(())
 	}
 
 	/// Register a [`Behavior`] of type <T>.
 	/// # Errors
+	/// - if a behavior with that `name` is already registered
 	pub fn register_node_type<T>(&mut self, name: &str) -> Result<(), Error>
 	where
 		T: BehaviorAllMethods,
@@ -215,6 +214,7 @@ impl BehaviorTreeFactory {
 
 	/// Register a function as [`Action`].
 	/// # Errors
+	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_action(
 		&mut self,
 		name: &str,
@@ -226,8 +226,9 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`Action`].
+	/// Register a function as [`Action`] which is using ports.
 	/// # Errors
+	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_action_with_ports(
 		&mut self,
 		name: &str,
@@ -242,6 +243,7 @@ impl BehaviorTreeFactory {
 
 	/// Register a function as [`Condition`].
 	/// # Errors
+	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_condition(
 		&mut self,
 		name: &str,
@@ -253,15 +255,17 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`Decorator`].
+	/// Register a function as [`Condition`] which is using ports.
 	/// # Errors
-	pub fn register_simple_decorator(
+	/// - if a behavior with that `name` is already registered
+	pub fn register_simple_condition_with_ports(
 		&mut self,
 		name: &str,
-		tick_fn: SimpleBhvrTickFn,
+		tick_fn: ComplexBhvrTickFn,
+		port_list: PortList,
 	) -> Result<(), Error> {
-		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
-		let bhvr_type = BehaviorType::Decorator;
+		let bhvr_creation_fn = SimpleBehavior::new_create_with_ports(tick_fn, port_list);
+		let bhvr_type = BehaviorType::Condition;
 		self.registry
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}

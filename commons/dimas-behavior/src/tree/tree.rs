@@ -109,7 +109,7 @@ impl BehaviorTree {
 
 	/// Pretty print the tree
 	/// # Errors
-	/// - if root tree is not yet set
+	/// - if tree depth exceeds 127 (sub)tree levels
 	pub fn print(&self) -> Result<(), Error> {
 		std::println!("{}", self.root.read().id());
 		print_recursively(0, &self.root.read())
@@ -117,7 +117,6 @@ impl BehaviorTree {
 
 	/// Get a (sub)tree where index 0 is root tree
 	/// # Errors
-	/// - if no root tree is set
 	/// - if index is out of bounds
 	pub fn subtree(&self, index: usize) -> Result<BehaviorSubTree, Error> {
 		if index == 0 {
@@ -131,7 +130,6 @@ impl BehaviorTree {
 
 	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`]
 	/// # Errors
-	/// - if no root exists
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
 		let mut status = BehaviorStatus::Idle;
 
@@ -150,7 +148,6 @@ impl BehaviorTree {
 
 	/// Ticks the tree exactly once
 	/// # Errors
-	/// - if no root exists
 	pub async fn tick_once(&mut self) -> BehaviorResult {
 		self.root.write().execute_tick()
 	}
@@ -179,6 +176,7 @@ impl DerefMut for BehaviorTreeComponentList {
 impl BehaviorTreeComponentList {
 	/// Reset all children
 	/// # Errors
+	/// - if a child errors on `halt()`
 	pub fn reset(&mut self) -> Result<(), BehaviorError> {
 		let x = &mut self.0;
 		for child in x {
