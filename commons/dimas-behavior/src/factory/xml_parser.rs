@@ -2,6 +2,8 @@
 
 //! XML parser for the [`BehaviorTreeFactory`] of `DiMAS`
 
+extern crate std;
+
 // region:      --- modules
 use dimas_core::ConstString;
 use hashbrown::HashMap;
@@ -10,7 +12,8 @@ use rustc_hash::FxBuildHasher;
 
 use crate::{
 	behavior::{BehaviorConfigurationData, BehaviorPtr, BehaviorTickData, BehaviorType},
-	blackboard::Blackboard,
+	blackboard::BlackboardNodeRef,
+	port::{PortRemappings, is_allowed_name},
 	tree::{
 		BehaviorTreeComponentList, BehaviorTreeLeaf, BehaviorTreeNode, BehaviorTreeProxy,
 		TreeElement,
@@ -38,7 +41,6 @@ pub struct XmlParser {}
 
 impl XmlParser {
 	pub(crate) fn register_root_element(
-		blackboard: &Blackboard,
 		registry: &mut BehaviorRegistry,
 		element: Node,
 	) -> Result<(), Error> {
@@ -61,10 +63,7 @@ impl XmlParser {
 						"BehaviorTree" => {
 							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
-								// A subtreee gets a new [`Blackboard`] with parent trees [`Blackboard`] as parent
-								let blackboard = blackboard.clone();
-								let new_subtree =
-									Self::handle_subtree(&blackboard, registry, element, id)?;
+								let new_subtree = Self::handle_subtree(registry, element, id)?;
 								// store subtree for later usage
 								registry.add_subtree(new_subtree)?;
 							} else {
@@ -89,12 +88,12 @@ impl XmlParser {
 	}
 
 	fn build_children(
-		blackboard: &Blackboard,
+		blackboard: BlackboardNodeRef,
 		registry: &mut BehaviorRegistry,
 		element: Node,
 	) -> Result<BehaviorTreeComponentList, Error> {
 		let mut children = BehaviorTreeComponentList::default();
-
+		let blackboard = blackboard;
 		for child in element.children() {
 			match child.node_type() {
 				NodeType::Comment | NodeType::Text => {} // ignore
@@ -107,7 +106,7 @@ impl XmlParser {
 					));
 				}
 				NodeType::Element => {
-					let behavior = Self::build_child(blackboard, registry, child)?;
+					let behavior = Self::build_child(blackboard.clone(), registry, child)?;
 					children.push(behavior);
 				}
 				NodeType::PI => {
@@ -124,51 +123,47 @@ impl XmlParser {
 
 	#[allow(clippy::option_if_let_else)]
 	fn build_child(
-		blackboard: &Blackboard,
+		blackboard: BlackboardNodeRef,
 		registry: &mut BehaviorRegistry,
 		element: Node,
 	) -> Result<TreeElement, Error> {
 		let element_name = element.tag_name().name();
-		let attrs = attrs_to_map(element.attributes());
 		if element_name == "SubTree" {
+			let attrs = attrs_to_map(element.attributes());
 			if let Some(id) = attrs.get("ID") {
 				let behavior = BehaviorTreeProxy::create(id, BehaviorTickData::default());
-				// let config_data = BehaviorConfigurationData::new(id);
+				let _config_data = BehaviorConfigurationData::new(id);
 				Ok(behavior)
 			} else {
 				Err(Error::MissingId(element.tag_name().name().into()))
 			}
 		} else {
-			// look for the behavior in the [`BehaviorRegisty`]
+			// look for the behavior in the `BehaviorRegistry`
 			let (bhvr_type, bhvr_creation_fn) = registry.fetch(element_name)?;
 			let bhvr = bhvr_creation_fn();
+			let attrs = attrs_to_map(element.attributes());
+			let (autoremap, remappings) = Self::create_remappings(element_name, &bhvr, &attrs)?;
+			let blackboard = BlackboardNodeRef::with(blackboard, remappings, autoremap);
 			let tree_node = match bhvr_type {
 				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
 						return Err(Error::ChildrenNotAllowed(element_name.into()));
 					}
-					let mut config_data = BehaviorConfigurationData::new(element_name);
-					let mut tick_data = BehaviorTickData::new(blackboard.clone());
-					Self::create_ports(&bhvr, &mut tick_data, &mut config_data, &element)?;
+					let _config_data = BehaviorConfigurationData::new(element_name);
+					let tick_data = BehaviorTickData::new(blackboard);
 					BehaviorTreeLeaf::create(element_name, tick_data, bhvr)
 				}
 				BehaviorType::Control | BehaviorType::Decorator => {
-					let children = Self::build_children(blackboard, registry, element)?;
+					let children = Self::build_children(blackboard.clone(), registry, element)?;
 
 					if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
 						return Err(Error::DecoratorOnlyOneChild(
 							element.tag_name().name().into(),
 						));
 					}
-					let mut tick_data = BehaviorTickData::new(blackboard.clone());
-					let mut config_data = BehaviorConfigurationData::default();
-					Self::create_ports(&bhvr, &mut tick_data, &mut config_data, &element)?;
-					BehaviorTreeNode::create(
-						element_name,
-						children,
-						BehaviorTickData::new(blackboard.clone()),
-						bhvr,
-					)
+					let tick_data = BehaviorTickData::new(blackboard);
+					let _config_data = BehaviorConfigurationData::default();
+					BehaviorTreeNode::create(element_name, children, tick_data, bhvr)
 				}
 				BehaviorType::SubTree => {
 					todo!()
@@ -178,61 +173,65 @@ impl XmlParser {
 		}
 	}
 
-	fn create_ports(
+	pub(crate) fn handle_subtree(
+		registry: &mut BehaviorRegistry,
+		element: Node,
+		id: &str,
+	) -> Result<TreeElement, Error> {
+		// look for the behavior in the `BehaviorRegistry`
+		let (_bhvr_type, bhvr_creation_fn) = registry.fetch("Subtree")?;
+		let bhvr = bhvr_creation_fn();
+		let attrs = attrs_to_map(element.attributes());
+		let (autoremap, remappings) = Self::create_remappings(id, &bhvr, &attrs)?;
+		let blackboard = BlackboardNodeRef::new(remappings, autoremap);
+		let children = Self::build_children(blackboard.clone(), registry, element)?;
+		let tick_data = BehaviorTickData::new(blackboard);
+		let _config_data = BehaviorConfigurationData::new(id);
+		let subtree = BehaviorTreeNode::create(id, children, tick_data, bhvr);
+		Ok(subtree)
+	}
+
+	fn create_remappings(
+		id: &str,
 		bhvr: &BehaviorPtr,
-		tick_data: &mut BehaviorTickData,
-		config_data: &mut BehaviorConfigurationData,
-		element: &Node,
-	) -> Result<(), Error> {
-		//let mut remappings = NewPortRemappings::new();
-		for attribute in element.attributes() {
-			let name = attribute.name();
-			let value = attribute.value();
-			// port "name" is always available
-			if name == "name" {
-				config_data.set_name(value);
+		attrs: &HashMap<ConstString, ConstString, FxBuildHasher>,
+	) -> Result<(bool, PortRemappings), Error> {
+		let autoremap = match attrs.get("_autoremap") {
+			Some(s) => match s.parse::<bool>() {
+				Ok(val) => val,
+				Err(_) => return Err(Error::WrongAutoremap),
+			},
+			None => false,
+		};
+
+		let mut remappings = PortRemappings::default();
+		for (key, value) in attrs {
+			let key = key.as_ref();
+			if key == "name" {
+				// port "name" is always available
+			} else if key == "ID" {
+				// ignore as it is not a Port
 			} else {
 				// fetch found port name from list of provided ports
 				let port_list = bhvr.static_provided_ports();
-				match port_list.find(name) {
-					Some(port_definition) => {
-						tick_data.add_port(name, port_definition.direction, value)?;
+				match port_list.find(key) {
+					Some(_) => {
+						// check value for port_name
+						if is_allowed_name(value) {
+							remappings.add(key, value)?;
+						}
 					}
 					None => {
 						return Err(Error::PortInvalid(
-							name.into(),
-							config_data.name().into(),
+							key.into(),
+							id.into(),
 							port_list.entries(),
 						));
 					}
 				}
 			}
 		}
-		tick_data.remappings.shrink();
-		Ok(())
-	}
-
-	pub(crate) fn handle_subtree(
-		_blackboard: &Blackboard,
-		registry: &mut BehaviorRegistry,
-		element: Node,
-		id: &str,
-	) -> Result<TreeElement, Error> {
-		let blackboard = Blackboard::default();
-		// look for the behavior in the [`BehaviorRegisty`]
-		let (_bhvr_type, bhvr_creation_fn) = registry.fetch("Subtree")?;
-		let bhvr = bhvr_creation_fn();
-		// let attrs = attrs_to_map(element.attributes());
-		let children = Self::build_children(&blackboard, registry, element)?;
-		// let tick_data = BehaviorTickData::new(blackboard);
-		// let config_data = BehaviorConfigurationData::new(id);
-		let subtree = BehaviorTreeNode::create(
-			id,
-			children,
-			BehaviorTickData::new(Blackboard::default()),
-			bhvr,
-		);
-		Ok(subtree)
+		Ok((autoremap, remappings))
 	}
 }
 // endregion:   --- XmlParser

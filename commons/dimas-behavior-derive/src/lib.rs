@@ -50,7 +50,7 @@ use syn::DeriveInput;
 /// impl BehaviorTreeMethods for MyBehavior {}
 ///
 /// impl BehaviorRedirectionMethods for MyBehavior {
-///     fn static_provided_ports(&self) -> NewPortList {
+///     fn static_provided_ports(&self) -> PortList {
 ///         Self::provided_ports()
 ///     }
 /// }

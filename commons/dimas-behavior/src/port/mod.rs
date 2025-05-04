@@ -34,16 +34,16 @@ macro_rules! input_port_macro {
 #[macro_export]
 macro_rules! inout_port_macro {
 	($tp:ty, $name:literal) => {
-		$crate::port::create_port::<$tp>($crate::port::NewPortDirection::InOut, $name, "", "")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, "", "")
 			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal) => {
-		$crate::port::create_port::<$tp>($crate::port::NewPortDirection::InOut, $name, $default, "")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, "")
 			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal) => {
 		$crate::port::create_port::<$tp>(
-			$crate::port::NewPortDirection::InOut,
+			$crate::port::PortDirection::InOut,
 			$name,
 			$default,
 			$desc,

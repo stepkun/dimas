@@ -4,17 +4,11 @@
 //!
 
 // region:      --- modules
-use alloc::{format, string::ToString};
-use core::{any::TypeId, str::FromStr};
+use alloc::string::{String, ToString};
+use core::str::FromStr;
 use dimas_core::ConstString;
 
-use crate::{
-	blackboard::Blackboard,
-	port::{
-		NewPortDirection, PortRemappings, error::Error, get_remapped_key, is_bb_pointer,
-		strip_bb_pointer,
-	},
-};
+use crate::blackboard::{BlackboardInterface, BlackboardNodeRef};
 
 use super::{BehaviorResult, BehaviorStatus, error::BehaviorError};
 // endregion:   --- modules
@@ -62,106 +56,52 @@ impl BehaviorConfigurationData {
 pub struct BehaviorTickData {
 	/// Current [`BehaviorStatus`]
 	pub status: BehaviorStatus,
-	/// [`Blackboard`] for this [`Behavior`]
-	pub(crate) blackboard: Blackboard,
-	/// Ports including remapping
-	pub(crate) remappings: PortRemappings,
+	/// [`BlackboardNodeRef`] for this [`Behavior`]
+	pub(crate) blackboard: BlackboardNodeRef,
 }
 impl BehaviorTickData {
 	/// Constructor
 	#[must_use]
-	pub fn new(blackboard: Blackboard) -> Self {
+	pub fn new(blackboard: BlackboardNodeRef) -> Self {
 		Self {
 			blackboard,
 			..Default::default()
 		}
 	}
 
-	/// Adds a port to the config based on the direction
-	/// # Errors
-	/// - if port is already in remappings
-	pub fn add_port(
-		&mut self,
-		name: &str,
-		direction: NewPortDirection,
-		value: &str,
-	) -> Result<(), Error> {
-		self.remappings.add(name, direction, value)
-	}
-
 	/// Get value of an input port.
 	/// # Errors
-	#[allow(clippy::option_if_let_else)]
 	pub fn get_input<T>(&self, port_name: &str) -> BehaviorResult<T>
 	where
-		T: FromStr + Clone + core::fmt::Debug + Send + Sync + 'static,
+		T: FromStr + ToString + Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
-		if let Some(remapped_name) = self
-			.remappings
-			.find(port_name, NewPortDirection::In)
-		{
-			// entry found
-			if remapped_name.is_empty() {
-				todo!()
-			} else {
-				match get_remapped_key(port_name, &remapped_name) {
-					// Value is a Blackboard pointer
-					Some(key) => self
-						.blackboard
-						.get_stringy::<T>(&key)
-						.map_or_else(|| Err(BehaviorError::NotInBlackboard(key)), |val| Ok(val)),
-					// Value is just a normal string
-					None => <T as FromStr>::from_str(&remapped_name).map_or_else(
-						|_| {
-							Err(BehaviorError::ParsePortValue(
-								port_name.into(),
-								format!("{:?}", TypeId::of::<T>()).into(),
-							))
+		self.blackboard.get::<T>(port_name).map_or_else(
+			|_err| {
+				self.blackboard
+					.get::<String>(port_name)
+					.map_or_else(
+						|_| Err(BehaviorError::NotInBlackboard(port_name.into())),
+						|s| {
+							T::from_str(&s).map_or_else(
+								|_| Err(BehaviorError::NotInBlackboard(port_name.into())),
+								|val| Ok(val),
+							)
 						},
-						|val| Ok(val),
-					),
-				}
-			}
-		} else {
-			// no entry found
-			Err(BehaviorError::PortNotDeclared(
-				port_name.into(),
-				"todo in behavior.rs get_input()".into(),
-			))
-		}
+					)
+			},
+			|val| Ok(val),
+		)
 	}
 
 	/// Set value of an output port.
 	/// # Errors
-	pub fn set_output<T>(&self, port: &str, value: T) -> BehaviorResult<()>
+	pub fn set_output<T>(&mut self, port_name: &str, value: T) -> BehaviorResult<()>
 	where
-		T: Clone + core::fmt::Debug + Send + Sync + 'static,
+		T: FromStr + ToString + Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
-		let port_name = port.to_string();
-		if let Some(remapped_name) = self.remappings.find(port, NewPortDirection::Out) {
-			// entry found
-			let blackboard_key = match &*remapped_name {
-				"=" => port_name,
-				value => {
-					if is_bb_pointer(value) {
-						strip_bb_pointer(value)
-							.unwrap_or_else(|| todo!())
-							.to_string()
-					} else {
-						value.to_string()
-					}
-				}
-			};
+		self.blackboard.set(port_name, value)?;
 
-			self.blackboard.set(blackboard_key, value);
-
-			Ok(())
-		} else {
-			// entry not found
-			Err(BehaviorError::Internal(
-				(port_name + " could not set in Blackboard, possibly not defined as output").into(),
-			))
-		}
+		Ok(())
 	}
 }
 // endregion:   --- BehaviorTickData

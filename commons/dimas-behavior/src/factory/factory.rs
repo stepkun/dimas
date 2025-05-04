@@ -1,7 +1,9 @@
 // Copyright © 2025 Stephan Kunz
 
-//! Factory for creation and modification of [`BehaviorTree`]s
+//! Factory for creation and modification of [`BehaviorTree`]s.
 //!
+//! The factory ensures that a tree is properly created and libraries or plugins
+//! are loaded properly and kept in memory as long as needed.
 
 #[doc(hidden)]
 #[cfg(feature = "std")]
@@ -27,7 +29,6 @@ use crate::{
 			retry_until_successful::RetryUntilSuccessful,
 		},
 	},
-	blackboard::Blackboard,
 	factory::xml_parser::XmlParser,
 	port::PortList,
 	tree::BehaviorTree,
@@ -40,7 +41,6 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 /// Factory for creation and modification of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorTreeFactory {
-	blackboard: Blackboard,
 	registry: BehaviorRegistry,
 	main_tree_name: Option<ConstString>,
 }
@@ -119,7 +119,7 @@ impl BehaviorTreeFactory {
 		self.registry.list_behaviors();
 	}
 
-	/// Register the behavior (sub)trees described by the XML. 
+	/// Register the behavior (sub)trees described by the XML.
 	/// # Errors
 	/// - on incorrect XML
 	/// - if tree description is not in BTCPP v4
@@ -142,7 +142,7 @@ impl BehaviorTreeFactory {
 			.attribute("main_tree_to_execute")
 			.map(|name| name.into());
 
-		XmlParser::register_root_element(&self.blackboard, &mut self.registry, root)?;
+		XmlParser::register_root_element(&mut self.registry, root)?;
 		Ok(())
 	}
 
