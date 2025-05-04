@@ -7,7 +7,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn boolean_equality(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new();
@@ -18,7 +18,8 @@ fn boolean_equality(c: &mut Criterion) {
 	c.bench_function("boolean equality", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -26,7 +27,7 @@ fn boolean_equality(c: &mut Criterion) {
 }
 
 fn double_equality(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new();
@@ -37,7 +38,8 @@ fn double_equality(c: &mut Criterion) {
 	c.bench_function("double equality", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -45,7 +47,7 @@ fn double_equality(c: &mut Criterion) {
 }
 
 fn integer_equality(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new();
@@ -56,7 +58,8 @@ fn integer_equality(c: &mut Criterion) {
 	c.bench_function("integer equality", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -64,7 +67,7 @@ fn integer_equality(c: &mut Criterion) {
 }
 
 fn string_equality(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new();
@@ -73,7 +76,8 @@ fn string_equality(c: &mut Criterion) {
 	c.bench_function("string equality", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -81,7 +85,7 @@ fn string_equality(c: &mut Criterion) {
 }
 
 fn mixed_equality(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
@@ -93,7 +97,8 @@ fn mixed_equality(c: &mut Criterion) {
 	c.bench_function("mixed equality", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});

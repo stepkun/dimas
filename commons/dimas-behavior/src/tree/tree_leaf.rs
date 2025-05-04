@@ -13,7 +13,7 @@ use crate::{
 	behavior::{
 		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
 	},
-	blackboard::Blackboard,
+	blackboard::BlackboardNodeRef,
 };
 
 use super::{BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
@@ -37,7 +37,7 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 		&self.id
 	}
 
-	fn blackboard(&self) -> Blackboard {
+	fn blackboard(&self) -> BlackboardNodeRef {
 		self.tick_data.blackboard.clone()
 	}
 
@@ -85,7 +85,7 @@ impl BehaviorTreeLeaf {
 		}
 	}
 
-	/// Create a [`TreeElement`]`::Leaf`([`BehaviorTreeLeaf`])
+	/// Create a tree leaf <code>TreeElement::Leaf(BehaviorTreeLeaf)</code>.
 	#[must_use]
 	pub fn create(id: &str, tick_data: BehaviorTickData, behavior: BehaviorPtr) -> TreeElement {
 		TreeElement::Leaf(Self::new(id, tick_data, behavior))

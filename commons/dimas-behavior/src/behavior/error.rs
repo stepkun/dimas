@@ -14,6 +14,9 @@ use thiserror::Error;
 /// `dimas-behavior` behavior error type
 #[derive(Error, Debug)]
 pub enum BehaviorError {
+	/// Pass through blackboard error
+	#[error("{0}")]
+	Blackboard(#[from] crate::blackboard::error::Error),
 	/// Error in structural composition of a behaviors children
 	#[error("{0}")]
 	Composition(ConstString),

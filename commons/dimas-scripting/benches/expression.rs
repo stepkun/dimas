@@ -7,7 +7,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn simple_expression(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
@@ -17,7 +17,8 @@ fn simple_expression(c: &mut Criterion) {
 	c.bench_function("simple expression", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -25,7 +26,7 @@ fn simple_expression(c: &mut Criterion) {
 }
 
 fn moderate_expression(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
@@ -37,7 +38,8 @@ fn moderate_expression(c: &mut Criterion) {
 	c.bench_function("moderate expression", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -45,7 +47,7 @@ fn moderate_expression(c: &mut Criterion) {
 }
 
 fn string_addition(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 
@@ -57,7 +59,8 @@ fn string_addition(c: &mut Criterion) {
 	c.bench_function("string addition", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});

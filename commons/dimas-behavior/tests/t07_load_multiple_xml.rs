@@ -40,7 +40,6 @@ const XML_SUB_B: &str = r#"
 
 #[tokio::test]
 #[serial]
-#[ignore]
 async fn load_multiple_xml() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 

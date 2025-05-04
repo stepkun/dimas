@@ -92,10 +92,10 @@ impl CrossDoor {
 		}
 	}
 
-	/// WILL always open a door
+	/// Will always open a door
 	/// # Errors
 	/// never
-	pub fn smash_door(&mut self) -> BehaviorResult {
+	pub const fn smash_door(&mut self) -> BehaviorResult {
 		self.door_locked = false;
 		self.door_open = true;
 		// smash always works

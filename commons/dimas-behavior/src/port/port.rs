@@ -33,7 +33,7 @@ const FORBIDDEN_NAMES: &[&str] = &[
 ];
 
 /// An immutable remapping entry
-type RemappingEntry = (ConstString, (NewPortDirection, ConstString));
+type RemappingEntry = (ConstString, ConstString);
 // endregion:   --- types
 
 // region:      --- helper
@@ -75,15 +75,15 @@ pub fn is_bb_pointer(port: &str) -> bool {
 /// # Errors
 /// - if the name violates the conventions.
 pub fn create_port<T: 'static>(
-	direction: NewPortDirection,
+	direction: PortDirection,
 	name: &str,
 	default: &str,
 	description: &str,
-) -> Result<NewPortDefinition, Error> {
+) -> Result<PortDefinition, Error> {
 	if is_allowed_name(name) {
 		let type_id = TypeId::of::<T>();
-		Ok(NewPortDefinition {
-			direction,
+		Ok(PortDefinition {
+			_direction: direction,
 			_type_id: type_id,
 			name: name.into(),
 			_default_value: default.into(),
@@ -94,7 +94,11 @@ pub fn create_port<T: 'static>(
 	}
 }
 
-fn is_allowed_name(name: &str) -> bool {
+/// Check a name to be allowed for ports
+/// # Panics
+/// - if something weird happens
+#[must_use]
+pub fn is_allowed_name(name: &str) -> bool {
 	if name.is_empty() {
 		return false;
 	}
@@ -116,10 +120,10 @@ fn is_allowed_name(name: &str) -> bool {
 /// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
 /// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
 #[derive(Debug, Default)]
-pub struct PortList(pub Vec<NewPortDefinition>);
+pub struct PortList(pub Vec<PortDefinition>);
 
 impl Deref for PortList {
-	type Target = Vec<NewPortDefinition>;
+	type Target = Vec<PortDefinition>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.0
@@ -136,7 +140,7 @@ impl PortList {
 	/// Add an entry to the [`PortList`]
 	/// # Errors
 	/// - if entry already exists
-	pub fn add(&mut self, port_definition: NewPortDefinition) -> Result<(), Error> {
+	pub fn add(&mut self, port_definition: PortDefinition) -> Result<(), Error> {
 		for entry in &self.0 {
 			if entry.name == port_definition.name {
 				return Err(Error::AlreadyInPortList(entry.name.as_ref().into()));
@@ -162,7 +166,7 @@ impl PortList {
 
 	/// Lookup a [`PortDefinition`].
 	#[must_use]
-	pub fn find(&self, name: &str) -> Option<NewPortDefinition> {
+	pub fn find(&self, name: &str) -> Option<PortDefinition> {
 		for entry in &self.0 {
 			if &*entry.name == name {
 				return Some(entry.clone());
@@ -185,30 +189,22 @@ impl PortRemappings {
 	/// Add an entry to the [`PortRemappings`]
 	/// # Errors
 	/// - if entry already exists
-	pub fn add(
-		&mut self,
-		name: &str,
-		direction: NewPortDirection,
-		remapped_name: &str,
-	) -> Result<(), Error> {
+	pub fn add(&mut self, name: &str, remapped_name: &str) -> Result<(), Error> {
 		for (original, _) in &self.0 {
 			if original.as_ref() == name {
 				return Err(Error::AlreadyInRemappings(name.into()));
 			}
 		}
-		self.0
-			.push((name.into(), (direction, remapped_name.into())));
+		self.0.push((name.into(), remapped_name.into()));
 		Ok(())
 	}
 
 	/// Lookup the remapped name.
 	#[must_use]
-	pub fn find(&self, name: &str, direction: NewPortDirection) -> Option<ConstString> {
+	pub fn find(&self, name: &str) -> Option<ConstString> {
 		for (original, remapped) in &self.0 {
-			if original.as_ref() == name
-				&& ((direction == remapped.0) || (remapped.0 == NewPortDirection::InOut))
-			{
-				return Some((remapped.1).clone());
+			if original.as_ref() == name {
+				return Some(remapped.clone());
 			}
 		}
 		None
@@ -225,7 +221,7 @@ impl PortRemappings {
 /// A [`Port`]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-pub enum NewPortDirection {
+pub enum PortDirection {
 	/// Input port
 	In,
 	/// Output port
@@ -234,7 +230,7 @@ pub enum NewPortDirection {
 	InOut,
 }
 
-impl core::fmt::Display for NewPortDirection {
+impl core::fmt::Display for PortDirection {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		let text = match self {
 			Self::In => "Input",
@@ -251,20 +247,20 @@ impl core::fmt::Display for NewPortDirection {
 /// A static [`PortDefinition`], which is used for configuration.
 /// Access to members is public within crate to maximize performance
 #[derive(Clone, Debug)]
-pub struct NewPortDefinition {
-	pub(crate) direction: NewPortDirection,
+pub struct PortDefinition {
+	pub(crate) _direction: PortDirection,
 	pub(crate) _type_id: TypeId,
 	pub(crate) name: ConstString,
 	pub(crate) _default_value: ConstString,
 	pub(crate) _description: ConstString,
 }
 
-impl NewPortDefinition {
+impl PortDefinition {
 	/// Constructor
 	/// # Errors
 	/// - if the name violates the conventions.
 	pub fn new(
-		direction: NewPortDirection,
+		direction: PortDirection,
 		type_id: TypeId,
 		name: &str,
 		default_value: &str,
@@ -272,7 +268,7 @@ impl NewPortDefinition {
 	) -> Result<Self, Error> {
 		if is_allowed_name(name) {
 			Ok(Self {
-				direction,
+				_direction: direction,
 				_type_id: type_id,
 				name: name.into(),
 				_default_value: default_value.into(),

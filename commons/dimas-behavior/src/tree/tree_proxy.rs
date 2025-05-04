@@ -15,7 +15,7 @@ use dimas_core::ConstString;
 
 use crate::{
 	behavior::{BehaviorResult, BehaviorTickData, error::BehaviorError},
-	blackboard::Blackboard,
+	blackboard::BlackboardNodeRef,
 };
 
 use super::{BehaviorSubTree, BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
@@ -39,7 +39,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 		&self.id
 	}
 
-	fn blackboard(&self) -> Blackboard {
+	fn blackboard(&self) -> BlackboardNodeRef {
 		self.tick_data.blackboard.clone()
 	}
 
@@ -102,7 +102,7 @@ impl BehaviorTreeProxy {
 		}
 	}
 
-	/// Create a [`TreeElement`]`::Proxy`([`BehaviorTreeProxy`])
+	/// Create a tree leaf <code>TreeElement::Proxy(BehaviorTreeProxy)</code>.
 	#[must_use]
 	pub fn create(id: &str, tick_data: BehaviorTickData) -> TreeElement {
 		TreeElement::Proxy(Self::new(id, tick_data))

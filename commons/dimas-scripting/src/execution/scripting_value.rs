@@ -8,7 +8,10 @@ extern crate alloc;
 
 // region:		--- modules
 use alloc::string::String;
-use core::fmt::{Debug, Display, Formatter};
+use core::{
+	fmt::{Debug, Display, Formatter},
+	str::FromStr,
+};
 
 use super::Error;
 // endregion:	--- modules
@@ -38,6 +41,14 @@ impl Display for ScriptingValue {
 			Self::Int64(val) => write!(f, "{val}"),
 			Self::String(val) => write!(f, "{val}"),
 		}
+	}
+}
+
+impl FromStr for ScriptingValue {
+	type Err = Error;
+
+	fn from_str(_s: &str) -> Result<Self, Self::Err> {
+		todo!()
 	}
 }
 

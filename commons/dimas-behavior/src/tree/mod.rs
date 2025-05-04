@@ -22,7 +22,7 @@ use parking_lot::RwLock;
 
 use crate::{
 	behavior::{BehaviorResult, error::BehaviorError},
-	blackboard::Blackboard,
+	blackboard::BlackboardNodeRef,
 };
 // endregion:   --- modules
 
@@ -55,7 +55,7 @@ impl BehaviorTreeComponent for TreeElement {
 		}
 	}
 
-	fn blackboard(&self) -> Blackboard {
+	fn blackboard(&self) -> BlackboardNodeRef {
 		match self {
 			Self::Leaf(leaf) => leaf.blackboard(),
 			Self::Node(node) => node.blackboard(),
@@ -120,7 +120,7 @@ pub trait BehaviorTreeComponent: Send + Sync {
 	fn id(&self) -> &str;
 
 	/// Get the blackboard
-	fn blackboard(&self) -> Blackboard;
+	fn blackboard(&self) -> BlackboardNodeRef;
 
 	/// Get the children
 	fn children(&self) -> &BehaviorTreeComponentList;

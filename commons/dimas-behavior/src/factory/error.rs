@@ -40,21 +40,24 @@ pub enum Error {
 	#[cfg(feature = "std")]
 	#[error("{0}")]
 	Env(#[from] std::io::Error),
-	/// Passthrough for libloading Errors
-	#[error("{0}")]
-	Libloading(#[from] libloading::Error),
 	/// Decorator with more than 1 child
 	#[error("the Decorator [{0}] has more than 1 child")]
 	DecoratorOnlyOneChild(ConstString),
 	/// Unsupported XML element:
 	#[error("element [{0}] is not supported")]
 	ElementNotSupported(ConstString),
+	/// Passthrough for libloading Errors
+	#[error("{0}")]
+	Libloading(#[from] libloading::Error),
 	/// Missing a corresponing end tag
 	#[error("missing end tag for [{0}]")]
 	MissingEndTag(ConstString),
 	/// Attribut 'ID' is missing
 	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(ConstString),
+	/// Name for a port is not allowed
+	#[error("name [{0}] not allowed for a port")]
+	NameNotAllowed(ConstString),
 	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' name provided")]
 	NoMainTreeName,
@@ -85,6 +88,9 @@ pub enum Error {
 	/// Processing instruction
 	#[error("processing instruction [{0}] is not supported")]
 	UnsupportedProcessingInstruction(ConstString),
+	/// Wrong value for "_autoremap"
+	#[error("'_autoremap' must be 'true' or 'false'")]
+	WrongAutoremap,
 	/// Wrong name for the root element
 	#[error("root element must be named 'root'")]
 	WrongRootName,

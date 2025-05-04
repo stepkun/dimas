@@ -7,7 +7,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_scripting::{DefaultEnvironment, Parser, VM};
 
 fn double_comparison(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new();
@@ -18,7 +18,8 @@ fn double_comparison(c: &mut Criterion) {
 	c.bench_function("double comparison", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -26,7 +27,7 @@ fn double_comparison(c: &mut Criterion) {
 }
 
 fn integer_comparison(c: &mut Criterion) {
-	let env = DefaultEnvironment::default();
+	let mut env = DefaultEnvironment::default();
 	let mut vm = VM::default();
 	let mut stdout: Vec<u8> = Vec::new();
 	let mut parser = Parser::new();
@@ -37,7 +38,8 @@ fn integer_comparison(c: &mut Criterion) {
 	c.bench_function("integer comparison", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &env, &mut stdout).expect("snh");
+				vm.run(&chunk, &mut env, &mut stdout)
+					.expect("snh");
 			}
 			std::hint::black_box(());
 		});

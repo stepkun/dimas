@@ -35,10 +35,10 @@ impl BehaviorInstanceMethods for Script {
 
 		let chunk = self.parser.parse(&code)?;
 
-		let env = tick_data.blackboard.clone();
+		let mut env = tick_data.blackboard.clone();
 		let mut vm = VM::default();
 		let mut out = Vec::new();
-		let value = vm.run(&chunk, &env, &mut out)?;
+		let value = vm.run(&chunk, &mut env, &mut out)?;
 
 		let status = if value.is_bool() {
 			let val = value.as_bool()?;

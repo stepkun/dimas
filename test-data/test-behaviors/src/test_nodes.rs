@@ -9,7 +9,10 @@ extern crate alloc;
 // region:		--- modules
 use alloc::str::FromStr;
 use core::num::ParseFloatError;
-use std::time::{Duration, Instant};
+use std::{
+	fmt::Display,
+	time::{Duration, Instant},
+};
 
 use dimas_behavior::{
 	behavior::{
@@ -112,7 +115,7 @@ impl BehaviorInstanceMethods for ThinkWhatToSay {
 		tick_data: &mut BehaviorTickData,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		tick_data.set_output("text", "The answer is 42")?;
+		tick_data.set_output("text", String::from("The answer is 42"))?;
 		Ok(BehaviorStatus::Success)
 	}
 }
@@ -158,6 +161,12 @@ impl FromStr for Position2D {
 		let x = f64::from_str(v[0])?;
 		let y = f64::from_str(v[1])?;
 		Ok(Self { x, y })
+	}
+}
+
+impl Display for Position2D {
+	fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		todo!()
 	}
 }
 
@@ -237,6 +246,12 @@ impl FromStr for Pose2D {
 		let y = f64::from_str(v[1])?;
 		let theta = f64::from_str(v[2])?;
 		Ok(Self { x, y, theta })
+	}
+}
+
+impl Display for Pose2D {
+	fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		todo!()
 	}
 }
 

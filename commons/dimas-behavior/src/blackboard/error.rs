@@ -15,6 +15,12 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// @TODO:
+	#[error("Couldn't find entry [{0}]")]
+	NotFound(ConstString),
+	/// @TODO:
+	#[error("Entry [{0}] has a different type")]
+	WrongType(ConstString),
+	/// @TODO:
 	#[error("Couldn't find port [{0}]")]
 	PortError(ConstString),
 

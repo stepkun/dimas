@@ -55,19 +55,19 @@ use rustc_hash::FxBuildHasher;
 
 /// The trait for providing an [`Environment`] to a [`VM`] that stores variables persistently and externally available.
 pub trait Environment: Send + Sync {
-	/// Define the variable with `name` to `value`.
+	/// Define the variable with `key` to `value`.
 	/// It has to be created if it does not already exist.
 	/// # Errors
 	/// if the Variable exists with a different type
-	fn define_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error>;
-	/// Get a variable by name
+	fn define_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), Error>;
+	/// Get a variable by `key`
 	/// # Errors
 	/// if the variable does not exist
-	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error>;
-	/// Set the variable with `name` to `value`.
+	fn get_env(&self, key: &str) -> Result<ScriptingValue, Error>;
+	/// Set the variable with `key` to `value`.
 	/// # Errors
 	/// if variable does not exist.
-	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error>;
+	fn set_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), Error>;
 }
 
 /// A very simple default Environment for testing purpose and the REPL
@@ -77,7 +77,7 @@ pub struct DefaultEnvironment {
 }
 
 impl Environment for DefaultEnvironment {
-	fn define_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
+	fn define_env(&mut self, name: &str, value: ScriptingValue) -> Result<(), Error> {
 		self.storage
 			.write()
 			.insert(name.to_string(), value);
@@ -91,7 +91,7 @@ impl Environment for DefaultEnvironment {
 		)
 	}
 
-	fn set_env(&self, name: &str, value: ScriptingValue) -> Result<(), Error> {
+	fn set_env(&mut self, name: &str, value: ScriptingValue) -> Result<(), Error> {
 		if self.storage.read().contains_key(name) {
 			self.storage
 				.write()

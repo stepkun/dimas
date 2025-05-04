@@ -19,7 +19,7 @@ use crate::{
 	behavior::{
 		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
 	},
-	blackboard::Blackboard,
+	blackboard::BlackboardNodeRef,
 };
 
 use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, TreeElement};
@@ -43,7 +43,7 @@ impl BehaviorTreeComponent for BehaviorTreeNode {
 		&self.id
 	}
 
-	fn blackboard(&self) -> Blackboard {
+	fn blackboard(&self) -> BlackboardNodeRef {
 		self.tick_data.blackboard.clone()
 	}
 
@@ -97,7 +97,7 @@ impl BehaviorTreeNode {
 		}
 	}
 
-	/// Create a [`TreeElement`]`::Node`([`BehaviorTreeNode`])
+	/// Create a tree node <code>TreeElement::Node(BehaviorTreeNode)</code>.
 	#[must_use]
 	pub fn create(
 		id: &str,
@@ -213,7 +213,7 @@ impl<'a> Iterator for TreeNodeIterMut<'a> {
 				for child in iter.rev() {
 					self.stack.push(&mut (*child));
 				}
-			};
+			}
 			return Some(component);
 		}
 		None
