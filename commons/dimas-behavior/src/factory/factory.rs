@@ -16,12 +16,19 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		action::Script, condition::script_condition::ScriptCondition, control::{
-			behaviortree::Behaviortree, fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree
-		}, decorator::{
+		BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		action::Script,
+		condition::script_condition::ScriptCondition,
+		control::{
+			behaviortree::Behaviortree, fallback::Fallback, parallel::Parallel,
+			parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
+			reactive_sequence::ReactiveSequence, sequence::Sequence,
+			sequence_with_memory::SequenceWithMemory, subtree::Subtree,
+		},
+		decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
 			retry_until_successful::RetryUntilSuccessful,
-		}, BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
+		},
 	},
 	factory::xml_parser::XmlParser,
 	port::PortList,

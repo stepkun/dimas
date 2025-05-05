@@ -2,8 +2,8 @@
 
 //! `DiMAS` scripting runtime errors
 
-use alloc::string::String;
 // region		--- modules
+use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
 
@@ -19,16 +19,16 @@ pub enum Error {
 	BoolNoArithmetic,
 	/// @TODO:
 	#[error("Variable [{0}] exceeds type limits")]
-	GlobalExceedsLimits(String),
+	GlobalExceedsLimits(ConstString),
 	/// @TODO:
 	#[error("Variable [{0}] has an unknown type")]
-	GlobalHasUnknownType(String),
+	GlobalHasUnknownType(ConstString),
 	/// @TODO:
 	#[error("Variable [{0}] has not been defined")]
-	GlobalNotDefined(String),
+	GlobalNotDefined(ConstString),
 	/// @TODO:
 	#[error("Variable [{0}] has a wrong type")]
-	GlobalWrongType(String),
+	GlobalWrongType(ConstString),
 	/// @TODO:
 	#[error("Value is 'Nil' which does not allow any operation")]
 	NilValue,
@@ -62,7 +62,7 @@ pub enum Error {
 
 	/// @TODO:
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
-	Unexpected(String, String, u32),
+	Unexpected(ConstString, ConstString, u32),
 	/// @TODO:
 	#[error("this should be unreachable in vm.rs line {0}")]
 	Unreachable(u32),

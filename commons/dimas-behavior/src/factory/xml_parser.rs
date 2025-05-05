@@ -89,12 +89,11 @@ impl XmlParser {
 	}
 
 	fn build_children(
-		blackboard: BlackboardNodeRef,
+		blackboard: &BlackboardNodeRef,
 		registry: &mut BehaviorRegistry,
 		element: Node,
 	) -> Result<BehaviorTreeComponentList, Error> {
 		let mut children = BehaviorTreeComponentList::default();
-		let blackboard = blackboard;
 		for child in element.children() {
 			match child.node_type() {
 				NodeType::Comment | NodeType::Text => {} // ignore
@@ -107,7 +106,7 @@ impl XmlParser {
 					));
 				}
 				NodeType::Element => {
-					let behavior = Self::build_child(blackboard.clone(), registry, child)?;
+					let behavior = Self::build_child(blackboard, registry, child)?;
 					children.push(behavior);
 				}
 				NodeType::PI => {
@@ -125,7 +124,7 @@ impl XmlParser {
 	#[allow(clippy::option_if_let_else)]
 	#[allow(clippy::needless_pass_by_value)]
 	fn build_child(
-		blackboard: BlackboardNodeRef,
+		blackboard: &BlackboardNodeRef,
 		registry: &mut BehaviorRegistry,
 		element: Node,
 	) -> Result<TreeElement, Error> {
@@ -136,10 +135,13 @@ impl XmlParser {
 			let bhvr = bhvr_creation_fn();
 			let attrs = attrs_to_map(element.attributes());
 			if let Some(id) = attrs.get("ID") {
-				let (_autoremap, _remappings, _values) =
+				let (autoremap, remappings, values) =
 					Self::create_remappings(element_name, &bhvr, &attrs)?;
-				let behavior = BehaviorTreeProxy::create(id, BehaviorTickData::default());
+				// A subtree gets a new Blackboard with the current Blackboard as parent and own remappings.
+				let blackboard = BlackboardNodeRef::with(blackboard.clone(), remappings, autoremap);
+				let _tick_data = BehaviorTickData::new(blackboard, values);
 				let _config_data = BehaviorConfigurationData::new(id);
+				let behavior = BehaviorTreeProxy::create(id, BehaviorTickData::default());
 				Ok(behavior)
 			} else {
 				Err(Error::MissingId(element.tag_name().name().into()))
@@ -151,21 +153,19 @@ impl XmlParser {
 			let attrs = attrs_to_map(element.attributes());
 			let (autoremap, remappings, values) =
 				Self::create_remappings(element_name, &bhvr, &attrs)?;
+			// Within a subtree clone the current Blackboard with own remappings for each element.
+			let blackboard = blackboard.cloned(remappings, autoremap);
 			let tree_node = match bhvr_type {
 				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
 						return Err(Error::ChildrenNotAllowed(element_name.into()));
 					}
-					// A leaf clones the current Blackboard with own remappings.
-					let blackboard = blackboard.cloned(remappings, autoremap);
 					let _config_data = BehaviorConfigurationData::new(element_name);
 					let tick_data = BehaviorTickData::new(blackboard, values);
 					BehaviorTreeLeaf::create(element_name, tick_data, bhvr)
 				}
 				BehaviorType::Control | BehaviorType::Decorator => {
-					// A node gets a new Blackboard with current Blackboard as parent and new/additional remappings.
-					let blackboard = BlackboardNodeRef::with(blackboard, remappings, autoremap);
-					let children = Self::build_children(blackboard.clone(), registry, element)?;
+					let children = Self::build_children(&blackboard, registry, element)?;
 
 					if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
 						return Err(Error::DecoratorOnlyOneChild(
@@ -194,8 +194,9 @@ impl XmlParser {
 		let bhvr = bhvr_creation_fn();
 		let attrs = attrs_to_map(element.attributes());
 		let (autoremap, remappings, values) = Self::create_remappings(id, &bhvr, &attrs)?;
+		// Each behavior tree has a separate Blackboard.
 		let blackboard = BlackboardNodeRef::new(remappings, autoremap);
-		let children = Self::build_children(blackboard.clone(), registry, element)?;
+		let children = Self::build_children(&blackboard, registry, element)?;
 		let tick_data = BehaviorTickData::new(blackboard, values);
 		let _config_data = BehaviorConfigurationData::new(id);
 		let behaviortree = BehaviorTreeNode::create(id, children, tick_data, bhvr);

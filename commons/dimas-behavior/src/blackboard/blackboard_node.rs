@@ -23,6 +23,7 @@ use core::{
 	ops::{Deref, DerefMut},
 	str::FromStr,
 };
+use dimas_core::ConstString;
 use dimas_scripting::{
 	Environment,
 	execution::{Error as ScriptingError, ScriptingValue},
@@ -62,25 +63,18 @@ impl BlackboardInterface for BlackboardNodeRef {
 			return self.root().contains(key_stripped);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try in current Blackboard
-		if self.read().current.read().contains(key) {
+		if self.read().current.read().contains(&final_key) {
 			return true;
 		}
 
-		// if there is a parent try remapping. Read needed values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
+		// if there is a parent try remapping.
 		if let Some(parent) = &mut self.write().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.contains(&remapped_key);
-			} else if autoremap {
-				return parent.contains(key);
+			if has_remapping || autoremap {
+				return parent.contains(&final_key);
 			}
 		}
 
@@ -96,28 +90,26 @@ impl BlackboardInterface for BlackboardNodeRef {
 			return self.root().delete(key_stripped);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try to delete key in current Blackboard
-		let a = self.write().current.write().delete::<T>(key);
+		let a = self
+			.write()
+			.current
+			.write()
+			.delete::<T>(&final_key);
 		if a.is_ok() {
 			return a;
 		}
 
-		// if there is a parent try remapping. Read needed values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
+		// if there is a parent try remapping.
 		if let Some(parent) = &mut self.write().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.delete(&remapped_key);
-			} else if autoremap {
-				return parent.delete(key);
+			if has_remapping || autoremap {
+				return parent.delete(&final_key);
 			}
 		}
+
 		Err(Error::NotFound(key.into()))
 	}
 
@@ -130,45 +122,23 @@ impl BlackboardInterface for BlackboardNodeRef {
 			return self.root().get(key_stripped);
 		}
 
-		// Try to find key in current Blackboard
-		let a = self.read().current.read().get::<T>(key);
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
+		// Try to find in current Blackboard
+		let a = self.read().current.read().get::<T>(&final_key);
 		if a.is_ok() {
 			return a;
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
-
-		// Try to find remapped key in current Blackboard.
-		if let Some(remapped_key) = remapped.clone() {
-			let a = self.read().current.read().get::<T>(&remapped_key);
-			if a.is_ok() {
-				return a;
-			}
-		}
-
 		// Try to find in parent hierarchy.
 		if let Some(parent) = &self.read().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped.clone() {
-				return parent.get(&remapped_key);
-			} else if autoremap {
-				return parent.get(key);
+			if has_remapping || autoremap {
+				return parent.get(&final_key);
 			}
 		}
 
-		let search = remapped.map_or_else(
-			|| String::from(key),
-			|remapped_key| String::from(key) + "/" + &remapped_key,
-		);
-
-		Err(Error::NotFound(search.into()))
+		Err(Error::NotFound(final_key))
 	}
 
 	fn get_entry(&self, key: &str) -> Option<Entry> {
@@ -177,28 +147,22 @@ impl BlackboardInterface for BlackboardNodeRef {
 			return self.root().get_entry(key_stripped);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try to find key in current Blackboard
-		let a = self.read().current.read().get_entry(key);
+		let a = self.read().current.read().get_entry(&final_key);
 		if a.is_some() {
 			return a;
 		}
 
 		// if there is a parent try remapping
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
 		if let Some(parent) = &self.read().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.get_entry(&remapped_key);
-			} else if autoremap {
-				return parent.get_entry(key);
+			if has_remapping || autoremap {
+				return parent.get_entry(&final_key);
 			}
 		}
+
 		None
 	}
 
@@ -211,31 +175,24 @@ impl BlackboardInterface for BlackboardNodeRef {
 			return self.root().set(key_stripped, value);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try to find key in current Blackboard
-		let a = self.read().current.read().get::<T>(key);
+		let a = self.read().current.read().get::<T>(&final_key);
 		if a.is_ok() {
-			return self.read().current.write().set(key, value);
+			return self.read().current.write().set(&final_key, value);
 		}
 
-		// if there is a parent do remapping otherwise create in current Blackboard.
-		// Read needed values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
+		// if there is a parent do remapping.
 		if let Some(parent) = &mut self.write().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.set(&remapped_key, value);
-			} else if autoremap {
-				return parent.set(key, value);
+			if has_remapping || autoremap {
+				return parent.set(&final_key, value);
 			}
 		}
+
 		// if it is not remapped, set it in current `Blackboard`
-		self.read().current.write().set(key, value)
+		self.read().current.write().set(&final_key, value)
 	}
 }
 
@@ -246,36 +203,28 @@ impl Environment for BlackboardNodeRef {
 			return self.root().define_env(key_stripped, value);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try to find key in current Blackboard
 		let a = self
 			.read()
 			.current
 			.read()
-			.get::<ScriptingValue>(key);
+			.get::<ScriptingValue>(&final_key);
 		if a.is_ok() {
-			return self.read().current.write().define_env(key, value);
+			return self.read().current.write().define_env(&final_key, value);
 		}
 
-		// if there is a parent do remapping otherwise create in current Blackboard.
-		// Read needed values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
+		// If there is a parent do remapping.
 		if let Some(parent) = &mut self.write().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.define_env(&remapped_key, value);
-			} else if autoremap {
-				return parent.define_env(key, value);
+			if has_remapping || autoremap {
+				return parent.define_env(&final_key, value);
 			}
 		}
 
 		// if it is not remapped, set it in current `Blackboard`
-		self.read().current.write().define_env(key, value)
+		self.read().current.write().define_env(&final_key, value)
 	}
 
 	fn get_env(&self, key: &str) -> Result<ScriptingValue, ScriptingError> {
@@ -284,31 +233,23 @@ impl Environment for BlackboardNodeRef {
 			return self.root().get_env(key_stripped);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try to find key in current Blackboard
-		let a = self.read().current.read().get_env(key);
+		let a = self.read().current.read().get_env(&final_key);
 		if let Ok(val) = a {
 			return Ok(val);
 		}
 
-		// if there is a parent do remapping otherwise create in current Blackboard.
-		// Read needed values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
+		// if there is a parent try remapping.
 		if let Some(parent) = &self.read().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.get_env(&remapped_key);
-			} else if autoremap {
-				return parent.get_env(key);
+			if has_remapping || autoremap {
+				return parent.get_env(&final_key);
 			}
 		}
 
-		Err(ScriptingError::GlobalNotDefined(key.into()))
+		Err(ScriptingError::GlobalNotDefined(final_key))
 	}
 
 	fn set_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), ScriptingError> {
@@ -317,35 +258,27 @@ impl Environment for BlackboardNodeRef {
 			return self.root().set_env(key_stripped, value);
 		}
 
+		// Read needed remapping values beforehand to avoid a deadlock.
+		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
+
 		// try to find key in current Blackboard
 		let a = self
 			.read()
 			.current
 			.read()
-			.get::<ScriptingValue>(key);
+			.get::<ScriptingValue>(&final_key);
 		if a.is_ok() {
-			return self.read().current.write().set_env(key, value);
+			return self.read().current.write().set_env(&final_key, value);
 		}
 
 		// if there is a parent do remapping
-		// Read needed values beforehand to avoid a deadlock.
-		let (remapped, autoremap) = {
-			let guard = self.read();
-			let remapped = guard.remappings.find(key);
-			let autoremap = guard.autoremap;
-			drop(guard);
-			(remapped, autoremap)
-		};
 		if let Some(parent) = &mut self.write().parent {
-			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
-				return parent.set_env(&remapped_key, value);
-			} else if autoremap {
-				return parent.set_env(key, value);
+			if has_remapping || autoremap {
+				return parent.set_env(&final_key, value);
 			}
 		}
 
-		Err(ScriptingError::GlobalNotDefined(key.into()))
+		Err(ScriptingError::GlobalNotDefined(final_key))
 	}
 }
 
@@ -382,6 +315,18 @@ impl BlackboardNodeRef {
 	#[cfg(feature = "std")]
 	pub fn debug_message(&self) {
 		std::println!("{self:?}");
+	}
+
+	/// Read needed remapping information.
+	fn get_remapping_info(&self, key: &str) -> (ConstString, bool, bool) {
+		let guard = self.read();
+		let (remapped_key, remapping) = guard
+			.remappings
+			.find(key)
+			.map_or_else(|| (key.into(), false), |remapped| (remapped, true));
+		let autoremap = guard.autoremap;
+		drop(guard);
+		(remapped_key, remapping, autoremap)
 	}
 
 	/// function to get access to the root [`BlackboardNode`]

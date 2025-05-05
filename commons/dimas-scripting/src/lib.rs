@@ -86,7 +86,7 @@ impl Environment for DefaultEnvironment {
 
 	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {
 		self.storage.read().get(name).map_or_else(
-			|| Err(Error::GlobalNotDefined(name.to_string())),
+			|| Err(Error::GlobalNotDefined(name.into())),
 			|value| Ok(value.clone()),
 		)
 	}
@@ -98,7 +98,7 @@ impl Environment for DefaultEnvironment {
 				.insert(name.to_string(), value);
 			Ok(())
 		} else {
-			Err(Error::GlobalNotDefined(name.to_string()))
+			Err(Error::GlobalNotDefined(name.into()))
 		}
 	}
 }

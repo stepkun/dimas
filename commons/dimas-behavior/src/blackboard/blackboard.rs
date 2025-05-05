@@ -166,7 +166,7 @@ impl Environment for Blackboard {
 
 	fn get_env(&self, name: &str) -> Result<ScriptingValue, ScriptingError> {
 		self.get_entry(name).map_or_else(
-			|| Err(ScriptingError::GlobalNotDefined(name.to_string())),
+			|| Err(ScriptingError::GlobalNotDefined(name.into())),
 			|entry| {
 				// let entry = **(entry);
 				let type_id = (**entry).type_id();
@@ -201,7 +201,7 @@ impl Environment for Blackboard {
 					let i = entry.downcast_ref::<i8>().expect("snh");
 					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
 				} else {
-					Err(ScriptingError::GlobalHasUnknownType(name.to_string()))
+					Err(ScriptingError::GlobalHasUnknownType(name.into()))
 				}
 			},
 		)
@@ -214,7 +214,7 @@ impl Environment for Blackboard {
 			let inner_entry = &entry;
 			(*(inner_entry.0)).type_id()
 		} else {
-			return Err(ScriptingError::GlobalNotDefined(name.to_string()));
+			return Err(ScriptingError::GlobalNotDefined(name.into()));
 		};
 		match value {
 			ScriptingValue::Nil() => todo!(),
@@ -222,7 +222,7 @@ impl Environment for Blackboard {
 				if TypeId::of::<bool>() == entry_type_id {
 					self.set(name, b);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name.to_string()));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 			ScriptingValue::Float64(f) => {
@@ -230,11 +230,11 @@ impl Environment for Blackboard {
 					self.set(name, f);
 				} else if TypeId::of::<f32>() == entry_type_id {
 					if f > f64::from(f32::MAX) || f < f64::from(f32::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, f as f32);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name.to_string()));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 			ScriptingValue::Int64(i) => {
@@ -242,43 +242,43 @@ impl Environment for Blackboard {
 					self.set(name, i);
 				} else if TypeId::of::<i32>() == entry_type_id {
 					if i > i64::from(i32::MAX) || i < i64::from(i32::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as i32);
 				} else if TypeId::of::<u32>() == entry_type_id {
 					if i > i64::from(u32::MAX) || i < i64::from(u32::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as u32);
 				} else if TypeId::of::<i16>() == entry_type_id {
 					if i > i64::from(i16::MAX) || i < i64::from(i16::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as i16);
 				} else if TypeId::of::<u16>() == entry_type_id {
 					if i > i64::from(u16::MAX) || i < i64::from(u16::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as u16);
 				} else if TypeId::of::<i8>() == entry_type_id {
 					if i > i64::from(i8::MAX) || i < i64::from(i8::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as i8);
 				} else if TypeId::of::<u8>() == entry_type_id {
 					if i > i64::from(u8::MAX) || i < i64::from(u8::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name.to_string()));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as u8);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name.to_string()));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 			ScriptingValue::String(s) => {
 				if TypeId::of::<String>() == entry_type_id {
 					self.set(name, s);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name.to_string()));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 		}
