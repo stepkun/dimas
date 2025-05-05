@@ -13,7 +13,10 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{string::ToString, sync::Arc};
+use alloc::{
+	string::{String, ToString},
+	sync::Arc,
+};
 use core::{
 	any::Any,
 	fmt::Debug,
@@ -127,13 +130,13 @@ impl BlackboardInterface for BlackboardNodeRef {
 			return self.root().get(key_stripped);
 		}
 
-		// try to find key in current Blackboard
+		// Try to find key in current Blackboard
 		let a = self.read().current.read().get::<T>(key);
 		if a.is_ok() {
 			return a;
 		}
 
-		// if there is a parent try remapping
+		// Read needed remapping values beforehand to avoid a deadlock.
 		let (remapped, autoremap) = {
 			let guard = self.read();
 			let remapped = guard.remappings.find(key);
@@ -141,15 +144,31 @@ impl BlackboardInterface for BlackboardNodeRef {
 			drop(guard);
 			(remapped, autoremap)
 		};
+
+		// Try to find remapped key in current Blackboard.
+		if let Some(remapped_key) = remapped.clone() {
+			let a = self.read().current.read().get::<T>(&remapped_key);
+			if a.is_ok() {
+				return a;
+			}
+		}
+
+		// Try to find in parent hierarchy.
 		if let Some(parent) = &self.read().parent {
 			// prefer manual remapping over autoremap
-			if let Some(remapped_key) = remapped {
+			if let Some(remapped_key) = remapped.clone() {
 				return parent.get(&remapped_key);
 			} else if autoremap {
 				return parent.get(key);
 			}
 		}
-		Err(Error::NotFound(key.into()))
+
+		let search = remapped.map_or_else(
+			|| String::from(key),
+			|remapped_key| String::from(key) + "/" + &remapped_key,
+		);
+
+		Err(Error::NotFound(search.into()))
 	}
 
 	fn get_entry(&self, key: &str) -> Option<Entry> {
@@ -254,6 +273,7 @@ impl Environment for BlackboardNodeRef {
 				return parent.define_env(key, value);
 			}
 		}
+
 		// if it is not remapped, set it in current `Blackboard`
 		self.read().current.write().define_env(key, value)
 	}
@@ -287,6 +307,7 @@ impl Environment for BlackboardNodeRef {
 				return parent.get_env(key);
 			}
 		}
+
 		Err(ScriptingError::GlobalNotDefined(key.into()))
 	}
 
@@ -306,7 +327,7 @@ impl Environment for BlackboardNodeRef {
 			return self.read().current.write().set_env(key, value);
 		}
 
-		// if there is a parent do remapping otherwise create in current Blackboard.
+		// if there is a parent do remapping
 		// Read needed values beforehand to avoid a deadlock.
 		let (remapped, autoremap) = {
 			let guard = self.read();
@@ -323,6 +344,7 @@ impl Environment for BlackboardNodeRef {
 				return parent.set_env(key, value);
 			}
 		}
+
 		Err(ScriptingError::GlobalNotDefined(key.into()))
 	}
 }
@@ -347,6 +369,15 @@ impl BlackboardNodeRef {
 		}
 	}
 
+	/// Create a cloned `BlackboardNodeRef`.
+	#[must_use]
+	pub fn cloned(&self, remappings: PortRemappings, autoremap: bool) -> Self {
+		let clone = self.node.read().cloned(remappings, autoremap);
+		Self {
+			node: Arc::new(RwLock::new(clone)),
+		}
+	}
+
 	/// Print the content of the `BlackboardNode` for debugging purpose
 	#[cfg(feature = "std")]
 	pub fn debug_message(&self) {
@@ -364,7 +395,7 @@ impl BlackboardNodeRef {
 			.map_or_else(|| self.clone(), |bb| bb.root())
 	}
 
-	/// Add or change the parent of a [`BlackboardNodeRef`]. 
+	/// Add or change the parent of a [`BlackboardNodeRef`].
 	pub fn set_parent(&self, parent: Self) {
 		self.write().parent = Some(parent);
 	}
@@ -402,6 +433,17 @@ impl BlackboardNode {
 		Self {
 			current: BlackboardRef::default(),
 			parent: Some(parent),
+			remappings,
+			autoremap,
+		}
+	}
+
+	/// Create a cloned `BlackboardNode`.
+	#[must_use]
+	pub fn cloned(&self, remappings: PortRemappings, autoremap: bool) -> Self {
+		Self {
+			current: self.current.clone(),
+			parent: self.parent.clone(),
 			remappings,
 			autoremap,
 		}

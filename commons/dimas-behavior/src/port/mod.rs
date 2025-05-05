@@ -42,13 +42,8 @@ macro_rules! inout_port_macro {
 			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal) => {
-		$crate::port::create_port::<$tp>(
-			$crate::port::PortDirection::InOut,
-			$name,
-			$default,
-			$desc,
-		)
-		.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, $desc)
+			.expect("snh")
 	};
 }
 

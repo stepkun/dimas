@@ -4,11 +4,17 @@
 //!
 
 // region:      --- modules
-use alloc::string::{String, ToString};
-use core::str::FromStr;
+use alloc::{
+	format,
+	string::{String, ToString},
+};
+use core::{any::TypeId, str::FromStr};
 use dimas_core::ConstString;
 
-use crate::blackboard::{BlackboardInterface, BlackboardNodeRef};
+use crate::{
+	blackboard::{BlackboardInterface, BlackboardNodeRef},
+	port::PortRemappings,
+};
 
 use super::{BehaviorResult, BehaviorStatus, error::BehaviorError};
 // endregion:   --- modules
@@ -58,13 +64,16 @@ pub struct BehaviorTickData {
 	pub status: BehaviorStatus,
 	/// [`BlackboardNodeRef`] for this [`Behavior`]
 	pub(crate) blackboard: BlackboardNodeRef,
+	/// List of port values
+	pub(crate) values: PortRemappings,
 }
 impl BehaviorTickData {
 	/// Constructor
 	#[must_use]
-	pub fn new(blackboard: BlackboardNodeRef) -> Self {
+	pub fn new(blackboard: BlackboardNodeRef, values: PortRemappings) -> Self {
 		Self {
 			blackboard,
+			values,
 			..Default::default()
 		}
 	}
@@ -75,21 +84,42 @@ impl BehaviorTickData {
 	where
 		T: FromStr + ToString + Clone + core::fmt::Debug + Send + Sync + 'static,
 	{
-		self.blackboard.get::<T>(port_name).map_or_else(
-			|_err| {
-				self.blackboard
-					.get::<String>(port_name)
-					.map_or_else(
-						|_| Err(BehaviorError::NotInBlackboard(port_name.into())),
-						|s| {
-							T::from_str(&s).map_or_else(
+		// check for hard coded values
+		self.values.find(port_name).map_or_else(
+			|| {
+				self.blackboard.get::<T>(port_name).map_or_else(
+					|_err| {
+						self.blackboard
+							.get::<String>(port_name)
+							.map_or_else(
 								|_| Err(BehaviorError::NotInBlackboard(port_name.into())),
-								|val| Ok(val),
+								|s| {
+									T::from_str(&s).map_or_else(
+										|_| {
+											Err(BehaviorError::ParsePortValue(
+												port_name.into(),
+												format!("{:?}", TypeId::of::<T>()).into(),
+											))
+										},
+										|val| Ok(val),
+									)
+								},
 							)
-						},
-					)
+					},
+					|val| Ok(val),
+				)
 			},
-			|val| Ok(val),
+			|value| {
+				<T as FromStr>::from_str(&value).map_or_else(
+					|_| {
+						Err(BehaviorError::ParsePortValue(
+							port_name.into(),
+							format!("{:?}", TypeId::of::<T>()).into(),
+						))
+					},
+					|val| Ok(val),
+				)
+			},
 		)
 	}
 

@@ -122,6 +122,7 @@ impl XmlParser {
 	}
 
 	#[allow(clippy::option_if_let_else)]
+	#[allow(clippy::needless_pass_by_value)]
 	fn build_child(
 		blackboard: BlackboardNodeRef,
 		registry: &mut BehaviorRegistry,
@@ -142,18 +143,20 @@ impl XmlParser {
 			let (bhvr_type, bhvr_creation_fn) = registry.fetch(element_name)?;
 			let bhvr = bhvr_creation_fn();
 			let attrs = attrs_to_map(element.attributes());
-			let (autoremap, remappings) = Self::create_remappings(element_name, &bhvr, &attrs)?;
-			let blackboard = BlackboardNodeRef::with(blackboard, remappings, autoremap);
+			let (autoremap, remappings, values) =
+				Self::create_remappings(element_name, &bhvr, &attrs)?;
 			let tree_node = match bhvr_type {
 				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
 						return Err(Error::ChildrenNotAllowed(element_name.into()));
 					}
+					let blackboard = blackboard.cloned(remappings, autoremap);
 					let _config_data = BehaviorConfigurationData::new(element_name);
-					let tick_data = BehaviorTickData::new(blackboard);
+					let tick_data = BehaviorTickData::new(blackboard, values);
 					BehaviorTreeLeaf::create(element_name, tick_data, bhvr)
 				}
 				BehaviorType::Control | BehaviorType::Decorator => {
+					let blackboard = BlackboardNodeRef::with(blackboard, remappings, autoremap);
 					let children = Self::build_children(blackboard.clone(), registry, element)?;
 
 					if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
@@ -161,7 +164,7 @@ impl XmlParser {
 							element.tag_name().name().into(),
 						));
 					}
-					let tick_data = BehaviorTickData::new(blackboard);
+					let tick_data = BehaviorTickData::new(blackboard, values);
 					let _config_data = BehaviorConfigurationData::default();
 					BehaviorTreeNode::create(element_name, children, tick_data, bhvr)
 				}
@@ -182,10 +185,10 @@ impl XmlParser {
 		let (_bhvr_type, bhvr_creation_fn) = registry.fetch("Subtree")?;
 		let bhvr = bhvr_creation_fn();
 		let attrs = attrs_to_map(element.attributes());
-		let (autoremap, remappings) = Self::create_remappings(id, &bhvr, &attrs)?;
+		let (autoremap, remappings, values) = Self::create_remappings(id, &bhvr, &attrs)?;
 		let blackboard = BlackboardNodeRef::new(remappings, autoremap);
 		let children = Self::build_children(blackboard.clone(), registry, element)?;
-		let tick_data = BehaviorTickData::new(blackboard);
+		let tick_data = BehaviorTickData::new(blackboard, values);
 		let _config_data = BehaviorConfigurationData::new(id);
 		let subtree = BehaviorTreeNode::create(id, children, tick_data, bhvr);
 		Ok(subtree)
@@ -195,7 +198,7 @@ impl XmlParser {
 		id: &str,
 		bhvr: &BehaviorPtr,
 		attrs: &HashMap<ConstString, ConstString, FxBuildHasher>,
-	) -> Result<(bool, PortRemappings), Error> {
+	) -> Result<(bool, PortRemappings, PortRemappings), Error> {
 		let autoremap = match attrs.get("_autoremap") {
 			Some(s) => match s.parse::<bool>() {
 				Ok(val) => val,
@@ -205,6 +208,7 @@ impl XmlParser {
 		};
 
 		let mut remappings = PortRemappings::default();
+		let mut values = PortRemappings::default();
 		for (key, value) in attrs {
 			let key = key.as_ref();
 			if key == "name" {
@@ -212,13 +216,29 @@ impl XmlParser {
 			} else if key == "ID" {
 				// ignore as it is not a Port
 			} else {
-				// fetch found port name from list of provided ports
+				// check found port name against list of provided ports
 				let port_list = bhvr.static_provided_ports();
 				match port_list.find(key) {
 					Some(_) => {
-						// check value for port_name
-						if is_allowed_name(value) {
-							remappings.add(key, value)?;
+						// check if it is a BB pointer
+						if value.starts_with('{') && value.ends_with('}') {
+							let stripped = value
+								.strip_prefix('{')
+								.unwrap_or_else(|| todo!())
+								.strip_suffix('}')
+								.unwrap_or_else(|| todo!());
+
+							// check value for allowed names
+							if is_allowed_name(stripped) {
+								remappings.add(key, stripped)?;
+							} else {
+								return Err(crate::factory::error::Error::NameNotAllowed(
+									key.into(),
+								));
+							}
+						} else {
+							// this is a normal string, representing a port value
+							values.add(key, value)?;
 						}
 					}
 					None => {
@@ -231,7 +251,7 @@ impl XmlParser {
 				}
 			}
 		}
-		Ok((autoremap, remappings))
+		Ok((autoremap, remappings, values))
 	}
 }
 // endregion:   --- XmlParser
