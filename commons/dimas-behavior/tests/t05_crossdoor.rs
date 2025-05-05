@@ -38,7 +38,6 @@ const XML: &str = r#"
 
 #[tokio::test]
 #[serial]
-#[ignore]
 async fn crossdoor() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -63,7 +62,6 @@ async fn crossdoor() -> anyhow::Result<()> {
 
 #[tokio::test]
 #[serial]
-#[ignore]
 async fn crossdoor_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 

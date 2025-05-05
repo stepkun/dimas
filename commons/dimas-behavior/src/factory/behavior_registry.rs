@@ -76,7 +76,7 @@ impl BehaviorRegistry {
 	/// Adding a subtree to the registry makes the registry 'dirty'.
 	/// It is then necessary to run a `self.link_subtrees()` to ensure that all subtrees
 	/// are properly linked with the subtrees they rely on.
-	pub(crate) fn add_subtree(&mut self, subtree: TreeElement) -> Result<(), Error> {
+	pub(crate) fn add_behavior_tree(&mut self, subtree: TreeElement) -> Result<(), Error> {
 		for item in &self.subtrees {
 			if item.read().id() == subtree.id() {
 				return Err(Error::SubtreeAlreadyRegistered(subtree.id().into()));

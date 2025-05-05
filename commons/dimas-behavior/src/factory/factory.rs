@@ -16,18 +16,12 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::Script,
-		condition::script_condition::ScriptCondition,
-		control::{
-			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
-			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
-			sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree,
-		},
-		decorator::{
+		action::Script, condition::script_condition::ScriptCondition, control::{
+			behaviortree::Behaviortree, fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory, subtree::Subtree
+		}, decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
 			retry_until_successful::RetryUntilSuccessful,
-		},
+		}, BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
 	},
 	factory::xml_parser::XmlParser,
 	port::PortList,
@@ -60,6 +54,7 @@ impl BehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core controls
+		self.register_node_type::<Behaviortree>("Behaviortree")?;
 		self.register_node_type::<Fallback>("Fallback")?;
 		self.register_node_type::<Parallel>("Parallel")?;
 		self.register_node_type::<ParallelAll>("ParallelAll")?;

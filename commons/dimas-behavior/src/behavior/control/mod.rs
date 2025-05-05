@@ -3,6 +3,7 @@
 //! Control behavior library
 //!
 
+pub mod behaviortree;
 pub mod fallback;
 pub mod parallel;
 pub mod parallel_all;

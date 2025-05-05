@@ -18,13 +18,13 @@ use crate::{
 };
 // endregion:   --- modules
 
-// region:      --- Subtree
-/// A `Subtree` ticks executes children in
+// region:      --- Behaviortree
+/// A `Behaviortree` ticks executes children in
 ///
 #[derive(Behavior, Debug, Default)]
-pub struct Subtree {}
+pub struct Behaviortree {}
 
-impl BehaviorInstanceMethods for Subtree {
+impl BehaviorInstanceMethods for Behaviortree {
 	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
 		children[0].execute_halt()
 	}
@@ -46,9 +46,9 @@ impl BehaviorInstanceMethods for Subtree {
 	}
 }
 
-impl BehaviorStaticMethods for Subtree {
+impl BehaviorStaticMethods for Behaviortree {
 	fn kind() -> BehaviorType {
 		BehaviorType::Control
 	}
 }
-// endregion:   --- Subtree
+// endregion:   --- Behaviortree
