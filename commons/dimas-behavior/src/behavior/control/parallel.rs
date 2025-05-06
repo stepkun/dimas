@@ -12,9 +12,7 @@ use crate::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	},
-	port::PortList,
-	tree::BehaviorTreeComponentList,
+	}, blackboard::BlackboardNodeRef, port::PortList, tree::BehaviorTreeComponentList
 };
 // endregion:   --- modules
 
@@ -28,6 +26,7 @@ impl BehaviorInstanceMethods for Parallel {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)

@@ -19,11 +19,7 @@ use dimas_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	},
-	input_port_macro, output_port_macro,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeComponentList,
+	}, blackboard::{BlackboardInterface, BlackboardNodeRef}, input_port_macro, output_port_macro, port::PortList, port_list, tree::BehaviorTreeComponentList
 };
 use dimas_behavior_derive::Behavior;
 // endregion:	--- modules
@@ -37,6 +33,7 @@ impl BehaviorInstanceMethods for ApproachObject {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
@@ -86,10 +83,11 @@ pub struct SaySomething {}
 impl BehaviorInstanceMethods for SaySomething {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let msg = tick_data.get_input::<String>("message")?;
+		let msg = blackboard.get::<String>("message")?;
 		println!("Robot says: {msg}");
 		Ok(BehaviorStatus::Success)
 	}
@@ -112,10 +110,11 @@ pub struct ThinkWhatToSay {}
 impl BehaviorInstanceMethods for ThinkWhatToSay {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		tick_data.set_output("text", String::from("The answer is 42"))?;
+		blackboard.set("text", String::from("The answer is 42"))?;
 		Ok(BehaviorStatus::Success)
 	}
 }
@@ -132,8 +131,8 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn new_say_something_simple(tick_data: &mut BehaviorTickData) -> BehaviorResult {
-	let msg = tick_data.get_input::<String>("message")?;
+pub fn new_say_something_simple(blackboard: &mut BlackboardNodeRef) -> BehaviorResult {
+	let msg = blackboard.get::<String>("message")?;
 	println!("Robot2 says: {msg}");
 	Ok(BehaviorStatus::Success)
 }
@@ -177,11 +176,12 @@ pub struct CalculateGoal {}
 impl BehaviorInstanceMethods for CalculateGoal {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
-		tick_data.set_output("goal", mygoal)?;
+		blackboard.set("goal", mygoal)?;
 		Ok(BehaviorStatus::Success)
 	}
 }
@@ -203,10 +203,11 @@ pub struct PrintTarget {}
 impl BehaviorInstanceMethods for PrintTarget {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let pos = tick_data.get_input::<Position2D>("target")?;
+		let pos = blackboard.get::<Position2D>("target")?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
 		Ok(BehaviorStatus::Success)
 	}
@@ -274,10 +275,11 @@ impl Default for MoveBaseAction {
 impl BehaviorInstanceMethods for MoveBaseAction {
 	fn start(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let pose = tick_data.get_input::<Pose2D>("goal")?;
+		let pose = blackboard.get::<Pose2D>("goal")?;
 		println!(
 			"[ MoveBase: SEND REQUEST ]. goal: x={} y={} theta={}",
 			pose.x, pose.y, pose.theta
@@ -290,6 +292,7 @@ impl BehaviorInstanceMethods for MoveBaseAction {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		if Instant::now().duration_since(self.start_time) >= self.completion_time {

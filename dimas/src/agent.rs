@@ -7,10 +7,7 @@ use dimas_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	},
-	factory::{BehaviorTreeFactory, error::Error},
-	port::PortList,
-	tree::{BehaviorTree, BehaviorTreeComponentList},
+	}, blackboard::BlackboardNodeRef, factory::{error::Error, BehaviorTreeFactory}, port::PortList, tree::{BehaviorTree, BehaviorTreeComponentList}
 };
 use dimas_behavior_derive::Behavior;
 use std::time::Duration;
@@ -60,6 +57,7 @@ impl BehaviorInstanceMethods for NotInterrupted {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking NotInterrupted");
@@ -82,6 +80,7 @@ impl BehaviorInstanceMethods for AlwaysRunning {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking AlwaysRunnin");
@@ -104,6 +103,7 @@ impl BehaviorInstanceMethods for Shutdown {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking Shutdown");

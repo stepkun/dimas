@@ -6,14 +6,8 @@
 use core::time::Duration;
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
-	},
-	input_port_macro,
-	port::PortList,
-	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+	}, blackboard::{BlackboardInterface, BlackboardNodeRef}, input_port_macro, port::PortList, port_list, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 use dimas_behavior_derive::Behavior;
 use tokio::{task::JoinHandle, time};
@@ -31,15 +25,16 @@ impl BehaviorInstanceMethods for IntervalTimer {
 	fn start(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("start IntervalTimer");
 
 		// timer already started?
 		if self.handle.is_none() {
-			tick_data.status = BehaviorStatus::Running;
+			tick_data.set_status(BehaviorStatus::Running);
 
-			let input = tick_data.get_input("interval")?;
+			let input = blackboard.get("interval")?;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
 
@@ -63,16 +58,17 @@ impl BehaviorInstanceMethods for IntervalTimer {
 				}));
 		} else {
 			println!("already started IntervalTimer");
-			tick_data.status = BehaviorStatus::Failure;
+			tick_data.set_status(BehaviorStatus::Failure);
 		}
 
-		Ok(tick_data.status)
+		Ok(tick_data.status())
 		// Ok(BehaviorStatus::Running)
 	}
 
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking IntervalTimer");

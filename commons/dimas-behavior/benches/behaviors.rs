@@ -10,9 +10,7 @@ use dimas_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	},
-	port::PortList,
-	tree::BehaviorTreeComponentList,
+	}, blackboard::BlackboardNodeRef, port::PortList, tree::BehaviorTreeComponentList
 };
 use dimas_behavior_derive::Behavior;
 
@@ -24,6 +22,7 @@ impl BehaviorInstanceMethods for AlwaysSuccess {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)
@@ -44,6 +43,7 @@ impl BehaviorInstanceMethods for AlwaysFailure {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)

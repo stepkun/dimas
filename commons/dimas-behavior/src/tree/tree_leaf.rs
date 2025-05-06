@@ -22,13 +22,15 @@ use super::{BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
 // region:		--- BehaviorTreeLeaf
 /// Implementation of a trees leaf
 pub struct BehaviorTreeLeaf {
-	/// ID of the node
+	/// ID of the node.
 	id: ConstString,
-	/// Data needed in every tick
+	/// Data needed in every tick.
 	tick_data: BehaviorTickData,
-	/// The behavior of that leaf
+	/// Reference to the [`Blackboard`] for the leaf.
+	blackboard: BlackboardNodeRef,
+	/// The behavior of that leaf.
 	behavior: BehaviorPtr,
-	/// dummy children list
+	/// Dummy children list.
 	children: BehaviorTreeComponentList,
 }
 
@@ -38,7 +40,7 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 	}
 
 	fn blackboard(&self) -> BlackboardNodeRef {
-		self.tick_data.blackboard.clone()
+		self.blackboard.clone()
 	}
 
 	fn children(&self) -> &BehaviorTreeComponentList {
@@ -50,17 +52,17 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 	}
 
 	fn execute_tick(&mut self) -> BehaviorResult {
-		let mut status = self.tick_data.status;
+		let mut status = self.tick_data.status();
 		if status == BehaviorStatus::Idle {
 			status = self
 				.behavior
-				.start(&mut self.tick_data, &mut self.children)?;
+				.start(&mut self.tick_data, &mut self.blackboard, &mut self.children)?;
 		} else {
 			status = self
 				.behavior
-				.tick(&mut self.tick_data, &mut self.children)?;
+				.tick(&mut self.tick_data, &mut self.blackboard, &mut self.children)?;
 		}
-		self.tick_data.status = status;
+		self.tick_data.set_status(status);
 		Ok(status)
 	}
 
@@ -76,10 +78,11 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 impl BehaviorTreeLeaf {
 	/// Construct a [`BehaviorTreeNode`]
 	#[must_use]
-	pub fn new(id: &str, tick_data: BehaviorTickData, behavior: BehaviorPtr) -> Self {
+	pub fn new(id: &str, tick_data: BehaviorTickData, blackboard: BlackboardNodeRef, behavior: BehaviorPtr) -> Self {
 		Self {
 			id: id.into(),
 			tick_data,
+			blackboard,
 			behavior,
 			children: BehaviorTreeComponentList::default(),
 		}
@@ -87,8 +90,8 @@ impl BehaviorTreeLeaf {
 
 	/// Create a tree leaf <code>TreeElement::Leaf(BehaviorTreeLeaf)</code>.
 	#[must_use]
-	pub fn create(id: &str, tick_data: BehaviorTickData, behavior: BehaviorPtr) -> TreeElement {
-		TreeElement::Leaf(Self::new(id, tick_data, behavior))
+	pub fn create(id: &str, tick_data: BehaviorTickData, blackboard: BlackboardNodeRef, behavior: BehaviorPtr) -> TreeElement {
+		TreeElement::Leaf(Self::new(id, tick_data, blackboard, behavior))
 	}
 }
 // endregion:	--- BehaviorTreeLeaf

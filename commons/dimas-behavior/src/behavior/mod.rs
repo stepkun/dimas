@@ -21,8 +21,7 @@ use alloc::boxed::Box;
 use error::BehaviorError;
 
 use crate::{
-	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	blackboard::BlackboardNodeRef, port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 // endregion:   --- modules
 
@@ -77,9 +76,10 @@ pub trait BehaviorInstanceMethods: core::fmt::Debug + Send + Sync {
 	fn start(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		self.tick(tick_data, children)
+		self.tick(tick_data, blackboard, children)
 	}
 
 	/// Method called to tick a [`Behavior`].
@@ -87,6 +87,7 @@ pub trait BehaviorInstanceMethods: core::fmt::Debug + Send + Sync {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult;
 }

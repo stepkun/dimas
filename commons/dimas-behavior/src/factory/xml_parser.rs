@@ -138,10 +138,10 @@ impl XmlParser {
 				let (autoremap, remappings, values) =
 					Self::create_remappings(element_name, &bhvr, &attrs)?;
 				// A subtree gets a new Blackboard with the current Blackboard as parent and own remappings.
-				let blackboard = BlackboardNodeRef::with(blackboard.clone(), remappings, autoremap);
-				let _tick_data = BehaviorTickData::new(blackboard, values);
+				let blackboard = BlackboardNodeRef::with(blackboard.clone(), remappings, values, autoremap);
+				let tick_data = BehaviorTickData::default();
 				let _config_data = BehaviorConfigurationData::new(id);
-				let behavior = BehaviorTreeProxy::create(id, BehaviorTickData::default());
+				let behavior = BehaviorTreeProxy::create(id, tick_data, blackboard);
 				Ok(behavior)
 			} else {
 				Err(Error::MissingId(element.tag_name().name().into()))
@@ -154,15 +154,15 @@ impl XmlParser {
 			let (autoremap, remappings, values) =
 				Self::create_remappings(element_name, &bhvr, &attrs)?;
 			// Within a subtree clone the current Blackboard with own remappings for each element.
-			let blackboard = blackboard.cloned(remappings, autoremap);
+			let blackboard = blackboard.cloned(remappings, values, autoremap);
 			let tree_node = match bhvr_type {
 				BehaviorType::Action | BehaviorType::Condition => {
 					if element.has_children() {
 						return Err(Error::ChildrenNotAllowed(element_name.into()));
 					}
 					let _config_data = BehaviorConfigurationData::new(element_name);
-					let tick_data = BehaviorTickData::new(blackboard, values);
-					BehaviorTreeLeaf::create(element_name, tick_data, bhvr)
+					let tick_data = BehaviorTickData::default();
+					BehaviorTreeLeaf::create(element_name, tick_data, blackboard, bhvr)
 				}
 				BehaviorType::Control | BehaviorType::Decorator => {
 					let children = Self::build_children(&blackboard, registry, element)?;
@@ -172,9 +172,9 @@ impl XmlParser {
 							element.tag_name().name().into(),
 						));
 					}
-					let tick_data = BehaviorTickData::new(blackboard, values);
+					let tick_data = BehaviorTickData::default();
 					let _config_data = BehaviorConfigurationData::default();
-					BehaviorTreeNode::create(element_name, children, tick_data, bhvr)
+					BehaviorTreeNode::create(element_name, children, tick_data, blackboard, bhvr)
 				}
 				BehaviorType::SubTree => {
 					todo!("This should not happen, as Subtrees are handled earlier!")
@@ -195,11 +195,11 @@ impl XmlParser {
 		let attrs = attrs_to_map(element.attributes());
 		let (autoremap, remappings, values) = Self::create_remappings(id, &bhvr, &attrs)?;
 		// Each behavior tree has a separate Blackboard.
-		let blackboard = BlackboardNodeRef::new(remappings, autoremap);
+		let blackboard = BlackboardNodeRef::new(remappings, values, autoremap);
 		let children = Self::build_children(&blackboard, registry, element)?;
-		let tick_data = BehaviorTickData::new(blackboard, values);
+		let tick_data = BehaviorTickData::default();
 		let _config_data = BehaviorConfigurationData::new(id);
-		let behaviortree = BehaviorTreeNode::create(id, children, tick_data, bhvr);
+		let behaviortree = BehaviorTreeNode::create(id, children, tick_data, blackboard, bhvr);
 		Ok(behaviortree)
 	}
 

@@ -8,11 +8,7 @@ use crate::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	},
-	input_port_macro,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeComponentList,
+	}, blackboard::{BlackboardInterface, BlackboardNodeRef}, input_port_macro, port::PortList, port_list, tree::BehaviorTreeComponentList
 };
 use alloc::{boxed::Box, string::String, vec, vec::Vec};
 use dimas_behavior_derive::Behavior;
@@ -28,14 +24,15 @@ pub struct Script {
 impl BehaviorInstanceMethods for Script {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let code = tick_data.get_input::<String>("code")?;
+		let code = blackboard.get::<String>("code")?;
 
 		let chunk = self.parser.parse(&code)?;
 
-		let mut env = tick_data.blackboard.clone();
+		let mut env = blackboard.clone();
 		let mut vm = VM::default();
 		let mut out = Vec::new();
 		let value = vm.run(&chunk, &mut env, &mut out)?;

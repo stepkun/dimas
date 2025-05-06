@@ -9,12 +9,8 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
-	},
-	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+	}, blackboard::BlackboardNodeRef, port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 // endregion:   --- modules
 
@@ -38,13 +34,14 @@ impl BehaviorInstanceMethods for Sequence {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		if tick_data.status == BehaviorStatus::Idle {
+		if tick_data.status() == BehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
-		tick_data.status = BehaviorStatus::Running;
+		tick_data.set_status(BehaviorStatus::Running);
 
 		while self.child_idx < children.len() {
 			let child = &mut children[self.child_idx];

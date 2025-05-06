@@ -10,11 +10,7 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{
-	borrow::ToOwned,
-	boxed::Box,
-	rc::Rc,
-	string::{String, ToString},
-	sync::Arc,
+	borrow::ToOwned, boxed::Box, format, rc::Rc, string::{String, ToString}, sync::Arc
 };
 use core::{
 	any::{Any, TypeId},
@@ -102,7 +98,28 @@ impl BlackboardInterface for Blackboard {
 				let e = e as &dyn Any;
 				e.downcast_ref::<T>()
 					.cloned()
-					.map_or_else(|| Err(Error::WrongType(key.into())), |value| Ok(value))
+					.map_or_else(
+						|| {
+							e.downcast_ref::<String>()
+							.cloned()
+							.map_or_else(
+								|| Err(Error::WrongType(key.into())), 
+								|s| {
+									T::from_str(&s).map_or_else(
+										|_| {
+											Err(Error::ParsePortValue(
+												key.into(),
+												format!("{:?}", TypeId::of::<T>()).into(),
+											))
+										},
+										|val| Ok(val),
+									)
+								},
+							)
+							
+						}, 
+						|value| Ok(value)
+					)
 			},
 		)
 	}

@@ -9,12 +9,8 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
-	},
-	port::PortList,
-	tree::BehaviorTreeComponentList,
+		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+	}, blackboard::BlackboardNodeRef, port::PortList, tree::BehaviorTreeComponentList
 };
 // endregion:   --- modules
 
@@ -32,6 +28,7 @@ impl BehaviorInstanceMethods for ParallelAll {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)

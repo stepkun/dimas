@@ -9,12 +9,8 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
-		BehaviorTreeMethods, BehaviorType, error::BehaviorError,
-	},
-	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+	}, blackboard::BlackboardNodeRef, port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 // endregion:   --- modules
 
@@ -32,6 +28,7 @@ impl BehaviorInstanceMethods for Subtree {
 	fn start(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		children[0].execute_tick()
@@ -40,6 +37,7 @@ impl BehaviorInstanceMethods for Subtree {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		children[0].execute_tick()

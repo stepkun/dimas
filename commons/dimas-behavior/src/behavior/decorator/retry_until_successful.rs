@@ -9,14 +9,8 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
-	},
-	input_port_macro,
-	port::PortList,
-	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+	}, blackboard::{BlackboardInterface, BlackboardNodeRef}, input_port_macro, port::PortList, port_list, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 // endregion:   --- modules
 
@@ -62,18 +56,19 @@ impl BehaviorInstanceMethods for RetryUntilSuccessful {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
+		blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		// Load num_cycles from the port value
-		self.max_attempts = tick_data.get_input::<i32>("num_attempts")?;
+		self.max_attempts = blackboard.get::<i32>("num_attempts")?;
 
 		let mut do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
 
-		if tick_data.status == BehaviorStatus::Idle {
+		if tick_data.status() == BehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
 
-		tick_data.status = BehaviorStatus::Running;
+		tick_data.set_status(BehaviorStatus::Running);
 
 		while do_loop {
 			// A `Decorator` has only 1 child

@@ -1,8 +1,6 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
-#![allow(dead_code)]
 
-//! Node implementation for a tree hierarchy of [`Blackboard`]s within `DiMAS`.
+//! Implementation for using a tree hierarchy of [`Blackboard`]s within `DiMAS`.
 //!
 //! This separates the hierarchy from the [`Blackboard`] itself, allowing a [`Blackboard`]
 //! beeing part of multiple hierarchies without interferences between those.
@@ -14,11 +12,10 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{
-	string::{String, ToString},
-	sync::Arc,
+	format, string::ToString, sync::Arc
 };
 use core::{
-	any::Any,
+	any::{Any, TypeId},
 	fmt::Debug,
 	ops::{Deref, DerefMut},
 	str::FromStr,
@@ -121,6 +118,20 @@ impl BlackboardInterface for BlackboardNodeRef {
 		if let Some(key_stripped) = key.strip_prefix('@') {
 			return self.root().get(key_stripped);
 		}
+
+		// Check for coded value.
+		let value_option = self.read().values.find(key);
+		if let Some(value) = value_option {
+			return <T as FromStr>::from_str(&value).map_or_else(
+				|_| {
+					Err(Error::ParsePortValue(
+						key.into(),
+						format!("{:?}", TypeId::of::<T>()).into(),
+					))
+				},
+				|val| Ok(val),
+			);
+		};
 
 		// Read needed remapping values beforehand to avoid a deadlock.
 		let (final_key, has_remapping, autoremap) = self.get_remapping_info(key);
@@ -285,8 +296,8 @@ impl Environment for BlackboardNodeRef {
 impl BlackboardNodeRef {
 	/// Create a `BlackboardNodeRef` with remappings.
 	#[must_use]
-	pub fn new(remappings: PortRemappings, autoremap: bool) -> Self {
-		let node = BlackboardNode::new(remappings, autoremap);
+	pub fn new(remappings: PortRemappings, values: PortRemappings, autoremap: bool) -> Self {
+		let node = BlackboardNode::new(remappings, values, autoremap);
 		Self {
 			node: Arc::new(RwLock::new(node)),
 		}
@@ -294,24 +305,24 @@ impl BlackboardNodeRef {
 
 	/// Create a `BlackboardNodeRef` with parent.
 	#[must_use]
-	pub fn with(parent: Self, remappings: PortRemappings, autoremap: bool) -> Self {
+	pub fn with(parent: Self, remappings: PortRemappings, values: PortRemappings, autoremap: bool) -> Self {
 		Self {
 			node: Arc::new(RwLock::new(BlackboardNode::with(
-				parent, remappings, autoremap,
+				parent, remappings, values, autoremap,
 			))),
 		}
 	}
 
 	/// Create a cloned `BlackboardNodeRef`.
 	#[must_use]
-	pub fn cloned(&self, remappings: PortRemappings, autoremap: bool) -> Self {
-		let clone = self.node.read().cloned(remappings, autoremap);
+	pub fn cloned(&self, remappings: PortRemappings, values: PortRemappings, autoremap: bool) -> Self {
+		let clone = self.node.read().cloned(remappings, values, autoremap);
 		Self {
 			node: Arc::new(RwLock::new(clone)),
 		}
 	}
 
-	/// Print the content of the `BlackboardNode` for debugging purpose
+	/// Print the content of the `BlackboardNodeRef` for debugging purpose
 	#[cfg(feature = "std")]
 	pub fn debug_message(&self) {
 		std::println!("{self:?}");
@@ -353,43 +364,49 @@ impl BlackboardNodeRef {
 pub struct BlackboardNode {
 	/// Reference to the managed [`Blackboard`].
 	current: BlackboardRef,
-	/// Optional reference to a parent [`BlackboardNode`].
+	/// Optional [`BlackboardNodeRef`] to a parent [`BlackboardNode`].
 	parent: Option<BlackboardNodeRef>,
 	/// List of [`Port`] remappings.
 	remappings: PortRemappings,
-	/// Automatic remapping of parent Blackboards ports.
+	/// List of port values
+	values: PortRemappings,
+	/// Enables automatic remapping of parent Blackboards ports/keys.
 	autoremap: bool,
 }
 impl BlackboardNode {
-	/// Create a `BlackboardNode` with remappings.
+	/// Create a new [`BlackboardNode`] with remappings.
 	#[must_use]
-	pub fn new(remappings: PortRemappings, autoremap: bool) -> Self {
+	pub fn new(remappings: PortRemappings, values: PortRemappings, autoremap: bool) -> Self {
 		Self {
 			current: BlackboardRef::default(),
 			parent: None,
 			remappings,
+			values,
 			autoremap,
 		}
 	}
 
-	/// Create a `BlackboardNode` with parent.
+	/// Create a new [`BlackboardNode`] with parent [`BlackboardNodeRef`].
 	#[must_use]
-	pub fn with(parent: BlackboardNodeRef, remappings: PortRemappings, autoremap: bool) -> Self {
+	pub fn with(parent: BlackboardNodeRef, remappings: PortRemappings, values: PortRemappings, autoremap: bool) -> Self {
 		Self {
 			current: BlackboardRef::default(),
 			parent: Some(parent),
 			remappings,
+			values,
 			autoremap,
 		}
 	}
 
-	/// Create a cloned `BlackboardNode`.
+	/// Create a cloned [`BlackboardNode`].
+	/// This uses the same [`Blackboard`] and parent [`BlackboardNodeRef`] but own remappings. 
 	#[must_use]
-	pub fn cloned(&self, remappings: PortRemappings, autoremap: bool) -> Self {
+	pub fn cloned(&self, remappings: PortRemappings, values: PortRemappings, autoremap: bool) -> Self {
 		Self {
 			current: self.current.clone(),
 			parent: self.parent.clone(),
 			remappings,
+			values,
 			autoremap,
 		}
 	}

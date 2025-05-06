@@ -29,7 +29,9 @@ pub struct BehaviorTreeProxy {
 	/// The Subtree to call
 	subtree: Option<BehaviorSubTree>,
 	/// Data needed in every tick
-	tick_data: BehaviorTickData,
+	_tick_data: BehaviorTickData,
+	/// Reference to the [`Blackboard`] for the leaf.
+	blackboard: BlackboardNodeRef,
 	/// empty dummy list
 	children: BehaviorTreeComponentList,
 }
@@ -40,7 +42,7 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 	}
 
 	fn blackboard(&self) -> BlackboardNodeRef {
-		self.tick_data.blackboard.clone()
+		self.blackboard.clone()
 	}
 
 	fn children(&self) -> &BehaviorTreeComponentList {
@@ -93,19 +95,20 @@ impl BehaviorTreeComponent for BehaviorTreeProxy {
 impl BehaviorTreeProxy {
 	/// Construct a [`BehaviorTreeProxy`]
 	#[must_use]
-	pub fn new(id: &str, tick_data: BehaviorTickData) -> Self {
+	pub fn new(id: &str, tick_data: BehaviorTickData, blackboard: BlackboardNodeRef) -> Self {
 		Self {
 			id: id.into(),
 			subtree: None,
-			tick_data,
+			_tick_data: tick_data,
+			blackboard,
 			children: BehaviorTreeComponentList::default(),
 		}
 	}
 
 	/// Create a tree leaf <code>TreeElement::Proxy(BehaviorTreeProxy)</code>.
 	#[must_use]
-	pub fn create(id: &str, tick_data: BehaviorTickData) -> TreeElement {
-		TreeElement::Proxy(Self::new(id, tick_data))
+	pub fn create(id: &str, tick_data: BehaviorTickData, blackboard: BlackboardNodeRef) -> TreeElement {
+		TreeElement::Proxy(Self::new(id, tick_data, blackboard))
 	}
 
 	pub(crate) fn set_subtree(&mut self, subtree: BehaviorSubTree) {

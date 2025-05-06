@@ -9,12 +9,8 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
-	},
-	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
+	}, blackboard::BlackboardNodeRef, port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 // endregion:   --- modules
 
@@ -37,10 +33,11 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
+		_blackboard: &mut BlackboardNodeRef,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
-		tick_data.status = BehaviorStatus::Running;
+		tick_data.set_status(BehaviorStatus::Running);
 
 		for index in 0..children.len() {
 			let child = &mut children[index];
