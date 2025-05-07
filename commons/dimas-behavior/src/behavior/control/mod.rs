@@ -3,7 +3,6 @@
 //! Control behavior library
 //!
 
-pub mod behaviortree;
 pub mod fallback;
 pub mod parallel;
 pub mod parallel_all;
@@ -11,7 +10,6 @@ pub mod reactive_fallback;
 pub mod reactive_sequence;
 pub mod sequence;
 pub mod sequence_with_memory;
-pub mod subtree;
 
 // region:      --- modules
 use crate::behavior::BehaviorInstanceMethods;

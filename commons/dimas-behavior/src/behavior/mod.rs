@@ -21,7 +21,9 @@ use alloc::boxed::Box;
 use error::BehaviorError;
 
 use crate::{
-	blackboard::BlackboardNodeRef, port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
+	blackboard::BlackboardNodeRef,
+	port::PortList,
+	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 // endregion:   --- modules
 

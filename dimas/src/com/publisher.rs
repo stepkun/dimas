@@ -8,7 +8,12 @@ use dimas_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	}, blackboard::BlackboardNodeRef, input_port_macro, port::PortList, port_list, tree::BehaviorTreeComponentList
+	},
+	blackboard::BlackboardNodeRef,
+	input_port_macro,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
 };
 use dimas_behavior_derive::Behavior;
 // endregion:   --- modules

@@ -13,6 +13,7 @@ use parking_lot::Mutex;
 use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
 
+/// This definition uses implicit node ID's
 const XML: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
@@ -64,6 +65,21 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 	Ok(())
 }
 
+/// This definition uses explicit node ID's
+const XML_EXPLICIT: &str = r#"
+<root BTCPP_format="4"
+		main_tree_to_execute="MainTree">
+	<BehaviorTree ID="MainTree">
+		<Control ID="Sequence" name="root_sequence">
+			<Condition ID="CheckBattery"	name="battery_ok"/>
+			<Action ID="OpenGripper"		name="open_gripper"/>
+			<Action ID="ApproachObject"		name="approach_object"/>
+			<Action ID="CloseGripper"		name="close_gripper"/>
+		</Control>
+	</BehaviorTree>
+</root>
+"#;
+
 #[tokio::test]
 #[serial]
 async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
@@ -73,7 +89,7 @@ async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 	// This automates the registering step.
 	factory.register_from_plugin("test_behaviors")?;
 
-	let mut tree = factory.create_from_text(XML)?;
+	let mut tree = factory.create_from_text(XML_EXPLICIT)?;
 	// dropping the factory to free memory
 	drop(factory);
 

@@ -19,7 +19,12 @@ use dimas_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	}, blackboard::{BlackboardInterface, BlackboardNodeRef}, input_port_macro, output_port_macro, port::PortList, port_list, tree::BehaviorTreeComponentList
+	},
+	blackboard::{BlackboardInterface, BlackboardNodeRef},
+	input_port_macro, output_port_macro,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
 };
 use dimas_behavior_derive::Behavior;
 // endregion:	--- modules

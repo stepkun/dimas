@@ -7,7 +7,11 @@ use dimas_behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	}, blackboard::BlackboardNodeRef, factory::{error::Error, BehaviorTreeFactory}, port::PortList, tree::{BehaviorTree, BehaviorTreeComponentList}
+	},
+	blackboard::BlackboardNodeRef,
+	factory::{BehaviorTreeFactory, error::Error},
+	port::PortList,
+	tree::{BehaviorTree, BehaviorTreeComponentList},
 };
 use dimas_behavior_derive::Behavior;
 use std::time::Duration;

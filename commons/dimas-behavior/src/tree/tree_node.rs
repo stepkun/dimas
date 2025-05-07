@@ -30,19 +30,25 @@ use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, 
 pub struct BehaviorTreeNode {
 	/// ID of the node.
 	id: ConstString,
-	/// Children.
-	children: BehaviorTreeComponentList,
+	/// Path to the node.
+	path: ConstString,
 	/// Data needed in every tick.
 	tick_data: BehaviorTickData,
 	/// Reference to the [`Blackboard`] for the leaf.
 	blackboard: BlackboardNodeRef,
 	/// The behavior of that leaf.
 	behavior: BehaviorPtr,
+	/// Children.
+	children: BehaviorTreeComponentList,
 }
 
 impl BehaviorTreeComponent for BehaviorTreeNode {
 	fn id(&self) -> &str {
 		&self.id
+	}
+
+	fn path(&self) -> &str {
+		&self.path
 	}
 
 	fn blackboard(&self) -> BlackboardNodeRef {
@@ -60,13 +66,17 @@ impl BehaviorTreeComponent for BehaviorTreeNode {
 	fn execute_tick(&mut self) -> BehaviorResult {
 		let mut status = self.tick_data.status();
 		if status == BehaviorStatus::Idle {
-			status = self
-				.behavior
-				.start(&mut self.tick_data, &mut self.blackboard, &mut self.children)?;
+			status = self.behavior.start(
+				&mut self.tick_data,
+				&mut self.blackboard,
+				&mut self.children,
+			)?;
 		} else {
-			status = self
-				.behavior
-				.tick(&mut self.tick_data, &mut self.blackboard, &mut self.children)?;
+			status = self.behavior.tick(
+				&mut self.tick_data,
+				&mut self.blackboard,
+				&mut self.children,
+			)?;
 		}
 		self.tick_data.set_status(status);
 		Ok(status)
@@ -87,6 +97,7 @@ impl BehaviorTreeNode {
 	#[must_use]
 	pub fn new(
 		id: &str,
+		path: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
 		blackboard: BlackboardNodeRef,
@@ -94,10 +105,11 @@ impl BehaviorTreeNode {
 	) -> Self {
 		Self {
 			id: id.into(),
-			children,
+			path: path.into(),
 			tick_data,
 			blackboard,
 			behavior,
+			children,
 		}
 	}
 
@@ -105,12 +117,15 @@ impl BehaviorTreeNode {
 	#[must_use]
 	pub fn create(
 		id: &str,
+		path: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
 		blackboard: BlackboardNodeRef,
 		behavior: BehaviorPtr,
 	) -> TreeElement {
-		TreeElement::Node(Self::new(id, children, tick_data, blackboard, behavior))
+		TreeElement::Node(Self::new(
+			id, path, children, tick_data, blackboard, behavior,
+		))
 	}
 
 	/// Get the id

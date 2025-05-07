@@ -46,41 +46,45 @@ fn blackboard() {
 
 #[test]
 fn blackboard_node_default() {
-	let mut node = BlackboardNodeRef::default();
+	let remappings0 = PortRemappings::default();
+	let values0 = PortRemappings::default();
+	let mut level0 = BlackboardNodeRef::new("level0", remappings0, values0, false);
 
-	let value = node.get::<i32>("test");
+	let value = level0.get::<i32>("test");
 	assert!(value.is_err());
 
-	let old = node
+	let old = level0
 		.set("test", String::from("test"))
 		.expect("snh");
 	assert_eq!(old, None);
 
-	let value = node.get::<String>("test").expect("snh");
+	let value = level0.get::<String>("test").expect("snh");
 	assert_eq!(value, String::from("test"));
 
-	let old = node.set("test", 42);
+	let old = level0.set("test", 42);
 	assert!(old.is_err());
 
-	let old = node.delete::<String>("test").expect("snh");
+	let old = level0.delete::<String>("test").expect("snh");
 	assert_eq!(old, String::from("test"));
 
-	let old = node.set("test", 42).expect("snh");
+	let old = level0.set("test", 42).expect("snh");
 	assert_eq!(old, None);
 
-	let value = node.get::<i32>("test").expect("snh");
+	let value = level0.get::<i32>("test").expect("snh");
 	assert_eq!(value, 42);
 }
 
 #[test]
 fn blackboard_node_with_parent() {
-	let mut parent = BlackboardNodeRef::default();
+	let remappings0 = PortRemappings::default();
+	let values0 = PortRemappings::default();
+	let mut level0 = BlackboardNodeRef::new("level0", remappings0, values0, false);
 
-	let old = parent
+	let old = level0
 		.set("test1", String::from("test1"))
 		.expect("snh");
 	assert_eq!(old, None);
-	let old = parent
+	let old = level0
 		.set("test2", String::from("test2"))
 		.expect("snh");
 	assert_eq!(old, None);
@@ -88,7 +92,7 @@ fn blackboard_node_with_parent() {
 	let mut remappings = PortRemappings::default();
 	let values = PortRemappings::default();
 	remappings.add("test", "test1");
-	let mut node = BlackboardNodeRef::with(parent, remappings, values, true);
+	let mut node = BlackboardNodeRef::with("level0", level0, remappings, values, true);
 
 	let old = node
 		.set("@other", String::from("other"))
@@ -112,24 +116,26 @@ fn blackboard_node_with_parent() {
 
 #[test]
 fn blackboard_node_hierarchy() {
-	let mut level0 = BlackboardNodeRef::default();
+	let remappings0 = PortRemappings::default();
+	let values0 = PortRemappings::default();
+	let mut level0 = BlackboardNodeRef::new("level0", remappings0, values0, false);
 
 	let mut remappings1 = PortRemappings::default();
 	let values1 = PortRemappings::default();
 
 	remappings1.add("levelB", "levelA");
-	let mut level1 = BlackboardNodeRef::with(level0.clone(), remappings1, values1, true);
+	let mut level1 = BlackboardNodeRef::with("level1", level0.clone(), remappings1, values1, true);
 
 	let mut remappings2 = PortRemappings::default();
 	let values2 = PortRemappings::default();
 
 	remappings2.add("levelC", "levelB");
-	let mut level2 = BlackboardNodeRef::with(level1.clone(), remappings2, values2, true);
+	let mut level2 = BlackboardNodeRef::with("level2", level1.clone(), remappings2, values2, true);
 
 	let mut remappings3 = PortRemappings::default();
 	let values3 = PortRemappings::default();
 	remappings3.add("levelD", "levelC");
-	let mut level3 = BlackboardNodeRef::with(level2.clone(), remappings3, values3, true);
+	let mut level3 = BlackboardNodeRef::with("level3", level2.clone(), remappings3, values3, true);
 
 	let old = level0
 		.set("levelA", String::from("testA"))

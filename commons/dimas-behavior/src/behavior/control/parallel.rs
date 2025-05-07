@@ -12,7 +12,10 @@ use crate::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	}, blackboard::BlackboardNodeRef, port::PortList, tree::BehaviorTreeComponentList
+	},
+	blackboard::BlackboardNodeRef,
+	port::PortList,
+	tree::BehaviorTreeComponentList,
 };
 // endregion:   --- modules
 

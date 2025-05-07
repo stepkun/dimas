@@ -11,15 +11,13 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{borrow::ToOwned, sync::Arc, vec::Vec};
+use alloc::{sync::Arc, vec::Vec};
 use dimas_core::ConstString;
+use hashbrown::HashMap;
 use libloading::Library;
-use parking_lot::RwLock;
+use rustc_hash::FxBuildHasher;
 
-use crate::{
-	behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType},
-	tree::{BehaviorSubTree, BehaviorTreeComponent, TreeElement},
-};
+use crate::behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType};
 
 use super::error::Error;
 // endregion:   --- modules
@@ -28,13 +26,10 @@ use super::error::Error;
 /// A registry for [`Behavior`]s used by the [`BehaviorTreeFactory`] for creation of [`BehaviorTree`]s
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	/// Indicates that the registry is properly setup,
-	/// i.e. contains all necessary subtrees and the subtrees are linked to sub-subtrees.
-	is_clean: bool,
-	/// List of available behavior creation functions.
-	behaviors: Vec<(ConstString, BehaviorType, Arc<BehaviorCreationFn>)>,
-	/// List of available subtrees.
-	subtrees: Vec<BehaviorSubTree>,
+	/// [`HashMap`] of available behavior creation functions.
+	behaviors: HashMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>), FxBuildHasher>,
+	/// [`HashMap`] of registered behavior tree definitions.
+	tree_definitions: HashMap<ConstString, ConstString, FxBuildHasher>,
 	/// List of loaded libraries.
 	/// Every tree must keep a reference to its needed libraries to keep the libraries in memory
 	/// until end of programm.
@@ -44,7 +39,7 @@ pub struct BehaviorRegistry {
 impl BehaviorRegistry {
 	/// Add a behavior to the registry
 	/// # Errors
-	/// - if the entry alreeady exists
+	/// - if the entry already exists
 	pub fn add_behavior<F>(
 		&mut self,
 		name: &str,
@@ -54,11 +49,11 @@ impl BehaviorRegistry {
 	where
 		F: Fn() -> BehaviorPtr + Send + Sync + 'static,
 	{
-		if self.contains_behavior(name) {
+		if self.behaviors.contains_key(name) {
 			return Err(Error::BehaviorAlreadyRegistered(name.into()));
 		}
 		self.behaviors
-			.push((name.into(), bhvr_type, Arc::from(bhvr_creation_fn)));
+			.insert(name.into(), (bhvr_type, Arc::from(bhvr_creation_fn)));
 		Ok(())
 	}
 
@@ -69,87 +64,42 @@ impl BehaviorRegistry {
 		self.libraries.push(Arc::new(library));
 	}
 
-	/// Add a subtree to the registry.
+	/// Add a behavior tree definition to the registry.
 	/// # Errors
-	/// - if the subtree is already registered.
-	///
-	/// Adding a subtree to the registry makes the registry 'dirty'.
-	/// It is then necessary to run a `self.link_subtrees()` to ensure that all subtrees
-	/// are properly linked with the subtrees they rely on.
-	pub(crate) fn add_behavior_tree(&mut self, subtree: TreeElement) -> Result<(), Error> {
-		for item in &self.subtrees {
-			if item.read().id() == subtree.id() {
-				return Err(Error::SubtreeAlreadyRegistered(subtree.id().into()));
-			}
+	/// - if the behavior tree definition is already registered.
+	pub(crate) fn add_tree_defintion(
+		&mut self,
+		id: &str,
+		tree_definition: ConstString,
+	) -> Result<(), Error> {
+		let id: ConstString = id.into();
+		if self.tree_definitions.contains_key(&id) {
+			Err(Error::SubtreeAlreadyRegistered(id))
+		} else {
+			self.tree_definitions.insert(id, tree_definition);
+			Ok(())
 		}
-		self.subtrees.push(Arc::new(RwLock::new(subtree)));
-		self.is_clean = false;
-		Ok(())
-	}
-
-	/// Check whether registry contains a behavior.
-	fn contains_behavior(&self, id: &str) -> bool {
-		for (name, _, _) in &self.behaviors {
-			if name.as_ref() == id {
-				return true;
-			}
-		}
-		false
 	}
 
 	/// Fetch a behavior creation function from the registry.
 	/// # Errors
 	/// - if the behavior is not found in the registry
 	pub fn fetch(&self, id: &str) -> Result<(BehaviorType, Arc<BehaviorCreationFn>), Error> {
-		for (name, bhvr_type, creation_fn) in &self.behaviors {
-			if name.as_ref() == id {
-				return Ok((bhvr_type.to_owned(), creation_fn.clone()));
-			}
-		}
-
-		Err(Error::BehaviorNotRegistered(id.into()))
+		self.behaviors.get(id).map_or_else(
+			|| Err(Error::BehaviorNotRegistered(id.into())),
+			|value| Ok(value.clone()),
+		)
 	}
 
-	pub(crate) fn link_subtrees(&mut self) -> Result<(), Error> {
-		if !self.is_clean {
-			for subtree in &self.subtrees {
-				self.link_subtree(subtree)?;
-			}
-			self.is_clean = true;
-		}
-		Ok(())
-	}
-
-	/// Link each Proxy in a subtree to its corresponding subtree.
-	fn link_subtree(&self, subtree: &BehaviorSubTree) -> Result<(), Error> {
-		let node = &mut *subtree.write();
-		for child in &mut node.children_mut().0 {
-			self.recursive_node(child)?;
-		}
-		Ok(())
-	}
-
-	fn recursive_node(&self, node: &mut TreeElement) -> Result<(), Error> {
-		match node {
-			TreeElement::Leaf(_leaf) => {}
-			TreeElement::Node(node) => {
-				for child in &mut node.children_mut().0 {
-					self.recursive_node(child)?;
-				}
-			}
-			TreeElement::Proxy(proxy) => {
-				let id = proxy.id();
-				let subtree = self.subtree_by_name(id)?;
-				proxy.set_subtree(subtree);
-			}
-		}
-		Ok(())
+	pub(crate) fn find_tree_definition(&self, name: &str) -> Option<ConstString> {
+		self.tree_definitions.get(name).cloned()
 	}
 
 	/// Prints out the list of registered behaviors
 	#[cfg(feature = "std")]
 	pub fn list_behaviors(&self) {
-		for (key, _, _) in &self.behaviors {
+		let iter = self.behaviors.iter();
+		for (key, _) in iter {
 			std::println!("{key}");
 		}
 		std::println!();
@@ -165,31 +115,10 @@ impl BehaviorRegistry {
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		let mut res = Vec::new();
-		for subtree in &self.subtrees {
-			res.push(subtree.read().id().into());
+		for (id, _) in &self.tree_definitions {
+			res.push(id.clone());
 		}
 		res
-	}
-
-	/// Get a reference to the registered subtrees
-	#[must_use]
-	pub(crate) const fn subtrees(&self) -> &Vec<BehaviorSubTree> {
-		&self.subtrees
-	}
-
-	/// Find a subtree in the list and return a reference to it
-	/// # Errors
-	/// - if subtree is not found
-	pub fn subtree_by_name(&self, id: &str) -> Result<BehaviorSubTree, Error> {
-		for subtree in &self.subtrees {
-			// if we are working on a subtree this would become a deadlock
-			if let Some(intern) = subtree.try_read() {
-				if intern.id() == id {
-					return Ok(subtree.clone());
-				}
-			}
-		}
-		Err(Error::SubtreeNotFound(id.into()))
 	}
 }
 // endregion:   --- BehaviorRegistry

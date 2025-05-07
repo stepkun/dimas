@@ -20,14 +20,13 @@ use crate::{
 		action::Script,
 		condition::script_condition::ScriptCondition,
 		control::{
-			behaviortree::Behaviortree, fallback::Fallback, parallel::Parallel,
-			parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
-			reactive_sequence::ReactiveSequence, sequence::Sequence,
-			sequence_with_memory::SequenceWithMemory, subtree::Subtree,
+			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
+			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
+			sequence::Sequence, sequence_with_memory::SequenceWithMemory,
 		},
 		decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
-			retry_until_successful::RetryUntilSuccessful,
+			retry_until_successful::RetryUntilSuccessful, subtree::Subtree,
 		},
 	},
 	factory::xml_parser::XmlParser,
@@ -60,8 +59,13 @@ impl BehaviorTreeFactory {
 	/// # Errors
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
+		// core actions
+		self.register_node_type::<Script>("Script")?;
+
+		// core conditions
+		self.register_node_type::<ScriptCondition>("ScriptCondition")?;
+
 		// core controls
-		self.register_node_type::<Behaviortree>("Behaviortree")?;
 		self.register_node_type::<Fallback>("Fallback")?;
 		self.register_node_type::<Parallel>("Parallel")?;
 		self.register_node_type::<ParallelAll>("ParallelAll")?;
@@ -69,18 +73,12 @@ impl BehaviorTreeFactory {
 		self.register_node_type::<ReactiveSequence>("ReactiveSequence")?;
 		self.register_node_type::<Sequence>("Sequence")?;
 		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory")?;
-		self.register_node_type::<Subtree>("Subtree")?;
-
-		// core conditions
-		self.register_node_type::<ScriptCondition>("ScriptCondition")?;
 
 		// core decorators
 		self.register_node_type::<ForceFailure>("ForceFailure")?;
 		self.register_node_type::<Inverter>("Inverter")?;
 		self.register_node_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
-
-		// core actions
-		self.register_node_type::<Script>("Script")
+		self.register_node_type::<Subtree>("SubTree")
 	}
 
 	/// Create a [`BehaviorTree`] directly from XML.
@@ -110,8 +108,9 @@ impl BehaviorTreeFactory {
 	/// - if no tree with `name` can be found
 	/// - if behaviors or subtrees are missing
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
-		self.registry.link_subtrees()?;
-		let root = self.registry.subtree_by_name(name)?;
+		// self.registry.link_subtrees()?;
+		// let root = self.registry.subtree_by_name(name)?;
+		let root = XmlParser::create_tree_from_definition(name, &self.registry)?;
 		Ok(BehaviorTree::new(root, &self.registry))
 	}
 
@@ -144,11 +143,11 @@ impl BehaviorTreeFactory {
 			.attribute("main_tree_to_execute")
 			.map(|name| name.into());
 
-		XmlParser::register_root_element(&mut self.registry, root)?;
+		XmlParser::register_document_root(&mut self.registry, root)?;
 		Ok(())
 	}
 
-	/// Get the name list of registered (sub)trees.
+	/// Get the name list of registered behavior trees.
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		self.registry.registered_behavior_trees()

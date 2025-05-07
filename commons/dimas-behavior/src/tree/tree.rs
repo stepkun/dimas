@@ -20,7 +20,7 @@ use crate::{
 	factory::BehaviorRegistry,
 };
 
-use super::{BehaviorSubTree, BehaviorTreeComponent, TreeElement, error::Error};
+use super::{BehaviorTreeComponent, TreeElement, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
@@ -29,7 +29,6 @@ use super::{BehaviorSubTree, BehaviorTreeComponent, TreeElement, error::Error};
 /// - if recursion is deeper than 127
 #[cfg(feature = "std")]
 pub fn print_tree(start_node: &TreeElement) -> Result<(), Error> {
-	std::println!("{}", start_node.id());
 	print_recursively(0, start_node)
 }
 
@@ -49,27 +48,17 @@ fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 
 	let next_level = level + 1;
 	let mut indentation = String::new();
-	for _ in 0..next_level {
-		indentation.push_str("   |");
+	for _ in 0..level {
+		indentation.push_str("  ");
 	}
 	match node {
 		TreeElement::Leaf(leaf) => {
-			std::println!("{indentation}- {}", leaf.id());
+			std::println!("{indentation}{}", leaf.id());
 		}
 		TreeElement::Node(node) => {
-			std::println!("{indentation}- {}", node.id());
+			std::println!("{indentation}{}", node.id());
 			for child in &**node.children() {
 				print_recursively(next_level, child)?;
-			}
-		}
-		TreeElement::Proxy(proxy) => {
-			std::println!("{indentation}- SubTree: {}", proxy.id());
-			if let Some(subtree) = proxy.subtree() {
-				for child in &**subtree.read().children() {
-					print_recursively(next_level, child)?;
-				}
-			} else {
-				std::println!("{indentation}   |- missing!!");
 			}
 		}
 	}
@@ -80,21 +69,14 @@ fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeComponent`]s
 pub struct BehaviorTree {
-	pub(crate) root: BehaviorSubTree,
-	pub(crate) subtrees: Vec<BehaviorSubTree>,
+	pub(crate) root: TreeElement,
 	pub(crate) _libraries: Vec<Arc<Library>>,
 }
 
 impl BehaviorTree {
 	/// create a Tree with reference to its libraries
-	pub fn new(root: BehaviorSubTree, registry: &BehaviorRegistry) -> Self {
-		// @TODO: create a list of all used subtrees
-		// for now its just a stupid copy of what is registered
-		let mut subtrees = Vec::new();
-		for sub in registry.subtrees() {
-			subtrees.push(sub.clone());
-		}
-
+	#[must_use]
+	pub fn new(root: TreeElement, registry: &BehaviorRegistry) -> Self {
 		// clone the current state of registered libraries
 		let mut libraries = Vec::new();
 		for lib in registry.libraries() {
@@ -102,60 +84,52 @@ impl BehaviorTree {
 		}
 		Self {
 			root,
-			subtrees,
 			_libraries: libraries,
 		}
 	}
 
-	/// Pretty print the tree
+	/// Pretty print the tree.
 	/// # Errors
-	/// - if tree depth exceeds 127 (sub)tree levels
+	/// - if tree depth exceeds 127 (sub)tree levels.
 	pub fn print(&self) -> Result<(), Error> {
-		std::println!("{}", self.root.read().id());
-		print_recursively(0, &self.root.read())
+		print_recursively(0, &self.root)
 	}
 
-	/// Get a (sub)tree where index 0 is root tree
+	/// Get a (sub)tree where index 0 is root tree.
 	/// # Errors
-	/// - if index is out of bounds
-	pub fn subtree(&self, index: usize) -> Result<BehaviorSubTree, Error> {
-		if index == 0 {
-			Ok(self.root.clone())
-		} else if (index - 1) > self.subtrees.len() {
-			Err(Error::IndexOutOfBounds(index))
-		} else {
-			Ok(self.subtrees[index - 1].clone())
-		}
+	/// - if index is out of bounds.
+	pub fn subtree(&self, _index: usize) -> Result<&TreeElement, Error> {
+		todo!("subtree access")
 	}
 
-	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`]
+	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`].
 	/// # Errors
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
 		let mut status = BehaviorStatus::Idle;
 
 		while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
-			status = self.root.write().execute_tick()?;
+			status = self.root.execute_tick()?;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 
 			if status.is_completed() {
-				self.root.write().halt(0)?;
+				self.root.halt(0)?;
 				break;
 			}
 		}
 		Ok(status)
 	}
 
-	/// Ticks the tree exactly once
+	/// Ticks the tree exactly once.
 	/// # Errors
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.write().execute_tick()
+		self.root.execute_tick()
 	}
 }
 // endregion:	--- BehaviorTree
 
 // region:		--- BehaviorTreeComponentList
-/// A List of tree components
+/// A List of tree components.
 #[derive(Default)]
 pub struct BehaviorTreeComponentList(pub(crate) Vec<TreeElement>);
 

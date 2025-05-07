@@ -8,42 +8,29 @@ pub mod error;
 mod tree;
 mod tree_leaf;
 mod tree_node;
-mod tree_proxy;
 
 // flatten
 pub use tree::{BehaviorTree, BehaviorTreeComponentList, print_tree};
 pub use tree_leaf::BehaviorTreeLeaf;
 pub use tree_node::BehaviorTreeNode;
-pub use tree_proxy::BehaviorTreeProxy;
 
 // region:      --- modules
-use alloc::sync::Arc;
-use parking_lot::RwLock;
-
 use crate::{
 	behavior::{BehaviorResult, error::BehaviorError},
 	blackboard::BlackboardNodeRef,
 };
 // endregion:   --- modules
 
-//  region:		--- types
-/// Shorthand for a behavior subtree definition
-/// An `Arc` with `Mutex` to enable reusability in the tree.
-pub type BehaviorSubTree = Arc<RwLock<TreeElement>>;
-// endregion:	--- types
-
 // region:		--- TreeElement
 /// An enum with the different types of tree elements.
 ///
-/// Using an enum makes sense, because there will most likely never be more than three kinds of elements.
+/// Using an enum makes sense, because there will most likely never be more than two kinds of elements.
 /// And it is not intended to give external access to the tree element type system.
 pub enum TreeElement {
-	/// A tree leaf
+	/// A final tree leaf
 	Leaf(BehaviorTreeLeaf),
 	/// An intermediate tree node
 	Node(BehaviorTreeNode),
-	/// A connector to subtrees
-	Proxy(BehaviorTreeProxy),
 }
 
 impl BehaviorTreeComponent for TreeElement {
@@ -51,7 +38,13 @@ impl BehaviorTreeComponent for TreeElement {
 		match self {
 			Self::Leaf(leaf) => leaf.id(),
 			Self::Node(node) => node.id(),
-			Self::Proxy(proxy) => proxy.id(),
+		}
+	}
+
+	fn path(&self) -> &str {
+		match self {
+			Self::Leaf(leaf) => leaf.path(),
+			Self::Node(node) => node.path(),
 		}
 	}
 
@@ -59,7 +52,6 @@ impl BehaviorTreeComponent for TreeElement {
 		match self {
 			Self::Leaf(leaf) => leaf.blackboard(),
 			Self::Node(node) => node.blackboard(),
-			Self::Proxy(proxy) => proxy.blackboard(),
 		}
 	}
 
@@ -67,7 +59,6 @@ impl BehaviorTreeComponent for TreeElement {
 		match self {
 			Self::Leaf(leaf) => leaf.children(),
 			Self::Node(node) => node.children(),
-			Self::Proxy(proxy) => proxy.children(),
 		}
 	}
 
@@ -75,7 +66,6 @@ impl BehaviorTreeComponent for TreeElement {
 		match self {
 			Self::Leaf(leaf) => leaf.children_mut(),
 			Self::Node(node) => node.children_mut(),
-			Self::Proxy(proxy) => proxy.children_mut(),
 		}
 	}
 
@@ -83,7 +73,6 @@ impl BehaviorTreeComponent for TreeElement {
 		match self {
 			Self::Leaf(leaf) => leaf.execute_halt(),
 			Self::Node(node) => node.execute_halt(),
-			Self::Proxy(proxy) => proxy.execute_halt(),
 		}
 	}
 
@@ -91,23 +80,22 @@ impl BehaviorTreeComponent for TreeElement {
 		match self {
 			Self::Leaf(leaf) => leaf.execute_tick(),
 			Self::Node(node) => node.execute_tick(),
-			Self::Proxy(proxy) => proxy.execute_tick(),
 		}
 	}
 
 	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
 		match self {
-			Self::Leaf(leaf) => leaf.halt_child(index),
+			// A leaf has no children, so we can return early.
+			Self::Leaf(_) => Ok(()),
 			Self::Node(node) => node.halt_child(index),
-			Self::Proxy(proxy) => proxy.halt_child(index),
 		}
 	}
 
 	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
 		match self {
-			Self::Leaf(leaf) => leaf.halt(index),
+			// A leaf has no children, so we can return early.
+			Self::Leaf(_) => Ok(()),
 			Self::Node(node) => node.halt(index),
-			Self::Proxy(proxy) => proxy.halt(index),
 		}
 	}
 }
@@ -118,6 +106,9 @@ impl BehaviorTreeComponent for TreeElement {
 pub trait BehaviorTreeComponent: Send + Sync {
 	/// Get the id
 	fn id(&self) -> &str;
+
+	/// Get the path
+	fn path(&self) -> &str;
 
 	/// Get the blackboard
 	fn blackboard(&self) -> BlackboardNodeRef;
@@ -148,13 +139,14 @@ pub trait BehaviorTreeComponent: Send + Sync {
 	/// - if index is out of childrens bounds
 	fn halt(&mut self, index: usize) -> Result<(), BehaviorError>;
 
-	/// Reset all children for single child components.
+	/// Reset child at `index`.
 	/// # Errors
-	fn reset_child(&mut self) -> Result<(), BehaviorError> {
-		self.halt_child(0)
+	/// - if index is out of childrens bounds
+	fn reset_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+		self.halt_child(index)
 	}
 
-	/// Reset all children for multi child components.
+	/// Reset all children.
 	/// # Errors
 	fn reset_children(&mut self) -> Result<(), BehaviorError> {
 		self.halt(0)

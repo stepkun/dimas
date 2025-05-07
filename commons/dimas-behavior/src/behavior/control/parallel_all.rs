@@ -9,8 +9,13 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus, BehaviorTickData, BehaviorTreeMethods, BehaviorType
-	}, blackboard::BlackboardNodeRef, port::PortList, tree::BehaviorTreeComponentList
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+	},
+	blackboard::BlackboardNodeRef,
+	port::PortList,
+	tree::BehaviorTreeComponentList,
 };
 // endregion:   --- modules
 

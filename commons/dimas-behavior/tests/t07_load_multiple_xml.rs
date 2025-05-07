@@ -7,7 +7,6 @@
 //!
 
 use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
-use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 
 const XML_MAIN: &str = r#"
@@ -39,7 +38,6 @@ const XML_SUB_B: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
 async fn load_multiple_xml() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -58,16 +56,18 @@ async fn load_multiple_xml() -> anyhow::Result<()> {
 	}
 
 	// You can create the MainTree and the subtrees will be added automatically.
-	println!("----- MainTree tick ----");
 	let mut tree = factory.create_tree("MainTree")?;
+	// ... and/or you can create only one of the subtrees
+	let mut sub_tree_a = factory.create_tree("SubA")?;
+	drop(factory);
+
+	println!("----- MainTree tick ----");
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 
-	// ... or you can create only one of the subtrees
 	println!("----- SubA tick ----");
-	let mut sub_tree_a = factory.create_tree("SubA")?;
-	drop(factory);
 	sub_tree_a.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
 }

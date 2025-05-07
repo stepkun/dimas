@@ -8,7 +8,12 @@ use crate::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
-	}, blackboard::{BlackboardInterface, BlackboardNodeRef}, input_port_macro, port::PortList, port_list, tree::BehaviorTreeComponentList
+	},
+	blackboard::{BlackboardInterface, BlackboardNodeRef},
+	input_port_macro,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
 };
 use alloc::{boxed::Box, string::String, vec, vec::Vec};
 use dimas_behavior_derive::Behavior;

@@ -7,7 +7,7 @@
 //!
 
 use dimas_behavior::{
-	behavior::BehaviorStatus, factory::BehaviorTreeFactory, tree::BehaviorTreeComponent,
+	behavior::BehaviorStatus, factory::BehaviorTreeFactory,
 };
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething};
@@ -38,7 +38,6 @@ const XML: &str = r#"
 
 #[tokio::test]
 #[serial]
-#[ignore]
 async fn subtree_port_remapping() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -52,21 +51,14 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ Root BB ------");
-	tree.subtree(0)?
-		.read()
-		.blackboard()
-		.debug_message();
+	// tree.subtree(0)?.blackboard().debug_message();
 	println!("\n----- Second BB -----");
-	tree.subtree(1)?
-		.read()
-		.blackboard()
-		.debug_message();
+	// tree.subtree(1)?.blackboard().debug_message();
 	Ok(())
 }
 
 #[tokio::test]
 #[serial]
-#[ignore]
 async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -79,14 +71,8 @@ async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ Root BB ------");
-	tree.subtree(0)?
-		.read()
-		.blackboard()
-		.debug_message();
+	// tree.subtree(0)?.blackboard().debug_message();
 	println!("\n----- Second BB -----");
-	tree.subtree(1)?
-		.read()
-		.blackboard()
-		.debug_message();
+	// tree.subtree(1)?.blackboard().debug_message();
 	Ok(())
 }

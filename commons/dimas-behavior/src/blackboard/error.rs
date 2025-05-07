@@ -15,8 +15,11 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Entry is not in `Blackboard`.
-	#[error("Couldn't find entry [{0}]")]
+	#[error("Couldn't find entry [{0}] in blackboard")]
 	NotFound(ConstString),
+	/// Entry is not in `Blackboard`.
+	#[error("Couldn't find entry [{0}] in blackboard of [{1}]")]
+	NotFoundIn(ConstString, ConstString),
 	/// Entry has other type than expected.
 	#[error("Entry [{0}] has a different type")]
 	WrongType(ConstString),

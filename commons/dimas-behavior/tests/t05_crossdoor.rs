@@ -8,7 +8,6 @@
 
 use cross_door::cross_door::CrossDoor;
 use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
-use serial_test::serial;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -37,7 +36,6 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
 async fn crossdoor() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -61,7 +59,6 @@ async fn crossdoor() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[serial]
 async fn crossdoor_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 

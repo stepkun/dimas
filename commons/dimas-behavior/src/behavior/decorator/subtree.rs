@@ -9,18 +9,22 @@ use dimas_behavior_derive::Behavior;
 
 use crate::{
 	behavior::{
-		error::BehaviorError, BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData, BehaviorTreeMethods, BehaviorType
-	}, blackboard::BlackboardNodeRef, port::PortList, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
+		BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+	},
+	blackboard::BlackboardNodeRef,
+	port::PortList,
+	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 // endregion:   --- modules
 
-// region:      --- Behaviortree
-/// A `Behaviortree` ticks executes children in
-///
+// region:      --- Subtree
+/// A `Subtree` is a `Decorator` but with its own [`BehaviorType`].
 #[derive(Behavior, Debug, Default)]
-pub struct Behaviortree {}
+pub struct Subtree {}
 
-impl BehaviorInstanceMethods for Behaviortree {
+impl BehaviorInstanceMethods for Subtree {
 	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
 		children[0].execute_halt()
 	}
@@ -44,9 +48,9 @@ impl BehaviorInstanceMethods for Behaviortree {
 	}
 }
 
-impl BehaviorStaticMethods for Behaviortree {
+impl BehaviorStaticMethods for Subtree {
 	fn kind() -> BehaviorType {
-		BehaviorType::Control
+		BehaviorType::SubTree
 	}
 }
-// endregion:   --- Behaviortree
+// endregion:   --- Subtree
