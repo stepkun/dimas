@@ -6,6 +6,8 @@
 extern crate alloc;
 
 // region		--- modules
+#[cfg(doc)]
+use super::{PortList, PortRemappings};
 use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules

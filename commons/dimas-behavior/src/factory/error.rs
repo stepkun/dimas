@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! [`BehaviorTreeFactory`] and [`XmlParser`] errors
+//! `BehaviorTreeFactory` and `XmlParser` errors.
 //!
 
 #[doc(hidden)]

@@ -8,36 +8,36 @@
 
 #[allow(clippy::module_inception)]
 mod blackboard;
-mod blackboard_node;
+mod blackboard_data;
 pub mod error;
-// mod old_blackboard;
-// mod string;
-// pub use string::*;
+mod shared_blackboard;
 
 // flatten
-pub use blackboard::{Blackboard, BlackboardRef};
-pub use blackboard_node::BlackboardNodeRef;
+pub use blackboard::Blackboard;
+pub use blackboard_data::BlackboardData;
+use dimas_core::ConstString;
+pub use shared_blackboard::SharedBlackboard;
 
 // region:      --- modules
 use alloc::string::ToString;
-use blackboard::Entry;
+use blackboard_data::Entry;
 use core::{any::Any, fmt::Debug, str::FromStr};
 
 use self::error::Error;
 // endregion:   --- modules
 
 // region:      --- BlackboardInterface
-/// Contract for interacting with a [`Blackboard`] or a [`BlackboardNode`].
+/// Contract for interacting with a [`Blackboard`], [`BlackboardNode`] or [`SharedBlackboard`].
 pub trait BlackboardInterface {
 	/// Check whether a certain key is within the [`Blackboard`].
-	fn contains(&self, key: &str) -> bool;
+	fn contains(&self, key: ConstString) -> bool;
 
 	/// Delete a value of type T with key from [`Blackboard`].
 	/// Return the old value.
 	/// # Errors
 	/// - if key is not in [`Blackboard`]
 	/// - if key has different type than expected
-	fn delete<T>(&mut self, key: &str) -> Result<T, Error>
+	fn delete<T>(&mut self, key: ConstString) -> Result<T, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
 
@@ -45,18 +45,18 @@ pub trait BlackboardInterface {
 	/// # Errors
 	/// - if key is not in [`Blackboard`]
 	/// - if key has different type than expected
-	fn get<T>(&self, key: &str) -> Result<T, Error>
+	fn get<T>(&self, key: ConstString) -> Result<T, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
 
 	/// Get raw [`Entry`] with key from [`Blackboard`].
-	fn get_entry(&self, key: &str) -> Option<Entry>;
+	fn get_entry(&self, key: ConstString) -> Option<Entry>;
 
 	/// Set a value of type T with key in the [`Blackboard`].
 	/// Returns an eventually existing value.
 	/// # Errors
 	/// - if key already exists with a different type
-	fn set<T>(&mut self, key: &str, value: T) -> Result<Option<T>, Error>
+	fn set<T>(&mut self, key: ConstString, value: T) -> Result<Option<T>, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
 }

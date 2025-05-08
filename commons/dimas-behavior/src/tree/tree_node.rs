@@ -13,13 +13,13 @@ use core::{
 	marker::PhantomData,
 	ops::DerefMut,
 };
-use dimas_core::ConstString;
+use dimas_core::BoxConstString;
 
 use crate::{
 	behavior::{
 		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 };
 
 use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, TreeElement};
@@ -29,13 +29,13 @@ use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, 
 /// Implementation of a trees node
 pub struct BehaviorTreeNode {
 	/// ID of the node.
-	id: ConstString,
+	id: BoxConstString,
 	/// Path to the node.
-	path: ConstString,
+	path: BoxConstString,
 	/// Data needed in every tick.
 	tick_data: BehaviorTickData,
 	/// Reference to the [`Blackboard`] for the leaf.
-	blackboard: BlackboardNodeRef,
+	blackboard: SharedBlackboard,
 	/// The behavior of that leaf.
 	behavior: BehaviorPtr,
 	/// Children.
@@ -51,7 +51,7 @@ impl BehaviorTreeComponent for BehaviorTreeNode {
 		&self.path
 	}
 
-	fn blackboard(&self) -> BlackboardNodeRef {
+	fn blackboard(&self) -> SharedBlackboard {
 		self.blackboard.clone()
 	}
 
@@ -100,7 +100,7 @@ impl BehaviorTreeNode {
 		path: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
-		blackboard: BlackboardNodeRef,
+		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
 		Self {
@@ -120,7 +120,7 @@ impl BehaviorTreeNode {
 		path: &str,
 		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
-		blackboard: BlackboardNodeRef,
+		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> TreeElement {
 		TreeElement::Node(Self::new(

@@ -5,8 +5,8 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use dimas_core::ConstString;
 // region		--- modules
+use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
 

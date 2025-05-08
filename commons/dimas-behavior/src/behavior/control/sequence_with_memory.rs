@@ -13,7 +13,7 @@ use crate::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
@@ -40,7 +40,7 @@ impl BehaviorInstanceMethods for SequenceWithMemory {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		if tick_data.status() == BehaviorStatus::Idle {

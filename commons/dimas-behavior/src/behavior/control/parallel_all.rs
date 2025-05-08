@@ -13,7 +13,7 @@ use crate::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::BehaviorTreeComponentList,
 };
@@ -33,7 +33,7 @@ impl BehaviorInstanceMethods for ParallelAll {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)

@@ -13,7 +13,7 @@ use crate::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
 		BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
@@ -32,7 +32,7 @@ impl BehaviorInstanceMethods for Subtree {
 	fn start(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		children[0].execute_tick()
@@ -41,7 +41,7 @@ impl BehaviorInstanceMethods for Subtree {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		children[0].execute_tick()

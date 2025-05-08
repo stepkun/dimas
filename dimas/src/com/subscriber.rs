@@ -9,7 +9,7 @@ use dimas_behavior::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 	input_port_macro,
 	port::PortList,
 	port_list,
@@ -19,7 +19,7 @@ use dimas_behavior_derive::Behavior;
 // endregion:   --- modules
 
 // region:      --- Subscriber
-/// A [`Publisher`]
+/// A [`Subscriber`]
 #[derive(Behavior, Debug, Default)]
 pub struct Subscriber {}
 
@@ -28,7 +28,7 @@ impl BehaviorInstanceMethods for Subscriber {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking Subscriber");

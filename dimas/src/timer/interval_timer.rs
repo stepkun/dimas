@@ -10,7 +10,7 @@ use dimas_behavior::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
-	blackboard::{BlackboardInterface, BlackboardNodeRef},
+	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro,
 	port::PortList,
 	port_list,
@@ -32,7 +32,7 @@ impl BehaviorInstanceMethods for IntervalTimer {
 	fn start(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("start IntervalTimer");
@@ -41,7 +41,7 @@ impl BehaviorInstanceMethods for IntervalTimer {
 		if self.handle.is_none() {
 			tick_data.set_status(BehaviorStatus::Running);
 
-			let input = blackboard.get("interval")?;
+			let input = blackboard.get("interval".into())?;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
 
@@ -75,7 +75,7 @@ impl BehaviorInstanceMethods for IntervalTimer {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking IntervalTimer");

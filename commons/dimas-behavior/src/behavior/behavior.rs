@@ -10,8 +10,7 @@ use super::BehaviorStatus;
 // endregion:   --- modules
 
 // region:		--- BehaviorConfigurationData
-/// Holds the Behavior data used during configuration
-/// and on other rare occasions.
+/// Holds the behavior data used during configuration and on other rare occasions.
 #[derive(Debug)]
 pub struct BehaviorConfigurationData {
 	name: ConstString,
@@ -39,14 +38,14 @@ impl BehaviorConfigurationData {
 
 	/// Get name
 	#[must_use]
-	pub const fn name(&self) -> &str {
-		&self.name
+	pub fn name(&self) -> ConstString {
+		self.name.clone()
 	}
 }
 // endregion:	--- BehaviorConfigurationData
 
 // region:      --- BehaviorTickData
-/// Holds the often used Data of a [`Behavior`].
+/// Holds the often used Data of a behavior.
 #[derive(Debug, Default)]
 pub struct BehaviorTickData {
 	/// Current [`BehaviorStatus`]

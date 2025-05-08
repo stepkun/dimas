@@ -277,7 +277,7 @@ impl VM {
 		self.ip += 1;
 		let value_val = self.pop();
 		//let name = chunk.get_string(name_val.as_string_pos()?);
-		globals.define_env(&name_val.to_string(), value_val)
+		globals.define_env(name_val.to_string().into(), value_val)
 	}
 
 	fn get_global(&mut self, chunk: &Chunk, globals: &dyn Environment) -> Result<(), Error> {
@@ -285,7 +285,7 @@ impl VM {
 		let name_val = chunk.read_constant(pos);
 		self.ip += 1;
 		// let name = chunk.get_string(name_val.as_string_pos()?);
-		let val = globals.get_env(&name_val.to_string())?;
+		let val = globals.get_env(name_val.to_string().into())?;
 		self.push(val)?;
 		Ok(())
 	}
@@ -296,7 +296,7 @@ impl VM {
 		self.ip += 1;
 		// let name = chunk.get_string(name_val.as_string_pos()?);
 		let value_val = self.pop();
-		globals.set_env(&name_val.to_string(), value_val)
+		globals.set_env(name_val.to_string().into(), value_val)
 	}
 
 	/// Execute a [`Chunk`] with the virtual machine,

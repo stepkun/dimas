@@ -13,7 +13,7 @@ use crate::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
@@ -33,7 +33,7 @@ impl BehaviorInstanceMethods for Inverter {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		tick_data.set_status(BehaviorStatus::Running);

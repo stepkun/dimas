@@ -11,7 +11,7 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{string::ToString, vec::Vec};
-use dimas_core::ConstString;
+use dimas_core::BoxConstString;
 use roxmltree::Document;
 
 use crate::{
@@ -42,7 +42,7 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 #[derive(Default)]
 pub struct BehaviorTreeFactory {
 	registry: BehaviorRegistry,
-	main_tree_name: Option<ConstString>,
+	main_tree_name: Option<BoxConstString>,
 }
 
 impl BehaviorTreeFactory {
@@ -149,7 +149,7 @@ impl BehaviorTreeFactory {
 
 	/// Get the name list of registered behavior trees.
 	#[must_use]
-	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
+	pub fn registered_behavior_trees(&self) -> Vec<BoxConstString> {
 		self.registry.registered_behavior_trees()
 	}
 
@@ -200,7 +200,7 @@ impl BehaviorTreeFactory {
 		Ok(())
 	}
 
-	/// Register a [`Behavior`] of type <T>.
+	/// Register a `Behavior` of type `<T>`.
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
 	pub fn register_node_type<T>(&mut self, name: &str) -> Result<(), Error>
@@ -213,7 +213,7 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`Action`].
+	/// Register a function as [`BehaviorType::Action`].
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_action(
@@ -227,7 +227,7 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`Action`] which is using ports.
+	/// Register a function as [`BehaviorType::Action`] which is using ports.
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_action_with_ports(
@@ -242,7 +242,7 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`Condition`].
+	/// Register a function as [`BehaviorType::Condition`].
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_condition(
@@ -256,7 +256,7 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`Condition`] which is using ports.
+	/// Register a function as [`BehaviorType::Condition`] which is using ports.
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
 	pub fn register_simple_condition_with_ports(

@@ -9,7 +9,7 @@ use crate::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
 	},
-	blackboard::{BlackboardInterface, BlackboardNodeRef},
+	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro,
 	port::PortList,
 	port_list,
@@ -30,10 +30,10 @@ impl BehaviorInstanceMethods for Script {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let code = blackboard.get::<String>("code")?;
+		let code = blackboard.get::<String>("code".into())?;
 
 		let chunk = self.parser.parse(&code)?;
 

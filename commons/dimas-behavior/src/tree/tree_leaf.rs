@@ -7,13 +7,13 @@
 extern crate std;
 
 // region:      --- modules
-use dimas_core::ConstString;
+use dimas_core::BoxConstString;
 
 use crate::{
 	behavior::{
 		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 };
 
 use super::{BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
@@ -23,13 +23,13 @@ use super::{BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
 /// Implementation of a trees leaf
 pub struct BehaviorTreeLeaf {
 	/// ID of the node.
-	id: ConstString,
+	id: BoxConstString,
 	/// Path to the node.
-	path: ConstString,
+	path: BoxConstString,
 	/// Data needed in every tick.
 	tick_data: BehaviorTickData,
 	/// Reference to the [`Blackboard`] for the leaf.
-	blackboard: BlackboardNodeRef,
+	blackboard: SharedBlackboard,
 	/// The behavior of that leaf.
 	behavior: BehaviorPtr,
 	/// Dummy children list.
@@ -45,7 +45,7 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 		&self.path
 	}
 
-	fn blackboard(&self) -> BlackboardNodeRef {
+	fn blackboard(&self) -> SharedBlackboard {
 		self.blackboard.clone()
 	}
 
@@ -86,13 +86,13 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 }
 
 impl BehaviorTreeLeaf {
-	/// Construct a [`BehaviorTreeNode`]
+	/// Construct a [`BehaviorTreeLeaf`]
 	#[must_use]
 	pub fn new(
 		id: &str,
 		path: &str,
 		tick_data: BehaviorTickData,
-		blackboard: BlackboardNodeRef,
+		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
 		Self {
@@ -111,7 +111,7 @@ impl BehaviorTreeLeaf {
 		id: &str,
 		path: &str,
 		tick_data: BehaviorTickData,
-		blackboard: BlackboardNodeRef,
+		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> TreeElement {
 		TreeElement::Leaf(Self::new(id, path, tick_data, blackboard, behavior))

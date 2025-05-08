@@ -8,7 +8,7 @@ use dimas_behavior::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
 	},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
 	port::PortList,
 	tree::{BehaviorTree, BehaviorTreeComponentList},
@@ -61,7 +61,7 @@ impl BehaviorInstanceMethods for NotInterrupted {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking NotInterrupted");
@@ -84,7 +84,7 @@ impl BehaviorInstanceMethods for AlwaysRunning {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking AlwaysRunnin");
@@ -107,7 +107,7 @@ impl BehaviorInstanceMethods for Shutdown {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ticking Shutdown");

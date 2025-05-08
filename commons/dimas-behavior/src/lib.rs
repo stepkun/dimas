@@ -1,14 +1,10 @@
 // Copyright © 2024 Stephan Kunz
 #![no_std]
 
-//! Behavior library of `DiMAS`
+//! Behavior library of `DiMAS`.
 
 #[doc(hidden)]
 extern crate alloc;
-
-// #[doc(hidden)]
-// #[cfg(feature = "std")]
-// extern crate std;
 
 // modules
 pub mod behavior;

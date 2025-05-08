@@ -6,18 +6,20 @@
 pub mod error;
 #[allow(clippy::module_inception)]
 mod tree;
+mod tree_component_list;
 mod tree_leaf;
 mod tree_node;
 
 // flatten
-pub use tree::{BehaviorTree, BehaviorTreeComponentList, print_tree};
+pub use tree::{BehaviorTree, print_tree};
+pub use tree_component_list::BehaviorTreeComponentList;
 pub use tree_leaf::BehaviorTreeLeaf;
 pub use tree_node::BehaviorTreeNode;
 
 // region:      --- modules
 use crate::{
 	behavior::{BehaviorResult, error::BehaviorError},
-	blackboard::BlackboardNodeRef,
+	blackboard::SharedBlackboard,
 };
 // endregion:   --- modules
 
@@ -48,7 +50,7 @@ impl BehaviorTreeComponent for TreeElement {
 		}
 	}
 
-	fn blackboard(&self) -> BlackboardNodeRef {
+	fn blackboard(&self) -> SharedBlackboard {
 		match self {
 			Self::Leaf(leaf) => leaf.blackboard(),
 			Self::Node(node) => node.blackboard(),
@@ -111,7 +113,7 @@ pub trait BehaviorTreeComponent: Send + Sync {
 	fn path(&self) -> &str;
 
 	/// Get the blackboard
-	fn blackboard(&self) -> BlackboardNodeRef;
+	fn blackboard(&self) -> SharedBlackboard;
 
 	/// Get the children
 	fn children(&self) -> &BehaviorTreeComponentList;

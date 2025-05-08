@@ -47,6 +47,7 @@ use alloc::string::{String, ToString};
 pub use compiling::{Lexer, Parser, TokenKind};
 pub use execution::VM;
 
+use dimas_core::ConstString;
 use execution::{Error, ScriptingValue};
 use hashbrown::HashMap;
 use parking_lot::RwLock;
@@ -59,15 +60,15 @@ pub trait Environment: Send + Sync {
 	/// It has to be created if it does not already exist.
 	/// # Errors
 	/// if the Variable exists with a different type
-	fn define_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), Error>;
+	fn define_env(&mut self, key: ConstString, value: ScriptingValue) -> Result<(), Error>;
 	/// Get a variable by `key`
 	/// # Errors
 	/// if the variable does not exist
-	fn get_env(&self, key: &str) -> Result<ScriptingValue, Error>;
+	fn get_env(&self, key: ConstString) -> Result<ScriptingValue, Error>;
 	/// Set the variable with `key` to `value`.
 	/// # Errors
 	/// if variable does not exist.
-	fn set_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), Error>;
+	fn set_env(&mut self, key: ConstString, value: ScriptingValue) -> Result<(), Error>;
 }
 
 /// A very simple default Environment for testing purpose and the REPL
@@ -77,28 +78,31 @@ pub struct DefaultEnvironment {
 }
 
 impl Environment for DefaultEnvironment {
-	fn define_env(&mut self, name: &str, value: ScriptingValue) -> Result<(), Error> {
+	fn define_env(&mut self, name: ConstString, value: ScriptingValue) -> Result<(), Error> {
 		self.storage
 			.write()
 			.insert(name.to_string(), value);
 		Ok(())
 	}
 
-	fn get_env(&self, name: &str) -> Result<ScriptingValue, Error> {
-		self.storage.read().get(name).map_or_else(
-			|| Err(Error::GlobalNotDefined(name.into())),
-			|value| Ok(value.clone()),
-		)
+	fn get_env(&self, name: ConstString) -> Result<ScriptingValue, Error> {
+		self.storage
+			.read()
+			.get(name.as_ref())
+			.map_or_else(
+				|| Err(Error::GlobalNotDefined(name)),
+				|value| Ok(value.clone()),
+			)
 	}
 
-	fn set_env(&mut self, name: &str, value: ScriptingValue) -> Result<(), Error> {
-		if self.storage.read().contains_key(name) {
+	fn set_env(&mut self, name: ConstString, value: ScriptingValue) -> Result<(), Error> {
+		if self.storage.read().contains_key(name.as_ref()) {
 			self.storage
 				.write()
 				.insert(name.to_string(), value);
 			Ok(())
 		} else {
-			Err(Error::GlobalNotDefined(name.into()))
+			Err(Error::GlobalNotDefined(name))
 		}
 	}
 }

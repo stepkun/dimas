@@ -20,7 +20,7 @@ use dimas_behavior::{
 		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
 		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
 	},
-	blackboard::{BlackboardInterface, BlackboardNodeRef},
+	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro, output_port_macro,
 	port::PortList,
 	port_list,
@@ -38,7 +38,7 @@ impl BehaviorInstanceMethods for ApproachObject {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
@@ -89,10 +89,10 @@ impl BehaviorInstanceMethods for SaySomething {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let msg = blackboard.get::<String>("message")?;
+		let msg = blackboard.get::<String>("message".into())?;
 		println!("Robot says: {msg}");
 		Ok(BehaviorStatus::Success)
 	}
@@ -116,10 +116,10 @@ impl BehaviorInstanceMethods for ThinkWhatToSay {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		blackboard.set("text", String::from("The answer is 42"))?;
+		blackboard.set("text".into(), String::from("The answer is 42"))?;
 		Ok(BehaviorStatus::Success)
 	}
 }
@@ -136,8 +136,8 @@ impl BehaviorStaticMethods for ThinkWhatToSay {
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn new_say_something_simple(blackboard: &mut BlackboardNodeRef) -> BehaviorResult {
-	let msg = blackboard.get::<String>("message")?;
+pub fn new_say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
+	let msg = blackboard.get::<String>("message".into())?;
 	println!("Robot2 says: {msg}");
 	Ok(BehaviorStatus::Success)
 }
@@ -182,11 +182,11 @@ impl BehaviorInstanceMethods for CalculateGoal {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
-		blackboard.set("goal", mygoal)?;
+		blackboard.set("goal".into(), mygoal)?;
 		Ok(BehaviorStatus::Success)
 	}
 }
@@ -209,10 +209,10 @@ impl BehaviorInstanceMethods for PrintTarget {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let pos = blackboard.get::<Position2D>("target")?;
+		let pos = blackboard.get::<Position2D>("target".into())?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
 		Ok(BehaviorStatus::Success)
 	}
@@ -281,10 +281,10 @@ impl BehaviorInstanceMethods for MoveBaseAction {
 	fn start(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
-		let pose = blackboard.get::<Pose2D>("goal")?;
+		let pose = blackboard.get::<Pose2D>("goal".into())?;
 		println!(
 			"[ MoveBase: SEND REQUEST ]. goal: x={} y={} theta={}",
 			pose.x, pose.y, pose.theta
@@ -297,7 +297,7 @@ impl BehaviorInstanceMethods for MoveBaseAction {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		_blackboard: &mut BlackboardNodeRef,
+		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		if Instant::now().duration_since(self.start_time) >= self.completion_time {

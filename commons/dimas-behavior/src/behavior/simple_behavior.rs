@@ -5,7 +5,7 @@
 // region:      --- modules
 use alloc::{boxed::Box, sync::Arc};
 
-use crate::{blackboard::BlackboardNodeRef, port::PortList, tree::BehaviorTreeComponentList};
+use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeComponentList};
 
 use super::{
 	BehaviorCreationFn, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult,
@@ -19,7 +19,7 @@ pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'stat
 
 /// Signature of a registered behavior function called by `SimpleBehavior`'s tick
 pub type ComplexBhvrTickFn =
-	Arc<dyn Fn(&mut BlackboardNodeRef) -> BehaviorResult + Send + Sync + 'static>;
+	Arc<dyn Fn(&mut SharedBlackboard) -> BehaviorResult + Send + Sync + 'static>;
 // endregion:   --- types
 
 // region:      --- BehaviorFunction
@@ -47,7 +47,7 @@ impl BehaviorInstanceMethods for SimpleBehavior {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
-		blackboard: &mut BlackboardNodeRef,
+		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeComponentList,
 	) -> BehaviorResult {
 		if self.complex_tick_fn.is_some() {
