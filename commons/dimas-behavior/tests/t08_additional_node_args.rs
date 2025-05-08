@@ -1,0 +1,118 @@
+// Copyright © 2025 Stephan Kunz
+
+//! This test implements the eigth tutorial/example from [BehaviorTree.CPP](https://www.behaviortree.dev)
+//!
+//! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_08_additional_args)
+//! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t08_additional_node_args.cpp)
+//!
+
+use dimas_behavior::{
+	behavior::{
+		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
+		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
+		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+	},
+	blackboard::SharedBlackboard,
+	factory::BehaviorTreeFactory,
+	port::PortList,
+	tree::BehaviorTreeComponentList,
+};
+use dimas_behavior_derive::Behavior;
+
+const XML: &str = r#"
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <Action_A/>
+            <Action_B/>
+        </Sequence>
+    </BehaviorTree>
+</root>
+"#;
+
+/// Behavior `ActionA` has a different constructor than the default one.
+#[derive(Behavior, Debug, Default)]
+pub struct ActionA {
+	arg1: i32,
+	arg2: String,
+}
+
+impl BehaviorInstanceMethods for ActionA {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		assert_eq!(self.arg1, 42);
+		assert_eq!(self.arg2, String::from("hello world"));
+		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
+		Ok(BehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for ActionA {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+}
+
+impl ActionA {
+	/// Constructor with arguments.
+	#[must_use]
+	pub const fn new(arg1: i32, arg2: String) -> Self {
+		Self {arg1, arg2}
+	}
+}
+
+/// Behavior `ActionB` implements an initialize(...) method that must be called once at the beginning.
+#[derive(Behavior, Debug, Default)]
+pub struct ActionB {
+	arg1: i32,
+	arg2: String,
+}
+
+impl BehaviorInstanceMethods for ActionB {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		assert_eq!(self.arg1, 69);
+		assert_eq!(self.arg2, String::from("interesting value"));
+		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
+		Ok(BehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStaticMethods for ActionB {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+}
+
+impl ActionB {
+	/// Initialization function.
+	pub fn initialize(&mut self, arg1: i32, arg2: String) {
+		self.arg1 = arg1;
+		self.arg2 = arg2;
+	}
+}
+
+#[tokio::test]
+#[ignore]
+async fn additional_args() -> anyhow::Result<()> {
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	// register_node!(&mut factory, ActionA, "Action_A", 42, "hello world")?;
+	factory.register_node_type::<ActionB>("Action_B")?;
+
+	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
+
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
+
+	Ok(())
+}

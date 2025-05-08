@@ -49,6 +49,26 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 	println!("\n------ Root BB ------");
+	// @TODO: tree.subtree(0)?.blackboard().debug_message();
+	println!("\n----- Second BB -----");
+	// @TODO: tree.subtree(1)?.blackboard().debug_message();
+	Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	factory.register_from_plugin("test_behaviors")?;
+
+	factory.register_behavior_tree_from_text(XML)?;
+	let mut tree = factory.create_tree("MainTree")?;
+	drop(factory);
+
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
+	println!("\n------ Root BB ------");
 	// tree.subtree(0)?.blackboard().debug_message();
 	println!("\n----- Second BB -----");
 	// tree.subtree(1)?.blackboard().debug_message();
@@ -56,8 +76,8 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[serial]
-async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
+#[ignore]
+async fn subtree_blackboard_access_reminder() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;

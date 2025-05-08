@@ -31,7 +31,6 @@ pub fn print_tree(start_node: &TreeElement) -> Result<(), Error> {
 	print_recursively(0, start_node)
 }
 
-/// Helper function to print a (sub)tree recursively
 /// Recursion function to print a (sub)tree recursively
 /// # Errors
 /// - Limit is a tree-depth of 127
@@ -101,6 +100,19 @@ impl BehaviorTree {
 		todo!("subtree access")
 	}
 
+	/// Ticks the tree exactly once.
+	/// # Errors
+	pub async fn tick_exactly_once(&mut self) -> BehaviorResult {
+		self.root.execute_tick()
+	}
+
+	/// Ticks the tree once.
+	/// @TODO: The wakeup mechanism is not yet implemented
+	/// # Errors
+	pub async fn tick_once(&mut self) -> BehaviorResult {
+		self.root.execute_tick()
+	}
+
 	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`].
 	/// # Errors
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
@@ -117,12 +129,6 @@ impl BehaviorTree {
 			}
 		}
 		Ok(status)
-	}
-
-	/// Ticks the tree exactly once.
-	/// # Errors
-	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.execute_tick()
 	}
 }
 // endregion:	--- BehaviorTree

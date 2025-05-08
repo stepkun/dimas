@@ -65,7 +65,7 @@ fn change_globals() {
 
 	stdout.clear();
 	let chunk = parser
-		.parse("test:=0xf;test=0x1print test;")
+		.parse("test:=0xf;test=0x1;print test;")
 		.expect("snh");
 	vm.run(&chunk, &mut env, &mut stdout)
 		.expect("snh");
@@ -96,7 +96,7 @@ fn assignment_with_change() {
 
 	stdout.clear();
 	let chunk = parser
-		.parse("test:=0xf;test+=0x1print test;")
+		.parse("test:=0xf;test+=0x1;print test;")
 		.expect("snh");
 	vm.run(&chunk, &mut env, &mut stdout)
 		.expect("snh");
