@@ -8,7 +8,7 @@ extern crate alloc;
 
 // region:		--- modules
 use alloc::str::FromStr;
-use core::{any::Any, num::ParseFloatError};
+use core::num::ParseFloatError;
 use std::{
 	fmt::Display,
 	time::{Duration, Instant},

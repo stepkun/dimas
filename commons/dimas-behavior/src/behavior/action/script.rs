@@ -15,8 +15,7 @@ use crate::{
 	port_list,
 	tree::BehaviorTreeComponentList,
 };
-use alloc::{boxed::Box, string::String, vec, vec::Vec};
-use core::any::Any;
+use alloc::{string::String, vec, vec::Vec};
 use dimas_behavior_derive::Behavior;
 use dimas_scripting::{Parser, VM};
 //endregion:    --- modules

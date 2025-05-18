@@ -6,6 +6,9 @@
 #[doc(hidden)]
 extern crate proc_macro;
 
+#[doc(hidden)]
+extern crate alloc;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
@@ -47,7 +50,10 @@ use syn::DeriveInput;
 ///     }
 /// }
 ///
-/// impl BehaviorTreeMethods for MyBehavior {}
+/// impl BehaviorTreeMethods for MyBehavior {
+///     fn as_any(&self) -> &dyn Any { self }
+///     fn as_any_mut(&mut self) -> &mut dyn Any { self }
+/// }
 ///
 /// impl BehaviorRedirectionMethods for MyBehavior {
 ///     fn static_provided_ports(&self) -> PortList {
@@ -86,16 +92,16 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 		#derived
 		#diagnostic
 		impl<#generics> BehaviorCreationMethods for #ident<#generics> #where_clause {
-			fn creation_fn() -> Box<BehaviorCreationFn> {
-				Box::new(|| Box::new(Self::default()))
+			fn creation_fn() -> alloc::boxed::Box<BehaviorCreationFn> {
+				alloc::boxed::Box::new(|| alloc::boxed::Box::new(Self::default()))
 			}
 		}
 
 		#derived
 		#diagnostic
 		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {
-			fn as_any(&self) -> &dyn Any { self }
-			fn as_any_mut(&mut self) -> &mut dyn Any { self }
+			fn as_any(&self) -> &dyn core::any::Any { self }
+			fn as_any_mut(&mut self) -> &mut dyn core::any::Any { self }
 		}
 
 		#derived

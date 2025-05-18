@@ -4,8 +4,7 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, vec};
-use core::any::Any;
+use alloc::vec;
 use dimas_behavior_derive::Behavior;
 
 use crate::{

@@ -6,7 +6,8 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t08_additional_node_args.cpp)
 //!
 
-use core::any::Any;
+extern crate alloc;
+
 use dimas_behavior::{
 	behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
@@ -24,7 +25,7 @@ const XML: &str = r#"
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-<!--            <Action_A/> -->
+            <Action_A/>
             <Action_B/>
         </Sequence>
     </BehaviorTree>
@@ -107,7 +108,7 @@ async fn additional_args() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	// register_node!(&mut factory, ActionA, "Action_A", 42, "hello world")?;
-	// factory.register_node_type::<ActionA>("Action_A")?;
+	factory.register_node_type::<ActionA>("Action_A")?;
 	factory.register_node_type::<ActionB>("Action_B")?;
 
 	let mut tree = factory.create_from_text(XML)?;
