@@ -6,9 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t11_groot_howto.cpp)
 //!
 
-use dimas_behavior::{
-	behavior::BehaviorStatus, factory::BehaviorTreeFactory
-};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 
 const XML: &str = r#"
 <root BTCPP_format="4">

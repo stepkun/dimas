@@ -6,6 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t08_additional_node_args.cpp)
 //!
 
+use core::any::Any;
 use dimas_behavior::{
 	behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
@@ -15,7 +16,7 @@ use dimas_behavior::{
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
 	port::PortList,
-	tree::BehaviorTreeComponentList,
+	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 use dimas_behavior_derive::Behavior;
 
@@ -23,7 +24,7 @@ const XML: &str = r#"
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-            <Action_A/>
+<!--            <Action_A/> -->
             <Action_B/>
         </Sequence>
     </BehaviorTree>
@@ -61,7 +62,7 @@ impl ActionA {
 	/// Constructor with arguments.
 	#[must_use]
 	pub const fn new(arg1: i32, arg2: String) -> Self {
-		Self {arg1, arg2}
+		Self { arg1, arg2 }
 	}
 }
 
@@ -106,13 +107,34 @@ async fn additional_args() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	// register_node!(&mut factory, ActionA, "Action_A", 42, "hello world")?;
+	// factory.register_node_type::<ActionA>("Action_A")?;
 	factory.register_node_type::<ActionB>("Action_B")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);
 
+	// initialize ActionB with the help of an iterator
+	for node in tree.iter_mut() {
+		if node.name() == "Action_B" {
+			let action = node
+				.behavior_mut()
+				.as_any_mut()
+				.downcast_mut::<ActionB>()
+				.expect("snh");
+			action.initialize(69, "interesting value".into());
+		}
+	}
+
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
+
+	// test the iterator
+	let mut iter = tree.iter();
+	assert_eq!(iter.next().expect("snh").name(), "MainTree");
+	assert_eq!(iter.next().expect("snh").name(), "Sequence");
+	// assert_eq!(iter.next().expect("snh").name(), "Action_A");
+	assert_eq!(iter.next().expect("snh").name(), "Action_B");
+	assert!(iter.next().is_none());
 
 	Ok(())
 }

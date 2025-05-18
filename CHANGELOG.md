@@ -21,6 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Version 0.5.0 is a fully new design, based on a behavior tree.
 
+## [0.4.2] - 2025-05-15
+
+### Changed
+- Updated dependencies
+- Minimum Rust version adapted to 1.85 due to dependencies
+
+### Fixed
+- Some missing comments
+- Solved complaints of Clippy
+- Missing std lib for tokio
+
 ## [0.4.1] - 2024-11-13
 
 ### Fixed

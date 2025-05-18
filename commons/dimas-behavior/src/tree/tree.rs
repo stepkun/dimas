@@ -11,7 +11,8 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{string::String, sync::Arc, vec::Vec};
+use alloc::{string::String, sync::Arc, vec, vec::Vec};
+use core::marker::PhantomData;
 use libloading::Library;
 
 use crate::{
@@ -63,6 +64,84 @@ fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 	Ok(())
 }
 // endregion:	--- helper
+
+// region:		--- TreeIter
+/// Iterator over the [`BehaviorTree`]
+struct TreeIter<'a> {
+	/// stack to do a depth first search
+	stack: Vec<&'a TreeElement>,
+	/// Lifetime marker
+	marker: PhantomData<&'a TreeElement>,
+}
+
+impl<'a> TreeIter<'a> {
+	/// @TODO:
+	#[must_use]
+	pub fn new(root: &'a TreeElement) -> Self {
+		Self {
+			stack: vec![root],
+			marker: PhantomData,
+		}
+	}
+}
+
+impl<'a> Iterator for TreeIter<'a> {
+	type Item = &'a TreeElement;
+
+	#[allow(clippy::cast_possible_truncation)]
+	#[allow(clippy::cast_sign_loss)]
+	#[allow(clippy::cast_possible_wrap)]
+	fn next(&mut self) -> Option<Self::Item> {
+		if let Some(node) = self.stack.pop() {
+			// Push children in revers order to maintain left-to-right order
+			for child in node.children_iter().rev() {
+				self.stack.push(child);
+			}
+			return Some(node);
+		}
+		None
+	}
+}
+// endregion:	--- TreeIter
+
+// region:		--- TreeIterMut
+/// Mutable Iterator over the [`BehaviorTree`]
+struct TeeIterMut<'a> {
+	/// stack to do a depth first search
+	stack: Vec<*mut TreeElement>,
+	/// Lifetime marker
+	marker: PhantomData<&'a mut TreeElement>,
+}
+
+impl<'a> TeeIterMut<'a> {
+	/// @TODO:
+	#[must_use]
+	pub fn new(root: &'a mut TreeElement) -> Self {
+		Self {
+			stack: vec![root],
+			marker: PhantomData,
+		}
+	}
+}
+
+#[allow(unsafe_code)]
+impl<'a> Iterator for TeeIterMut<'a> {
+	type Item = &'a mut TreeElement;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if let Some(node_ptr) = self.stack.pop() {
+			// we know this pointer is valid since the iterator owns the traversal
+			let node = unsafe { &mut *node_ptr };
+			// Push children in revers order to maintain left-to-right order
+			for child in node.children_iter_mut().rev() {
+				self.stack.push(child);
+			}
+			return Some(&mut *node);
+		}
+		None
+	}
+}
+// endregion:	--- TreeIterMut
 
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeComponent`]s
@@ -129,6 +208,16 @@ impl BehaviorTree {
 			}
 		}
 		Ok(status)
+	}
+
+	/// @TODO:
+	pub fn iter(&self) -> impl Iterator<Item = &TreeElement> {
+		TreeIter::new(&self.root)
+	}
+
+	/// @TODO:
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut TreeElement> {
+		TeeIterMut::new(&mut self.root)
 	}
 }
 // endregion:	--- BehaviorTree

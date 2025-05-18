@@ -4,6 +4,7 @@
 
 // region:      --- modules
 use alloc::{boxed::Box, sync::Arc};
+use core::any::Any;
 
 use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeComponentList};
 
@@ -41,7 +42,15 @@ impl core::fmt::Debug for SimpleBehavior {
 	}
 }
 
-impl BehaviorTreeMethods for SimpleBehavior {}
+impl BehaviorTreeMethods for SimpleBehavior {
+	fn as_any(&self) -> &dyn Any {
+		self
+	}
+
+	fn as_any_mut(&mut self) -> &mut dyn Any {
+		self
+	}
+}
 
 impl BehaviorInstanceMethods for SimpleBehavior {
 	fn tick(

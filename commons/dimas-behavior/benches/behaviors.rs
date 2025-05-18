@@ -5,6 +5,7 @@
 #[doc(hidden)]
 extern crate alloc;
 
+use core::any::Any;
 use dimas_behavior::{
 	behavior::{
 		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,

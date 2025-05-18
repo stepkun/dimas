@@ -6,9 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t09_scripting.cpp)
 //!
 
-use dimas_behavior::{
-	behavior::BehaviorStatus, factory::BehaviorTreeFactory
-};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 

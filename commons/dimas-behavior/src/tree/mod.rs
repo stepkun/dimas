@@ -18,7 +18,7 @@ pub use tree_node::BehaviorTreeNode;
 
 // region:      --- modules
 use crate::{
-	behavior::{BehaviorResult, error::BehaviorError},
+	behavior::{BehaviorPtr, BehaviorResult, error::BehaviorError},
 	blackboard::SharedBlackboard,
 };
 // endregion:   --- modules
@@ -43,10 +43,31 @@ impl BehaviorTreeComponent for TreeElement {
 		}
 	}
 
+	fn name(&self) -> &str {
+		match self {
+			Self::Leaf(leaf) => leaf.id(),
+			Self::Node(node) => node.id(),
+		}
+	}
+
 	fn path(&self) -> &str {
 		match self {
 			Self::Leaf(leaf) => leaf.path(),
 			Self::Node(node) => node.path(),
+		}
+	}
+
+	fn behavior(&self) -> &BehaviorPtr {
+		match self {
+			Self::Leaf(leaf) => leaf.behavior(),
+			Self::Node(node) => node.behavior(),
+		}
+	}
+
+	fn behavior_mut(&mut self) -> &mut BehaviorPtr {
+		match self {
+			Self::Leaf(leaf) => leaf.behavior_mut(),
+			Self::Node(node) => node.behavior_mut(),
 		}
 	}
 
@@ -101,6 +122,20 @@ impl BehaviorTreeComponent for TreeElement {
 		}
 	}
 }
+
+impl TreeElement {
+	/// Return an iterator over the children
+	#[must_use]
+	pub fn children_iter(&self) -> impl DoubleEndedIterator<Item = &Self> {
+		self.children().iter()
+	}
+
+	/// Return a mutable iterator over the children
+	#[must_use]
+	pub fn children_iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut Self> {
+		self.children_mut().iter_mut()
+	}
+}
 // endregion:	--- TreeElement
 
 // region:      --- BehaviorTreeComponent
@@ -109,8 +144,17 @@ pub trait BehaviorTreeComponent: Send + Sync {
 	/// Get the id
 	fn id(&self) -> &str;
 
+	/// Get the name
+	fn name(&self) -> &str;
+
 	/// Get the path
 	fn path(&self) -> &str;
+
+	/// Get the behavior
+	fn behavior(&self) -> &BehaviorPtr;
+
+	/// Get the behavior
+	fn behavior_mut(&mut self) -> &mut BehaviorPtr;
 
 	/// Get the blackboard
 	fn blackboard(&self) -> SharedBlackboard;

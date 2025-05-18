@@ -12,6 +12,8 @@ pub mod decorator;
 pub mod error;
 mod simple_behavior;
 
+use core::any::Any;
+
 // flatten
 pub use behavior::{BehaviorConfigurationData, BehaviorTickData};
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
@@ -46,7 +48,12 @@ pub trait BehaviorAllMethods:
 }
 
 /// Supertrait for execution of a behavior.
-pub trait BehaviorTreeMethods: BehaviorInstanceMethods + BehaviorRedirectionMethods {}
+pub trait BehaviorTreeMethods: Any + BehaviorInstanceMethods + BehaviorRedirectionMethods {
+	/// Needed for dynamic downcasting
+	fn as_any(&self) -> &dyn Any;
+	/// Needed for mutable dynamic downcasting
+	fn as_any_mut(&mut self) -> &mut dyn Any;
+}
 // endregion:   --- supertraits
 
 // region:      --- BehaviorCreationMethods

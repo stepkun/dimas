@@ -41,8 +41,20 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 		&self.id
 	}
 
+	fn name(&self) -> &str {
+		&self.id
+	}
+
 	fn path(&self) -> &str {
 		&self.path
+	}
+
+	fn behavior(&self) -> &BehaviorPtr {
+		&self.behavior
+	}
+
+	fn behavior_mut(&mut self) -> &mut BehaviorPtr {
+		&mut self.behavior
 	}
 
 	fn blackboard(&self) -> SharedBlackboard {

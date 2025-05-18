@@ -93,7 +93,10 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 
 		#derived
 		#diagnostic
-		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {}
+		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {
+			fn as_any(&self) -> &dyn Any { self }
+			fn as_any_mut(&mut self) -> &mut dyn Any { self }
+		}
 
 		#derived
 		#diagnostic
