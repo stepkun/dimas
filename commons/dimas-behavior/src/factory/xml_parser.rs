@@ -2,6 +2,7 @@
 
 //! XML parser for the [`BehaviorTreeFactory`] of `DiMAS`
 
+#[cfg(feature = "std")]
 extern crate std;
 
 use alloc::string::String;
@@ -10,6 +11,8 @@ use dimas_core::BoxConstString;
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType};
 use rustc_hash::FxBuildHasher;
+#[cfg(feature = "std")]
+use std::path::PathBuf;
 use tracing::{Level, event, instrument};
 
 use crate::{
@@ -39,6 +42,24 @@ fn attrs_to_map(attrs: Attributes) -> HashMap<BoxConstString, BoxConstString, Fx
 pub struct XmlParser {}
 
 impl XmlParser {
+	#[instrument(level = Level::DEBUG, skip_all)]
+	fn register_document(registry: &mut BehaviorRegistry, xml: &str) -> Result<(), Error> {
+		// general checks
+		let doc = Document::parse(xml)?;
+		let root = doc.root_element();
+		if root.tag_name().name() != "root" {
+			return Err(Error::WrongRootName);
+		}
+		if let Some(format) = root.attribute("BTCPP_format") {
+			if format != "4" {
+				return Err(Error::BtCppFormat);
+			}
+		}
+
+		Self::register_document_root(registry, root)?;
+		Ok(())
+	}
+
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub(crate) fn register_document_root(
 		registry: &mut BehaviorRegistry,
@@ -70,6 +91,22 @@ impl XmlParser {
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
 							}
+						}
+						#[cfg(feature = "std")]
+						"include" => {
+							let mut file_path: PathBuf;
+							if let Some(path) = element.attribute("path") {
+								file_path = PathBuf::from(path);
+								if file_path.is_relative() {
+									// get the "current" directory
+									file_path = std::env::current_dir()?;
+									file_path.push(path);
+								}
+							} else {
+								return Err(Error::MissingPath(element.tag_name().name().into()));
+							}
+							let xml = std::fs::read_to_string(file_path)?;
+							Self::register_document(registry, &xml)?;
 						}
 						_ => {
 							return Err(Error::ElementNotSupported(

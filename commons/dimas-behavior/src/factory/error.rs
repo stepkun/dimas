@@ -55,6 +55,9 @@ pub enum Error {
 	/// Attribut 'ID' is missing
 	#[error("missing attribute 'ID' in tag [{0}]")]
 	MissingId(ConstString),
+	/// Attribut 'path' is missing
+	#[error("missing attribute 'path' in tag [{0}]")]
+	MissingPath(ConstString),
 	/// Name for a port is not allowed
 	#[error("name [{0}] not allowed for a port")]
 	NameNotAllowed(ConstString),
