@@ -46,6 +46,11 @@ pub struct BehaviorTreeFactory {
 }
 
 impl BehaviorTreeFactory {
+	/// Access the registry
+	pub fn registry(&mut self) -> &mut BehaviorRegistry {
+		&mut self.registry
+	}
+	
 	/// Create a factory with registered core behaviors
 	/// # Errors
 	/// - if core behaviors cannot be registered

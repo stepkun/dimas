@@ -202,3 +202,24 @@ impl core::fmt::Display for BehaviorType {
 	}
 }
 // endregion:	--- BehaviorType
+
+// region:		---macros
+/// Macro to register a behavior with additional arguments.
+/// 
+/// # Usage:
+/// `register_node!(<mutable reference to behavior factory>, <struct to register>, <"identifying name">, <arg1>, <arg2>, ...>)`
+/// 
+/// # Example
+/// `register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;`
+#[macro_export]
+macro_rules! register_node {
+	($factory:expr, $tp:ident, $name:expr, $($arg:expr),* $(,)?) => {{
+		let bhvr_creation_fn = Box::new(move || -> Box<dyn BehaviorExecution> {
+		Box::new($tp::new($($arg),*))
+	});
+	$factory
+		.registry()
+		.add_behavior("Action_A", bhvr_creation_fn, ActionA::kind())
+	}};
+}
+// endregion:	---macros

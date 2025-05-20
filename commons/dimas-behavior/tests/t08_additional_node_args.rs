@@ -10,12 +10,8 @@ extern crate alloc;
 
 use dimas_behavior::{
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType,
-	},
-	blackboard::SharedBlackboard,
-	factory::BehaviorTreeFactory,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData, BehaviorType
+	}, blackboard::SharedBlackboard, factory::BehaviorTreeFactory, register_node, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
 };
 use dimas_behavior_derive::Behavior;
 
@@ -101,12 +97,11 @@ impl ActionB {
 }
 
 #[tokio::test]
-#[ignore]
 async fn additional_args() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	// register_node!(&mut factory, ActionA, "Action_A", 42, "hello world")?;
-	factory.register_node_type::<ActionA>("Action_A")?;
+	register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
+	// factory.register_node_type::<ActionA>("Action_A")?;
 	factory.register_node_type::<ActionB>("Action_B")?;
 
 	let mut tree = factory.create_from_text(XML)?;
@@ -131,7 +126,7 @@ async fn additional_args() -> anyhow::Result<()> {
 	let mut iter = tree.iter();
 	assert_eq!(iter.next().expect("snh").name(), "MainTree");
 	assert_eq!(iter.next().expect("snh").name(), "Sequence");
-	// assert_eq!(iter.next().expect("snh").name(), "Action_A");
+	assert_eq!(iter.next().expect("snh").name(), "Action_A");
 	assert_eq!(iter.next().expect("snh").name(), "Action_B");
 	assert!(iter.next().is_none());
 
