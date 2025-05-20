@@ -12,10 +12,10 @@ pub mod sequence;
 pub mod sequence_with_memory;
 
 // region:      --- modules
-use crate::behavior::BehaviorInstanceMethods;
+use crate::behavior::BehaviorInstance;
 // endregion:   --- modules
 
 // region:      --- ControlBehavior
 /// Common methods for control behaviors.
-pub trait ControlBehavior: BehaviorInstanceMethods {}
+pub trait ControlBehavior: BehaviorInstance {}
 // endregion:   --- ControlBehavior

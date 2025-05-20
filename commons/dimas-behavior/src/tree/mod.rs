@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! [`BehaviorTree`] library
+//! A [`BehaviorTree`] library
 //!
 
 pub mod error;
@@ -23,19 +23,19 @@ use crate::{
 };
 // endregion:   --- modules
 
-// region:		--- TreeElement
+// region:		--- BehaviorTreeElement
 /// An enum with the different types of tree elements.
 ///
 /// Using an enum makes sense, because there will most likely never be more than two kinds of elements.
 /// And it is not intended to give external access to the tree element type system.
-pub enum TreeElement {
+pub enum BehaviorTreeElement {
 	/// A final tree leaf
 	Leaf(BehaviorTreeLeaf),
 	/// An intermediate tree node
 	Node(BehaviorTreeNode),
 }
 
-impl BehaviorTreeComponent for TreeElement {
+impl BehaviorTreeComponent for BehaviorTreeElement {
 	fn id(&self) -> &str {
 		match self {
 			Self::Leaf(leaf) => leaf.id(),
@@ -123,7 +123,7 @@ impl BehaviorTreeComponent for TreeElement {
 	}
 }
 
-impl TreeElement {
+impl BehaviorTreeElement {
 	/// Return an iterator over the children
 	#[must_use]
 	pub fn children_iter(&self) -> impl DoubleEndedIterator<Item = &Self> {
@@ -136,7 +136,7 @@ impl TreeElement {
 		self.children_mut().iter_mut()
 	}
 }
-// endregion:	--- TreeElement
+// endregion:	--- BehaviorTreeElement
 
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]

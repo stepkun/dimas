@@ -16,7 +16,7 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		BehaviorAllMethods, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		Behavior, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
 		action::Script,
 		condition::script_condition::ScriptCondition,
 		control::{
@@ -205,7 +205,7 @@ impl BehaviorTreeFactory {
 	/// - if a behavior with that `name` is already registered
 	pub fn register_node_type<T>(&mut self, name: &str) -> Result<(), Error>
 	where
-		T: BehaviorAllMethods,
+		T: Behavior,
 	{
 		let bhvr_creation_fn = T::creation_fn();
 		let bhvr_type = T::kind();

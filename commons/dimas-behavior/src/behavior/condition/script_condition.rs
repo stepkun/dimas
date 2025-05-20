@@ -3,11 +3,12 @@
 //! Built in scripted condition behavior of `DiMAS`
 
 // region:      --- modules
+use crate as dimas_behavior;
 use crate::{
+	Behavior,
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro,
@@ -16,7 +17,6 @@ use crate::{
 	tree::BehaviorTreeComponentList,
 };
 use alloc::{string::String, vec, vec::Vec};
-use dimas_behavior_derive::Behavior;
 use dimas_scripting::{Parser, VM};
 //endregion:    --- modules
 
@@ -26,7 +26,7 @@ pub struct ScriptCondition {
 	parser: Parser,
 }
 
-impl BehaviorInstanceMethods for ScriptCondition {
+impl BehaviorInstance for ScriptCondition {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -57,7 +57,7 @@ impl BehaviorInstanceMethods for ScriptCondition {
 	}
 }
 
-impl BehaviorStaticMethods for ScriptCondition {
+impl BehaviorStatic for ScriptCondition {
 	fn kind() -> BehaviorType {
 		BehaviorType::Condition
 	}

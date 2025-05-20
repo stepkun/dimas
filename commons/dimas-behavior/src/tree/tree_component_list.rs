@@ -13,16 +13,16 @@ use core::ops::{Deref, DerefMut};
 
 use crate::behavior::error::BehaviorError;
 
-use super::{BehaviorTreeComponent, TreeElement};
+use super::{BehaviorTreeComponent, BehaviorTreeElement};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeComponentList
 /// A List of tree components.
 #[derive(Default)]
-pub struct BehaviorTreeComponentList(pub(crate) Vec<TreeElement>);
+pub struct BehaviorTreeComponentList(pub(crate) Vec<BehaviorTreeElement>);
 
 impl Deref for BehaviorTreeComponentList {
-	type Target = Vec<TreeElement>;
+	type Target = Vec<BehaviorTreeElement>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.0

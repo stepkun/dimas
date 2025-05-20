@@ -9,8 +9,8 @@ use core::any::Any;
 use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeComponentList};
 
 use super::{
-	BehaviorCreationFn, BehaviorInstanceMethods, BehaviorRedirectionMethods, BehaviorResult,
-	BehaviorTickData, BehaviorTreeMethods,
+	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult,
+	BehaviorTickData,
 };
 // endregion:   --- modules
 
@@ -42,7 +42,7 @@ impl core::fmt::Debug for SimpleBehavior {
 	}
 }
 
-impl BehaviorTreeMethods for SimpleBehavior {
+impl BehaviorExecution for SimpleBehavior {
 	fn as_any(&self) -> &dyn Any {
 		self
 	}
@@ -52,7 +52,7 @@ impl BehaviorTreeMethods for SimpleBehavior {
 	}
 }
 
-impl BehaviorInstanceMethods for SimpleBehavior {
+impl BehaviorInstance for SimpleBehavior {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -67,7 +67,7 @@ impl BehaviorInstanceMethods for SimpleBehavior {
 	}
 }
 
-impl BehaviorRedirectionMethods for SimpleBehavior {
+impl BehaviorRedirection for SimpleBehavior {
 	fn static_provided_ports(&self) -> PortList {
 		PortList(self.provided_ports.clone())
 	}

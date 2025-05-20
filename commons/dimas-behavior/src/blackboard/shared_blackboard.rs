@@ -32,12 +32,12 @@ use crate::port::PortRemappings;
 // endregion:   --- modules
 
 // region:      --- SharedBlackboard
-/// Thread safe reference to a [`BlackboardNode`].
+/// Thread safe reference to a [`Blackboard`].
 #[derive(Clone, Debug)]
 pub struct SharedBlackboard {
 	/// Hierarchy of this shared reference.
 	path: ConstString,
-	/// Shared reference to the [`BlackboardNode`]
+	/// Shared reference to the [`Blackboard`]
 	node: Arc<RwLock<Blackboard>>,
 }
 

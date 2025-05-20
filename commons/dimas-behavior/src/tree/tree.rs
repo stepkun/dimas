@@ -20,7 +20,7 @@ use crate::{
 	factory::BehaviorRegistry,
 };
 
-use super::{BehaviorTreeComponent, TreeElement, error::Error};
+use super::{BehaviorTreeComponent, BehaviorTreeElement, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
@@ -28,7 +28,7 @@ use super::{BehaviorTreeComponent, TreeElement, error::Error};
 /// # Errors
 /// - if recursion is deeper than 127
 #[cfg(feature = "std")]
-pub fn print_tree(start_node: &TreeElement) -> Result<(), Error> {
+pub fn print_tree(start_node: &BehaviorTreeElement) -> Result<(), Error> {
 	print_recursively(0, start_node)
 }
 
@@ -36,7 +36,7 @@ pub fn print_tree(start_node: &TreeElement) -> Result<(), Error> {
 /// # Errors
 /// - Limit is a tree-depth of 127
 #[cfg(feature = "std")]
-fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
+fn print_recursively(level: i8, node: &BehaviorTreeElement) -> Result<(), Error> {
 	if level == i8::MAX {
 		return Err(Error::Unexpected(
 			"recursion limit reached".into(),
@@ -51,10 +51,10 @@ fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 		indentation.push_str("  ");
 	}
 	match node {
-		TreeElement::Leaf(leaf) => {
+		BehaviorTreeElement::Leaf(leaf) => {
 			std::println!("{indentation}{}", leaf.id());
 		}
-		TreeElement::Node(node) => {
+		BehaviorTreeElement::Node(node) => {
 			std::println!("{indentation}{}", node.id());
 			for child in &**node.children() {
 				print_recursively(next_level, child)?;
@@ -69,15 +69,15 @@ fn print_recursively(level: i8, node: &TreeElement) -> Result<(), Error> {
 /// Iterator over the [`BehaviorTree`]
 struct TreeIter<'a> {
 	/// stack to do a depth first search
-	stack: Vec<&'a TreeElement>,
+	stack: Vec<&'a BehaviorTreeElement>,
 	/// Lifetime marker
-	marker: PhantomData<&'a TreeElement>,
+	marker: PhantomData<&'a BehaviorTreeElement>,
 }
 
 impl<'a> TreeIter<'a> {
 	/// @TODO:
 	#[must_use]
-	pub fn new(root: &'a TreeElement) -> Self {
+	pub fn new(root: &'a BehaviorTreeElement) -> Self {
 		Self {
 			stack: vec![root],
 			marker: PhantomData,
@@ -86,7 +86,7 @@ impl<'a> TreeIter<'a> {
 }
 
 impl<'a> Iterator for TreeIter<'a> {
-	type Item = &'a TreeElement;
+	type Item = &'a BehaviorTreeElement;
 
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_sign_loss)]
@@ -108,15 +108,15 @@ impl<'a> Iterator for TreeIter<'a> {
 /// Mutable Iterator over the [`BehaviorTree`]
 struct TeeIterMut<'a> {
 	/// stack to do a depth first search
-	stack: Vec<*mut TreeElement>,
+	stack: Vec<*mut BehaviorTreeElement>,
 	/// Lifetime marker
-	marker: PhantomData<&'a mut TreeElement>,
+	marker: PhantomData<&'a mut BehaviorTreeElement>,
 }
 
 impl<'a> TeeIterMut<'a> {
 	/// @TODO:
 	#[must_use]
-	pub fn new(root: &'a mut TreeElement) -> Self {
+	pub fn new(root: &'a mut BehaviorTreeElement) -> Self {
 		Self {
 			stack: vec![root],
 			marker: PhantomData,
@@ -126,7 +126,7 @@ impl<'a> TeeIterMut<'a> {
 
 #[allow(unsafe_code)]
 impl<'a> Iterator for TeeIterMut<'a> {
-	type Item = &'a mut TreeElement;
+	type Item = &'a mut BehaviorTreeElement;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if let Some(node_ptr) = self.stack.pop() {
@@ -146,14 +146,14 @@ impl<'a> Iterator for TeeIterMut<'a> {
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeComponent`]s
 pub struct BehaviorTree {
-	pub(crate) root: TreeElement,
+	pub(crate) root: BehaviorTreeElement,
 	pub(crate) _libraries: Vec<Arc<Library>>,
 }
 
 impl BehaviorTree {
 	/// create a Tree with reference to its libraries
 	#[must_use]
-	pub fn new(root: TreeElement, registry: &BehaviorRegistry) -> Self {
+	pub fn new(root: BehaviorTreeElement, registry: &BehaviorRegistry) -> Self {
 		// clone the current state of registered libraries
 		let mut libraries = Vec::new();
 		for lib in registry.libraries() {
@@ -175,7 +175,7 @@ impl BehaviorTree {
 	/// Get a (sub)tree where index 0 is root tree.
 	/// # Errors
 	/// - if index is out of bounds.
-	pub fn subtree(&self, _index: usize) -> Result<&TreeElement, Error> {
+	pub fn subtree(&self, _index: usize) -> Result<&BehaviorTreeElement, Error> {
 		todo!("subtree access")
 	}
 
@@ -211,12 +211,12 @@ impl BehaviorTree {
 	}
 
 	/// @TODO:
-	pub fn iter(&self) -> impl Iterator<Item = &TreeElement> {
+	pub fn iter(&self) -> impl Iterator<Item = &BehaviorTreeElement> {
 		TreeIter::new(&self.root)
 	}
 
 	/// @TODO:
-	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut TreeElement> {
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut BehaviorTreeElement> {
 		TeeIterMut::new(&mut self.root)
 	}
 }

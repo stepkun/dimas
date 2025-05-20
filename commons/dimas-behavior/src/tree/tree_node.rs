@@ -22,7 +22,9 @@ use crate::{
 	blackboard::SharedBlackboard,
 };
 
-use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeLeaf, TreeElement};
+use super::{
+	BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeElement, BehaviorTreeLeaf,
+};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeNode
@@ -134,8 +136,8 @@ impl BehaviorTreeNode {
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
-	) -> TreeElement {
-		TreeElement::Node(Self::new(
+	) -> BehaviorTreeElement {
+		BehaviorTreeElement::Node(Self::new(
 			id, path, children, tick_data, blackboard, behavior,
 		))
 	}

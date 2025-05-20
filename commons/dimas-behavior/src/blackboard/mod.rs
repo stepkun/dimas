@@ -27,7 +27,7 @@ use self::error::Error;
 // endregion:   --- modules
 
 // region:      --- BlackboardInterface
-/// Contract for interacting with a [`Blackboard`], [`BlackboardNode`] or [`SharedBlackboard`].
+/// Contract for interacting with a [`Blackboard`], the [`BlackboardData`] or a [`SharedBlackboard`].
 pub trait BlackboardInterface {
 	/// Check whether a certain key is within the [`Blackboard`].
 	fn contains(&self, key: ConstString) -> bool;

@@ -16,7 +16,7 @@ use crate::{
 	behavior::{BehaviorConfigurationData, BehaviorPtr, BehaviorTickData, BehaviorType},
 	blackboard::SharedBlackboard,
 	port::{PortRemappings, is_allowed_port_name},
-	tree::{BehaviorTreeComponentList, BehaviorTreeLeaf, BehaviorTreeNode, TreeElement},
+	tree::{BehaviorTreeComponentList, BehaviorTreeElement, BehaviorTreeLeaf, BehaviorTreeNode},
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -175,7 +175,7 @@ impl XmlParser {
 	pub(crate) fn create_tree_from_definition(
 		id: &str,
 		registry: &BehaviorRegistry,
-	) -> Result<TreeElement, Error> {
+	) -> Result<BehaviorTreeElement, Error> {
 		event!(Level::TRACE, "create_tree_from_definition");
 		registry.find_tree_definition(id).map_or_else(
 			|| Err(Error::SubtreeNotFound(id.into())),
@@ -241,7 +241,7 @@ impl XmlParser {
 		node: Node,
 		registry: &BehaviorRegistry,
 		blackboard: SharedBlackboard,
-	) -> Result<TreeElement, Error> {
+	) -> Result<BehaviorTreeElement, Error> {
 		event!(Level::TRACE, "build_child");
 		let mut node_name = node.tag_name().name();
 		let is_subtree = node_name == "SubTree";

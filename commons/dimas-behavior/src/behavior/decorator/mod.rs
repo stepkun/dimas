@@ -9,10 +9,10 @@ pub mod retry_until_successful;
 pub mod subtree;
 
 // region:      --- modules
-use crate::behavior::BehaviorInstanceMethods;
+use crate::behavior::BehaviorInstance;
 // endregion:   --- modules
 
 // region:      --- DecoratorBehavior
 /// Common methods for control behaviors.
-pub trait DecoratorBehavior: BehaviorInstanceMethods {}
+pub trait DecoratorBehavior: BehaviorInstance {}
 // endregion:   --- DecoratorBehavior

@@ -4,16 +4,14 @@
 //!
 
 // region:      --- modules
-use dimas_behavior_derive::Behavior;
-
+use crate as dimas_behavior;
 use crate::{
+	Behavior,
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
-	port::PortList,
 	tree::BehaviorTreeComponentList,
 };
 // endregion:   --- modules
@@ -24,7 +22,7 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct Parallel {}
 
-impl BehaviorInstanceMethods for Parallel {
+impl BehaviorInstance for Parallel {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -35,7 +33,7 @@ impl BehaviorInstanceMethods for Parallel {
 	}
 }
 
-impl BehaviorStaticMethods for Parallel {
+impl BehaviorStatic for Parallel {
 	fn kind() -> BehaviorType {
 		BehaviorType::Control
 	}

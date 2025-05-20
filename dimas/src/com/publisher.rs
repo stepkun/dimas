@@ -5,9 +5,8 @@
 // region:      --- modules
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
 	input_port_macro,
@@ -23,7 +22,7 @@ use dimas_behavior_derive::Behavior;
 #[derive(Behavior, Debug, Default)]
 pub struct Publisher {}
 
-impl BehaviorInstanceMethods for Publisher {
+impl BehaviorInstance for Publisher {
 	/// @TODO:
 	fn tick(
 		&mut self,
@@ -36,7 +35,7 @@ impl BehaviorInstanceMethods for Publisher {
 	}
 }
 
-impl BehaviorStaticMethods for Publisher {
+impl BehaviorStatic for Publisher {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}

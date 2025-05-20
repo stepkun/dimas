@@ -4,16 +4,14 @@
 //!
 
 // region:      --- modules
-use dimas_behavior_derive::Behavior;
-
+use crate as dimas_behavior;
 use crate::{
+	Behavior,
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorTickData,
-		BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorTickData, BehaviorType,
+		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 // endregion:   --- modules
@@ -23,7 +21,7 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct Subtree {}
 
-impl BehaviorInstanceMethods for Subtree {
+impl BehaviorInstance for Subtree {
 	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
 		children[0].execute_halt()
 	}
@@ -47,7 +45,7 @@ impl BehaviorInstanceMethods for Subtree {
 	}
 }
 
-impl BehaviorStaticMethods for Subtree {
+impl BehaviorStatic for Subtree {
 	fn kind() -> BehaviorType {
 		BehaviorType::SubTree
 	}

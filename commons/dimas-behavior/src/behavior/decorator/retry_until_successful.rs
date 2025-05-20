@@ -5,13 +5,13 @@
 
 // region:      --- modules
 use alloc::vec;
-use dimas_behavior_derive::Behavior;
 
+use crate as dimas_behavior;
 use crate::{
+	Behavior,
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType, error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro,
@@ -59,7 +59,7 @@ impl Default for RetryUntilSuccessful {
 	}
 }
 
-impl BehaviorInstanceMethods for RetryUntilSuccessful {
+impl BehaviorInstance for RetryUntilSuccessful {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
@@ -119,7 +119,7 @@ impl BehaviorInstanceMethods for RetryUntilSuccessful {
 	}
 }
 
-impl BehaviorStaticMethods for RetryUntilSuccessful {
+impl BehaviorStatic for RetryUntilSuccessful {
 	fn kind() -> BehaviorType {
 		BehaviorType::Decorator
 	}

@@ -4,13 +4,11 @@
 use anyhow::Result;
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
-	port::PortList,
 	tree::{BehaviorTree, BehaviorTreeComponentList},
 };
 use dimas_behavior_derive::Behavior;
@@ -56,7 +54,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 #[derive(Behavior, Debug, Default)]
 struct NotInterrupted {}
 
-impl BehaviorInstanceMethods for NotInterrupted {
+impl BehaviorInstance for NotInterrupted {
 	/// @TODO:
 	fn tick(
 		&mut self,
@@ -69,7 +67,7 @@ impl BehaviorInstanceMethods for NotInterrupted {
 	}
 }
 
-impl BehaviorStaticMethods for NotInterrupted {
+impl BehaviorStatic for NotInterrupted {
 	fn kind() -> BehaviorType {
 		BehaviorType::Condition
 	}
@@ -79,7 +77,7 @@ impl BehaviorStaticMethods for NotInterrupted {
 #[derive(Behavior, Debug, Default)]
 struct AlwaysRunning {}
 
-impl BehaviorInstanceMethods for AlwaysRunning {
+impl BehaviorInstance for AlwaysRunning {
 	/// @TODO:
 	fn tick(
 		&mut self,
@@ -92,7 +90,7 @@ impl BehaviorInstanceMethods for AlwaysRunning {
 	}
 }
 
-impl BehaviorStaticMethods for AlwaysRunning {
+impl BehaviorStatic for AlwaysRunning {
 	fn kind() -> BehaviorType {
 		BehaviorType::Decorator
 	}
@@ -102,7 +100,7 @@ impl BehaviorStaticMethods for AlwaysRunning {
 #[derive(Behavior, Debug, Default)]
 struct Shutdown {}
 
-impl BehaviorInstanceMethods for Shutdown {
+impl BehaviorInstance for Shutdown {
 	/// @TODO:
 	fn tick(
 		&mut self,
@@ -115,7 +113,7 @@ impl BehaviorInstanceMethods for Shutdown {
 	}
 }
 
-impl BehaviorStaticMethods for Shutdown {
+impl BehaviorStatic for Shutdown {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}

@@ -10,13 +10,11 @@ extern crate alloc;
 
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
-	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 use dimas_behavior_derive::Behavior;
@@ -39,7 +37,7 @@ pub struct ActionA {
 	arg2: String,
 }
 
-impl BehaviorInstanceMethods for ActionA {
+impl BehaviorInstance for ActionA {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -53,7 +51,7 @@ impl BehaviorInstanceMethods for ActionA {
 	}
 }
 
-impl BehaviorStaticMethods for ActionA {
+impl BehaviorStatic for ActionA {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -74,7 +72,7 @@ pub struct ActionB {
 	arg2: String,
 }
 
-impl BehaviorInstanceMethods for ActionB {
+impl BehaviorInstance for ActionB {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -88,7 +86,7 @@ impl BehaviorInstanceMethods for ActionB {
 	}
 }
 
-impl BehaviorStaticMethods for ActionB {
+impl BehaviorStatic for ActionB {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}

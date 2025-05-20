@@ -16,9 +16,8 @@ use std::{
 
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro, output_port_macro,
@@ -34,7 +33,7 @@ use dimas_behavior_derive::Behavior;
 #[derive(Behavior, Debug, Default)]
 pub struct ApproachObject {}
 
-impl BehaviorInstanceMethods for ApproachObject {
+impl BehaviorInstance for ApproachObject {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -46,7 +45,7 @@ impl BehaviorInstanceMethods for ApproachObject {
 	}
 }
 
-impl BehaviorStaticMethods for ApproachObject {
+impl BehaviorStatic for ApproachObject {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -85,7 +84,7 @@ impl GripperInterface {
 #[derive(Behavior, Debug, Default)]
 pub struct SaySomething {}
 
-impl BehaviorInstanceMethods for SaySomething {
+impl BehaviorInstance for SaySomething {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -98,7 +97,7 @@ impl BehaviorInstanceMethods for SaySomething {
 	}
 }
 
-impl BehaviorStaticMethods for SaySomething {
+impl BehaviorStatic for SaySomething {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -112,7 +111,7 @@ impl BehaviorStaticMethods for SaySomething {
 #[derive(Behavior, Debug, Default)]
 pub struct ThinkWhatToSay {}
 
-impl BehaviorInstanceMethods for ThinkWhatToSay {
+impl BehaviorInstance for ThinkWhatToSay {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -124,7 +123,7 @@ impl BehaviorInstanceMethods for ThinkWhatToSay {
 	}
 }
 
-impl BehaviorStaticMethods for ThinkWhatToSay {
+impl BehaviorStatic for ThinkWhatToSay {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -178,7 +177,7 @@ impl Display for Position2D {
 #[derive(Behavior, Debug, Default)]
 pub struct CalculateGoal {}
 
-impl BehaviorInstanceMethods for CalculateGoal {
+impl BehaviorInstance for CalculateGoal {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -191,7 +190,7 @@ impl BehaviorInstanceMethods for CalculateGoal {
 	}
 }
 
-impl BehaviorStaticMethods for CalculateGoal {
+impl BehaviorStatic for CalculateGoal {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -205,7 +204,7 @@ impl BehaviorStaticMethods for CalculateGoal {
 #[derive(Behavior, Debug, Default)]
 pub struct PrintTarget {}
 
-impl BehaviorInstanceMethods for PrintTarget {
+impl BehaviorInstance for PrintTarget {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -218,7 +217,7 @@ impl BehaviorInstanceMethods for PrintTarget {
 	}
 }
 
-impl BehaviorStaticMethods for PrintTarget {
+impl BehaviorStatic for PrintTarget {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -277,7 +276,7 @@ impl Default for MoveBaseAction {
 	}
 }
 
-impl BehaviorInstanceMethods for MoveBaseAction {
+impl BehaviorInstance for MoveBaseAction {
 	fn start(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -309,7 +308,7 @@ impl BehaviorInstanceMethods for MoveBaseAction {
 	}
 }
 
-impl BehaviorStaticMethods for MoveBaseAction {
+impl BehaviorStatic for MoveBaseAction {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}

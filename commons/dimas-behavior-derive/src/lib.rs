@@ -42,21 +42,29 @@ use syn::DeriveInput;
 ///     ...
 /// }
 ///
-/// impl BehaviorAllMethods for MyBehavior {}
+/// #[automatically_derived]
+/// #[diagnostic::do_not_recommend]
+/// impl dimas_behavior::behavior::Behavior for MyBehavior {}
 ///
-/// impl BehaviorCreationMethods for Fallback {
-///     fn creation_fn() -> Box<BehaviorCreationFn> {
-///         Box::new(|| Box::new(Self::default()))
+/// #[automatically_derived]
+/// #[diagnostic::do_not_recommend]
+/// impl dimas_behavior::behavior::BehaviorCreation for Fallback {
+///     fn creation_fn() -> ::alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
+///         ::alloc::boxed::Box::new(|| ::alloc::boxed::Box::new(Self::default()))
 ///     }
 /// }
 ///
-/// impl BehaviorTreeMethods for MyBehavior {
-///     fn as_any(&self) -> &dyn Any { self }
-///     fn as_any_mut(&mut self) -> &mut dyn Any { self }
+/// #[automatically_derived]
+/// #[diagnostic::do_not_recommend]
+/// impl dimas_behavior::behavior::BehaviorExecution for MyBehavior {
+///     fn as_any(&self) -> &dyn ::core::any::AnyAny { self }
+///     fn as_any_mut(&mut self) -> &mut dyn ::core::any::AnyAny { self }
 /// }
 ///
-/// impl BehaviorRedirectionMethods for MyBehavior {
-///     fn static_provided_ports(&self) -> PortList {
+/// #[automatically_derived]
+/// #[diagnostic::do_not_recommend]
+/// impl dimas_behavior::behavior::BehaviorRedirection for MyBehavior {
+///     fn static_provided_ports(&self) -> dimas_behavior::port::PortList {
 ///         Self::provided_ports()
 ///     }
 /// }
@@ -87,27 +95,27 @@ pub fn behavior_derive(input: TokenStream) -> TokenStream {
 	quote! {
 		#derived
 		#diagnostic
-		impl<#generics> BehaviorAllMethods for #ident<#generics> #where_clause {}
+		impl<#generics> dimas_behavior::behavior::Behavior for #ident<#generics> #where_clause {}
 
 		#derived
 		#diagnostic
-		impl<#generics> BehaviorCreationMethods for #ident<#generics> #where_clause {
-			fn creation_fn() -> alloc::boxed::Box<BehaviorCreationFn> {
-				alloc::boxed::Box::new(|| alloc::boxed::Box::new(Self::default()))
+		impl<#generics> dimas_behavior::behavior::BehaviorCreation for #ident<#generics> #where_clause {
+			fn creation_fn() -> ::alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
+				::alloc::boxed::Box::new(|| ::alloc::boxed::Box::new(Self::default()))
 			}
 		}
 
 		#derived
 		#diagnostic
-		impl<#generics> BehaviorTreeMethods for #ident<#generics> #where_clause {
-			fn as_any(&self) -> &dyn core::any::Any { self }
-			fn as_any_mut(&mut self) -> &mut dyn core::any::Any { self }
+		impl<#generics> dimas_behavior::behavior::BehaviorExecution for #ident<#generics> #where_clause {
+			fn as_any(&self) -> &dyn ::core::any::Any { self }
+			fn as_any_mut(&mut self) -> &mut dyn ::core::any::Any { self }
 		}
 
 		#derived
 		#diagnostic
-		impl<#generics> BehaviorRedirectionMethods for #ident<#generics> #where_clause {
-			fn static_provided_ports(&self) -> PortList {
+		impl<#generics> dimas_behavior::behavior::BehaviorRedirection for #ident<#generics> #where_clause {
+			fn static_provided_ports(&self) -> dimas_behavior::port::PortList {
 				Self::provided_ports()
 			}
 		}

@@ -14,3 +14,7 @@ pub mod port;
 pub mod tree;
 
 // flatten:
+pub use behavior::Behavior;
+
+// re-export
+pub use dimas_behavior_derive::Behavior;

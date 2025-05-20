@@ -4,16 +4,14 @@
 //!
 
 // region:      --- modules
-use dimas_behavior_derive::Behavior;
-
+use crate as dimas_behavior;
 use crate::{
+	Behavior,
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType, error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 // endregion:   --- modules
@@ -33,7 +31,7 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct ReactiveFallback {}
 
-impl BehaviorInstanceMethods for ReactiveFallback {
+impl BehaviorInstance for ReactiveFallback {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
@@ -85,7 +83,7 @@ impl BehaviorInstanceMethods for ReactiveFallback {
 	}
 }
 
-impl BehaviorStaticMethods for ReactiveFallback {
+impl BehaviorStatic for ReactiveFallback {
 	fn kind() -> BehaviorType {
 		BehaviorType::Control
 	}

@@ -6,9 +6,8 @@
 use core::time::Duration;
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType, error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port_macro,
@@ -28,7 +27,7 @@ pub struct IntervalTimer {
 	handle: Option<JoinHandle<()>>,
 }
 
-impl BehaviorInstanceMethods for IntervalTimer {
+impl BehaviorInstance for IntervalTimer {
 	fn start(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
@@ -92,7 +91,7 @@ impl BehaviorInstanceMethods for IntervalTimer {
 	}
 }
 
-impl BehaviorStaticMethods for IntervalTimer {
+impl BehaviorStatic for IntervalTimer {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}

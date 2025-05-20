@@ -9,10 +9,10 @@ mod script;
 pub use script::Script;
 
 // region:      --- modules
-use crate::behavior::BehaviorInstanceMethods;
+use crate::behavior::BehaviorInstance;
 // endregion:   --- modules
 
 // region:      --- ActionBehavior
 /// Common methods for control behaviors.
-pub trait ActionBehavior: BehaviorInstanceMethods {}
+pub trait ActionBehavior: BehaviorInstance {}
 // endregion:   --- ActionBehavior

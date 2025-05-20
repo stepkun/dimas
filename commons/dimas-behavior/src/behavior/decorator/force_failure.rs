@@ -4,16 +4,14 @@
 //!
 
 // region:      --- modules
-use dimas_behavior_derive::Behavior;
-
+use crate as dimas_behavior;
 use crate::{
+	Behavior,
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType, error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	port::PortList,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 // endregion:   --- modules
@@ -28,7 +26,7 @@ use crate::{
 pub struct ForceFailure {}
 
 extern crate std;
-impl BehaviorInstanceMethods for ForceFailure {
+impl BehaviorInstance for ForceFailure {
 	fn tick(
 		&mut self,
 		tick_data: &mut BehaviorTickData,
@@ -55,7 +53,7 @@ impl BehaviorInstanceMethods for ForceFailure {
 	}
 }
 
-impl BehaviorStaticMethods for ForceFailure {
+impl BehaviorStatic for ForceFailure {
 	fn kind() -> BehaviorType {
 		BehaviorType::Decorator
 	}

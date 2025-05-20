@@ -7,12 +7,10 @@ extern crate alloc;
 
 use dimas_behavior::{
 	behavior::{
-		BehaviorAllMethods, BehaviorCreationFn, BehaviorCreationMethods, BehaviorInstanceMethods,
-		BehaviorRedirectionMethods, BehaviorResult, BehaviorStaticMethods, BehaviorStatus,
-		BehaviorTickData, BehaviorTreeMethods, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
-	port::PortList,
 	tree::BehaviorTreeComponentList,
 };
 use dimas_behavior_derive::Behavior;
@@ -21,7 +19,7 @@ use dimas_behavior_derive::Behavior;
 #[derive(Behavior, Debug, Default)]
 pub struct AlwaysSuccess {}
 
-impl BehaviorInstanceMethods for AlwaysSuccess {
+impl BehaviorInstance for AlwaysSuccess {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -32,7 +30,7 @@ impl BehaviorInstanceMethods for AlwaysSuccess {
 	}
 }
 
-impl BehaviorStaticMethods for AlwaysSuccess {
+impl BehaviorStatic for AlwaysSuccess {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
@@ -42,7 +40,7 @@ impl BehaviorStaticMethods for AlwaysSuccess {
 #[derive(Behavior, Debug, Default)]
 pub struct AlwaysFailure {}
 
-impl BehaviorInstanceMethods for AlwaysFailure {
+impl BehaviorInstance for AlwaysFailure {
 	fn tick(
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
@@ -53,7 +51,7 @@ impl BehaviorInstanceMethods for AlwaysFailure {
 	}
 }
 
-impl BehaviorStaticMethods for AlwaysFailure {
+impl BehaviorStatic for AlwaysFailure {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}

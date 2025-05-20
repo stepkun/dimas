@@ -16,7 +16,7 @@ use crate::{
 	blackboard::SharedBlackboard,
 };
 
-use super::{BehaviorTreeComponent, BehaviorTreeComponentList, TreeElement};
+use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeElement};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeLeaf
@@ -125,8 +125,8 @@ impl BehaviorTreeLeaf {
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
-	) -> TreeElement {
-		TreeElement::Leaf(Self::new(id, path, tick_data, blackboard, behavior))
+	) -> BehaviorTreeElement {
+		BehaviorTreeElement::Leaf(Self::new(id, path, tick_data, blackboard, behavior))
 	}
 }
 // endregion:	--- BehaviorTreeLeaf
