@@ -11,12 +11,12 @@ use crate::{
 		BehaviorType,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
-	input_port_macro,
+	input_port,
 	port::PortList,
 	port_list,
 	tree::BehaviorTreeComponentList,
 };
-use alloc::{string::String, vec, vec::Vec};
+use alloc::{string::String, vec::Vec};
 use dimas_scripting::{Parser, VM};
 //endregion:    --- modules
 
@@ -63,7 +63,7 @@ impl BehaviorStatic for Script {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(
+		port_list![input_port!(
 			String,
 			"code",
 			"",

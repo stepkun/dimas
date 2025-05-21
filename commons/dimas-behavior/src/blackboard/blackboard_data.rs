@@ -74,20 +74,43 @@ impl BlackboardInterface for BlackboardData {
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static,
 	{
+		let t_key = key.as_ref();
 		self.storage.get(key.as_ref()).map_or_else(
 			|| Err(Error::NotFound(key.clone())),
 			|entry| {
-				let e = &*entry.0;
-				let e = e as &dyn Any;
-				e.downcast_ref::<T>().cloned().map_or_else(
+				let en = &*entry.0;
+				en.downcast_ref::<T>().map_or_else(
 					|| {
-						e.downcast_ref::<String>().cloned().map_or_else(
-							|| Err(Error::WrongType(key.clone())),
+						en.downcast_ref::<String>().map_or_else(
+							|| {
+								// maybe it is a value set by scripting
+								self.get_env(key.clone()).map_or_else(
+									|_| Err(Error::WrongType(t_key.into())),
+									|val| {
+										let s = match val {
+											ScriptingValue::Nil() => todo!(),
+											ScriptingValue::Boolean(b) => b.to_string(),
+											ScriptingValue::Float64(f) => f.to_string(),
+											ScriptingValue::Int64(i) => i.to_string(),
+											ScriptingValue::String(s) => s,
+										};
+										T::from_str(&s).map_or_else(
+											|_| {
+												Err(Error::ParsePortValue(
+													t_key.into(),
+													format!("{:?}", TypeId::of::<T>()).into(),
+												))
+											},
+											|val| Ok(val),
+										)
+									},
+								)
+							},
 							|s| {
-								T::from_str(&s).map_or_else(
+								T::from_str(s).map_or_else(
 									|_| {
 										Err(Error::ParsePortValue(
-											key.clone(),
+											t_key.into(),
 											format!("{:?}", TypeId::of::<T>()).into(),
 										))
 									},
@@ -96,7 +119,7 @@ impl BlackboardInterface for BlackboardData {
 							},
 						)
 					},
-					|value| Ok(value),
+					|value| Ok(value.clone()),
 				)
 			},
 		)
@@ -287,7 +310,6 @@ impl Environment for BlackboardData {
 // endregion:   --- BlackboardData
 
 // region:      --- Entry
-trait AnyEntry: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static {}
 pub struct Entry(Arc<dyn Any + Send + Sync + 'static>);
 
 impl Debug for Entry {

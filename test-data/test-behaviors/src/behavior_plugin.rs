@@ -3,7 +3,7 @@
 //! A library with test behaviors
 
 use alloc::sync::Arc;
-use dimas_behavior::{factory::BehaviorTreeFactory, input_port_macro, port_list};
+use dimas_behavior::{factory::BehaviorTreeFactory, input_port, port_list};
 use parking_lot::Mutex;
 
 use crate::test_nodes::{
@@ -42,7 +42,7 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let say_something_ports = port_list![input_port_macro!(String, "message")];
+	let say_something_ports = port_list![input_port!(String, "message")];
 	factory
 		.register_simple_action_with_ports(
 			"SaySomething2",

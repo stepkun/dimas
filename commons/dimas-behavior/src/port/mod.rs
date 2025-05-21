@@ -8,15 +8,17 @@ mod port_list;
 #[allow(clippy::module_inception)]
 mod port_remappings;
 
-use core::any::TypeId;
-
-use dimas_core::BoxConstString;
-use error::Error;
-
 // flatten
 pub use port_definition::PortDefinition;
 pub use port_list::PortList;
 pub use port_remappings::PortRemappings;
+
+// region:      --- modules
+use core::any::TypeId;
+
+use dimas_core::BoxConstString;
+use error::Error;
+// endregion:   --- modules
 
 // region:      --- types
 const FORBIDDEN_NAMES: &[&str] = &[
@@ -141,7 +143,7 @@ impl core::fmt::Display for PortDirection {
 // region:		---macros
 /// macro for creation of an input port definition
 #[macro_export]
-macro_rules! input_port_macro {
+macro_rules! input_port {
 	($tp:ty, $name:literal $(,)?) => {
 		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, "", "")
 			.expect("snh")
@@ -158,7 +160,7 @@ macro_rules! input_port_macro {
 
 /// macro for creation of an in/out port definition
 #[macro_export]
-macro_rules! inout_port_macro {
+macro_rules! inout_port {
 	($tp:ty, $name:literal $(,)?) => {
 		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, "", "")
 			.expect("snh")
@@ -175,7 +177,7 @@ macro_rules! inout_port_macro {
 
 /// macro for creation of an output port definition
 #[macro_export]
-macro_rules! output_port_macro {
+macro_rules! output_port {
 	($tp:ty, $name:literal $(,)?) => {
 		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, "", "")
 			.expect("snh")
@@ -193,6 +195,6 @@ macro_rules! output_port_macro {
 /// macro for creation of a [`PortList`]
 #[macro_export]
 macro_rules! port_list {
-	($($e:expr),* $(,)?) => {$crate::port::PortList(vec![$($e)*])};
+	($($e:expr),* $(,)?) => {$crate::port::PortList(::alloc::vec![$($e),*])};
 }
 // endregion:	--- macros

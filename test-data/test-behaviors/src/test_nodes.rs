@@ -20,7 +20,7 @@ use dimas_behavior::{
 		BehaviorType,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
-	input_port_macro, output_port_macro,
+	input_port, output_port,
 	port::PortList,
 	port_list,
 	tree::BehaviorTreeComponentList,
@@ -103,7 +103,7 @@ impl BehaviorStatic for SaySomething {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list! {input_port_macro!(String, "message", "hello")}
+		port_list! {input_port!(String, "message", "hello")}
 	}
 }
 
@@ -129,7 +129,7 @@ impl BehaviorStatic for ThinkWhatToSay {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![output_port_macro!(String, "text")]
+		port_list![output_port!(String, "text")]
 	}
 }
 
@@ -196,7 +196,7 @@ impl BehaviorStatic for CalculateGoal {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![output_port_macro!(Position2D, "goal")]
+		port_list![output_port!(Position2D, "goal")]
 	}
 }
 
@@ -223,7 +223,7 @@ impl BehaviorStatic for PrintTarget {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(Position2D, "target")]
+		port_list![input_port!(Position2D, "target")]
 	}
 }
 
@@ -314,6 +314,6 @@ impl BehaviorStatic for MoveBaseAction {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(Pose2D, "goal")]
+		port_list![input_port!(Pose2D, "goal")]
 	}
 }

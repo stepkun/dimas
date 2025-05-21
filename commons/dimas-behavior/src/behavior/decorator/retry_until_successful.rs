@@ -4,8 +4,6 @@
 //!
 
 // region:      --- modules
-use alloc::vec;
-
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -14,7 +12,7 @@ use crate::{
 		BehaviorType, error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
-	input_port_macro,
+	input_port,
 	port::PortList,
 	port_list,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
@@ -125,7 +123,7 @@ impl BehaviorStatic for RetryUntilSuccessful {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(i32, "num_attempts")]
+		port_list![input_port!(i32, "num_attempts")]
 	}
 }
 // endregion:   --- RetryUntilSuccessful

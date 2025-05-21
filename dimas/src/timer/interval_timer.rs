@@ -10,7 +10,7 @@ use dimas_behavior::{
 		BehaviorType, error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
-	input_port_macro,
+	input_port,
 	port::PortList,
 	port_list,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
@@ -97,7 +97,7 @@ impl BehaviorStatic for IntervalTimer {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(
+		port_list![input_port!(
 			i32,
 			"interval",
 			"1000",

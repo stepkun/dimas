@@ -26,7 +26,8 @@ use crate::{
 		},
 		decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
-			retry_until_successful::RetryUntilSuccessful, subtree::Subtree,
+			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition,
+			subtree::Subtree,
 		},
 	},
 	factory::xml_parser::XmlParser,
@@ -50,7 +51,7 @@ impl BehaviorTreeFactory {
 	pub fn registry(&mut self) -> &mut BehaviorRegistry {
 		&mut self.registry
 	}
-	
+
 	/// Create a factory with registered core behaviors
 	/// # Errors
 	/// - if core behaviors cannot be registered
@@ -83,6 +84,7 @@ impl BehaviorTreeFactory {
 		self.register_node_type::<ForceFailure>("ForceFailure")?;
 		self.register_node_type::<Inverter>("Inverter")?;
 		self.register_node_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
+		self.register_node_type::<Precondition>("Precondition")?;
 		self.register_node_type::<Subtree>("SubTree")
 	}
 
@@ -277,3 +279,24 @@ impl BehaviorTreeFactory {
 	}
 }
 // endregion:   --- BehaviorTreeFactory
+
+// region:		---macros
+/// Macro to register a behavior with additional arguments.
+///
+/// # Usage:
+/// `register_node!(<mutable reference to behavior factory>, <struct to register>, <"identifying name">, <arg1>, <arg2>, ...>)`
+///
+/// # Example
+/// `register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;`
+#[macro_export]
+macro_rules! register_node {
+	($factory:expr, $tp:ty, $name:expr, $($arg:expr),* $(,)?) => {{
+		let bhvr_creation_fn = Box::new(move || -> Box<dyn BehaviorExecution> {
+		Box::new(<$tp>::new($($arg),*))
+	});
+	$factory
+		.registry()
+		.add_behavior($name, bhvr_creation_fn, <$tp>::kind())
+	}};
+}
+// endregion:	---macros

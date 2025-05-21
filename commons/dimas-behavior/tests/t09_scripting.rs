@@ -10,13 +10,16 @@ use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 
-const XML: &str = r#"
+const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
+			<!-- replacement for enum registration -->
+			<Script code=" THE_ANSWER:=42; RED:=1; BLUE:=2; GREEN:=3; FAILURE:=false " />
             <Script code=" msg:='hello world' " />
             <Script code=" A:=THE_ANSWER; B:=3.14; color:=RED " />
-            <Precondition if="A>-B && color != BLUE" else="FAILURE">
+			<!-- the original '&&' is a none valid xml, so it is replaced by '&amp;&amp;' -->
+            <Precondition if="A>-B &amp;&amp; color != BLUE" else="FAILURE">
                 <Sequence>
                   <SaySomething message="{A}"/>
                   <SaySomething message="{B}"/>
@@ -30,8 +33,24 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
+#[ignore="reminder for enums"]
+async fn scripting_with_enums_reminder() -> anyhow::Result<()> {
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	factory.register_node_type::<SaySomething>("SaySomething")?;
+
+	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
+
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
+
+	Ok(())
+}
+
+
+#[tokio::test]
 #[serial]
-#[ignore]
 async fn scripting() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -48,7 +67,6 @@ async fn scripting() -> anyhow::Result<()> {
 
 #[tokio::test]
 #[serial]
-#[ignore]
 async fn scripting_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 

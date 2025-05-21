@@ -12,7 +12,7 @@ extern crate alloc;
 use std::sync::Arc;
 
 use dimas_behavior::{
-	behavior::BehaviorStatus, factory::BehaviorTreeFactory, input_port_macro, port_list,
+	behavior::BehaviorStatus, factory::BehaviorTreeFactory, input_port, port_list,
 };
 use serial_test::serial;
 use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, new_say_something_simple};
@@ -48,7 +48,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
-	let say_something_ports = port_list! {input_port_macro!(String, "message")};
+	let say_something_ports = port_list! {input_port!(String, "message")};
 	factory.register_simple_action_with_ports(
 		"SaySomething2",
 		Arc::new(new_say_something_simple),

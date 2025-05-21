@@ -9,7 +9,7 @@ use dimas_behavior::{
 		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
-	input_port_macro,
+	input_port,
 	port::PortList,
 	port_list,
 	tree::BehaviorTreeComponentList,
@@ -41,7 +41,7 @@ impl BehaviorStatic for Publisher {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port_macro!(
+		port_list![input_port!(
 			String,
 			"topic",
 			"",

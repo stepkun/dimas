@@ -10,8 +10,13 @@ extern crate alloc;
 
 use dimas_behavior::{
 	behavior::{
-		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData, BehaviorType
-	}, blackboard::SharedBlackboard, factory::BehaviorTreeFactory, register_node, tree::{BehaviorTreeComponent, BehaviorTreeComponentList}
+		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus,
+		BehaviorTickData, BehaviorType,
+	},
+	blackboard::SharedBlackboard,
+	factory::BehaviorTreeFactory,
+	register_node,
+	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
 use dimas_behavior_derive::Behavior;
 
@@ -101,7 +106,6 @@ async fn additional_args() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
-	// factory.register_node_type::<ActionA>("Action_A")?;
 	factory.register_node_type::<ActionB>("Action_B")?;
 
 	let mut tree = factory.create_from_text(XML)?;
