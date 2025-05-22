@@ -2,6 +2,8 @@
 
 //! Virtual machine for `DiMAS` scripting
 
+#[doc(hidden)]
+#[cfg(feature = "std")]
 extern crate std;
 
 // region:		--- modules

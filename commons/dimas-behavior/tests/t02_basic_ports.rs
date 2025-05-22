@@ -67,7 +67,6 @@ async fn basic_ports() -> anyhow::Result<()> {
 #[tokio::test]
 #[serial]
 async fn basic_ports_with_plugin() -> anyhow::Result<()> {
-	extern crate std;
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("test_behaviors")?;

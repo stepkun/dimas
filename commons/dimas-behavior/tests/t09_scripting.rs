@@ -33,7 +33,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 "#;
 
 #[tokio::test]
-#[ignore="reminder for enums"]
+#[ignore = "reminder for enums"]
 async fn scripting_with_enums_reminder() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -47,7 +47,6 @@ async fn scripting_with_enums_reminder() -> anyhow::Result<()> {
 
 	Ok(())
 }
-
 
 #[tokio::test]
 #[serial]

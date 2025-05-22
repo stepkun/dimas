@@ -25,7 +25,6 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct ForceFailure {}
 
-extern crate std;
 impl BehaviorInstance for ForceFailure {
 	fn tick(
 		&mut self,

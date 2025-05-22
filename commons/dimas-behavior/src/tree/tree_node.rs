@@ -3,9 +3,6 @@
 //! [`BehaviorTreeNode`] implementation.
 //!
 
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:      --- modules
 use alloc::{vec, vec::Vec};
 use core::{

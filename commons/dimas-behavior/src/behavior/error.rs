@@ -34,6 +34,9 @@ pub enum BehaviorError {
 	/// Error in internal composition of a behavior
 	#[error("{0}")]
 	Internal(ConstString),
+	/// VM result is not a boolean value
+	#[error("result of VM computation is not a boolean value")]
+	NotABool,
 	/// Variable/Port is not in Blackboard
 	#[error("could not find entry [{0}] in blackboard")]
 	NotInBlackboard(ConstString),

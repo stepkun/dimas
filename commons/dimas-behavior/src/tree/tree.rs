@@ -7,6 +7,7 @@
 //! together with a [`proxy pattern`](https://en.wikipedia.org/wiki/Proxy_pattern)
 //!
 
+#[doc(hidden)]
 #[cfg(feature = "std")]
 extern crate std;
 

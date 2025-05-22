@@ -9,8 +9,11 @@
 //! - Jürgen Wurzers implementation of [Bantam](https://github.com/jwurzer/bantam-rust/blob/master/src/bantam/bantam_parser.rs)
 //!
 
+#[doc(hidden)]
+#[cfg(feature = "std")]
 extern crate std;
 
+// region:		--- modules
 use alloc::{string::ToString, sync::Arc};
 use hashbrown::HashMap;
 use rustc_hash::FxBuildHasher;
@@ -29,7 +32,9 @@ use super::{
 	precedence::Precedence,
 	token::{Token, TokenKind},
 };
+// endregion:	--- modules
 
+// region:		--- Parser
 /// Parser
 pub struct Parser {
 	prefix_parselets: HashMap<TokenKind, Arc<dyn PrefixParselet>, FxBuildHasher>,
@@ -191,6 +196,7 @@ impl Parser {
 			//std::println!("{}", self.current.kind);
 			// in case of error try to synchronize to next statement
 			if let Err(error) = self.statement(&mut lexer, &mut chunk) {
+				#[cfg(feature = "std")]
 				std::println!("{error}");
 				while !(self.check_next(TokenKind::Semicolon)
 					|| self.check_next(TokenKind::Print)
@@ -345,3 +351,4 @@ impl Parser {
 		Precedence::None
 	}
 }
+// endregion:	--- Parser

@@ -4,9 +4,6 @@
 //! [`BehaviorTreeComponentList`] implementation.
 //!
 
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:      --- modules
 use alloc::vec::Vec;
 use core::ops::{Deref, DerefMut};

@@ -4,10 +4,6 @@
 
 //! Blackboard of `DiMAS`
 
-#[doc(hidden)]
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:      --- modules
 use alloc::{
 	borrow::ToOwned,

@@ -6,10 +6,6 @@
 //! beeing part of multiple hierarchies without interferences between those.
 //!
 
-#[doc(hidden)]
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:      --- modules
 use alloc::sync::Arc;
 use core::fmt::Debug;

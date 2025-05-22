@@ -2,11 +2,12 @@
 
 //! XML parser for the [`BehaviorTreeFactory`] of `DiMAS`
 
+#[doc(hidden)]
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::string::String;
 // region:      --- modules
+use alloc::string::String;
 use dimas_core::BoxConstString;
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType};

@@ -3,9 +3,6 @@
 //! [`BehaviorTreeLeaf`] implementation.
 //!
 
-#[cfg(feature = "std")]
-extern crate std;
-
 // region:      --- modules
 use dimas_core::BoxConstString;
 

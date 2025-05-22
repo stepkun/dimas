@@ -25,7 +25,6 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct Inverter {}
 
-extern crate std;
 impl BehaviorInstance for Inverter {
 	fn tick(
 		&mut self,
