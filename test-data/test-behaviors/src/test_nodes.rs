@@ -28,8 +28,50 @@ use dimas_behavior::{
 use dimas_behavior_derive::Behavior;
 // endregion:	--- modules
 
+/// Action `AlwaysSuccess`
+#[derive(Behavior, Debug, Default)]
+pub struct AlwaysSuccess {}
+
+impl BehaviorInstance for AlwaysSuccess {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		Ok(BehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStatic for AlwaysSuccess {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+}
+
+/// Action `AlwaysFailure`
+#[derive(Behavior, Debug, Default)]
+pub struct AlwaysFailure {}
+
+impl BehaviorInstance for AlwaysFailure {
+	fn tick(
+		&mut self,
+		_tick_data: &mut BehaviorTickData,
+		_blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeComponentList,
+	) -> BehaviorResult {
+		Ok(BehaviorStatus::Success)
+	}
+}
+
+impl BehaviorStatic for AlwaysFailure {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+}
+
 /// Behavior `ApproachObject`
-/// Example of custom `SyncActionNode` (synchronous action) without ports.
+/// Example of custom `ActionNode` (synchronous action) without ports.
 #[derive(Behavior, Debug, Default)]
 pub struct ApproachObject {}
 
@@ -80,7 +122,7 @@ impl GripperInterface {
 	}
 }
 /// Behavior `SaySomething`
-/// Example of custom `SyncActionNode` (synchronous action) with an input port.
+/// Example of custom `ActionNode` (synchronous action) with an input port.
 #[derive(Behavior, Debug, Default)]
 pub struct SaySomething {}
 
@@ -168,8 +210,8 @@ impl FromStr for Position2D {
 }
 
 impl Display for Position2D {
-	fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		todo!()
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "[{}, {}]", self.x, self.y)
 	}
 }
 

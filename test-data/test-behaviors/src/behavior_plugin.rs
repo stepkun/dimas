@@ -7,8 +7,7 @@ use dimas_behavior::{factory::BehaviorTreeFactory, input_port, port_list};
 use parking_lot::Mutex;
 
 use crate::test_nodes::{
-	ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction, PrintTarget, SaySomething,
-	ThinkWhatToSay, check_battery, new_say_something_simple,
+	check_battery, new_say_something_simple, AlwaysFailure, AlwaysSuccess, ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction, PrintTarget, SaySomething, ThinkWhatToSay
 };
 
 /// Registration function for all external symbols
@@ -65,6 +64,15 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 		.expect("snh");
 	factory
 		.register_node_type::<MoveBaseAction>("MoveBase")
+		.expect("snh");
+
+
+	// t10
+	factory
+		.register_node_type::<AlwaysFailure>("AlwaysFailure")
+		.expect("snh");
+	factory
+		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
 		.expect("snh");
 
 	// A return value of 0 signals success
