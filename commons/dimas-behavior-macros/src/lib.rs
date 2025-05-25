@@ -75,7 +75,7 @@ use syn::DeriveInput;
 /// # Panics
 ///
 #[proc_macro_derive(Behavior)]
-pub fn behavior_derive(input: TokenStream) -> TokenStream {
+pub fn derive_behavior(input: TokenStream) -> TokenStream {
 	// Construct a representation of Rust code as a syntax tree
 	let ast: DeriveInput = syn::parse(input).expect("could not parse input");
 

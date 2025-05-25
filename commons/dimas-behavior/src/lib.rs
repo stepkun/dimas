@@ -17,4 +17,4 @@ pub mod tree;
 pub use behavior::Behavior;
 
 // re-export
-pub use dimas_behavior_derive::Behavior;
+pub use dimas_behavior_macros::Behavior;

@@ -39,7 +39,7 @@ harness = false
 workspace = true
 
 [dependencies]
-dimas-behavior-derive = { workspace = true }
+dimas-behavior-macros = { workspace = true }
 dimas-core = { workspace = true }
 dimas-macros = { workspace = true }
 dimas-scripting = { workspace = true }

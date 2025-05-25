@@ -5,7 +5,7 @@ resolver="3"
 
 members = [
 	"commons/dimas-behavior",
-	"commons/dimas-behavior-derive",
+	"commons/dimas-behavior-macros",
 	"commons/dimas-com",
 	"commons/dimas-commands",
 	"commons/dimas-config",
@@ -58,8 +58,8 @@ dimas = { path = "dimas" }
 #dimas = "0.5.0"
 dimas-behavior = { path = "commons/dimas-behavior" }
 #dimas-behavior = "0.5.0"
-dimas-behavior-derive = { path = "commons/dimas-behavior-derive" }
-#dimas-behavior-derive = "0.5.0"
+dimas-behavior-macros = { path = "commons/dimas-behavior-macros" }
+#dimas-behavior-macros = "0.5.0"
 dimas-com = { path = "commons/dimas-com" }
 #dimas-com = "0.5.0"
 dimas-commands = { path = "commons/dimas-commands" }
@@ -88,7 +88,7 @@ roxmltree = "0.20.0"
 rustc-hash = "2.1.1"
 serial_test = "3.2.0"
 thiserror = "2.0.12"
-tokio = { version = "1.45.0", features = ["parking_lot"]}
+tokio = { version = "1.45.1", features = ["parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
 trybuild = { version = "1.0.105", features = ["diff"] }

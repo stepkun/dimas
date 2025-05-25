@@ -6,6 +6,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
+	Behavior,
 	behavior::{
 		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
 		BehaviorType,
@@ -13,7 +14,6 @@ use dimas_behavior::{
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeComponentList,
 };
-use dimas_behavior_derive::Behavior;
 
 /// Action `AlwaysSuccess`
 #[derive(Behavior, Debug, Default)]

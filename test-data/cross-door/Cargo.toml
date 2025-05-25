@@ -25,7 +25,7 @@ crate-type = ["dylib", "rlib"]
 
 [dependencies]
 dimas-behavior = { workspace = true }
-dimas-behavior-derive = { workspace = true }
+dimas-behavior-macros = { workspace = true }
 dimas-core = { workspace = true }
 anyhow = { workspace = true}
 parking_lot = { workspace = true }

@@ -4,6 +4,7 @@
 
 // region:      --- modules
 use dimas_behavior::{
+	Behavior,
 	behavior::{
 		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
 		BehaviorType,
@@ -14,7 +15,6 @@ use dimas_behavior::{
 	port_list,
 	tree::BehaviorTreeComponentList,
 };
-use dimas_behavior_derive::Behavior;
 // endregion:   --- modules
 
 // region:      --- Subscriber

@@ -1,7 +1,7 @@
 # Copyright © 2024 Stephan Kunz
 
 [package]
-name = "dimas-behavior-derive"
+name = "dimas-behavior-macros"
 rust-version.workspace = true
 edition.workspace = true
 version.workspace = true
@@ -12,8 +12,8 @@ keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
 repository.workspace = true
-description = "Derive proc-macros for dimas-behavior"
-documentation = "https://docs.rs/dimas-behavior-derive/latest/dimas-behavior-derive/"
+description = "Procedural macros for dimas-behavior"
+documentation = "https://docs.rs/dimas-behavior-macros/latest/dimas-behavior-macros/"
 readme = "README.md"
 exclude = [
     "benchees/**",

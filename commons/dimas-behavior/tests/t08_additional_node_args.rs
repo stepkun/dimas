@@ -9,6 +9,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
+	Behavior,
 	behavior::{
 		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus,
 		BehaviorTickData, BehaviorType,
@@ -18,7 +19,6 @@ use dimas_behavior::{
 	register_node,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
-use dimas_behavior_derive::Behavior;
 
 const XML: &str = r#"
 <root BTCPP_format="4">

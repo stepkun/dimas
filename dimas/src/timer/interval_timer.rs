@@ -5,6 +5,7 @@
 // region:      --- modules
 use core::time::Duration;
 use dimas_behavior::{
+	Behavior,
 	behavior::{
 		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
 		BehaviorType, error::BehaviorError,
@@ -15,7 +16,6 @@ use dimas_behavior::{
 	port_list,
 	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
 };
-use dimas_behavior_derive::Behavior;
 use tokio::{task::JoinHandle, time};
 // endregion:   --- modules
 

@@ -3,6 +3,7 @@
 // region:      --- modules
 use anyhow::Result;
 use dimas_behavior::{
+	Behavior,
 	behavior::{
 		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
 		BehaviorType,
@@ -11,7 +12,6 @@ use dimas_behavior::{
 	factory::{BehaviorTreeFactory, error::Error},
 	tree::{BehaviorTree, BehaviorTreeComponentList},
 };
-use dimas_behavior_derive::Behavior;
 use std::time::Duration;
 use tracing::{Level, event, instrument};
 // endregion:   --- modules

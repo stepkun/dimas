@@ -11,7 +11,19 @@ extern crate alloc;
 use std::{fmt::Display, num::ParseFloatError, str::FromStr};
 
 use cross_door::cross_door::CrossDoor;
-use dimas_behavior::{behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData, BehaviorType}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, output_port, port::PortList, port_list, tree::BehaviorTreeComponentList, Behavior};
+use dimas_behavior::{
+	Behavior,
+	behavior::{
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
+		BehaviorType,
+	},
+	blackboard::{BlackboardInterface, SharedBlackboard},
+	factory::BehaviorTreeFactory,
+	output_port,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeComponentList,
+};
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -104,7 +116,6 @@ impl Display for Position2D {
 		write!(f, "[{}, {}]", self.x, self.y)
 	}
 }
-
 
 #[tokio::test]
 #[ignore]
