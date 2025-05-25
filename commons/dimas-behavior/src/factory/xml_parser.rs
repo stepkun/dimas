@@ -20,7 +20,7 @@ use crate::{
 	behavior::{BehaviorConfigurationData, BehaviorPtr, BehaviorTickData, BehaviorType},
 	blackboard::SharedBlackboard,
 	port::{PortRemappings, is_allowed_port_name},
-	tree::{BehaviorTreeComponentList, BehaviorTreeElement, BehaviorTreeLeaf, BehaviorTreeNode},
+	tree::{BehaviorTreeComponentList, BehaviorTreeElement},
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -231,7 +231,7 @@ impl XmlParser {
 				let tick_data = BehaviorTickData::default();
 				let _config_data = BehaviorConfigurationData::new(id);
 				let behaviortree =
-					BehaviorTreeNode::create(id, id, children, tick_data, blackboard, bhvr);
+					BehaviorTreeElement::create_node(id, id, children, tick_data, blackboard, bhvr);
 				Ok(behaviortree)
 			},
 		)
@@ -318,7 +318,7 @@ impl XmlParser {
 				let blackboard = blackboard.cloned(remappings, values);
 				let _config_data = BehaviorConfigurationData::new(node_name);
 				let tick_data = BehaviorTickData::default();
-				BehaviorTreeLeaf::create(node_name, &path, tick_data, blackboard, bhvr)
+				BehaviorTreeElement::create_leaf(node_name, &path, tick_data, blackboard, bhvr)
 			}
 			BehaviorType::Control | BehaviorType::Decorator => {
 				// A node gets a cloned Blackboard with own remappings
@@ -330,7 +330,7 @@ impl XmlParser {
 				}
 				let tick_data = BehaviorTickData::default();
 				let _config_data = BehaviorConfigurationData::new(node_name);
-				BehaviorTreeNode::create(node_name, &path, children, tick_data, blackboard, bhvr)
+				BehaviorTreeElement::create_node(node_name, &path, children, tick_data, blackboard, bhvr)
 			}
 			BehaviorType::SubTree => {
 				let definition = registry.find_tree_definition(node_name);
@@ -350,7 +350,7 @@ impl XmlParser {
 							Self::build_children(&path, node, registry, blackboard1.clone())?;
 						let tick_data = BehaviorTickData::default();
 						let _config_data = BehaviorConfigurationData::new(node_name);
-						BehaviorTreeNode::create(
+						BehaviorTreeElement::create_node(
 							node_name,
 							&path,
 							children,

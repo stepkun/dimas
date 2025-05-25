@@ -1,24 +1,22 @@
 // Copyright © 2025 Stephan Kunz
 
-//! [`BehaviorTreeLeaf`] implementation.
+//! A [`BehaviorTreeElement`]
 //!
+
 
 // region:      --- modules
 use dimas_core::BoxConstString;
-
 use crate::{
-	behavior::{
-		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
-	},
+	behavior::{error::BehaviorError, BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData},
 	blackboard::SharedBlackboard,
 };
 
-use super::{BehaviorTreeComponent, BehaviorTreeComponentList, BehaviorTreeElement};
+use super::{BehaviorTreeComponent, BehaviorTreeComponentList};
 // endregion:   --- modules
 
-// region:		--- BehaviorTreeLeaf
-/// Implementation of a trees leaf
-pub struct BehaviorTreeLeaf {
+// region:		--- BehaviorTreeElement
+/// A tree elements.
+pub struct BehaviorTreeElement {
 	/// ID of the node.
 	id: BoxConstString,
 	/// Path to the node.
@@ -29,11 +27,11 @@ pub struct BehaviorTreeLeaf {
 	blackboard: SharedBlackboard,
 	/// The behavior of that leaf.
 	behavior: BehaviorPtr,
-	/// Dummy children list.
+	/// Children.
 	children: BehaviorTreeComponentList,
 }
 
-impl BehaviorTreeComponent for BehaviorTreeLeaf {
+impl BehaviorTreeComponent for BehaviorTreeElement {
 	fn id(&self) -> &str {
 		&self.id
 	}
@@ -85,21 +83,25 @@ impl BehaviorTreeComponent for BehaviorTreeLeaf {
 		Ok(status)
 	}
 
-	fn halt_child(&mut self, _index: usize) -> Result<(), BehaviorError> {
-		Ok(())
+	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+		self.children.halt_child(index)
 	}
 
-	fn halt(&mut self, _index: usize) -> Result<(), BehaviorError> {
-		Ok(())
+	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
+		//self.behavior.halt(&mut self.children)
+		self.children.halt(index)
 	}
 }
 
-impl BehaviorTreeLeaf {
-	/// Construct a [`BehaviorTreeLeaf`]
-	#[must_use]
-	pub fn new(
+impl BehaviorTreeElement {
+	/// Construct a [`BehaviorTreeElement`].
+	/// 
+	/// Non public to enforce using the dedicated creation functions.
+	#[inline]
+	fn new(
 		id: &str,
 		path: &str,
+		children: BehaviorTreeComponentList,
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
@@ -110,20 +112,49 @@ impl BehaviorTreeLeaf {
 			tick_data,
 			blackboard,
 			behavior,
-			children: BehaviorTreeComponentList::default(),
+			children,
 		}
 	}
 
-	/// Create a tree leaf <code>TreeElement::Leaf(BehaviorTreeLeaf)</code>.
+	/// Create a tree node.
 	#[must_use]
-	pub fn create(
+	pub fn create_node(
+		id: &str,
+		path: &str,
+		children: BehaviorTreeComponentList,
+		tick_data: BehaviorTickData,
+		blackboard: SharedBlackboard,
+		behavior: BehaviorPtr,
+	) -> Self {
+		Self::new(
+			id, path, children, tick_data, blackboard, behavior,
+		)
+	}
+
+	/// Create a tree leaf.
+	#[must_use]
+	pub fn create_leaf(
 		id: &str,
 		path: &str,
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
-	) -> BehaviorTreeElement {
-		BehaviorTreeElement::Leaf(Self::new(id, path, tick_data, blackboard, behavior))
+	) -> Self {
+		Self::new(
+			id, path, BehaviorTreeComponentList::default(), tick_data, blackboard, behavior,
+		)
+	}
+
+	/// Return an iterator over the children
+	#[must_use]
+	pub fn children_iter(&self) -> impl DoubleEndedIterator<Item = &Self> {
+		self.children().iter()
+	}
+
+	/// Return a mutable iterator over the children
+	#[must_use]
+	pub fn children_iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut Self> {
+		self.children_mut().iter_mut()
 	}
 }
-// endregion:	--- BehaviorTreeLeaf
+// endregion:	--- BehaviorTreeElement

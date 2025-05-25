@@ -45,7 +45,11 @@ impl BehaviorTreeComponentList {
 	}
 
 	pub(crate) fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.0[index].halt(0)
+		if self.0.is_empty() {
+			Ok(())
+		} else {
+			self.0[index].halt(0)
+		}
 	}
 
 	pub(crate) fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {

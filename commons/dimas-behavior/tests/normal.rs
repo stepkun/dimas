@@ -5,7 +5,7 @@
 use dimas_behavior::{
 	blackboard::{Blackboard, BlackboardData, SharedBlackboard},
 	port::{PortDefinition, PortList, PortRemappings},
-	tree::{BehaviorTree, BehaviorTreeComponentList, BehaviorTreeLeaf, BehaviorTreeNode},
+	tree::{BehaviorTree, BehaviorTreeComponentList, BehaviorTreeElement},
 };
 
 // check, that the auto traits are available
@@ -19,8 +19,7 @@ const fn normal_types() {
 
 	is_normal::<BehaviorTree>();
 	is_normal::<BehaviorTreeComponentList>();
-	is_normal::<BehaviorTreeLeaf>();
-	is_normal::<BehaviorTreeNode>();
+	is_normal::<BehaviorTreeElement>();
 
 	is_normal::<PortDefinition>();
 	is_normal::<PortList>();

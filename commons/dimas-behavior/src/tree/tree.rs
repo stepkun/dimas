@@ -51,16 +51,10 @@ fn print_recursively(level: i8, node: &BehaviorTreeElement) -> Result<(), Error>
 	for _ in 0..level {
 		indentation.push_str("  ");
 	}
-	match node {
-		BehaviorTreeElement::Leaf(leaf) => {
-			std::println!("{indentation}{}", leaf.id());
-		}
-		BehaviorTreeElement::Node(node) => {
-			std::println!("{indentation}{}", node.id());
-			for child in &**node.children() {
-				print_recursively(next_level, child)?;
-			}
-		}
+
+	std::println!("{indentation}{}", node.id());
+	for child in &**node.children() {
+		print_recursively(next_level, child)?;
 	}
 	Ok(())
 }
