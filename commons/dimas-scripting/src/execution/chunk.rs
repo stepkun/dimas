@@ -85,13 +85,12 @@ impl Chunk {
 		}
 	*/
 	/// Read a [`ScriptingValue`] from the [`ScriptingValue`] storage
-	#[allow(clippy::redundant_closure_for_method_calls)]
 	#[must_use]
 	pub fn read_constant(&self, pos: u8) -> ScriptingValue {
 		let offset = usize::from(pos);
 		self.values
 			.get(offset)
-			.map_or_else(|| todo!("pos: {}", pos), |value| value.to_owned())
+			.map_or_else(|| todo!("pos: {}", pos), ToOwned::to_owned)
 	}
 
 	/// Disassemble chunk

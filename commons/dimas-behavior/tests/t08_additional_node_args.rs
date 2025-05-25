@@ -113,7 +113,7 @@ async fn additional_args() -> anyhow::Result<()> {
 
 	// initialize ActionB with the help of an iterator
 	for node in tree.iter_mut() {
-		if node.name() == "Action_B" {
+		if node.name() == ("Action_B") {
 			let action = node
 				.behavior_mut()
 				.as_any_mut()

@@ -8,7 +8,7 @@
 
 extern crate alloc;
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory, tree::BehaviorTreeComponent};
 use test_behaviors::test_nodes::{AlwaysFailure, AlwaysSuccess};
 
 const XML: &str = r#"
@@ -52,7 +52,13 @@ async fn observer() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
-	let result = tree.tick_while_running().await?;
+    // Print the unique ID and the corresponding human readable path
+    // Path is also expected to be unique.
+    for node in tree.iter() {
+        println!("{} <-> {}", node.uid(), node.path());
+    }
+
+    let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
@@ -69,6 +75,13 @@ async fn observer_with_plugin() -> anyhow::Result<()> {
 
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
+
+    // Print the unique ID and the corresponding human readable path
+    // Path is also expected to be unique.
+    for node in tree.iter() {
+        println!("{} <-> {}", node.uid(), node.path());
+    }
+
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

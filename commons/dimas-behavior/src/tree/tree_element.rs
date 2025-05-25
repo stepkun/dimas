@@ -18,27 +18,33 @@ use super::{BehaviorTreeComponent, BehaviorTreeElementList};
 // region:		--- BehaviorTreeElement
 /// A tree elements.
 pub struct BehaviorTreeElement {
-	/// ID of the node.
-	id: BoxConstString,
-	/// Path to the node.
+	/// UID of the element.
+	/// 65536 [`BehaviorTreeElement`]s in a [`BehaviorTree`](crate::tree::BehaviorTree) should be sufficient.
+	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
+	/// This should end up in a depth first ordering.
+	uid: i16,
+	/// Name of the element.
+	name: BoxConstString,
+	/// Path to the element.
+	/// In contrast to BehaviorTree.CPP this path is fully qualified, which means that every level is denoted explicitly.
 	path: BoxConstString,
 	/// Data needed in every tick.
 	tick_data: BehaviorTickData,
-	/// Reference to the [`Blackboard`] for the leaf.
+	/// Reference to the [`Blackboard`] for the element.
 	blackboard: SharedBlackboard,
-	/// The behavior of that leaf.
+	/// The behavior of that element.
 	behavior: BehaviorPtr,
-	/// Children.
+	/// Children of the element.
 	children: BehaviorTreeElementList,
 }
 
 impl BehaviorTreeComponent for BehaviorTreeElement {
-	fn id(&self) -> &str {
-		&self.id
+	fn uid(&self) -> i16 {
+		self.uid
 	}
 
 	fn name(&self) -> &str {
-		&self.id
+		&self.name
 	}
 
 	fn path(&self) -> &str {
@@ -99,7 +105,8 @@ impl BehaviorTreeElement {
 	/// Non public to enforce using the dedicated creation functions.
 	#[inline]
 	fn new(
-		id: &str,
+		uid: i16,
+		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
 		tick_data: BehaviorTickData,
@@ -107,7 +114,8 @@ impl BehaviorTreeElement {
 		behavior: BehaviorPtr,
 	) -> Self {
 		Self {
-			id: id.into(),
+			uid,
+			name: name.into(),
 			path: path.into(),
 			tick_data,
 			blackboard,
@@ -116,36 +124,53 @@ impl BehaviorTreeElement {
 		}
 	}
 
-	/// Create a tree node.
-	#[must_use]
-	pub fn create_node(
-		id: &str,
-		path: &str,
-		children: BehaviorTreeElementList,
-		tick_data: BehaviorTickData,
-		blackboard: SharedBlackboard,
-		behavior: BehaviorPtr,
-	) -> Self {
-		Self::new(id, path, children, tick_data, blackboard, behavior)
-	}
-
 	/// Create a tree leaf.
 	#[must_use]
 	pub fn create_leaf(
-		id: &str,
+		uid: i16,
+		name: &str,
 		path: &str,
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
 		Self::new(
-			id,
+			uid,
+			name,
 			path,
 			BehaviorTreeElementList::default(),
 			tick_data,
 			blackboard,
 			behavior,
 		)
+	}
+
+	/// Create a tree node.
+	#[must_use]
+	pub fn create_node(
+		uid: i16,
+		name: &str,
+		path: &str,
+		children: BehaviorTreeElementList,
+		tick_data: BehaviorTickData,
+		blackboard: SharedBlackboard,
+		behavior: BehaviorPtr,
+	) -> Self {
+		Self::new(uid, name, path, children, tick_data, blackboard, behavior)
+	}
+
+	/// Create a subtree.
+	#[must_use]
+	pub fn create_subtree(
+		uid: i16,
+		name: &str,
+		path: &str,
+		children: BehaviorTreeElementList,
+		tick_data: BehaviorTickData,
+		blackboard: SharedBlackboard,
+		behavior: BehaviorPtr,
+	) -> Self {
+		Self::new(uid, name, path, children, tick_data, blackboard, behavior)
 	}
 
 	/// Return an iterator over the children

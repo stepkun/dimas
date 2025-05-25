@@ -52,7 +52,7 @@ fn print_recursively(level: i8, node: &BehaviorTreeElement) -> Result<(), Error>
 		indentation.push_str("  ");
 	}
 
-	std::println!("{indentation}{}", node.id());
+	std::println!("{indentation}{}", node.name());
 	for child in &**node.children() {
 		print_recursively(next_level, child)?;
 	}
@@ -139,7 +139,8 @@ impl<'a> Iterator for TeeIterMut<'a> {
 // endregion:	--- TreeIterMut
 
 // region:		--- BehaviorTree
-/// A Tree of [`BehaviorTreeComponent`]s
+/// A Tree of [`BehaviorTreeElement`]s.
+/// A certain [`BehaviorTree`] can contain up to 65536 [`BehaviorTreeElement`]s.
 pub struct BehaviorTree {
 	pub(crate) root: BehaviorTreeElement,
 	pub(crate) _libraries: Vec<Arc<Library>>,

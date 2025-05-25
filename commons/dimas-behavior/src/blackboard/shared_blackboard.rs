@@ -406,13 +406,12 @@ impl SharedBlackboard {
 
 	/// function to get access to the root [`BlackboardNode`]
 	/// of a [`Blackboard`] tree in a recursive way.
-	#[allow(clippy::redundant_closure_for_method_calls)]
 	fn root(&self) -> Self {
 		self.node
 			.read()
 			.parent
 			.as_ref()
-			.map_or_else(|| self.clone(), |bb| bb.root())
+			.map_or_else(|| self.clone(), Self::root)
 	}
 
 	/// Add or change the parent of a [`SharedBlackboard`].

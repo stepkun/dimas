@@ -115,9 +115,8 @@ impl BehaviorTreeFactory {
 	/// - if no tree with `name` can be found
 	/// - if behaviors or subtrees are missing
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
-		// self.registry.link_subtrees()?;
-		// let root = self.registry.subtree_by_name(name)?;
-		let root = XmlParser::create_tree_from_definition(name, &self.registry)?;
+		let mut parser = XmlParser::default();
+		let root = parser.create_tree_from_definition(name, &self.registry)?;
 		Ok(BehaviorTree::new(root, &self.registry))
 	}
 
@@ -131,7 +130,6 @@ impl BehaviorTreeFactory {
 	/// # Errors
 	/// - on incorrect XML
 	/// - if tree description is not in BTCPP v4
-	#[allow(clippy::redundant_closure_for_method_calls)]
 	pub fn register_behavior_tree_from_text(&mut self, xml: &str) -> Result<(), Error> {
 		// general checks
 		let doc = Document::parse(xml)?;
@@ -148,7 +146,7 @@ impl BehaviorTreeFactory {
 		// handle the attribute 'main_tree_to_execute`
 		self.main_tree_name = root
 			.attribute("main_tree_to_execute")
-			.map(|name| name.into());
+			.map(Into::into);
 
 		XmlParser::register_document_root(&mut self.registry, root)?;
 		Ok(())

@@ -24,8 +24,8 @@ use crate::{
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]
 pub trait BehaviorTreeComponent: Send + Sync {
-	/// Get the id
-	fn id(&self) -> &str;
+	/// Get the uid
+	fn uid(&self) -> i16;
 
 	/// Get the name
 	fn name(&self) -> &str;
