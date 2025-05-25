@@ -14,7 +14,7 @@ use crate::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::BehaviorTreeComponentList,
+	tree::BehaviorTreeElementList,
 };
 use alloc::{string::String, vec::Vec};
 use dimas_scripting::{Parser, VM};
@@ -33,7 +33,7 @@ impl BehaviorInstance for Script {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let code = blackboard.get::<String>("code".into())?;
 		let chunk = self.parser.parse(&code)?;

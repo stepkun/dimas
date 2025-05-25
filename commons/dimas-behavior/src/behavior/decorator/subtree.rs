@@ -12,7 +12,7 @@ use crate::{
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 // endregion:   --- modules
 
@@ -22,7 +22,7 @@ use crate::{
 pub struct Subtree {}
 
 impl BehaviorInstance for Subtree {
-	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
+	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
 		children[0].execute_halt()
 	}
 
@@ -30,7 +30,7 @@ impl BehaviorInstance for Subtree {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		children[0].execute_tick()
 	}
@@ -39,7 +39,7 @@ impl BehaviorInstance for Subtree {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		children[0].execute_tick()
 	}

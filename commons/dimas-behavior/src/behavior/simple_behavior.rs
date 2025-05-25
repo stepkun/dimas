@@ -6,7 +6,7 @@
 use alloc::{boxed::Box, sync::Arc};
 use core::any::Any;
 
-use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeComponentList};
+use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 
 use super::{
 	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult,
@@ -57,7 +57,7 @@ impl BehaviorInstance for SimpleBehavior {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		if self.complex_tick_fn.is_some() {
 			self.complex_tick_fn.as_ref().expect("snh")(blackboard)

@@ -13,7 +13,7 @@ use dimas_behavior::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::BehaviorTreeComponentList,
+	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
 
@@ -28,7 +28,7 @@ impl BehaviorInstance for Subscriber {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("ticking Subscriber");
 		Ok(BehaviorStatus::Success)

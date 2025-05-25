@@ -12,7 +12,7 @@ use crate::{
 		BehaviorType, error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	tree::BehaviorTreeComponentList,
+	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
 
@@ -23,7 +23,7 @@ use crate::{
 pub struct ParallelAll {}
 
 impl BehaviorInstance for ParallelAll {
-	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
+	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
 		children.halt(0)
 	}
 
@@ -31,7 +31,7 @@ impl BehaviorInstance for ParallelAll {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)
 	}

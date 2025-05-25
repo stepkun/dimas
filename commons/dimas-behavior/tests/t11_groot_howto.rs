@@ -22,7 +22,7 @@ use dimas_behavior::{
 	output_port,
 	port::PortList,
 	port_list,
-	tree::BehaviorTreeComponentList,
+	tree::BehaviorTreeElementList,
 };
 
 const XML: &str = r#"
@@ -66,7 +66,7 @@ impl BehaviorInstance for UpdatePosition {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		self.pos.x += 0.2;
 		self.pos.y += 0.1;

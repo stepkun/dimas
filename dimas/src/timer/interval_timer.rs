@@ -14,7 +14,7 @@ use dimas_behavior::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 use tokio::{task::JoinHandle, time};
 // endregion:   --- modules
@@ -32,7 +32,7 @@ impl BehaviorInstance for IntervalTimer {
 		&mut self,
 		tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("start IntervalTimer");
 
@@ -46,7 +46,7 @@ impl BehaviorInstance for IntervalTimer {
 
 			// @TODO: Dirty way to move access to children into spawned task
 			//        The node is not restartable/recoverable
-			let mut my_children: BehaviorTreeComponentList = BehaviorTreeComponentList::default();
+			let mut my_children: BehaviorTreeElementList = BehaviorTreeElementList::default();
 			std::mem::swap(children, &mut my_children);
 
 			self.handle
@@ -75,13 +75,13 @@ impl BehaviorInstance for IntervalTimer {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("ticking IntervalTimer");
 		Ok(BehaviorStatus::Running)
 	}
 
-	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
+	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
 		children.reset()?;
 		let handle = self.handle.take();
 		if let Some(handle) = handle {

@@ -21,7 +21,7 @@ use crate::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 // endregion:   --- modules
 
@@ -40,7 +40,7 @@ impl BehaviorInstance for Precondition {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let if_branch = blackboard.get::<String>("if".into())?;
 		let if_chunk = self.parser.parse(&if_branch)?;

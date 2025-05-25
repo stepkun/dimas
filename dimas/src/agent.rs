@@ -10,7 +10,7 @@ use dimas_behavior::{
 	},
 	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
-	tree::{BehaviorTree, BehaviorTreeComponentList},
+	tree::{BehaviorTree, BehaviorTreeElementList},
 };
 use std::time::Duration;
 use tracing::{Level, event, instrument};
@@ -60,7 +60,7 @@ impl BehaviorInstance for NotInterrupted {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("ticking NotInterrupted");
 		Ok(BehaviorStatus::Success)
@@ -83,7 +83,7 @@ impl BehaviorInstance for AlwaysRunning {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("ticking AlwaysRunnin");
 		Ok(BehaviorStatus::Running)
@@ -106,7 +106,7 @@ impl BehaviorInstance for Shutdown {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("ticking Shutdown");
 		Ok(BehaviorStatus::Success)

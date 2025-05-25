@@ -3,15 +3,16 @@
 //! A [`BehaviorTreeElement`]
 //!
 
-
 // region:      --- modules
-use dimas_core::BoxConstString;
 use crate::{
-	behavior::{error::BehaviorError, BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData},
+	behavior::{
+		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
+	},
 	blackboard::SharedBlackboard,
 };
+use dimas_core::BoxConstString;
 
-use super::{BehaviorTreeComponent, BehaviorTreeComponentList};
+use super::{BehaviorTreeComponent, BehaviorTreeElementList};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeElement
@@ -28,7 +29,7 @@ pub struct BehaviorTreeElement {
 	/// The behavior of that leaf.
 	behavior: BehaviorPtr,
 	/// Children.
-	children: BehaviorTreeComponentList,
+	children: BehaviorTreeElementList,
 }
 
 impl BehaviorTreeComponent for BehaviorTreeElement {
@@ -56,11 +57,11 @@ impl BehaviorTreeComponent for BehaviorTreeElement {
 		self.blackboard.clone()
 	}
 
-	fn children(&self) -> &BehaviorTreeComponentList {
+	fn children(&self) -> &BehaviorTreeElementList {
 		&self.children
 	}
 
-	fn children_mut(&mut self) -> &mut BehaviorTreeComponentList {
+	fn children_mut(&mut self) -> &mut BehaviorTreeElementList {
 		&mut self.children
 	}
 
@@ -88,20 +89,19 @@ impl BehaviorTreeComponent for BehaviorTreeElement {
 	}
 
 	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		//self.behavior.halt(&mut self.children)
 		self.children.halt(index)
 	}
 }
 
 impl BehaviorTreeElement {
 	/// Construct a [`BehaviorTreeElement`].
-	/// 
+	///
 	/// Non public to enforce using the dedicated creation functions.
 	#[inline]
 	fn new(
 		id: &str,
 		path: &str,
-		children: BehaviorTreeComponentList,
+		children: BehaviorTreeElementList,
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
@@ -121,14 +121,12 @@ impl BehaviorTreeElement {
 	pub fn create_node(
 		id: &str,
 		path: &str,
-		children: BehaviorTreeComponentList,
+		children: BehaviorTreeElementList,
 		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
-		Self::new(
-			id, path, children, tick_data, blackboard, behavior,
-		)
+		Self::new(id, path, children, tick_data, blackboard, behavior)
 	}
 
 	/// Create a tree leaf.
@@ -141,7 +139,12 @@ impl BehaviorTreeElement {
 		behavior: BehaviorPtr,
 	) -> Self {
 		Self::new(
-			id, path, BehaviorTreeComponentList::default(), tick_data, blackboard, behavior,
+			id,
+			path,
+			BehaviorTreeElementList::default(),
+			tick_data,
+			blackboard,
+			behavior,
 		)
 	}
 

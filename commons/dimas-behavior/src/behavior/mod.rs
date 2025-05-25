@@ -5,7 +5,6 @@
 
 pub mod action;
 #[allow(clippy::module_inception)]
-mod behavior;
 pub mod condition;
 pub mod control;
 pub mod decorator;
@@ -13,7 +12,6 @@ pub mod error;
 mod simple_behavior;
 
 // flatten
-pub use behavior::{BehaviorConfigurationData, BehaviorTickData};
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 
 // region:      --- modules
@@ -24,7 +22,7 @@ use error::BehaviorError;
 use crate::{
 	blackboard::SharedBlackboard,
 	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 // endregion:   --- modules
 
@@ -68,7 +66,7 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to stop/cancel/halt a behavior.
 	/// Default implementation just returns [`BehaviorStatus::Idle`]
 	/// # Errors
-	fn halt(&mut self, children: &mut BehaviorTreeComponentList) -> Result<(), BehaviorError> {
+	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
 		for child in &mut **children {
 			child.halt(0)?;
 		}
@@ -82,7 +80,7 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 		&mut self,
 		tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		self.tick(tick_data, blackboard, children)
 	}
@@ -93,7 +91,7 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 		&mut self,
 		tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult;
 }
 // endregion:	--- BehaviorInstance
@@ -170,6 +168,28 @@ impl core::fmt::Display for BehaviorStatus {
 	}
 }
 // endregion:   --- BehaviorStatus
+
+// region:      --- BehaviorTickData
+/// Holds the often used Data of a behavior.
+#[derive(Debug, Default)]
+pub struct BehaviorTickData {
+	/// Current [`BehaviorStatus`]
+	status: BehaviorStatus,
+}
+
+impl BehaviorTickData {
+	/// Get the current status.
+	#[must_use]
+	pub const fn status(&self) -> BehaviorStatus {
+		self.status
+	}
+
+	/// Set the current status.
+	pub fn set_status(&mut self, status: BehaviorStatus) {
+		self.status = status;
+	}
+}
+// endregion:   --- BehaviorTickData
 
 // region:		--- BehaviorType
 /// All types of behaviors usable in a behavior tree.

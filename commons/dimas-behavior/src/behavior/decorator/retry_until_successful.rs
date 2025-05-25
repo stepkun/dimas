@@ -15,7 +15,7 @@ use crate::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 // endregion:   --- modules
 
@@ -62,7 +62,7 @@ impl BehaviorInstance for RetryUntilSuccessful {
 		&mut self,
 		tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		// Load num_cycles from the port value
 		self.max_attempts = blackboard.get::<i32>("num_attempts".into())?;

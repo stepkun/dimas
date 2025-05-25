@@ -12,7 +12,7 @@ use crate::{
 		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
-	tree::BehaviorTreeComponentList,
+	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
 
@@ -27,7 +27,7 @@ impl BehaviorInstance for Parallel {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)
 	}

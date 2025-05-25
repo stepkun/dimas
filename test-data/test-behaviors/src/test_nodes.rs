@@ -24,7 +24,7 @@ use dimas_behavior::{
 	input_port, output_port,
 	port::PortList,
 	port_list,
-	tree::BehaviorTreeComponentList,
+	tree::BehaviorTreeElementList,
 };
 // endregion:	--- modules
 
@@ -37,7 +37,7 @@ impl BehaviorInstance for AlwaysSuccess {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)
 	}
@@ -58,7 +58,7 @@ impl BehaviorInstance for AlwaysFailure {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		Ok(BehaviorStatus::Success)
 	}
@@ -80,7 +80,7 @@ impl BehaviorInstance for ApproachObject {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
 		Ok(BehaviorStatus::Success)
@@ -131,7 +131,7 @@ impl BehaviorInstance for SaySomething {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let msg = blackboard.get::<String>("message".into())?;
 		println!("Robot says: {msg}");
@@ -158,7 +158,7 @@ impl BehaviorInstance for ThinkWhatToSay {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		blackboard.set("text".into(), String::from("The answer is 42"))?;
 		Ok(BehaviorStatus::Success)
@@ -224,7 +224,7 @@ impl BehaviorInstance for CalculateGoal {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
 		blackboard.set("goal".into(), mygoal)?;
@@ -251,7 +251,7 @@ impl BehaviorInstance for PrintTarget {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let pos = blackboard.get::<Position2D>("target".into())?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
@@ -323,7 +323,7 @@ impl BehaviorInstance for MoveBaseAction {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let pose = blackboard.get::<Pose2D>("goal".into())?;
 		println!(
@@ -339,7 +339,7 @@ impl BehaviorInstance for MoveBaseAction {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		if Instant::now().duration_since(self.start_time) >= self.completion_time {
 			println!("[ MoveBase: FINISHED ]");

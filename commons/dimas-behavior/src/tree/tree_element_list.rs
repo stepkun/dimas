@@ -13,12 +13,12 @@ use crate::behavior::error::BehaviorError;
 use super::{BehaviorTreeComponent, BehaviorTreeElement};
 // endregion:   --- modules
 
-// region:		--- BehaviorTreeComponentList
+// region:		--- BehaviorTreeElementList
 /// A List of tree components.
 #[derive(Default)]
-pub struct BehaviorTreeComponentList(pub(crate) Vec<BehaviorTreeElement>);
+pub struct BehaviorTreeElementList(pub(crate) Vec<BehaviorTreeElement>);
 
-impl Deref for BehaviorTreeComponentList {
+impl Deref for BehaviorTreeElementList {
 	type Target = Vec<BehaviorTreeElement>;
 
 	fn deref(&self) -> &Self::Target {
@@ -26,34 +26,34 @@ impl Deref for BehaviorTreeComponentList {
 	}
 }
 
-impl DerefMut for BehaviorTreeComponentList {
+impl DerefMut for BehaviorTreeElementList {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		&mut self.0
 	}
 }
 
-impl BehaviorTreeComponentList {
+impl BehaviorTreeElementList {
 	/// Reset all children
 	/// # Errors
 	/// - if a child errors on `halt()`
 	pub fn reset(&mut self) -> Result<(), BehaviorError> {
-		let x = &mut self.0;
-		for child in x {
+		for child in &mut self.0 {
 			child.halt(0)?;
 		}
 		Ok(())
 	}
 
+	/// Halt child at and beyond index.
 	pub(crate) fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		if self.0.is_empty() {
-			Ok(())
-		} else {
-			self.0[index].halt(0)
+		for i in index..self.0.len() {
+			self.0[i].halt(0)?;
 		}
+		Ok(())
 	}
 
+	/// Halt child at index.
 	pub(crate) fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
 		self.0[index].halt_child(0)
 	}
 }
-// endregion:	--- BehaviorTreeComponentList
+// endregion:	--- BehaviorTreeElementList

@@ -12,7 +12,7 @@ use crate::{
 		BehaviorType, error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 // endregion:   --- modules
 
@@ -39,7 +39,7 @@ impl BehaviorInstance for ReactiveSequence {
 		&mut self,
 		tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		children: &mut BehaviorTreeComponentList,
+		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
 		tick_data.set_status(BehaviorStatus::Running);

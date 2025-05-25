@@ -17,7 +17,7 @@ use dimas_behavior::{
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
 	register_node,
-	tree::{BehaviorTreeComponent, BehaviorTreeComponentList},
+	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
 };
 
 const XML: &str = r#"
@@ -43,7 +43,7 @@ impl BehaviorInstance for ActionA {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 42);
 		assert_eq!(self.arg2, String::from("hello world"));
@@ -78,7 +78,7 @@ impl BehaviorInstance for ActionB {
 		&mut self,
 		_tick_data: &mut BehaviorTickData,
 		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeComponentList,
+		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 69);
 		assert_eq!(self.arg2, String::from("interesting value"));

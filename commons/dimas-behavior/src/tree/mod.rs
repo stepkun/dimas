@@ -6,13 +6,13 @@
 pub mod error;
 #[allow(clippy::module_inception)]
 mod tree;
-mod tree_component_list;
 mod tree_element;
+mod tree_element_list;
 
 // flatten
 pub use tree::{BehaviorTree, print_tree};
-pub use tree_component_list::BehaviorTreeComponentList;
 pub use tree_element::BehaviorTreeElement;
+pub use tree_element_list::BehaviorTreeElementList;
 
 // region:      --- modules
 use crate::{
@@ -43,10 +43,10 @@ pub trait BehaviorTreeComponent: Send + Sync {
 	fn blackboard(&self) -> SharedBlackboard;
 
 	/// Get the children
-	fn children(&self) -> &BehaviorTreeComponentList;
+	fn children(&self) -> &BehaviorTreeElementList;
 
 	/// Get the children mutable
-	fn children_mut(&mut self) -> &mut BehaviorTreeComponentList;
+	fn children_mut(&mut self) -> &mut BehaviorTreeElementList;
 
 	/// Halt the component
 	/// # Errors
