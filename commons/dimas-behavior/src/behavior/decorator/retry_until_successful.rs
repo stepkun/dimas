@@ -15,7 +15,7 @@ use crate::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
+	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
 

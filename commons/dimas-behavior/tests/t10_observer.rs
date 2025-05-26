@@ -8,7 +8,7 @@
 
 extern crate alloc;
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory, tree::BehaviorTreeComponent};
+use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
 use test_behaviors::test_nodes::{AlwaysFailure, AlwaysSuccess};
 
 const XML: &str = r#"

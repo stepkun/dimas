@@ -17,7 +17,7 @@ use dimas_behavior::{
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
 	register_node,
-	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
+	tree::BehaviorTreeElementList,
 };
 
 const XML: &str = r#"

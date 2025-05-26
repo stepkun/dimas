@@ -21,7 +21,7 @@ use crate::{
 	factory::BehaviorRegistry,
 };
 
-use super::{BehaviorTreeComponent, BehaviorTreeElement, error::Error};
+use super::{BehaviorTreeElement, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper

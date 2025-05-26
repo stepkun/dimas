@@ -22,7 +22,7 @@ use error::BehaviorError;
 use crate::{
 	blackboard::SharedBlackboard,
 	port::PortList,
-	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
+	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
 

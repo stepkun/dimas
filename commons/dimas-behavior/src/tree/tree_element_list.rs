@@ -10,7 +10,7 @@ use core::ops::{Deref, DerefMut};
 
 use crate::behavior::error::BehaviorError;
 
-use super::{BehaviorTreeComponent, BehaviorTreeElement};
+use super::BehaviorTreeElement;
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeElementList

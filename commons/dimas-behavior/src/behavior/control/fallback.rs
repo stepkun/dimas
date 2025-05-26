@@ -12,7 +12,7 @@ use crate::{
 		BehaviorType, error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
-	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
+	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
 

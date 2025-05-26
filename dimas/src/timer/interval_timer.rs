@@ -14,7 +14,7 @@ use dimas_behavior::{
 	input_port,
 	port::PortList,
 	port_list,
-	tree::{BehaviorTreeComponent, BehaviorTreeElementList},
+	tree::BehaviorTreeElementList,
 };
 use tokio::{task::JoinHandle, time};
 // endregion:   --- modules

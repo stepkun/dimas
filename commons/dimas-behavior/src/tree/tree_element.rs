@@ -12,7 +12,7 @@ use crate::{
 };
 use dimas_core::BoxConstString;
 
-use super::{BehaviorTreeComponent, BehaviorTreeElementList};
+use super::BehaviorTreeElementList;
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeElement
@@ -36,67 +36,6 @@ pub struct BehaviorTreeElement {
 	behavior: BehaviorPtr,
 	/// Children of the element.
 	children: BehaviorTreeElementList,
-}
-
-impl BehaviorTreeComponent for BehaviorTreeElement {
-	fn uid(&self) -> i16 {
-		self.uid
-	}
-
-	fn name(&self) -> &str {
-		&self.name
-	}
-
-	fn path(&self) -> &str {
-		&self.path
-	}
-
-	fn behavior(&self) -> &BehaviorPtr {
-		&self.behavior
-	}
-
-	fn behavior_mut(&mut self) -> &mut BehaviorPtr {
-		&mut self.behavior
-	}
-
-	fn blackboard(&self) -> SharedBlackboard {
-		self.blackboard.clone()
-	}
-
-	fn children(&self) -> &BehaviorTreeElementList {
-		&self.children
-	}
-
-	fn children_mut(&mut self) -> &mut BehaviorTreeElementList {
-		&mut self.children
-	}
-
-	fn execute_tick(&mut self) -> BehaviorResult {
-		let mut status = self.tick_data.status();
-		if status == BehaviorStatus::Idle {
-			status = self.behavior.start(
-				&mut self.tick_data,
-				&mut self.blackboard,
-				&mut self.children,
-			)?;
-		} else {
-			status = self.behavior.tick(
-				&mut self.tick_data,
-				&mut self.blackboard,
-				&mut self.children,
-			)?;
-		}
-		self.tick_data.set_status(status);
-		Ok(status)
-	}
-
-	fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.children.halt_child(index)
-	}
-
-	fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
-		self.children.halt(index)
-	}
 }
 
 impl BehaviorTreeElement {
@@ -173,13 +112,94 @@ impl BehaviorTreeElement {
 		Self::new(uid, name, path, children, tick_data, blackboard, behavior)
 	}
 
-	/// Return an iterator over the children
+	/// Get the uid.
+	pub fn uid(&self) -> i16 {
+		self.uid
+	}
+
+	/// Get the name.
+	pub fn name(&self) -> &str {
+		&self.name
+	}
+
+	/// Get the path.
+	pub fn path(&self) -> &str {
+		&self.path
+	}
+
+	/// Get a reference to the behavior.
+	pub fn behavior(&self) -> &BehaviorPtr {
+		&self.behavior
+	}
+
+	/// Get a mutable reference to the behavior.
+	pub fn behavior_mut(&mut self) -> &mut BehaviorPtr {
+		&mut self.behavior
+	}
+
+	/// Get the blackboard.
+	pub fn blackboard(&self) -> SharedBlackboard {
+		self.blackboard.clone()
+	}
+
+	/// Get the children.
+	pub fn children(&self) -> &BehaviorTreeElementList {
+		&self.children
+	}
+
+	/// Get the children mutable.
+	pub fn children_mut(&mut self) -> &mut BehaviorTreeElementList {
+		&mut self.children
+	}
+
+	/// Halt the element and all its children.
+	/// # Errors
+	pub fn execute_halt(&mut self) -> Result<(), BehaviorError> {
+		self.halt(0)
+	}
+
+	/// Tick the element and its children.
+	/// # Errors
+	pub fn execute_tick(&mut self) -> BehaviorResult {
+		let mut status = self.tick_data.status();
+		if status == BehaviorStatus::Idle {
+			status = self.behavior.start(
+				&mut self.tick_data,
+				&mut self.blackboard,
+				&mut self.children,
+			)?;
+		} else {
+			status = self.behavior.tick(
+				&mut self.tick_data,
+				&mut self.blackboard,
+				&mut self.children,
+			)?;
+		}
+		self.tick_data.set_status(status);
+		Ok(status)
+	}
+
+	/// Halt child at `index`.
+	/// # Errors
+	/// - if index is out of childrens bounds.
+	pub fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+		self.children.halt_child(index)
+	}
+
+	/// Halt all children at and beyond `index`.
+	/// # Errors
+	/// - if index is out of childrens bounds.
+	pub fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
+		self.children.halt(index)
+	}
+
+	/// Return an iterator over the children.
 	#[must_use]
 	pub fn children_iter(&self) -> impl DoubleEndedIterator<Item = &Self> {
 		self.children().iter()
 	}
 
-	/// Return a mutable iterator over the children
+	/// Return a mutable iterator over the children.
 	#[must_use]
 	pub fn children_iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut Self> {
 		self.children_mut().iter_mut()
