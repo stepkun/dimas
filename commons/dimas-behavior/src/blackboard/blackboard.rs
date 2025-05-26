@@ -20,7 +20,7 @@ use crate::port::PortRemappings;
 // region:      --- Blackboard
 /// Implementation of a [`Blackboard`] with a possible parent, a [`SharedBlackboard`],
 /// internal & external remappings and/or value assignments, all as [`PortRemappings`].
-/// 
+///
 /// Access to the fields is public within this module.
 #[derive(Debug, Default)]
 pub struct Blackboard {

@@ -10,7 +10,7 @@ use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElem
 
 use super::{
 	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult,
-	BehaviorTickData,
+	BehaviorStatus,
 };
 // endregion:   --- modules
 
@@ -55,7 +55,7 @@ impl BehaviorExecution for SimpleBehavior {
 impl BehaviorInstance for SimpleBehavior {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

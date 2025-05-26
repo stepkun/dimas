@@ -16,5 +16,5 @@ pub use tree_element_list::BehaviorTreeElementList;
 
 // region:      --- types
 /// [`BehaviorTreeElement`] subscriber callback signature
-pub type BehaviorTreeElementObserver = fn(&BehaviorTreeElement); 
+pub type BehaviorTreeElementObserver = fn(&BehaviorTreeElement);
 // endregion:   --- types

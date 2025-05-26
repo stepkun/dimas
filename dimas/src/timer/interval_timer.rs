@@ -7,8 +7,8 @@ use core::time::Duration;
 use dimas_behavior::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
@@ -30,7 +30,7 @@ pub struct IntervalTimer {
 impl BehaviorInstance for IntervalTimer {
 	fn start(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -38,8 +38,6 @@ impl BehaviorInstance for IntervalTimer {
 
 		// timer already started?
 		if self.handle.is_none() {
-			tick_data.set_status(BehaviorStatus::Running);
-
 			let input = blackboard.get("interval".into())?;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
@@ -62,18 +60,16 @@ impl BehaviorInstance for IntervalTimer {
 						}
 					}
 				}));
+			Ok(BehaviorStatus::Running)
 		} else {
 			println!("already started IntervalTimer");
-			tick_data.set_status(BehaviorStatus::Failure);
+			Ok(BehaviorStatus::Failure)
 		}
-
-		Ok(tick_data.status())
-		// Ok(BehaviorStatus::Running)
 	}
 
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

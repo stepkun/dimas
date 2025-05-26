@@ -12,7 +12,7 @@ use dimas_behavior::{
 	Behavior,
 	behavior::{
 		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus,
-		BehaviorTickData, BehaviorType,
+		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
@@ -41,11 +41,12 @@ pub struct ActionA {
 impl BehaviorInstance for ActionA {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 42);
+
 		assert_eq!(self.arg2, String::from("hello world"));
 		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
 		Ok(BehaviorStatus::Success)
@@ -76,7 +77,7 @@ pub struct ActionB {
 impl BehaviorInstance for ActionB {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

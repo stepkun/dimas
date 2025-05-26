@@ -19,11 +19,7 @@ use alloc::boxed::Box;
 use core::any::Any;
 use error::BehaviorError;
 
-use crate::{
-	blackboard::SharedBlackboard,
-	port::PortList,
-	tree::BehaviorTreeElementList,
-};
+use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 // endregion:   --- modules
 
 // region:		--- types
@@ -78,18 +74,18 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// # Errors
 	fn start(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		self.tick(tick_data, blackboard, children)
+		self.tick(status, blackboard, children)
 	}
 
 	/// Method called to tick a behavior.
 	/// # Errors
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult;

@@ -8,8 +8,8 @@ use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
@@ -29,7 +29,7 @@ impl BehaviorInstance for ParallelAll {
 
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

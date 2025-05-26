@@ -8,8 +8,8 @@ use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
@@ -35,15 +35,13 @@ pub struct Sequence {
 impl BehaviorInstance for Sequence {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		if tick_data.status() == BehaviorStatus::Idle {
+		if status == BehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
-
-		tick_data.set_status(BehaviorStatus::Running);
 
 		while self.child_idx < children.len() {
 			let child = &mut children[self.child_idx];

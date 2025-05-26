@@ -52,13 +52,13 @@ async fn observer() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
-    // Print the unique ID and the corresponding human readable path
-    // Path is also expected to be unique.
-    for node in tree.iter() {
-        println!("{} <-> {}", node.uid(), node.path());
-    }
+	// Print the unique ID and the corresponding human readable path
+	// Path is also expected to be unique.
+	for node in tree.iter() {
+		println!("{} <-> {}", node.uid(), node.path());
+	}
 
-    let result = tree.tick_while_running().await?;
+	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
 
 	Ok(())
@@ -76,12 +76,11 @@ async fn observer_with_plugin() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
-    // Print the unique ID and the corresponding human readable path
-    // Path is also expected to be unique.
-    for node in tree.iter() {
-        println!("{} <-> {}", node.uid(), node.path());
-    }
-
+	// Print the unique ID and the corresponding human readable path
+	// Path is also expected to be unique.
+	for node in tree.iter() {
+		println!("{} <-> {}", node.uid(), node.path());
+	}
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);

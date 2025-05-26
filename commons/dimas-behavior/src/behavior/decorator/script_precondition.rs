@@ -13,10 +13,7 @@ use crate::behavior::error::BehaviorError;
 use crate::blackboard::BlackboardInterface;
 use crate::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
 	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
@@ -38,7 +35,7 @@ pub struct Precondition {
 impl BehaviorInstance for Precondition {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

@@ -5,9 +5,7 @@
 
 // region:      --- modules
 use crate::{
-	behavior::{
-		BehaviorPtr, BehaviorResult, BehaviorStatus, BehaviorTickData, error::BehaviorError,
-	},
+	behavior::{BehaviorPtr, BehaviorResult, BehaviorStatus, error::BehaviorError},
 	blackboard::SharedBlackboard,
 };
 use dimas_core::BoxConstString;
@@ -28,8 +26,8 @@ pub struct BehaviorTreeElement {
 	/// Path to the element.
 	/// In contrast to BehaviorTree.CPP this path is fully qualified, which means that every level is denoted explicitly.
 	path: BoxConstString,
-	/// Data needed in every tick.
-	tick_data: BehaviorTickData,
+	/// Current [`BehaviorStatus`]
+	status: BehaviorStatus,
 	/// Reference to the [`Blackboard`] for the element.
 	blackboard: SharedBlackboard,
 	/// The behavior of that element.
@@ -48,7 +46,6 @@ impl BehaviorTreeElement {
 		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
-		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
@@ -56,7 +53,7 @@ impl BehaviorTreeElement {
 			uid,
 			name: name.into(),
 			path: path.into(),
-			tick_data,
+			status: BehaviorStatus::Idle,
 			blackboard,
 			behavior,
 			children,
@@ -69,7 +66,6 @@ impl BehaviorTreeElement {
 		uid: i16,
 		name: &str,
 		path: &str,
-		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
@@ -78,7 +74,6 @@ impl BehaviorTreeElement {
 			name,
 			path,
 			BehaviorTreeElementList::default(),
-			tick_data,
 			blackboard,
 			behavior,
 		)
@@ -91,11 +86,10 @@ impl BehaviorTreeElement {
 		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
-		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
-		Self::new(uid, name, path, children, tick_data, blackboard, behavior)
+		Self::new(uid, name, path, children, blackboard, behavior)
 	}
 
 	/// Create a subtree.
@@ -105,11 +99,10 @@ impl BehaviorTreeElement {
 		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
-		tick_data: BehaviorTickData,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 	) -> Self {
-		Self::new(uid, name, path, children, tick_data, blackboard, behavior)
+		Self::new(uid, name, path, children, blackboard, behavior)
 	}
 
 	/// Get the uid.
@@ -161,21 +154,14 @@ impl BehaviorTreeElement {
 	/// Tick the element and its children.
 	/// # Errors
 	pub fn execute_tick(&mut self) -> BehaviorResult {
-		let mut status = self.tick_data.status();
-		if status == BehaviorStatus::Idle {
-			status = self.behavior.start(
-				&mut self.tick_data,
-				&mut self.blackboard,
-				&mut self.children,
-			)?;
+		let status = if self.status == BehaviorStatus::Idle {
+			self.behavior
+				.start(self.status, &mut self.blackboard, &mut self.children)?
 		} else {
-			status = self.behavior.tick(
-				&mut self.tick_data,
-				&mut self.blackboard,
-				&mut self.children,
-			)?;
-		}
-		self.tick_data.set_status(status);
+			self.behavior
+				.tick(self.status, &mut self.blackboard, &mut self.children)?
+		};
+		self.status = status;
 		Ok(status)
 	}
 

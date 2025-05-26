@@ -8,8 +8,8 @@ use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
@@ -28,12 +28,10 @@ pub struct Inverter {}
 impl BehaviorInstance for Inverter {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		tick_data.set_status(BehaviorStatus::Running);
-
 		let child = &mut children[0];
 		let new_status = child.execute_tick()?;
 

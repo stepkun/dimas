@@ -8,8 +8,8 @@ use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType, error::BehaviorError,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
@@ -60,7 +60,7 @@ impl Default for RetryUntilSuccessful {
 impl BehaviorInstance for RetryUntilSuccessful {
 	fn tick(
 		&mut self,
-		tick_data: &mut BehaviorTickData,
+		status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -69,11 +69,9 @@ impl BehaviorInstance for RetryUntilSuccessful {
 
 		let mut do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
 
-		if tick_data.status() == BehaviorStatus::Idle {
+		if status == BehaviorStatus::Idle {
 			self.all_skipped = true;
 		}
-
-		tick_data.set_status(BehaviorStatus::Running);
 
 		while do_loop {
 			// A `Decorator` has only 1 child

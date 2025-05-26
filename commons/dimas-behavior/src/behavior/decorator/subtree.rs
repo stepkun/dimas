@@ -8,7 +8,7 @@ use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorTickData, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
@@ -28,7 +28,7 @@ impl BehaviorInstance for Subtree {
 
 	fn start(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -37,7 +37,7 @@ impl BehaviorInstance for Subtree {
 
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

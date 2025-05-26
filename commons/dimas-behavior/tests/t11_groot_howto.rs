@@ -13,10 +13,7 @@ use std::{fmt::Display, num::ParseFloatError, str::FromStr};
 use cross_door::cross_door::CrossDoor;
 use dimas_behavior::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	output_port,
@@ -64,7 +61,7 @@ pub struct UpdatePosition {
 impl BehaviorInstance for UpdatePosition {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -124,6 +121,25 @@ async fn groot_howto() -> anyhow::Result<()> {
 
 	let cross_door = CrossDoor::default();
 	cross_door.register_nodes(&mut factory)?;
+	factory.register_node_type::<UpdatePosition>("UpdatePosition")?;
+
+	factory.register_behavior_tree_from_text(XML)?;
+
+	let mut tree = factory.create_tree("MainTree")?;
+	drop(factory);
+
+	let result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorStatus::Success);
+
+	Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+async fn groot_howto_with_plugin() -> anyhow::Result<()> {
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	factory.register_from_plugin("cross_door")?;
 	factory.register_node_type::<UpdatePosition>("UpdatePosition")?;
 
 	factory.register_behavior_tree_from_text(XML)?;

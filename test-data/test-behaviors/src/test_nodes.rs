@@ -16,10 +16,7 @@ use std::{
 
 use dimas_behavior::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port, output_port,
 	port::PortList,
@@ -35,7 +32,7 @@ pub struct AlwaysSuccess {}
 impl BehaviorInstance for AlwaysSuccess {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -56,7 +53,7 @@ pub struct AlwaysFailure {}
 impl BehaviorInstance for AlwaysFailure {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -78,7 +75,7 @@ pub struct ApproachObject {}
 impl BehaviorInstance for ApproachObject {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -129,7 +126,7 @@ pub struct SaySomething {}
 impl BehaviorInstance for SaySomething {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -156,7 +153,7 @@ pub struct ThinkWhatToSay {}
 impl BehaviorInstance for ThinkWhatToSay {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -222,7 +219,7 @@ pub struct CalculateGoal {}
 impl BehaviorInstance for CalculateGoal {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -249,7 +246,7 @@ pub struct PrintTarget {}
 impl BehaviorInstance for PrintTarget {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -321,7 +318,7 @@ impl Default for MoveBaseAction {
 impl BehaviorInstance for MoveBaseAction {
 	fn start(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
@@ -337,7 +334,7 @@ impl BehaviorInstance for MoveBaseAction {
 
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

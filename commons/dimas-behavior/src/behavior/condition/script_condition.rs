@@ -6,10 +6,7 @@
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorTickData,
-		BehaviorType,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,
@@ -31,7 +28,7 @@ pub struct ScriptCondition {
 impl BehaviorInstance for ScriptCondition {
 	fn tick(
 		&mut self,
-		_tick_data: &mut BehaviorTickData,
+		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {

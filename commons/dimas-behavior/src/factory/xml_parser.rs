@@ -17,7 +17,7 @@ use std::path::PathBuf;
 use tracing::{Level, event, instrument};
 
 use crate::{
-	behavior::{BehaviorPtr, BehaviorTickData, BehaviorType},
+	behavior::{BehaviorPtr, BehaviorType},
 	blackboard::SharedBlackboard,
 	port::{PortRemappings, is_allowed_port_name},
 	tree::{BehaviorTreeElement, BehaviorTreeElementList},
@@ -242,10 +242,9 @@ impl XmlParser {
 				let (_, remappings, values) = Self::create_remappings(name, true, &bhvr, &attrs)?;
 				let blackboard = SharedBlackboard::new(name.into(), remappings, values);
 				let children = self.build_children(name, node, registry, blackboard.clone())?;
-				let tick_data = BehaviorTickData::default();
 				// path is for root element same as name
 				let behaviortree = BehaviorTreeElement::create_subtree(
-					uid, name, name, children, tick_data, blackboard, bhvr,
+					uid, name, name, children, blackboard, bhvr,
 				);
 				Ok(behaviortree)
 			},
@@ -319,10 +318,9 @@ impl XmlParser {
 		}
 
 		// if node has no assigned name, use tag name
-		let node_name = attrs.get("name").map_or_else(
-			|| String::from(tag_name),
-			ToString::to_string,
-		);
+		let node_name = attrs
+			.get("name")
+			.map_or_else(|| String::from(tag_name), ToString::to_string);
 
 		let mut path = String::from(path) + "/" + &node_name;
 		// in case no explicit name was given, we extend the node_name with the uid
@@ -347,10 +345,7 @@ impl XmlParser {
 				}
 				// A leaf gets a cloned Blackboard with own remappings
 				let blackboard = blackboard.cloned(remappings, values);
-				let tick_data = BehaviorTickData::default();
-				BehaviorTreeElement::create_leaf(
-					uid, &node_name, &path, tick_data, blackboard, bhvr,
-				)
+				BehaviorTreeElement::create_leaf(uid, &node_name, &path, blackboard, bhvr)
 			}
 			BehaviorType::Control | BehaviorType::Decorator => {
 				// A node gets a cloned Blackboard with own remappings
@@ -360,10 +355,7 @@ impl XmlParser {
 				if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
 					return Err(Error::DecoratorOnlyOneChild(node.tag_name().name().into()));
 				}
-				let tick_data = BehaviorTickData::default();
-				BehaviorTreeElement::create_node(
-					uid, &node_name, &path, children, tick_data, blackboard, bhvr,
-				)
+				BehaviorTreeElement::create_node(uid, &node_name, &path, children, blackboard, bhvr)
 			}
 			BehaviorType::SubTree => {
 				if let Some(id) = attrs.get("ID") {
@@ -382,13 +374,11 @@ impl XmlParser {
 							);
 							let children =
 								self.build_children(&path, node, registry, blackboard1.clone())?;
-							let tick_data = BehaviorTickData::default();
 							BehaviorTreeElement::create_node(
 								uid,
 								&node_name,
 								&path,
 								children,
-								tick_data,
 								blackboard1,
 								bhvr,
 							)
