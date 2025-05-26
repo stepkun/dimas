@@ -18,11 +18,16 @@ use super::{PortDirection, error::Error, is_allowed_port_name};
 /// Access to members is public within crate to maximize performance
 #[derive(Clone, Debug)]
 pub struct PortDefinition {
-	pub(crate) _direction: PortDirection,
-	pub(crate) _type_id: TypeId,
-	pub(crate) name: ConstString,
-	pub(crate) _default_value: ConstString,
-	pub(crate) _description: ConstString,
+	/// Directiopn of the port.
+	_direction: PortDirection,
+	/// Type of the port.
+	_type_id: TypeId,
+	/// Name of the port.
+	name: ConstString,
+	/// Default value for the port.
+	_default_value: ConstString,
+	/// Description of the port.
+	_description: ConstString,
 }
 
 impl PortDefinition {
@@ -47,6 +52,11 @@ impl PortDefinition {
 		} else {
 			Err(Error::NameNotAllowed(name.into()))
 		}
+	}
+
+	/// Get the [`PortDefinition`]s name.
+	pub fn name(&self) -> ConstString {
+		self.name.clone()
 	}
 }
 // endregion:   --- PortDefinition

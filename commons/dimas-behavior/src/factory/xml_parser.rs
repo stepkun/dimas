@@ -74,7 +74,7 @@ impl XmlParser {
 	}
 
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub(crate) fn register_document_root(
+	pub(super) fn register_document_root(
 		registry: &mut BehaviorRegistry,
 		element: Node,
 	) -> Result<(), Error> {
@@ -222,7 +222,7 @@ impl XmlParser {
 	}
 
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub(crate) fn create_tree_from_definition(
+	pub(super) fn create_tree_from_definition(
 		&mut self,
 		name: &str,
 		registry: &BehaviorRegistry,

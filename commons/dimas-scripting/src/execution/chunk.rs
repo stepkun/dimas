@@ -40,20 +40,20 @@ impl Chunk {
 	}
 
 	/// Add a byte to the chunk
-	pub fn write(&mut self, byte: u8, line: usize) {
+	pub(crate) fn write(&mut self, byte: u8, line: usize) {
 		self.code.push(byte);
 		self.lines.push(line);
 	}
 
 	/// Patch a byte in the chunk
-	pub fn patch(&mut self, byte: u8, pos: usize) {
+	pub(crate) fn patch(&mut self, byte: u8, pos: usize) {
 		self.code[pos] = byte;
 	}
 
 	/// Add a Value to the Value storage returning its position in the storage
 	/// # Errors
 	#[allow(clippy::cast_possible_truncation)]
-	pub fn add_constant(&mut self, value: ScriptingValue) -> Result<u8, Error> {
+	pub(crate) fn add_constant(&mut self, value: ScriptingValue) -> Result<u8, Error> {
 		if self.values.len() < u8::MAX as usize {
 			self.values.push(value);
 			let pos = self.values.len() - 1;
@@ -63,30 +63,9 @@ impl Chunk {
 		}
 	}
 
-	/*
-		/// Add a String to the String storage returning its position in the storage
-		pub fn add_string(&mut self, string: String) -> usize {
-			self.strings.push(string);
-			self.strings.len() - 1
-		}
-
-		/// Add a String to the Value storage returning its position in the storage
-		/// # Errors
-		pub fn add_string_constant(&mut self, string: String) -> Result<u8, Error> {
-			let offset = self.add_string(string);
-			let value = ScriptingValue::from_string_pos(offset);
-			self.add_constant(value)
-		}
-
-		/// Get the reference to stored [`String`]
-		#[must_use]
-		pub fn get_string(&self, pos: usize) -> &String {
-			&self.strings[pos]
-		}
-	*/
 	/// Read a [`ScriptingValue`] from the [`ScriptingValue`] storage
 	#[must_use]
-	pub fn read_constant(&self, pos: u8) -> ScriptingValue {
+	pub(super) fn read_constant(&self, pos: u8) -> ScriptingValue {
 		let offset = usize::from(pos);
 		self.values
 			.get(offset)

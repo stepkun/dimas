@@ -16,7 +16,7 @@ use super::{BehaviorTreeComponent, BehaviorTreeElement};
 // region:		--- BehaviorTreeElementList
 /// A List of tree components.
 #[derive(Default)]
-pub struct BehaviorTreeElementList(pub(crate) Vec<BehaviorTreeElement>);
+pub struct BehaviorTreeElementList(pub(super) Vec<BehaviorTreeElement>);
 
 impl Deref for BehaviorTreeElementList {
 	type Target = Vec<BehaviorTreeElement>;
@@ -44,7 +44,7 @@ impl BehaviorTreeElementList {
 	}
 
 	/// Halt child at and beyond index.
-	pub(crate) fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
+	pub fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
 		for i in index..self.0.len() {
 			self.0[i].halt(0)?;
 		}
@@ -52,7 +52,7 @@ impl BehaviorTreeElementList {
 	}
 
 	/// Halt child at index.
-	pub(crate) fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+	pub fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
 		self.0[index].halt_child(0)
 	}
 }

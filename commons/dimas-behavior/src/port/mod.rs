@@ -82,13 +82,13 @@ pub fn create_port<T: 'static>(
 ) -> Result<PortDefinition, Error> {
 	if is_allowed_port_name(name) {
 		let type_id = TypeId::of::<T>();
-		Ok(PortDefinition {
-			_direction: direction,
-			_type_id: type_id,
-			name: name.into(),
-			_default_value: default.into(),
-			_description: description.into(),
-		})
+		Ok(PortDefinition::new(
+			direction,
+			type_id,
+			name,
+			default,
+			description,
+		)?)
 	} else {
 		Err(Error::NameNotAllowed(name.into()))
 	}

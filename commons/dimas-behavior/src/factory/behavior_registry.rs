@@ -70,7 +70,7 @@ impl BehaviorRegistry {
 	/// Add a behavior tree definition to the registry.
 	/// # Errors
 	/// - if the behavior tree definition is already registered.
-	pub(crate) fn add_tree_defintion(
+	pub(super) fn add_tree_defintion(
 		&mut self,
 		id: &str,
 		tree_definition: BoxConstString,
@@ -94,7 +94,7 @@ impl BehaviorRegistry {
 		)
 	}
 
-	pub(crate) fn find_tree_definition(&self, name: &str) -> Option<BoxConstString> {
+	pub(super) fn find_tree_definition(&self, name: &str) -> Option<BoxConstString> {
 		self.tree_definitions.get(name).cloned()
 	}
 

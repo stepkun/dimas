@@ -213,18 +213,18 @@ impl Parser {
 		Ok(chunk)
 	}
 
-	pub(crate) fn current(&self) -> Token {
+	pub(super) fn current(&self) -> Token {
 		self.current.clone()
 	}
 
-	pub(crate) fn next(&self) -> Token {
+	pub(super) fn next(&self) -> Token {
 		self.next.clone()
 	}
 
 	/// Advance to the next token
 	/// # Errors
 	/// passthrough of [`Lexer`] errors
-	pub(crate) fn advance(&mut self, lexer: &mut Lexer) -> Result<(), Error> {
+	pub(super) fn advance(&mut self, lexer: &mut Lexer) -> Result<(), Error> {
 		self.current = self.next.clone();
 		let tmp = lexer.next();
 		if let Some(token) = tmp {
@@ -240,7 +240,7 @@ impl Parser {
 	/// Consume the next token if it has the expected kind
 	/// # Errors
 	/// if next token does not have the expected kind
-	pub(crate) fn consume(&mut self, lexer: &mut Lexer, expected: TokenKind) -> Result<(), Error> {
+	pub(super) fn consume(&mut self, lexer: &mut Lexer, expected: TokenKind) -> Result<(), Error> {
 		if self.next.kind == expected {
 			self.advance(lexer)
 		} else {
@@ -253,20 +253,20 @@ impl Parser {
 	}
 
 	/// Check next token whether it has given kind
-	pub(crate) fn check_next(&self, kind: TokenKind) -> bool {
+	pub(super) fn check_next(&self, kind: TokenKind) -> bool {
 		self.next.kind == kind
 	}
 
-	pub(crate) fn emit_byte(&self, byte: u8, chunk: &mut Chunk) {
+	pub(super) fn emit_byte(&self, byte: u8, chunk: &mut Chunk) {
 		chunk.write(byte, self.current.line);
 	}
 
-	pub(crate) fn emit_bytes(&self, byte1: u8, byte2: u8, chunk: &mut Chunk) {
+	pub(super) fn emit_bytes(&self, byte1: u8, byte2: u8, chunk: &mut Chunk) {
 		chunk.write(byte1, self.current.line);
 		chunk.write(byte2, self.current.line);
 	}
 
-	pub(crate) fn emit_jump(&self, instruction: u8, chunk: &mut Chunk) -> usize {
+	pub(super) fn emit_jump(&self, instruction: u8, chunk: &mut Chunk) -> usize {
 		chunk.write(instruction, self.current.line);
 		let target_pos = chunk.code().len();
 		// the dummy address bytes
@@ -276,7 +276,7 @@ impl Parser {
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
-	pub(crate) fn patch_jump(patch_pos: usize, chunk: &mut Chunk) {
+	pub(super) fn patch_jump(patch_pos: usize, chunk: &mut Chunk) {
 		let target = chunk.code().len();
 		let byte1 = (target >> 8) as u8;
 		let byte2 = target as u8;
@@ -284,7 +284,7 @@ impl Parser {
 		chunk.patch(byte2, patch_pos + 1);
 	}
 
-	pub(crate) fn statement(&mut self, lexer: &mut Lexer, chunk: &mut Chunk) -> Result<(), Error> {
+	pub(super) fn statement(&mut self, lexer: &mut Lexer, chunk: &mut Chunk) -> Result<(), Error> {
 		if self.next.kind == TokenKind::Print {
 			self.advance(lexer)?;
 			self.expression(lexer, chunk)?;
@@ -303,11 +303,11 @@ impl Parser {
 		Ok(())
 	}
 
-	pub(crate) fn expression(&mut self, lexer: &mut Lexer, chunk: &mut Chunk) -> Result<(), Error> {
+	pub(super) fn expression(&mut self, lexer: &mut Lexer, chunk: &mut Chunk) -> Result<(), Error> {
 		self.with_precedence(lexer, Precedence::Assignment, chunk)
 	}
 
-	pub(crate) fn with_precedence(
+	pub(super) fn with_precedence(
 		&mut self,
 		lexer: &mut Lexer,
 		precedence: Precedence,

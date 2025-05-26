@@ -26,12 +26,12 @@ pub type ComplexBhvrTickFn =
 // region:      --- BehaviorFunction
 /// A simple behavior
 pub struct SimpleBehavior {
-	/// the function to be called on tick
-	pub(crate) simple_tick_fn: Option<SimpleBhvrTickFn>,
-	/// the function to be called on tick if ports exist
-	pub(crate) complex_tick_fn: Option<ComplexBhvrTickFn>,
-	/// list of provided ports
-	pub(crate) provided_ports: PortList,
+	/// The function to be called on tick
+	simple_tick_fn: Option<SimpleBhvrTickFn>,
+	/// The function to be called on tick if ports exist
+	complex_tick_fn: Option<ComplexBhvrTickFn>,
+	/// List of provided ports
+	provided_ports: PortList,
 }
 
 impl core::fmt::Debug for SimpleBehavior {

@@ -21,6 +21,11 @@ use crate::{
 };
 // endregion:   --- modules
 
+// region:      --- types
+/// [`BehaviorTreeElement`] subscriber callback signature
+pub type BehaviorTreeElementObserver = fn(&BehaviorTreeElement); 
+// endregion:   --- types
+
 // region:      --- BehaviorTreeComponent
 /// Interface for an element in a [`BehaviorTree`]
 pub trait BehaviorTreeComponent: Send + Sync {

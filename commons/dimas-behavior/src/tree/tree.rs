@@ -142,8 +142,8 @@ impl<'a> Iterator for TeeIterMut<'a> {
 /// A Tree of [`BehaviorTreeElement`]s.
 /// A certain [`BehaviorTree`] can contain up to 65536 [`BehaviorTreeElement`]s.
 pub struct BehaviorTree {
-	pub(crate) root: BehaviorTreeElement,
-	pub(crate) _libraries: Vec<Arc<Library>>,
+	root: BehaviorTreeElement,
+	_libraries: Vec<Arc<Library>>,
 }
 
 impl BehaviorTree {

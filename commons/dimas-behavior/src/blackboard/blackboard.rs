@@ -20,22 +20,24 @@ use crate::port::PortRemappings;
 // region:      --- Blackboard
 /// Implementation of a [`Blackboard`] with a possible parent, a [`SharedBlackboard`],
 /// internal & external remappings and/or value assignments, all as [`PortRemappings`].
+/// 
+/// Access to the fields is public within this module.
 #[derive(Debug, Default)]
 pub struct Blackboard {
 	/// Creator of the Blackboard.
-	creator: ConstString,
+	pub(super) creator: ConstString,
 	/// Reference to the managed [`BlackboardData`].
-	pub(crate) content: Arc<RwLock<BlackboardData>>,
+	pub(super) content: Arc<RwLock<BlackboardData>>,
 	/// Optional parent [`SharedBlackboard`].
-	pub(crate) parent: Option<SharedBlackboard>,
+	pub(super) parent: Option<SharedBlackboard>,
 	/// Optional lsit of [`PortRemappings`] to the parent.
-	pub(crate) remappings_to_parent: Option<Arc<PortRemappings>>,
+	pub(super) remappings_to_parent: Option<Arc<PortRemappings>>,
 	/// Optional autoremapping to the parent.
-	pub(crate) autoremap_to_parent: bool,
+	pub(super) autoremap_to_parent: bool,
 	/// List of internal [`PortRemappings`].
-	pub(crate) remappings: PortRemappings,
+	pub(super) remappings: PortRemappings,
 	/// List of direct assigned values to a `Port`.
-	pub(crate) values: PortRemappings,
+	pub(super) values: PortRemappings,
 }
 impl Blackboard {
 	/// Create a new [`Blackboard`] with remappings.
