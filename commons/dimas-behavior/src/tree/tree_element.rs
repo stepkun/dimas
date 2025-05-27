@@ -168,10 +168,12 @@ impl BehaviorTreeElement {
 	pub async fn execute_tick(&mut self) -> BehaviorResult {
 		let mut status = if self.status == BehaviorStatus::Idle {
 			self.behavior
-				.start(self.status, &mut self.blackboard, &mut self.children).await?
+				.start(self.status, &mut self.blackboard, &mut self.children)
+				.await?
 		} else {
 			self.behavior
-				.tick(self.status, &mut self.blackboard, &mut self.children).await?
+				.tick(self.status, &mut self.blackboard, &mut self.children)
+				.await?
 		};
 		// handle on status change notify callbacks
 		if status != self.status {

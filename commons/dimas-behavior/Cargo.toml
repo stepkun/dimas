@@ -51,6 +51,7 @@ parking_lot = { workspace = true }
 roxmltree = { workspace = true }
 rustc-hash = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
@@ -63,7 +64,7 @@ anyhow = { workspace = true }
 criterion = { workspace = true }
 #rand = { workspace = true }
 serial_test = { workspace = true }
-tokio = { workspace = true, features = ["rt", "macros", "time"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time"] }
 
 [features]
 default = ["std"]
