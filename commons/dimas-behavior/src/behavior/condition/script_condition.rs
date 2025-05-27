@@ -13,7 +13,7 @@ use crate::{
 	port_list,
 	tree::BehaviorTreeElementList,
 };
-use alloc::{string::String, vec::Vec};
+use alloc::{boxed::Box, string::String, vec::Vec};
 use dimas_scripting::{Parser, VM};
 //endregion:    --- modules
 
@@ -25,8 +25,9 @@ pub struct ScriptCondition {
 	stdout: Vec<u8>,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ScriptCondition {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,

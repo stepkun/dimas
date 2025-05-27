@@ -39,6 +39,7 @@ harness = false
 workspace = true
 
 [dependencies]
+async-trait = { workspace = true }
 dimas-behavior-macros = { workspace = true }
 dimas-core = { workspace = true }
 dimas-macros = { workspace = true }

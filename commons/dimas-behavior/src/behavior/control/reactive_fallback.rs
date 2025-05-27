@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -31,8 +33,9 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct ReactiveFallback {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ReactiveFallback {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -42,7 +45,7 @@ impl BehaviorInstance for ReactiveFallback {
 
 		for index in 0..children.len() {
 			let child = &mut children[index];
-			let new_status = child.execute_tick()?;
+			let new_status = child.execute_tick().await?;
 
 			all_skipped &= new_status == BehaviorStatus::Skipped;
 
@@ -58,12 +61,12 @@ impl BehaviorInstance for ReactiveFallback {
 					// stop later children
 					for i in 0..index {
 						let cd = &mut children[i];
-						cd.execute_halt()?;
+						cd.execute_halt().await?;
 					}
 					return Ok(BehaviorStatus::Running);
 				}
 				BehaviorStatus::Skipped => {
-					child.execute_halt()?;
+					child.execute_halt().await?;
 				}
 				BehaviorStatus::Success => {
 					children.reset()?;

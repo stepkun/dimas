@@ -29,8 +29,9 @@ use dimas_behavior::{
 #[derive(Behavior, Debug, Default)]
 pub struct AlwaysSuccess {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for AlwaysSuccess {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -50,8 +51,9 @@ impl BehaviorStatic for AlwaysSuccess {
 #[derive(Behavior, Debug, Default)]
 pub struct AlwaysFailure {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for AlwaysFailure {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -72,8 +74,9 @@ impl BehaviorStatic for AlwaysFailure {
 #[derive(Behavior, Debug, Default)]
 pub struct ApproachObject {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ApproachObject {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -123,8 +126,9 @@ impl GripperInterface {
 #[derive(Behavior, Debug, Default)]
 pub struct SaySomething {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for SaySomething {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -150,8 +154,9 @@ impl BehaviorStatic for SaySomething {
 #[derive(Behavior, Debug, Default)]
 pub struct ThinkWhatToSay {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ThinkWhatToSay {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -216,8 +221,9 @@ impl Display for Position2D {
 #[derive(Behavior, Debug, Default)]
 pub struct CalculateGoal {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for CalculateGoal {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -243,8 +249,9 @@ impl BehaviorStatic for CalculateGoal {
 #[derive(Behavior, Debug, Default)]
 pub struct PrintTarget {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for PrintTarget {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -315,8 +322,9 @@ impl Default for MoveBaseAction {
 	}
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for MoveBaseAction {
-	fn start(
+	async fn start(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -332,7 +340,7 @@ impl BehaviorInstance for MoveBaseAction {
 		Ok(BehaviorStatus::Running)
 	}
 
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,

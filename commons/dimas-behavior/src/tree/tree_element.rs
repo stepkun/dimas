@@ -4,29 +4,32 @@
 //!
 
 // region:      --- modules
+use alloc::{boxed::Box, vec::Vec};
+use dimas_core::ConstString;
+
 use crate::{
 	behavior::{BehaviorPtr, BehaviorResult, BehaviorStatus, error::BehaviorError},
 	blackboard::SharedBlackboard,
 };
-use dimas_core::BoxConstString;
 
-use super::BehaviorTreeElementList;
+use super::{BehaviorTreeElementList, BehaviorTreeElementPreStatusChangeCallback};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeElement
 /// A tree elements.
 pub struct BehaviorTreeElement {
-	/// UID of the element.
+	/// UID of the element within the [`BehaviorTree`](crate::tree::BehaviorTree).
 	/// 65536 [`BehaviorTreeElement`]s in a [`BehaviorTree`](crate::tree::BehaviorTree) should be sufficient.
 	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
 	/// This should end up in a depth first ordering.
 	uid: i16,
 	/// Name of the element.
-	name: BoxConstString,
+	name: ConstString,
 	/// Path to the element.
-	/// In contrast to BehaviorTree.CPP this path is fully qualified, which means that every level is denoted explicitly.
-	path: BoxConstString,
-	/// Current [`BehaviorStatus`]
+	/// In contrast to BehaviorTree.CPP this path is fully qualified,
+	/// which means that every level is denoted explicitly, including the tree root.
+	path: ConstString,
+	/// Current [`BehaviorStatus`] of the element.
 	status: BehaviorStatus,
 	/// Reference to the [`Blackboard`] for the element.
 	blackboard: SharedBlackboard,
@@ -34,11 +37,14 @@ pub struct BehaviorTreeElement {
 	behavior: BehaviorPtr,
 	/// Children of the element.
 	children: BehaviorTreeElementList,
+	/// List of pre status change callbacks with an identifier.
+	/// These callbacks can be used for observation of the [`BehaviorTreeElement`] and
+	/// for manipulation the resulting [`BehaviorStatus`] of a tick.
+	pre_status_change_hooks: Vec<(ConstString, Box<BehaviorTreeElementPreStatusChangeCallback>)>,
 }
 
 impl BehaviorTreeElement {
 	/// Construct a [`BehaviorTreeElement`].
-	///
 	/// Non public to enforce using the dedicated creation functions.
 	#[inline]
 	fn new(
@@ -57,6 +63,7 @@ impl BehaviorTreeElement {
 			blackboard,
 			behavior,
 			children,
+			pre_status_change_hooks: Vec::new(),
 		}
 	}
 
@@ -120,6 +127,11 @@ impl BehaviorTreeElement {
 		&self.path
 	}
 
+	/// Get the status.
+	pub fn status(&self) -> BehaviorStatus {
+		self.status
+	}
+
 	/// Get a reference to the behavior.
 	pub fn behavior(&self) -> &BehaviorPtr {
 		&self.behavior
@@ -147,22 +159,28 @@ impl BehaviorTreeElement {
 
 	/// Halt the element and all its children.
 	/// # Errors
-	pub fn execute_halt(&mut self) -> Result<(), BehaviorError> {
+	pub async fn execute_halt(&mut self) -> Result<(), BehaviorError> {
 		self.halt(0)
 	}
 
 	/// Tick the element and its children.
 	/// # Errors
-	pub fn execute_tick(&mut self) -> BehaviorResult {
-		let status = if self.status == BehaviorStatus::Idle {
+	pub async fn execute_tick(&mut self) -> BehaviorResult {
+		let mut status = if self.status == BehaviorStatus::Idle {
 			self.behavior
-				.start(self.status, &mut self.blackboard, &mut self.children)?
+				.start(self.status, &mut self.blackboard, &mut self.children).await?
 		} else {
 			self.behavior
-				.tick(self.status, &mut self.blackboard, &mut self.children)?
+				.tick(self.status, &mut self.blackboard, &mut self.children).await?
 		};
-		self.status = status;
-		Ok(status)
+		// handle on status change notify callbacks
+		if status != self.status {
+			for (_, callback) in &self.pre_status_change_hooks {
+				callback(&self, &mut status);
+			}
+			self.status = status;
+		}
+		Ok(self.status)
 	}
 
 	/// Halt child at `index`.
@@ -177,6 +195,31 @@ impl BehaviorTreeElement {
 	/// - if index is out of childrens bounds.
 	pub fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
 		self.children.halt(index)
+	}
+
+	/// Add a pre status change callback with the given name.
+	/// The name is not unique, which is important when removing callback.
+	pub fn add_pre_status_change_callback<T>(&mut self, name: ConstString, callback: T)
+	where
+		T: Fn(&BehaviorTreeElement, &mut BehaviorStatus) + Send + Sync + 'static,
+	{
+		self.pre_status_change_hooks
+			.push((name, Box::new(callback)));
+	}
+
+	/// Remove any pre status change callback with the given name.
+	pub fn remove_pre_status_change_callback(&mut self, name: &ConstString) {
+		// first collect all subscriber with that name ...
+		let mut indices = Vec::new();
+		for (index, (cb_name, _)) in self.pre_status_change_hooks.iter().enumerate() {
+			if cb_name == name {
+				indices.push(index);
+			}
+		}
+		// ... then remove them from vec
+		for index in indices {
+			let _ = self.pre_status_change_hooks.remove(index);
+		}
 	}
 
 	/// Return an iterator over the children.

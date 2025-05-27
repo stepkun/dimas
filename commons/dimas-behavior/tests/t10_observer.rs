@@ -8,7 +8,10 @@
 
 extern crate alloc;
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{
+	behavior::BehaviorStatus, factory::BehaviorTreeFactory,
+	tree::observer::tree_observer::BehaviorTreeObserver,
+};
 use test_behaviors::test_nodes::{AlwaysFailure, AlwaysSuccess};
 
 const XML: &str = r#"
@@ -52,6 +55,12 @@ async fn observer() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
+	// add the observer
+	let observer = BehaviorTreeObserver::new(&mut tree);
+
+	// print tree structure
+	tree.print()?;
+	println!();
 	// Print the unique ID and the corresponding human readable path
 	// Path is also expected to be unique.
 	for node in tree.iter() {
@@ -60,6 +69,20 @@ async fn observer() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
+
+	// print statistics
+	for item in tree.iter() {
+		let stats = observer
+			.get_statistics(item.uid())
+			.expect("should be there");
+		println!(
+			"[{}]  T/S/F: {}/{}/{}",
+			item.path(),
+			stats.transitions_count,
+			stats.success_count,
+			stats.failure_count
+		);
+	}
 
 	Ok(())
 }
@@ -76,6 +99,12 @@ async fn observer_with_plugin() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
+	// add the observer
+	let observer = BehaviorTreeObserver::new(&mut tree);
+
+	// print tree structure
+	tree.print()?;
+	println!();
 	// Print the unique ID and the corresponding human readable path
 	// Path is also expected to be unique.
 	for node in tree.iter() {
@@ -84,6 +113,20 @@ async fn observer_with_plugin() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorStatus::Success);
+
+	// print statistics
+	for item in tree.iter() {
+		let stats = observer
+			.get_statistics(item.uid())
+			.expect("should be there");
+		println!(
+			"[{}]  T/S/F: {}/{}/{}",
+			item.path(),
+			stats.transitions_count,
+			stats.success_count,
+			stats.failure_count
+		);
+	}
 
 	Ok(())
 }

@@ -51,9 +51,10 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 #[derive(Behavior, Debug, Default)]
 struct NotInterrupted {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for NotInterrupted {
 	/// @TODO:
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -74,9 +75,10 @@ impl BehaviorStatic for NotInterrupted {
 #[derive(Behavior, Debug, Default)]
 struct AlwaysRunning {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for AlwaysRunning {
 	/// @TODO:
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -97,9 +99,10 @@ impl BehaviorStatic for AlwaysRunning {
 #[derive(Behavior, Debug, Default)]
 struct Shutdown {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Shutdown {
 	/// @TODO:
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,

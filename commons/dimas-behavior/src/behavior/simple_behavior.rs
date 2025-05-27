@@ -52,8 +52,9 @@ impl BehaviorExecution for SimpleBehavior {
 	}
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for SimpleBehavior {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,

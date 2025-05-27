@@ -12,7 +12,7 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{sync::Arc, vec::Vec};
-use dimas_core::BoxConstString;
+use dimas_core::ConstString;
 use hashbrown::HashMap;
 use libloading::Library;
 use rustc_hash::FxBuildHasher;
@@ -30,9 +30,9 @@ use super::BehaviorTreeFactory;
 #[derive(Default)]
 pub struct BehaviorRegistry {
 	/// [`HashMap`] of available behavior creation functions.
-	behaviors: HashMap<BoxConstString, (BehaviorType, Arc<BehaviorCreationFn>), FxBuildHasher>,
+	behaviors: HashMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>), FxBuildHasher>,
 	/// [`HashMap`] of registered behavior tree definitions.
-	tree_definitions: HashMap<BoxConstString, BoxConstString, FxBuildHasher>,
+	tree_definitions: HashMap<ConstString, ConstString, FxBuildHasher>,
 	/// List of loaded libraries.
 	/// Every tree must keep a reference to its needed libraries to keep the libraries in memory
 	/// until end of programm.
@@ -73,9 +73,9 @@ impl BehaviorRegistry {
 	pub(super) fn add_tree_defintion(
 		&mut self,
 		id: &str,
-		tree_definition: BoxConstString,
+		tree_definition: ConstString,
 	) -> Result<(), Error> {
-		let id: BoxConstString = id.into();
+		let id: ConstString = id.into();
 		if self.tree_definitions.contains_key(&id) {
 			Err(Error::SubtreeAlreadyRegistered(id.into()))
 		} else {
@@ -94,7 +94,7 @@ impl BehaviorRegistry {
 		)
 	}
 
-	pub(super) fn find_tree_definition(&self, name: &str) -> Option<BoxConstString> {
+	pub(super) fn find_tree_definition(&self, name: &str) -> Option<ConstString> {
 		self.tree_definitions.get(name).cloned()
 	}
 
@@ -116,7 +116,7 @@ impl BehaviorRegistry {
 
 	/// Get the name list of registered (sub)trees
 	#[must_use]
-	pub fn registered_behavior_trees(&self) -> Vec<BoxConstString> {
+	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		let mut res = Vec::new();
 		for (id, _) in &self.tree_definitions {
 			res.push(id.clone());

@@ -58,8 +58,9 @@ pub struct UpdatePosition {
 	pos: Position2D,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for UpdatePosition {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,

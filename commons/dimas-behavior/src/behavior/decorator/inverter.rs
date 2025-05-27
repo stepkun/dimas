@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -25,15 +27,16 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct Inverter {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Inverter {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
 		let child = &mut children[0];
-		let new_status = child.execute_tick()?;
+		let new_status = child.execute_tick().await?;
 
 		match new_status {
 			BehaviorStatus::Failure => {

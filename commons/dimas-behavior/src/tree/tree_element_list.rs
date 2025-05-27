@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(clippy::unused_async)]
 
 //! [`BehaviorTreeComponentList`] implementation.
 //!
@@ -16,7 +15,7 @@ use super::BehaviorTreeElement;
 // region:		--- BehaviorTreeElementList
 /// A List of tree components.
 #[derive(Default)]
-pub struct BehaviorTreeElementList(pub(super) Vec<BehaviorTreeElement>);
+pub struct BehaviorTreeElementList(Vec<BehaviorTreeElement>);
 
 impl Deref for BehaviorTreeElementList {
 	type Target = Vec<BehaviorTreeElement>;

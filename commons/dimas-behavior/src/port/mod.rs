@@ -16,7 +16,7 @@ pub use port_remappings::PortRemappings;
 // region:      --- modules
 use core::any::TypeId;
 
-use dimas_core::BoxConstString;
+use dimas_core::ConstString;
 use error::Error;
 // endregion:   --- modules
 
@@ -39,7 +39,7 @@ const FORBIDDEN_NAMES: &[&str] = &[
 // region:      --- helper
 /// Function handles the special remapping cases
 #[must_use]
-pub fn resolve_special_port(port_name: &str, remapped_port: &str) -> Option<BoxConstString> {
+pub fn resolve_special_port(port_name: &str, remapped_port: &str) -> Option<ConstString> {
 	// is the shortcut '{=}' used?
 	if port_name == "{=}" || remapped_port == "{=}" {
 		Some(port_name.into())
@@ -50,7 +50,7 @@ pub fn resolve_special_port(port_name: &str, remapped_port: &str) -> Option<BoxC
 
 /// Remove all 'decoration' from port name
 #[must_use]
-pub fn strip_bb_pointer(port: &str) -> Option<BoxConstString> {
+pub fn strip_bb_pointer(port: &str) -> Option<ConstString> {
 	// Is bb pointer
 	if port.starts_with('{') && port.ends_with('}') {
 		Some(

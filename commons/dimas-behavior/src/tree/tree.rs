@@ -178,14 +178,14 @@ impl BehaviorTree {
 	/// Ticks the tree exactly once.
 	/// # Errors
 	pub async fn tick_exactly_once(&mut self) -> BehaviorResult {
-		self.root.execute_tick()
+		self.root.execute_tick().await
 	}
 
 	/// Ticks the tree once.
 	/// @TODO: The wakeup mechanism is not yet implemented
 	/// # Errors
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.execute_tick()
+		self.root.execute_tick().await
 	}
 
 	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`].
@@ -194,7 +194,7 @@ impl BehaviorTree {
 		let mut status = BehaviorStatus::Idle;
 
 		while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
-			status = self.root.execute_tick()?;
+			status = self.root.execute_tick().await?;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 

@@ -4,6 +4,7 @@
 //!
 
 pub mod error;
+pub mod observer;
 #[allow(clippy::module_inception)]
 mod tree;
 mod tree_element;
@@ -14,7 +15,14 @@ pub use tree::{BehaviorTree, print_tree};
 pub use tree_element::BehaviorTreeElement;
 pub use tree_element_list::BehaviorTreeElementList;
 
+// region:      --- modules
+use crate::behavior::BehaviorStatus;
+// endregion:   --- modules
+
 // region:      --- types
-/// [`BehaviorTreeElement`] subscriber callback signature
-pub type BehaviorTreeElementObserver = fn(&BehaviorTreeElement);
+/// [`BehaviorTreeElement`] status change callback signature.
+/// This callback can be used to observe a [`BehaviorTreeElement`] and manipulate the resulting [`BehaviorStatus`] of a tick.
+/// In case of non std without a timestamp.
+pub type BehaviorTreeElementPreStatusChangeCallback =
+	dyn Fn(&BehaviorTreeElement, &mut BehaviorStatus) + Send + Sync + 'static;
 // endregion:   --- types

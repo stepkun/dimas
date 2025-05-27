@@ -8,7 +8,7 @@ extern crate std;
 
 // region:      --- modules
 use alloc::string::{String, ToString};
-use dimas_core::BoxConstString;
+use dimas_core::ConstString;
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType};
 use rustc_hash::FxBuildHasher;
@@ -27,7 +27,7 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
-fn attrs_to_map(attrs: Attributes) -> HashMap<BoxConstString, BoxConstString, FxBuildHasher> {
+fn attrs_to_map(attrs: Attributes) -> HashMap<ConstString, ConstString, FxBuildHasher> {
 	let mut map = HashMap::default();
 	//dbg!(self);
 	for attr in attrs {
@@ -98,7 +98,7 @@ impl XmlParser {
 						"BehaviorTree" => {
 							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
-								let source: BoxConstString =
+								let source: ConstString =
 									element.document().input_text()[element.range()].into();
 								registry.add_tree_defintion(id, source)?;
 							} else {
@@ -142,7 +142,7 @@ impl XmlParser {
 		name: &str,
 		is_subtree: bool,
 		bhvr: &BehaviorPtr,
-		attrs: &HashMap<BoxConstString, BoxConstString, FxBuildHasher>,
+		attrs: &HashMap<ConstString, ConstString, FxBuildHasher>,
 	) -> Result<(bool, PortRemappings, PortRemappings), Error> {
 		let autoremap = match attrs.get("_autoremap") {
 			Some(s) => match s.parse::<bool>() {

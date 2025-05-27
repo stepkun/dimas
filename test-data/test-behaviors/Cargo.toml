@@ -24,6 +24,7 @@ name = "test_behaviors"
 crate-type = ["dylib", "rlib"]
 
 [dependencies]
+async-trait = { workspace = true }
 dimas-behavior = { workspace = true }
 dimas-behavior-macros = { workspace = true }
 dimas-core = { workspace = true }

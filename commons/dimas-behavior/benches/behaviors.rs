@@ -16,8 +16,9 @@ use dimas_behavior::{
 #[derive(Behavior, Debug, Default)]
 pub struct AlwaysSuccess {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for AlwaysSuccess {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -37,8 +38,9 @@ impl BehaviorStatic for AlwaysSuccess {
 #[derive(Behavior, Debug, Default)]
 pub struct AlwaysFailure {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for AlwaysFailure {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,

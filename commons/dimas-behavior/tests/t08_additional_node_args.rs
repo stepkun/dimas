@@ -38,8 +38,9 @@ pub struct ActionA {
 	arg2: String,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ActionA {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -74,8 +75,9 @@ pub struct ActionB {
 	arg2: String,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ActionB {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,

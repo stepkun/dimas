@@ -58,11 +58,12 @@ pub trait BehaviorCreation: Default {
 // region:		--- BehaviorInstance
 /// Defines the methods common to all behaviors.
 /// These methods are available when traversing a behavior tree.
+#[async_trait::async_trait]
 pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to stop/cancel/halt a behavior.
 	/// Default implementation just returns [`BehaviorStatus::Idle`]
 	/// # Errors
-	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
+	async fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
 		for child in &mut **children {
 			child.halt(0)?;
 		}
@@ -72,18 +73,18 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to start ticking a behavior.
 	/// Defaults to calling `self.tick(...)`
 	/// # Errors
-	fn start(
+	async fn start(
 		&mut self,
 		status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		self.tick(status, blackboard, children)
+		self.tick(status, blackboard, children).await
 	}
 
 	/// Method called to tick a behavior.
 	/// # Errors
-	fn tick(
+	async fn tick(
 		&mut self,
 		status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -164,28 +165,6 @@ impl core::fmt::Display for BehaviorStatus {
 	}
 }
 // endregion:   --- BehaviorStatus
-
-// region:      --- BehaviorTickData
-/// Holds the often used Data of a behavior.
-#[derive(Debug, Default)]
-pub struct BehaviorTickData {
-	/// Current [`BehaviorStatus`]
-	status: BehaviorStatus,
-}
-
-impl BehaviorTickData {
-	/// Get the current status.
-	#[must_use]
-	pub const fn status(&self) -> BehaviorStatus {
-		self.status
-	}
-
-	/// Set the current status.
-	pub fn set_status(&mut self, status: BehaviorStatus) {
-		self.status = status;
-	}
-}
-// endregion:   --- BehaviorTickData
 
 // region:		--- BehaviorType
 /// All types of behaviors usable in a behavior tree.

@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -21,27 +23,28 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct Subtree {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Subtree {
-	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
-		children[0].execute_halt()
+	async fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
+		children[0].execute_halt().await
 	}
 
-	fn start(
+	async fn start(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		children[0].execute_tick()
+		children[0].execute_tick().await
 	}
 
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		children[0].execute_tick()
+		children[0].execute_tick().await
 	}
 }
 

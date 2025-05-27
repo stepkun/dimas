@@ -19,9 +19,10 @@ use dimas_behavior::{
 #[derive(Behavior, Debug, Default)]
 pub struct Subscriber {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Subscriber {
 	/// @TODO:
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,

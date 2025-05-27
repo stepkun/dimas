@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -57,8 +59,9 @@ impl Default for RetryUntilSuccessful {
 	}
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for RetryUntilSuccessful {
-	fn tick(
+	async fn tick(
 		&mut self,
 		status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -76,7 +79,7 @@ impl BehaviorInstance for RetryUntilSuccessful {
 		while do_loop {
 			// A `Decorator` has only 1 child
 			let child = &mut children[0];
-			let new_status = child.execute_tick()?;
+			let new_status = child.execute_tick().await?;
 
 			self.all_skipped &= new_status == BehaviorStatus::Skipped;
 

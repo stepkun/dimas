@@ -11,7 +11,7 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{string::ToString, vec::Vec};
-use dimas_core::BoxConstString;
+use dimas_core::ConstString;
 use roxmltree::Document;
 
 use crate::{
@@ -43,7 +43,7 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 #[derive(Default)]
 pub struct BehaviorTreeFactory {
 	registry: BehaviorRegistry,
-	main_tree_name: Option<BoxConstString>,
+	main_tree_name: Option<ConstString>,
 }
 
 impl BehaviorTreeFactory {
@@ -154,7 +154,7 @@ impl BehaviorTreeFactory {
 
 	/// Get the name list of registered behavior trees.
 	#[must_use]
-	pub fn registered_behavior_trees(&self) -> Vec<BoxConstString> {
+	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		self.registry.registered_behavior_trees()
 	}
 

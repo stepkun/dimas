@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -32,8 +34,9 @@ pub struct Sequence {
 	all_skipped: bool,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Sequence {
-	fn tick(
+	async fn tick(
 		&mut self,
 		status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -45,7 +48,7 @@ impl BehaviorInstance for Sequence {
 
 		while self.child_idx < children.len() {
 			let child = &mut children[self.child_idx];
-			let new_status = child.execute_tick()?;
+			let new_status = child.execute_tick().await?;
 
 			self.all_skipped &= new_status == BehaviorStatus::Skipped;
 

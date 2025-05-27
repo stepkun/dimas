@@ -27,8 +27,9 @@ pub struct IntervalTimer {
 	handle: Option<JoinHandle<()>>,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for IntervalTimer {
-	fn start(
+	async fn start(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -67,7 +68,7 @@ impl BehaviorInstance for IntervalTimer {
 		}
 	}
 
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -77,7 +78,7 @@ impl BehaviorInstance for IntervalTimer {
 		Ok(BehaviorStatus::Running)
 	}
 
-	fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
+	async fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
 		children.reset()?;
 		let handle = self.handle.take();
 		if let Some(handle) = handle {

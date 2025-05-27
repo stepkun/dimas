@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -19,8 +21,9 @@ use crate::{
 #[derive(Behavior, Debug, Default)]
 pub struct Parallel {}
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Parallel {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,

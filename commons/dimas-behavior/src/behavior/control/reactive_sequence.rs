@@ -4,6 +4,8 @@
 //!
 
 // region:      --- modules
+use alloc::boxed::Box;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -34,8 +36,9 @@ pub struct ReactiveSequence {
 	child_idx: usize,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for ReactiveSequence {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		_blackboard: &mut SharedBlackboard,
@@ -45,7 +48,7 @@ impl BehaviorInstance for ReactiveSequence {
 
 		for counter in 0..children.len() {
 			let child = &mut children[counter];
-			let new_status = child.execute_tick()?;
+			let new_status = child.execute_tick().await?;
 
 			all_skipped &= new_status == BehaviorStatus::Skipped;
 
@@ -62,7 +65,7 @@ impl BehaviorInstance for ReactiveSequence {
 				}
 				BehaviorStatus::Running => {
 					for i in 0..counter {
-						children[i].execute_halt()?;
+						children[i].execute_halt().await?;
 					}
 					if !self.running {
 						self.child_idx = counter;
@@ -77,7 +80,7 @@ impl BehaviorInstance for ReactiveSequence {
 				}
 				BehaviorStatus::Skipped => {
 					// halt current child
-					child.execute_halt()?;
+					child.execute_halt().await?;
 				}
 				BehaviorStatus::Success => {}
 			}

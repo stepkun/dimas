@@ -36,6 +36,7 @@ unwrap_used = "deny"
 
 [dependencies]
 anyhow = { workspace = true }
+async-trait = { workspace = true }
 dimas-behavior = { workspace = true }
 dimas-behavior-macros = { workspace = true }
 dimas-com = { workspace = true }

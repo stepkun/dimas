@@ -4,8 +4,7 @@
 //!
 
 // region:      --- modules
-use alloc::string::String;
-use alloc::vec::Vec;
+use alloc::{boxed::Box, string::String, vec::Vec};
 use dimas_scripting::{Parser, VM};
 
 use crate as dimas_behavior;
@@ -32,8 +31,9 @@ pub struct Precondition {
 	stdout: Vec<u8>,
 }
 
+#[async_trait::async_trait]
 impl BehaviorInstance for Precondition {
-	fn tick(
+	async fn tick(
 		&mut self,
 		_status: BehaviorStatus,
 		blackboard: &mut SharedBlackboard,
@@ -51,10 +51,10 @@ impl BehaviorInstance for Precondition {
 			let child = &mut children[0];
 			if val {
 				// tick child and return the resulting value
-				child.execute_tick()?
+				child.execute_tick().await?
 			} else {
 				// halt eventually running child
-				child.execute_halt()?;
+				child.execute_halt().await?;
 				let else_branch = blackboard.get::<String>("else".into())?;
 				match else_branch.as_ref() {
 					"Failure" => BehaviorStatus::Failure,
