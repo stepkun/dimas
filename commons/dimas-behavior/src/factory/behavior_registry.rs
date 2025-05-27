@@ -77,7 +77,7 @@ impl BehaviorRegistry {
 	) -> Result<(), Error> {
 		let id: ConstString = id.into();
 		if self.tree_definitions.contains_key(&id) {
-			Err(Error::SubtreeAlreadyRegistered(id.into()))
+			Err(Error::SubtreeAlreadyRegistered(id))
 		} else {
 			self.tree_definitions.insert(id, tree_definition);
 			Ok(())

@@ -43,6 +43,8 @@ impl BehaviorTreeElementList {
 	}
 
 	/// Halt child at and beyond index.
+	/// # Errors
+	/// - if halt of a child fails
 	pub fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
 		for i in index..self.0.len() {
 			self.0[i].halt(0)?;
@@ -51,6 +53,8 @@ impl BehaviorTreeElementList {
 	}
 
 	/// Halt child at index.
+	/// # Errors
+	/// - if halt of that child fails
 	pub fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
 		self.0[index].halt_child(0)
 	}

@@ -6,7 +6,8 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t10_observer.cpp)
 //!
 
-extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 use dimas_behavior::{
 	behavior::BehaviorStatus, factory::BehaviorTreeFactory,

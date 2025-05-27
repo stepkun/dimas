@@ -22,7 +22,7 @@ pub struct BehaviorTreeElement {
 	/// 65536 [`BehaviorTreeElement`]s in a [`BehaviorTree`](crate::tree::BehaviorTree) should be sufficient.
 	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
 	/// This should end up in a depth first ordering.
-	uid: i16,
+	uid: u16,
 	/// Name of the element.
 	name: ConstString,
 	/// Path to the element.
@@ -48,7 +48,7 @@ impl BehaviorTreeElement {
 	/// Non public to enforce using the dedicated creation functions.
 	#[inline]
 	fn new(
-		uid: i16,
+		uid: u16,
 		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
@@ -70,7 +70,7 @@ impl BehaviorTreeElement {
 	/// Create a tree leaf.
 	#[must_use]
 	pub fn create_leaf(
-		uid: i16,
+		uid: u16,
 		name: &str,
 		path: &str,
 		blackboard: SharedBlackboard,
@@ -89,7 +89,7 @@ impl BehaviorTreeElement {
 	/// Create a tree node.
 	#[must_use]
 	pub fn create_node(
-		uid: i16,
+		uid: u16,
 		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
@@ -102,7 +102,7 @@ impl BehaviorTreeElement {
 	/// Create a subtree.
 	#[must_use]
 	pub fn create_subtree(
-		uid: i16,
+		uid: u16,
 		name: &str,
 		path: &str,
 		children: BehaviorTreeElementList,
@@ -113,26 +113,31 @@ impl BehaviorTreeElement {
 	}
 
 	/// Get the uid.
-	pub fn uid(&self) -> i16 {
+	#[must_use]
+	pub const fn uid(&self) -> u16 {
 		self.uid
 	}
 
 	/// Get the name.
+	#[must_use]
 	pub fn name(&self) -> &str {
 		&self.name
 	}
 
 	/// Get the path.
+	#[must_use]
 	pub fn path(&self) -> &str {
 		&self.path
 	}
 
 	/// Get the status.
-	pub fn status(&self) -> BehaviorStatus {
+	#[must_use]
+	pub const fn status(&self) -> BehaviorStatus {
 		self.status
 	}
 
 	/// Get a reference to the behavior.
+	#[must_use]
 	pub fn behavior(&self) -> &BehaviorPtr {
 		&self.behavior
 	}
@@ -143,12 +148,14 @@ impl BehaviorTreeElement {
 	}
 
 	/// Get the blackboard.
+	#[must_use]
 	pub fn blackboard(&self) -> SharedBlackboard {
 		self.blackboard.clone()
 	}
 
 	/// Get the children.
-	pub fn children(&self) -> &BehaviorTreeElementList {
+	#[must_use]
+	pub const fn children(&self) -> &BehaviorTreeElementList {
 		&self.children
 	}
 
@@ -159,6 +166,7 @@ impl BehaviorTreeElement {
 
 	/// Halt the element and all its children.
 	/// # Errors
+	#[allow(clippy::unused_async)]
 	pub async fn execute_halt(&mut self) -> Result<(), BehaviorError> {
 		self.halt(0)
 	}
@@ -178,7 +186,7 @@ impl BehaviorTreeElement {
 		// handle on status change notify callbacks
 		if status != self.status {
 			for (_, callback) in &self.pre_status_change_hooks {
-				callback(&self, &mut status);
+				callback(self, &mut status);
 			}
 			self.status = status;
 		}
@@ -203,7 +211,7 @@ impl BehaviorTreeElement {
 	/// The name is not unique, which is important when removing callback.
 	pub fn add_pre_status_change_callback<T>(&mut self, name: ConstString, callback: T)
 	where
-		T: Fn(&BehaviorTreeElement, &mut BehaviorStatus) + Send + Sync + 'static,
+		T: Fn(&Self, &mut BehaviorStatus) + Send + Sync + 'static,
 	{
 		self.pre_status_change_hooks
 			.push((name, Box::new(callback)));

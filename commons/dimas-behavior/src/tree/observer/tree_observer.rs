@@ -3,7 +3,6 @@
 //! [`BehaviorTreeObserver`] implementation.
 //!
 
-#[cfg(feature = "std")]
 extern crate std;
 
 // region:      --- modules
@@ -47,8 +46,8 @@ pub struct Statistics {
 impl Default for Statistics {
 	fn default() -> Self {
 		Self {
-			last_result: Default::default(),
-			current_status: Default::default(),
+			last_result: BehaviorStatus::default(),
+			current_status: BehaviorStatus::default(),
 			transitions_count: Default::default(),
 			success_count: Default::default(),
 			failure_count: Default::default(),
@@ -68,54 +67,47 @@ pub struct BehaviorTreeObserver {
 
 impl BehaviorTreeObserver {
 	/// Construct a new [`BehaviorTreeObserver`].
+	/// # Panics
 	pub fn new(root: &mut BehaviorTree) -> Self {
 		let id: ConstString = "statistics".into();
 		let statistics: Arc<Mutex<Vec<Statistics>>> = Arc::new(Mutex::new(Vec::new()));
-		let (tx, mut rx) = mpsc::channel::<(i16, Instant, BehaviorStatus, BehaviorStatus)>(5);
+		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorStatus, BehaviorStatus)>(5);
 		// spawn receiver
 		let statistics_clone = statistics.clone();
 		let handle = tokio::spawn(async move {
-			loop {
-				std::dbg!("receiving");
-				match rx.recv().await {
-					Some(val) => {
-						std::dbg!(val.0, val.1, val.2, val.3);
-						let mut stats = statistics_clone.lock();
-						let entry = &mut stats[val.0 as usize];
-						entry.transitions_count += 1;
-						match val.3 {
-							BehaviorStatus::Failure => {
-								entry.failure_count += 1;
-								entry.last_result = val.3;
-							}
-							BehaviorStatus::Idle => {}
-							BehaviorStatus::Running => {}
-							BehaviorStatus::Skipped => entry.skip_count += 1,
-							BehaviorStatus::Success => {
-								entry.success_count += 1;
-								entry.last_result = val.3;
-							}
-						}
-						entry.current_status = val.3;
-						entry.timestamp = val.1;
+			std::dbg!("receiving");
+			while let Some(val) = rx.recv().await {
+				std::dbg!(val.0, val.1, val.2, val.3);
+				let mut stats = statistics_clone.lock();
+				let entry = &mut stats[val.0 as usize];
+				entry.transitions_count += 1;
+				match val.3 {
+					BehaviorStatus::Failure => {
+						entry.failure_count += 1;
+						entry.last_result = val.3;
 					}
-					None => {
-						std::dbg!("observer done");
-						return -1;
+					BehaviorStatus::Idle |
+					BehaviorStatus::Running => {}
+					BehaviorStatus::Skipped => entry.skip_count += 1,
+					BehaviorStatus::Success => {
+						entry.success_count += 1;
+						entry.last_result = val.3;
 					}
 				}
+				entry.current_status = val.3;
+				entry.timestamp = val.1;
+				drop(stats);
 			}
+			std::dbg!("exited receiving");
+			-1
 		});
-		let observer = Self {
-			_handle: handle,
-			statistics,
-		};
-		for node in root.iter_mut() {
-			let statistic = Statistics::default();
+		// add a statistics entry and a callback for each tree element
+		for element in root.iter_mut() {
+			statistics.lock().push(Statistics::default());
 			let tx_clone = tx.clone();
-			let callback = move |node: &BehaviorTreeElement, new_status: &mut BehaviorStatus| {
+			let callback = move |element: &BehaviorTreeElement, new_status: &mut BehaviorStatus| {
 				let timestamp = Instant::now();
-				let tuple = (node.uid(), timestamp, node.status(), new_status.clone());
+				let tuple = (element.uid(), timestamp, element.status(), *new_status);
 				// ignore any errors when sending
 				let tx_clone_cloned = tx_clone.clone();
 				tokio::spawn(async move {
@@ -123,14 +115,17 @@ impl BehaviorTreeObserver {
 					tx_clone_cloned.send(tuple).await.expect("snh");
 				});
 			};
-			observer.statistics.lock().push(statistic);
-			node.add_pre_status_change_callback(id.clone(), callback);
+			element.add_pre_status_change_callback(id.clone(), callback);
 		}
-		observer
+		Self {
+			_handle: handle,
+			statistics,
+		}
 	}
 
 	/// Get the [`Statistics`] for a [`BehaviorTreeElement`](crate::tree::BehaviorTreeElement) using its uid.
-	pub fn get_statistics(&self, uid: i16) -> Option<Statistics> {
+	#[must_use]
+	pub fn get_statistics(&self, uid: u16) -> Option<Statistics> {
 		if self.statistics.lock().len() >= uid as usize {
 			return Some((self.statistics.lock()[uid as usize]).clone());
 		}

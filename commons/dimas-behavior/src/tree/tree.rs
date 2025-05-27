@@ -199,7 +199,7 @@ impl BehaviorTree {
 			// Not implemented: Check for wake-up conditions and tick again if so
 
 			if status.is_completed() {
-				self.root.halt(0)?;
+				self.root.execute_halt().await?;
 				break;
 			}
 		}

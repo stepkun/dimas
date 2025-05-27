@@ -42,14 +42,14 @@ fn attrs_to_map(attrs: Attributes) -> HashMap<ConstString, ConstString, FxBuildH
 // region:      --- XmlParser
 #[derive(Default)]
 pub struct XmlParser {
-	uid: i16,
+	uid: u16,
 }
 
 impl XmlParser {
 	/// Get the next uid for a [`BehaviorTreeElement`].
 	/// # Panics
 	/// if more than 65536 [`BehaviorTreeElement`]s are required for a [`BehaviorTree`](crate::tree::BehaviorTree)
-	fn next_uid(&mut self) -> i16 {
+	fn next_uid(&mut self) -> u16 {
 		let next = self.uid;
 		self.uid += 1;
 		next

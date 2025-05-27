@@ -55,6 +55,7 @@ impl PortDefinition {
 	}
 
 	/// Get the [`PortDefinition`]s name.
+	#[must_use]
 	pub fn name(&self) -> ConstString {
 		self.name.clone()
 	}
