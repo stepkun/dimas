@@ -46,7 +46,7 @@ impl BehaviorInstance for AlwaysFailure {
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 	) -> BehaviorResult {
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorStatus::Failure)
 	}
 }
 

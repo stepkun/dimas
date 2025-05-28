@@ -71,13 +71,11 @@ impl BehaviorTreeObserver {
 	pub fn new(root: &mut BehaviorTree) -> Self {
 		let id: ConstString = "statistics".into();
 		let statistics: Arc<Mutex<Vec<Statistics>>> = Arc::new(Mutex::new(Vec::new()));
-		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorStatus, BehaviorStatus)>(5);
+		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorStatus, BehaviorStatus)>(10);
 		// spawn receiver
 		let statistics_clone = statistics.clone();
 		let handle = tokio::spawn(async move {
-			std::dbg!("receiving");
 			while let Some(val) = rx.recv().await {
-				std::dbg!(val.0, val.1, val.2, val.3);
 				let mut stats = statistics_clone.lock();
 				let entry = &mut stats[val.0 as usize];
 				entry.transitions_count += 1;
@@ -86,8 +84,7 @@ impl BehaviorTreeObserver {
 						entry.failure_count += 1;
 						entry.last_result = val.3;
 					}
-					BehaviorStatus::Idle |
-					BehaviorStatus::Running => {}
+					BehaviorStatus::Idle | BehaviorStatus::Running => {}
 					BehaviorStatus::Skipped => entry.skip_count += 1,
 					BehaviorStatus::Success => {
 						entry.success_count += 1;
@@ -98,7 +95,6 @@ impl BehaviorTreeObserver {
 				entry.timestamp = val.1;
 				drop(stats);
 			}
-			std::dbg!("exited receiving");
 			-1
 		});
 		// add a statistics entry and a callback for each tree element
@@ -111,7 +107,6 @@ impl BehaviorTreeObserver {
 				// ignore any errors when sending
 				let tx_clone_cloned = tx_clone.clone();
 				tokio::spawn(async move {
-					std::dbg!("sending");
 					tx_clone_cloned.send(tuple).await.expect("snh");
 				});
 			};

@@ -178,14 +178,18 @@ impl BehaviorTree {
 	/// Ticks the tree exactly once.
 	/// # Errors
 	pub async fn tick_exactly_once(&mut self) -> BehaviorResult {
-		self.root.execute_tick().await
+		let status = self.root.execute_tick().await?;
+		tokio::task::yield_now().await;
+		Ok(status)
 	}
 
 	/// Ticks the tree once.
 	/// @TODO: The wakeup mechanism is not yet implemented
 	/// # Errors
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		self.root.execute_tick().await
+		let status = self.root.execute_tick().await?;
+		tokio::task::yield_now().await;
+		Ok(status)
 	}
 
 	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`].
@@ -203,6 +207,7 @@ impl BehaviorTree {
 				break;
 			}
 		}
+		tokio::task::yield_now().await;
 		Ok(status)
 	}
 

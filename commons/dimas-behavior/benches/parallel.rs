@@ -16,7 +16,7 @@ const PARALLEL: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<Parallel name="root_parallel">
+		<Parallel name="root_parallel" failure_count="-1" success_count="2">
 			<AlwaysFailure	name="step1"/>
 			<AlwaysFailure	name="step2"/>
 			<AlwaysSuccess	name="step3"/>
