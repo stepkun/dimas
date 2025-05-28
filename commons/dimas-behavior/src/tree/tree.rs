@@ -199,6 +199,7 @@ impl BehaviorTree {
 
 		while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
 			status = self.root.execute_tick().await?;
+			tokio::task::yield_now().await;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 
