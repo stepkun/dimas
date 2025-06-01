@@ -12,7 +12,7 @@ use crate::{
 	blackboard::SharedBlackboard,
 };
 
-use super::{BehaviorTreeElementList, BehaviorTreeElementPreStatusChangeCallback};
+use super::{BehaviorTreeElementList, BehaviorTreeElementTickCallback};
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeElement
@@ -40,7 +40,7 @@ pub struct BehaviorTreeElement {
 	/// List of pre status change callbacks with an identifier.
 	/// These callbacks can be used for observation of the [`BehaviorTreeElement`] and
 	/// for manipulation the resulting [`BehaviorStatus`] of a tick.
-	pre_status_change_hooks: Vec<(ConstString, Box<BehaviorTreeElementPreStatusChangeCallback>)>,
+	pre_status_change_hooks: Vec<(ConstString, Box<BehaviorTreeElementTickCallback>)>,
 }
 
 impl BehaviorTreeElement {
@@ -183,14 +183,13 @@ impl BehaviorTreeElement {
 				.tick(self.status, &mut self.blackboard, &mut self.children)
 				.await?
 		};
-		// handle on status change notify callbacks
-		if status != self.status {
-			for (_, callback) in &self.pre_status_change_hooks {
-				callback(self, &mut status);
-			}
-			self.status = status;
+		// Callback after running tick before remembering & propagating status
+		for (_, callback) in &self.pre_status_change_hooks {
+			callback(self, &mut status);
 		}
-		Ok(self.status)
+		self.status = status;
+
+		Ok(status)
 	}
 
 	/// Halt child at `index`.

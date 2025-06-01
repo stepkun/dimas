@@ -24,6 +24,6 @@ use crate::behavior::BehaviorStatus;
 ///
 /// This callback can be used to observe a [`BehaviorTreeElement`] and manipulate the resulting [`BehaviorStatus`] of a tick.
 /// In case of non std without a timestamp.
-pub type BehaviorTreeElementPreStatusChangeCallback =
+pub type BehaviorTreeElementTickCallback =
 	dyn Fn(&BehaviorTreeElement, &mut BehaviorStatus) + Send + Sync + 'static;
 // endregion:   --- types

@@ -26,6 +26,8 @@ use crate::{
 /// Structure to collect various statistic data.
 #[derive(Clone)]
 pub struct Statistics {
+	/// count ticks.
+	pub tick_count: usize,
 	/// Last result of a tick, either Success or Failure.
 	pub last_result: BehaviorStatus,
 	/// Last status. Can be any status.
@@ -46,6 +48,7 @@ pub struct Statistics {
 impl Default for Statistics {
 	fn default() -> Self {
 		Self {
+			tick_count: Default::default(),
 			last_result: BehaviorStatus::default(),
 			current_status: BehaviorStatus::default(),
 			transitions_count: Default::default(),
@@ -78,25 +81,29 @@ impl BehaviorTreeObserver {
 			while let Some(val) = rx.recv().await {
 				let mut stats = statistics_clone.lock();
 				let entry = &mut stats[val.0 as usize];
-				entry.transitions_count += 1;
-				match val.3 {
-					BehaviorStatus::Failure => {
-						entry.failure_count += 1;
-						entry.last_result = val.3;
+				entry.tick_count += 1;
+				if val.3 != val.2 {
+					entry.transitions_count += 1;
+					match val.3 {
+						BehaviorStatus::Failure => {
+							entry.failure_count += 1;
+							entry.last_result = val.3;
+						}
+						BehaviorStatus::Idle | BehaviorStatus::Running => {}
+						BehaviorStatus::Skipped => entry.skip_count += 1,
+						BehaviorStatus::Success => {
+							entry.success_count += 1;
+							entry.last_result = val.3;
+						}
 					}
-					BehaviorStatus::Idle | BehaviorStatus::Running => {}
-					BehaviorStatus::Skipped => entry.skip_count += 1,
-					BehaviorStatus::Success => {
-						entry.success_count += 1;
-						entry.last_result = val.3;
-					}
+					entry.current_status = val.3;
+					entry.timestamp = val.1;
 				}
-				entry.current_status = val.3;
-				entry.timestamp = val.1;
 				drop(stats);
 			}
 			-1
 		});
+
 		// add a statistics entry and a callback for each tree element
 		for element in root.iter_mut() {
 			statistics.lock().push(Statistics::default());

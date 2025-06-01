@@ -197,7 +197,7 @@ impl BehaviorTree {
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
 		let mut status = BehaviorStatus::Idle;
 
-		while status == BehaviorStatus::Idle || matches!(status, BehaviorStatus::Running) {
+		while status == BehaviorStatus::Idle || status == BehaviorStatus::Running {
 			status = self.root.execute_tick().await?;
 			tokio::task::yield_now().await;
 

@@ -44,7 +44,6 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-#[ignore]
 async fn observer() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -92,7 +91,6 @@ async fn observer() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ignore]
 async fn observer_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
