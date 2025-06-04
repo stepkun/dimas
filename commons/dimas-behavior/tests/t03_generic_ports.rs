@@ -9,7 +9,7 @@
 use serial_test::serial;
 use test_behaviors::test_nodes::{CalculateGoal, PrintTarget};
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -40,7 +40,7 @@ async fn generic_ports() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -55,6 +55,6 @@ async fn generic_ports_with_plugin() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }

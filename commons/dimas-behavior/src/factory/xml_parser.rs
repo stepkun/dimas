@@ -9,6 +9,7 @@ extern crate std;
 // region:      --- modules
 use alloc::string::{String, ToString};
 use dimas_core::ConstString;
+use dimas_scripting::Runtime;
 use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType};
 use rustc_hash::FxBuildHasher;
@@ -17,7 +18,10 @@ use std::path::PathBuf;
 use tracing::{Level, event, instrument};
 
 use crate::{
-	behavior::{BehaviorPtr, BehaviorType},
+	behavior::{
+		BehaviorPtr, BehaviorType,
+		pre_post_conditions::{Conditions, PostConditions, PreConditions},
+	},
 	blackboard::SharedBlackboard,
 	port::{PortRemappings, is_allowed_port_name},
 	tree::{BehaviorTreeElement, BehaviorTreeElementList},
@@ -138,28 +142,54 @@ impl XmlParser {
 		Ok(())
 	}
 
-	fn create_remappings(
+	fn handle_attributes(
 		name: &str,
 		is_subtree: bool,
 		bhvr: &BehaviorPtr,
 		attrs: &HashMap<ConstString, ConstString, FxBuildHasher>,
-	) -> Result<(bool, PortRemappings, PortRemappings), Error> {
-		let autoremap = match attrs.get("_autoremap") {
-			Some(s) => match s.parse::<bool>() {
-				Ok(val) => val,
-				Err(_) => return Err(Error::WrongAutoremap),
-			},
-			None => false,
-		};
-
+		runtime: &mut Runtime,
+	) -> Result<
+		(
+			/*autoremap:*/ bool,
+			/*remappings:*/ PortRemappings,
+			/*values:*/ PortRemappings,
+			/*pre&post conditions:*/ Conditions,
+		),
+		Error,
+	> {
+		let mut autoremap = false;
 		let mut remappings = PortRemappings::default();
 		let mut values = PortRemappings::default();
+		let mut preconditions = PreConditions::default();
+		let mut postconditions = PostConditions::default();
+
 		for (key, value) in attrs {
 			let key = key.as_ref();
 			if key == "name" {
 				// port "name" is always available
 			} else if key == "ID" {
 				// ignore as it is not a Port
+			} else if key.starts_with('_') {
+				// these are special attributes
+				match key {
+					"_autoremap" => {
+						autoremap = match value.parse::<bool>() {
+							Ok(val) => val,
+							Err(_) => return Err(Error::WrongAutoremap),
+						};
+					}
+					// preconditions
+					"_skipif" | "_failureif" | "_successif" | "_while" => {
+						let chunk = runtime.parse(value)?;
+						preconditions.set(key, chunk)?;
+					}
+					// postconditions
+					"_onSuccess" | "_onFailure" | "_post" | "_onHalted" => {
+						let chunk = runtime.parse(value)?;
+						postconditions.set(key, chunk)?;
+					}
+					_ => return Err(Error::UnknownSpecialAttribute(key.into())),
+				}
 			} else {
 				// for a subtree we cannot check the ports
 				if is_subtree {
@@ -218,14 +248,18 @@ impl XmlParser {
 				}
 			}
 		}
-		Ok((autoremap, remappings, values))
+		let conditions = Conditions {
+			pre: preconditions,
+			post: postconditions,
+		};
+		Ok((autoremap, remappings, values, conditions))
 	}
 
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub(super) fn create_tree_from_definition(
 		&mut self,
 		name: &str,
-		registry: &BehaviorRegistry,
+		registry: &mut BehaviorRegistry,
 	) -> Result<BehaviorTreeElement, Error> {
 		event!(Level::TRACE, "create_tree_from_definition");
 		registry.find_tree_definition(name).map_or_else(
@@ -239,12 +273,13 @@ impl XmlParser {
 				let uid = self.next_uid();
 				// handle the nodes attributes
 				let attrs = attrs_to_map(node.attributes());
-				let (_, remappings, values) = Self::create_remappings(name, true, &bhvr, &attrs)?;
+				let (_, remappings, values, conditions) =
+					Self::handle_attributes(name, true, &bhvr, &attrs, registry.runtime_mut())?;
 				let blackboard = SharedBlackboard::new(name.into(), remappings, values);
 				let children = self.build_children(name, node, registry, blackboard.clone())?;
 				// path is for root element same as name
 				let behaviortree = BehaviorTreeElement::create_subtree(
-					uid, name, name, children, blackboard, bhvr,
+					uid, name, name, children, blackboard, bhvr, conditions,
 				);
 				Ok(behaviortree)
 			},
@@ -256,7 +291,7 @@ impl XmlParser {
 		&mut self,
 		path: &str,
 		node: Node,
-		registry: &BehaviorRegistry,
+		registry: &mut BehaviorRegistry,
 		blackboard: SharedBlackboard,
 	) -> Result<BehaviorTreeElementList, Error> {
 		event!(Level::TRACE, "build_children");
@@ -293,7 +328,7 @@ impl XmlParser {
 		&mut self,
 		path: &str,
 		node: Node,
-		registry: &BehaviorRegistry,
+		registry: &mut BehaviorRegistry,
 		blackboard: SharedBlackboard,
 	) -> Result<BehaviorTreeElement, Error> {
 		event!(Level::TRACE, "build_child");
@@ -336,8 +371,13 @@ impl XmlParser {
 			registry.fetch(tag_name)?
 		};
 		let bhvr = bhvr_creation_fn();
-		let (autoremap, remappings, values) =
-			Self::create_remappings(&node_name, is_subtree, &bhvr, &attrs)?;
+		let (autoremap, remappings, values, conditions) = Self::handle_attributes(
+			&node_name,
+			is_subtree,
+			&bhvr,
+			&attrs,
+			registry.runtime_mut(),
+		)?;
 		let tree_node = match bhvr_type {
 			BehaviorType::Action | BehaviorType::Condition => {
 				if node.has_children() {
@@ -345,7 +385,9 @@ impl XmlParser {
 				}
 				// A leaf gets a cloned Blackboard with own remappings
 				let blackboard = blackboard.cloned(remappings, values);
-				BehaviorTreeElement::create_leaf(uid, &node_name, &path, blackboard, bhvr)
+				BehaviorTreeElement::create_leaf(
+					uid, &node_name, &path, blackboard, bhvr, conditions,
+				)
 			}
 			BehaviorType::Control | BehaviorType::Decorator => {
 				// A node gets a cloned Blackboard with own remappings
@@ -355,7 +397,9 @@ impl XmlParser {
 				if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
 					return Err(Error::DecoratorOnlyOneChild(node.tag_name().name().into()));
 				}
-				BehaviorTreeElement::create_node(uid, &node_name, &path, children, blackboard, bhvr)
+				BehaviorTreeElement::create_node(
+					uid, &node_name, &path, children, blackboard, bhvr, conditions,
+				)
 			}
 			BehaviorType::SubTree => {
 				if let Some(id) = attrs.get("ID") {
@@ -381,6 +425,7 @@ impl XmlParser {
 								children,
 								blackboard1,
 								bhvr,
+								conditions,
 							)
 						}
 						None => {

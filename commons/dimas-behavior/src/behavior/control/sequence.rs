@@ -5,12 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
@@ -20,9 +21,9 @@ use crate::{
 
 // region:      --- Sequence
 /// A `Sequence` ticks its children in an ordered sequence from first to last.
-/// - If any child returns [`BehaviorStatus::Failure`] the sequence returns [`BehaviorStatus::Failure`].
-/// - If all children return [`BehaviorStatus::Success`] the sequence returns [`BehaviorStatus::Success`].
-/// - While any child returns [`BehaviorStatus::Running`] the sequence returns [`BehaviorStatus::Running`].
+/// - If any child returns [`BehaviorState::Failure`] the sequence returns [`BehaviorState::Failure`].
+/// - If all children return [`BehaviorState::Success`] the sequence returns [`BehaviorState::Success`].
+/// - While any child returns [`BehaviorState::Running`] the sequence returns [`BehaviorState::Running`].
 ///
 /// While running, the loop is not restarted, first the running child will be ticked again.
 /// If that tick succeeds the sequence continues, children that already succeeded will not be ticked again.
@@ -38,31 +39,32 @@ pub struct Sequence {
 impl BehaviorInstance for Sequence {
 	async fn tick(
 		&mut self,
-		status: BehaviorStatus,
+		state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if status == BehaviorStatus::Idle {
+		if state == BehaviorState::Idle {
 			self.all_skipped = true;
 		}
 
 		while self.child_idx < children.len() {
 			let child = &mut children[self.child_idx];
-			let new_status = child.execute_tick().await?;
+			let new_state = child.execute_tick(runtime).await?;
 
-			self.all_skipped &= new_status == BehaviorStatus::Skipped;
+			self.all_skipped &= new_state == BehaviorState::Skipped;
 
-			match new_status {
-				BehaviorStatus::Failure => {
-					children.reset()?;
+			match new_state {
+				BehaviorState::Failure => {
+					children.reset(runtime)?;
 					self.child_idx = 0;
-					return Ok(BehaviorStatus::Failure);
+					return Ok(BehaviorState::Failure);
 				}
-				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status("Sequence".into(), "Idle".into()));
+				BehaviorState::Idle => {
+					return Err(BehaviorError::State("Sequence".into(), "Idle".into()));
 				}
-				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
-				BehaviorStatus::Skipped | BehaviorStatus::Success => {
+				BehaviorState::Running => return Ok(BehaviorState::Running),
+				BehaviorState::Skipped | BehaviorState::Success => {
 					self.child_idx += 1;
 				}
 			}
@@ -71,14 +73,14 @@ impl BehaviorInstance for Sequence {
 		// All children returned Success
 		if self.child_idx >= children.len() {
 			// Reset children
-			children.reset()?;
+			children.reset(runtime)?;
 			self.child_idx = 0;
 		}
 
 		if self.all_skipped {
-			Ok(BehaviorStatus::Skipped)
+			Ok(BehaviorState::Skipped)
 		} else {
-			Ok(BehaviorStatus::Success)
+			Ok(BehaviorState::Success)
 		}
 	}
 }

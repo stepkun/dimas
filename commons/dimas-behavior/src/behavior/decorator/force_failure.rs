@@ -5,12 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
@@ -31,23 +32,24 @@ pub struct ForceFailure {}
 impl BehaviorInstance for ForceFailure {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let child = &mut children[0];
-		let new_status = child.execute_tick().await?;
+		let new_state = child.execute_tick(runtime).await?;
 
-		match new_status {
-			BehaviorStatus::Failure => {
-				children.reset()?;
-				Ok(BehaviorStatus::Failure)
+		match new_state {
+			BehaviorState::Failure => {
+				children.reset(runtime)?;
+				Ok(BehaviorState::Failure)
 			}
-			BehaviorStatus::Idle => Err(BehaviorError::Status("Inverter".into(), "Idle".into())),
-			status @ (BehaviorStatus::Running | BehaviorStatus::Skipped) => Ok(status),
-			BehaviorStatus::Success => {
-				children.reset()?;
-				Ok(BehaviorStatus::Failure)
+			BehaviorState::Idle => Err(BehaviorError::State("Inverter".into(), "Idle".into())),
+			state @ (BehaviorState::Running | BehaviorState::Skipped) => Ok(state),
+			BehaviorState::Success => {
+				children.reset(runtime)?;
+				Ok(BehaviorState::Failure)
 			}
 		}
 	}

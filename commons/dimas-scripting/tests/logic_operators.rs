@@ -2,187 +2,159 @@
 
 //! Tests of scripting logic operators
 
-use dimas_scripting::{DefaultEnvironment, Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Runtime};
 
 #[test]
 fn and() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
+	let chunk = runtime
 		.parse("print false && false;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"false\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"false\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print true && false;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
+	runtime.clear();
+	let chunk = runtime
+		.parse("print true && false;")
 		.expect("snh");
-	assert_eq!(stdout, b"false\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"false\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print true && true;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
+	runtime.clear();
+	let chunk = runtime.parse("print true && true;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
+
+	runtime.clear();
+	let chunk = runtime
+		.parse("print false && true;")
 		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"false\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print false && true;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"false\n");
-
-	stdout.clear();
-	let chunk = parser
+	runtime.clear();
+	let chunk = runtime
 		.parse("print true && true && false;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"false\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"false\n");
 
-	stdout.clear();
-	let chunk = parser
+	runtime.clear();
+	let chunk = runtime
 		.parse("print true && true && true;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
 }
 
 #[test]
 fn or() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser.parse("print true || true;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	let chunk = runtime.parse("print true || true;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print false || true;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
+	runtime.clear();
+	let chunk = runtime
+		.parse("print false || true;")
 		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
 }
 
 #[test]
 fn and_or() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
+	let chunk = runtime
 		.parse("print true || true && false;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
 
-	stdout.clear();
-	let chunk = parser
+	runtime.clear();
+	let chunk = runtime
 		.parse("print false || true && true;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
 }
 
 #[test]
 fn bitwise_and() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser.parse("print 0x1 & 0x1;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"1\n");
+	let chunk = runtime.parse("print 0x1 & 0x1;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"1\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print 0x1 & 0x0;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"0\n");
+	runtime.clear();
+	let chunk = runtime.parse("print 0x1 & 0x0;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"0\n");
 }
 
 #[test]
 fn bitwise_or() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser.parse("print 0x1 | 0x1;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"1\n");
+	let chunk = runtime.parse("print 0x1 | 0x1;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"1\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print 0x1 | 0x0;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"1\n");
+	runtime.clear();
+	let chunk = runtime.parse("print 0x1 | 0x0;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"1\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print 0x1 | 0x2;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"3\n");
+	runtime.clear();
+	let chunk = runtime.parse("print 0x1 | 0x2;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"3\n");
 }
 
 #[test]
 fn bitwise_xor() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser.parse("print 0x1 ^ 0x1;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"0\n");
+	let chunk = runtime.parse("print 0x1 ^ 0x1;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"0\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print 0x1 ^ 0x0;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"1\n");
+	runtime.clear();
+	let chunk = runtime.parse("print 0x1 ^ 0x0;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"1\n");
 
-	stdout.clear();
-	let chunk = parser.parse("print 0x1 ^ 0x2;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"3\n");
+	runtime.clear();
+	let chunk = runtime.parse("print 0x1 ^ 0x2;").expect("snh");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"3\n");
 }
 
 #[test]
 fn ternary() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
+	let chunk = runtime
 		.parse("print 1 < 2 ? true : false;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"true\n");
 
-	stdout.clear();
-	let chunk = parser
+	runtime.clear();
+	let chunk = runtime
 		.parse("print 1 > 2 ? true : false;")
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"false\n");
+	runtime.execute(&chunk, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), b"false\n");
 }

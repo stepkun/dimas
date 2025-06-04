@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t06_subtree_port_remapping.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething};
 
@@ -47,7 +47,7 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	println!("\n------ Root BB ------");
 	// @TODO: tree.subtree(0)?.blackboard().debug_message();
 	println!("\n----- Second BB -----");
@@ -67,7 +67,7 @@ async fn subtree_port_remapping_with_plugin() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	println!("\n------ Root BB ------");
 	// tree.subtree(0)?.blackboard().debug_message();
 	println!("\n----- Second BB -----");
@@ -87,7 +87,7 @@ async fn subtree_blackboard_access_reminder() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	println!("\n------ Root BB ------");
 	// tree.subtree(0)?.blackboard().debug_message();
 	println!("\n----- Second BB -----");

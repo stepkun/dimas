@@ -5,12 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
@@ -37,50 +38,51 @@ pub struct ReactiveFallback {}
 impl BehaviorInstance for ReactiveFallback {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
 
 		for index in 0..children.len() {
 			let child = &mut children[index];
-			let new_status = child.execute_tick().await?;
+			let new_state = child.execute_tick(runtime).await?;
 
-			all_skipped &= new_status == BehaviorStatus::Skipped;
+			all_skipped &= new_state == BehaviorState::Skipped;
 
-			match new_status {
-				BehaviorStatus::Failure => {}
-				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status(
+			match new_state {
+				BehaviorState::Failure => {}
+				BehaviorState::Idle => {
+					return Err(BehaviorError::State(
 						"ReactiveFallback".into(),
 						"Idle".into(),
 					));
 				}
-				BehaviorStatus::Running => {
+				BehaviorState::Running => {
 					// stop later children
 					for i in 0..index {
 						let cd = &mut children[i];
-						cd.execute_halt().await?;
+						cd.execute_halt(runtime).await?;
 					}
-					return Ok(BehaviorStatus::Running);
+					return Ok(BehaviorState::Running);
 				}
-				BehaviorStatus::Skipped => {
-					child.execute_halt().await?;
+				BehaviorState::Skipped => {
+					child.execute_halt(runtime).await?;
 				}
-				BehaviorStatus::Success => {
-					children.reset()?;
-					return Ok(BehaviorStatus::Success);
+				BehaviorState::Success => {
+					children.reset(runtime)?;
+					return Ok(BehaviorState::Success);
 				}
 			}
 		}
 
-		children.reset()?;
+		children.reset(runtime)?;
 
 		if all_skipped {
-			Ok(BehaviorStatus::Skipped)
+			Ok(BehaviorState::Skipped)
 		} else {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		}
 	}
 }

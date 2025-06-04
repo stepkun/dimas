@@ -4,9 +4,9 @@
 //!
 
 use crate::{
-	Lexer, Parser,
+	Error,
 	compiling::{
-		error::Error,
+		Lexer, Parser,
 		token::{Token, TokenKind},
 	},
 	execution::Chunk,

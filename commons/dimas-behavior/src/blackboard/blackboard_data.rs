@@ -21,10 +21,7 @@ use core::{
 	str::FromStr,
 };
 use dimas_core::ConstString;
-use dimas_scripting::{
-	Environment,
-	execution::{Error as ScriptingError, ScriptingValue},
-};
+use dimas_scripting::{Environment, Error as ScriptingError, execution::ScriptingValue};
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use rustc_hash::FxBuildHasher;

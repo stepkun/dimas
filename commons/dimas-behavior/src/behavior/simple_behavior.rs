@@ -5,12 +5,13 @@
 // region:      --- modules
 use alloc::{boxed::Box, sync::Arc};
 use core::any::Any;
+use dimas_scripting::SharedRuntime;
 
 use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 
 use super::{
 	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult,
-	BehaviorStatus,
+	BehaviorState,
 };
 // endregion:   --- modules
 
@@ -56,9 +57,10 @@ impl BehaviorExecution for SimpleBehavior {
 impl BehaviorInstance for SimpleBehavior {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		if self.complex_tick_fn.is_some() {
 			self.complex_tick_fn.as_ref().expect("snh")(blackboard)

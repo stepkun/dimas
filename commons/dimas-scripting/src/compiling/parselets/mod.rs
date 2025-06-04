@@ -20,9 +20,9 @@ pub use logic_parselet::LogicParselet;
 pub use unary_parselet::UnaryParselet;
 pub use value_parselet::ValueParselet;
 
-use crate::execution::Chunk;
+use crate::{Error, compiling::Parser, execution::Chunk};
 
-use super::{Lexer, Parser, error::Error, precedence::Precedence, token::Token};
+use super::{Lexer, precedence::Precedence, token::Token};
 
 /// Interfaces used by the Pratt parser. A `PrefixParselet` is
 /// associated with a token that appears at the beginning of an expression.

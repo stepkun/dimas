@@ -19,6 +19,9 @@ use thiserror::Error;
 /// `dimas` error type
 #[derive(Error, Debug)]
 pub enum Error {
+	/// Passthrough for `BehaviorErrors`
+	#[error("{0}")]
+	Behavior(#[from] crate::behavior::BehaviorError),
 	/// Behavior is already registered
 	#[error("behavior [{0}] is already registered")]
 	BehaviorAlreadyRegistered(ConstString),
@@ -70,6 +73,9 @@ pub enum Error {
 	/// The main tree information is missing
 	#[error("no 'main_tree_to_execute' provided")]
 	NoTreeToExecute,
+	/// Passthrough for scripting Errors
+	#[error("{0}")]
+	Scripting(#[from] dimas_scripting::Error),
 	/// Passthrough port error
 	#[error("{0}")]
 	Port(#[from] crate::port::error::Error),
@@ -88,6 +94,9 @@ pub enum Error {
 	/// Passthrough for behavior tree Errors
 	#[error("{0}")]
 	Tree(#[from] crate::tree::error::Error),
+	/// Special attribute values not defined
+	#[error("special attribute [{0}] is not supported")]
+	UnknownSpecialAttribute(ConstString),
 	/// Processing instruction
 	#[error("processing instruction [{0}] is not supported")]
 	UnsupportedProcessingInstruction(ConstString),

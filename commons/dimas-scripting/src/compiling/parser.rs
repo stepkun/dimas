@@ -19,12 +19,12 @@ use hashbrown::HashMap;
 use rustc_hash::FxBuildHasher;
 
 use crate::{
-	Lexer,
+	Error,
+	compiling::Lexer,
 	execution::{Chunk, op_code::OpCode},
 };
 
 use super::{
-	error::Error,
 	parselets::{
 		AssignmentParselet, BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet,
 		LogicParselet, PrefixParselet, UnaryParselet, ValueParselet,
@@ -245,8 +245,8 @@ impl Parser {
 			self.advance(lexer)
 		} else {
 			Err(Error::ExpectedToken(
-				expected.to_string(),
-				self.next.kind.to_string(),
+				expected.to_string().into(),
+				self.next.kind.to_string().into(),
 				self.next.line,
 			))
 		}

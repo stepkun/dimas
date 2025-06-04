@@ -3,12 +3,10 @@
 //! `BinaryParselet` for `Dimas` scripting analyzses and handles the binary expressions
 //!
 
-use alloc::string::ToString;
-
 use crate::{
-	Lexer, Parser,
+	Error,
 	compiling::{
-		error::Error,
+		Lexer, Parser,
 		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
@@ -78,7 +76,7 @@ impl InfixParselet for BinaryParselet {
 				parser.emit_byte(OpCode::Divide as u8, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string(), line!())),
+			_ => Err(Error::Unreachable(file!().into(), line!())),
 		}
 	}
 

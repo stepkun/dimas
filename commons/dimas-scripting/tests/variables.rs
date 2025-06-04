@@ -2,215 +2,167 @@
 
 //! Tests of scripting operators
 
-use dimas_scripting::{DefaultEnvironment, Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Runtime};
 
 #[test]
 fn defining_globals() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser.parse("test:=3;print test;").expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
+	runtime
+		.run("test:=3;print test;", &mut env)
 		.expect("snh");
-	assert_eq!(stdout, b"3\n");
+	assert_eq!(runtime.stdout(), b"3\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("@test:=17;print @test;")
+	runtime.clear();
+	runtime
+		.run("@test:=17;print @test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"17\n");
+	assert_eq!(runtime.stdout(), b"17\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("_test:='string';print _test;")
+	runtime.clear();
+	runtime
+		.run("_test:='string';print _test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"string\n");
+	assert_eq!(runtime.stdout(), b"string\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=0xf;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=0xf;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"15\n");
+	assert_eq!(runtime.stdout(), b"15\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:='string';print test;")
+	runtime.clear();
+	runtime
+		.run("test:='string';print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"string\n");
+	assert_eq!(runtime.stdout(), b"string\n");
 }
 
 #[test]
 fn change_globals() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
-		.parse("test:=3;test=7;print test;")
+	runtime
+		.run("test:=3;test=7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"7\n");
+	assert_eq!(runtime.stdout(), b"7\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=0xf;test=0x1;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=0xf;test=0x1;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"1\n");
+	assert_eq!(runtime.stdout(), b"1\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:='string';test='other';print test;")
+	runtime.clear();
+	runtime
+		.run("test:='string';test='other';print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"other\n");
+	assert_eq!(runtime.stdout(), b"other\n");
 }
 
 #[test]
 fn assignment_with_change() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
-		.parse("test:=3;test+=7;print test;")
+	runtime
+		.run("test:=3;test+=7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"10\n");
+	assert_eq!(runtime.stdout(), b"10\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=0xf;test+=0x1;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=0xf;test+=0x1;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"16\n");
+	assert_eq!(runtime.stdout(), b"16\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:='string';test+=' other';print test;")
+	runtime.clear();
+	runtime
+		.run("test:='string';test+=' other';print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"string other\n");
+	assert_eq!(runtime.stdout(), b"string other\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=3;test-=7;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=3;test-=7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"-4\n");
+	assert_eq!(runtime.stdout(), b"-4\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=3;test*=7;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=3;test*=7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"21\n");
+	assert_eq!(runtime.stdout(), b"21\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=6;test/=2;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=6;test/=2;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"3\n");
+	assert_eq!(runtime.stdout(), b"3\n");
 }
 
 #[test]
 fn assignment_with_complex_change() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
-		.parse("test:=3;test+=(17-10)*2-7;print test;")
+	runtime
+		.run("test:=3;test+=(17-10)*2-7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"10\n");
+	assert_eq!(runtime.stdout(), b"10\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=3;test-=(17-10)*2-7;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=3;test-=(17-10)*2-7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"-4\n");
+	assert_eq!(runtime.stdout(), b"-4\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=3;test*=(17-10)*2-7;print test;")
+	runtime.clear();
+	runtime
+		.run("test:=3;test*=(17-10)*2-7;print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"21\n");
+	assert_eq!(runtime.stdout(), b"21\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("test:=6;test/=(17-10)*2-(7+5);print test;")
+	runtime.clear();
+	runtime
+		.run("test:=6;test/=(17-10)*2-(7+5);print test;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"3\n");
+	assert_eq!(runtime.stdout(), b"3\n");
 }
 
 #[test]
 fn complex_examples() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
-		.parse(
+	runtime
+		.run(
 			"param_A:=7;param_B:=5;param_B*=2;param_C:=(param_A*3)+param_B;print param_B;print param_C",
+			&mut env,
 		)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"10\n31\n");
+	assert_eq!(runtime.stdout(), b"10\n31\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("value:=0x7F;val_A:=value&0x0F;val_B:=value|0xF0;print val_A;print val_B")
+	runtime.clear();
+	runtime
+		.run(
+			"value:=0x7F;val_A:=value&0x0F;val_B:=value|0xF0;print val_A;print val_B",
+			&mut env,
+		)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"15\n255\n");
+	assert_eq!(runtime.stdout(), b"15\n255\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("val_A:=2;val_B:=(val_A>1)?42:24;print val_B")
+	runtime.clear();
+	runtime
+		.run("val_A:=2;val_B:=(val_A>1)?42:24;print val_B", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"42\n");
+	assert_eq!(runtime.stdout(), b"42\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("val_A:=0;val_B:=(val_A>1)?42:24;print val_B")
+	runtime.clear();
+	runtime
+		.run("val_A:=0;val_B:=(val_A>1)?42:24;print val_B", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"24\n");
+	assert_eq!(runtime.stdout(), b"24\n");
 }

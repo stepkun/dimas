@@ -5,6 +5,7 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 use hashbrown::HashSet;
 
 use crate::behavior::error::BehaviorError;
@@ -12,7 +13,7 @@ use crate::blackboard::BlackboardInterface;
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::BehaviorTreeElementList,
@@ -54,12 +55,17 @@ impl BehaviorInstance for Parallel {
 	#[allow(clippy::cast_possible_wrap)]
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		self.success_threshold = blackboard.get("success_count".into()).unwrap_or(-1);
-		self.failure_threshold = blackboard.get("failure_count".into()).unwrap_or(-1);
+		self.success_threshold = blackboard
+			.get("success_count".into())
+			.unwrap_or(-1);
+		self.failure_threshold = blackboard
+			.get("failure_count".into())
+			.unwrap_or(-1);
 
 		let children_count = children.len();
 
@@ -81,19 +87,19 @@ impl BehaviorInstance for Parallel {
 		for i in 0..children_count {
 			if !self.completed_list.contains(&i) {
 				let child = &mut children[i];
-				match child.execute_tick().await? {
-					BehaviorStatus::Skipped => skipped_count += 1,
-					BehaviorStatus::Success => {
+				match child.execute_tick(runtime).await? {
+					BehaviorState::Skipped => skipped_count += 1,
+					BehaviorState::Success => {
 						self.completed_list.insert(i);
 						self.success_count += 1;
 					}
-					BehaviorStatus::Failure => {
+					BehaviorState::Failure => {
 						self.completed_list.insert(i);
 						self.failure_count += 1;
 					}
-					BehaviorStatus::Running => {}
+					BehaviorState::Running => {}
 					// Throw error, should never happen
-					BehaviorStatus::Idle => {
+					BehaviorState::Idle => {
 						todo!()
 					}
 				}
@@ -107,25 +113,25 @@ impl BehaviorInstance for Parallel {
 					&& (self.success_count + skipped_count) >= required_success_count)
 			{
 				self.clear();
-				children.reset()?;
-				return Ok(BehaviorStatus::Success);
+				children.reset(runtime)?;
+				return Ok(BehaviorState::Success);
 			}
 
 			if (children_count - self.failure_count) < required_success_count
 				|| self.failure_count == self.failure_threshold(children_count as i32)
 			{
 				self.clear();
-				children.reset()?;
-				return Ok(BehaviorStatus::Failure);
+				children.reset(runtime)?;
+				return Ok(BehaviorState::Failure);
 			}
 		}
 
 		// If all children were skipped, return Skipped
 		// Otherwise return Running
 		if skipped_count == children_count {
-			Ok(BehaviorStatus::Skipped)
+			Ok(BehaviorState::Skipped)
 		} else {
-			Ok(BehaviorStatus::Running)
+			Ok(BehaviorState::Running)
 		}
 	}
 }

@@ -4,15 +4,15 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, string::String, vec::Vec};
-use dimas_scripting::{Parser, VM};
+use alloc::{boxed::Box, string::String};
+use dimas_scripting::{Runtime, SharedRuntime};
 
 use crate as dimas_behavior;
 use crate::behavior::error::BehaviorError;
 use crate::blackboard::BlackboardInterface;
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
@@ -26,53 +26,46 @@ use crate::{
 /// executing its child.
 #[derive(Behavior, Debug, Default)]
 pub struct Precondition {
-	parser: Parser,
-	vm: VM,
-	stdout: Vec<u8>,
+	runtime: Runtime,
 }
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Precondition {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let if_branch = blackboard.get::<String>("if".into())?;
-		let if_chunk = self.parser.parse(&if_branch)?;
 		let mut env = blackboard.clone();
-		let value = self
-			.vm
-			.run(&if_chunk, &mut env, &mut self.stdout)?;
+		let value = self.runtime.run(&if_branch, &mut env)?;
 
-		let status = if value.is_bool() {
+		let new_state = if value.is_bool() {
 			let val = value.as_bool()?;
 			let child = &mut children[0];
 			if val {
 				// tick child and return the resulting value
-				child.execute_tick().await?
+				child.execute_tick(runtime).await?
 			} else {
 				// halt eventually running child
-				child.execute_halt().await?;
+				child.execute_halt(runtime).await?;
 				let else_branch = blackboard.get::<String>("else".into())?;
 				match else_branch.as_ref() {
-					"Failure" => BehaviorStatus::Failure,
-					"Idle" => BehaviorStatus::Idle,
-					"Running" => BehaviorStatus::Running,
-					"Skipped" => BehaviorStatus::Skipped,
-					"Success" => BehaviorStatus::Success,
+					"Failure" => BehaviorState::Failure,
+					"Idle" => BehaviorState::Idle,
+					"Running" => BehaviorState::Running,
+					"Skipped" => BehaviorState::Skipped,
+					"Success" => BehaviorState::Success,
 					_ => {
-						let else_chunk = self.parser.parse(&else_branch)?;
-						let value = self
-							.vm
-							.run(&else_chunk, &mut env, &mut self.stdout)?;
+						let value = self.runtime.run(&else_branch, &mut env)?;
 						if value.is_bool() {
 							let val = value.as_bool()?;
 							if val {
-								BehaviorStatus::Success
+								BehaviorState::Success
 							} else {
-								BehaviorStatus::Failure
+								BehaviorState::Failure
 							}
 						} else {
 							return Err(BehaviorError::NotABool);
@@ -84,7 +77,7 @@ impl BehaviorInstance for Precondition {
 			return Err(BehaviorError::NotABool);
 		};
 
-		Ok(status)
+		Ok(new_state)
 	}
 }
 
@@ -96,7 +89,7 @@ impl BehaviorStatic for Precondition {
 	fn provided_ports() -> PortList {
 		port_list![
 			input_port!(String, "if", "", "Condition to check."),
-			input_port!(String, "else", "", "Return status if condition is false."),
+			input_port!(String, "else", "", "Return state if condition is false."),
 		]
 	}
 }

@@ -12,7 +12,7 @@ extern crate alloc;
 use std::sync::Arc;
 
 use dimas_behavior::{
-	behavior::BehaviorStatus, factory::BehaviorTreeFactory, input_port, port_list,
+	behavior::BehaviorState, factory::BehaviorTreeFactory, input_port, port_list,
 };
 use serial_test::serial;
 use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, new_say_something_simple};
@@ -60,7 +60,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -76,6 +76,6 @@ async fn basic_ports_with_plugin() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }

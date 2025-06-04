@@ -6,7 +6,7 @@
 use std::{sync::Arc, thread, time::Duration};
 
 use dimas_behavior::{
-	behavior::{BehaviorResult, BehaviorStatus},
+	behavior::{BehaviorResult, BehaviorState},
 	factory::{BehaviorTreeFactory, error::Error},
 };
 use parking_lot::Mutex;
@@ -45,9 +45,9 @@ impl CrossDoor {
 	pub fn is_door_closed(&mut self) -> BehaviorResult {
 		sleep_ms(200);
 		if self.door_open {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		} else {
-			Ok(BehaviorStatus::Success)
+			Ok(BehaviorState::Success)
 		}
 	}
 
@@ -57,10 +57,10 @@ impl CrossDoor {
 	pub fn open_door(&mut self) -> BehaviorResult {
 		sleep_ms(500);
 		if self.door_locked {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		} else {
 			self.door_open = true;
-			Ok(BehaviorStatus::Success)
+			Ok(BehaviorState::Success)
 		}
 	}
 
@@ -70,9 +70,9 @@ impl CrossDoor {
 	pub fn pass_through_door(&mut self) -> BehaviorResult {
 		sleep_ms(500);
 		if self.door_open {
-			Ok(BehaviorStatus::Success)
+			Ok(BehaviorState::Success)
 		} else {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		}
 	}
 
@@ -86,10 +86,17 @@ impl CrossDoor {
 		if self.pick_attempts > 3 {
 			self.door_locked = false;
 			self.door_open = true;
-			Ok(BehaviorStatus::Success)
+			Ok(BehaviorState::Success)
 		} else {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		}
+	}
+
+	/// Reset cross door
+	pub fn reset(&mut self) {
+		self.door_open = false;
+		self.door_locked = true;
+		self.pick_attempts = 0;
 	}
 
 	/// Will always open a door
@@ -99,7 +106,7 @@ impl CrossDoor {
 		self.door_locked = false;
 		self.door_open = true;
 		// smash always works
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 
 	/// Registration function for the `CrossDoor` interface

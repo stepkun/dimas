@@ -9,9 +9,9 @@ extern crate std;
 // region:		--- modules
 use alloc::{borrow::ToOwned, string::ToString};
 
-use crate::Environment;
+use crate::{Environment, Error};
 
-use super::{Chunk, ScriptingValue, error::Error, op_code::OpCode};
+use super::{Chunk, ScriptingValue, op_code::OpCode};
 // endregion:	--- modules
 
 /// Stack size is fixed to avoid cache misses, which drastically reduce performance.
@@ -96,7 +96,7 @@ impl VM {
 					OpCode::Subtract => a - b,
 					OpCode::Multiply => a * b,
 					OpCode::Divide => a / b,
-					_ => return Err(Error::Unreachable(line!())),
+					_ => return Err(Error::Unreachable(file!().into(), line!())),
 				};
 				self.push(ScriptingValue::Float64(res))
 			}
@@ -106,7 +106,7 @@ impl VM {
 					OpCode::Subtract => a - (*b as f64),
 					OpCode::Multiply => a * (*b as f64),
 					OpCode::Divide => a / (*b as f64),
-					_ => return Err(Error::Unreachable(line!())),
+					_ => return Err(Error::Unreachable(file!().into(), line!())),
 				};
 				self.push(ScriptingValue::Float64(res))
 			}
@@ -116,7 +116,7 @@ impl VM {
 					OpCode::Subtract => (*a as f64) - b,
 					OpCode::Multiply => (*a as f64) * b,
 					OpCode::Divide => (*a as f64) / b,
-					_ => return Err(Error::Unreachable(line!())),
+					_ => return Err(Error::Unreachable(file!().into(), line!())),
 				};
 				self.push(ScriptingValue::Float64(res))
 			}
@@ -126,7 +126,7 @@ impl VM {
 					OpCode::Subtract => a - b,
 					OpCode::Multiply => a * b,
 					OpCode::Divide => a / b,
-					_ => return Err(Error::Unreachable(line!())),
+					_ => return Err(Error::Unreachable(file!().into(), line!())),
 				};
 				self.push(ScriptingValue::Int64(res))
 			}
@@ -160,7 +160,7 @@ impl VM {
 					OpCode::BitwiseAnd => a & b,
 					OpCode::BitwiseOr => a | b,
 					OpCode::BitwiseXor => a ^ b,
-					_ => return Err(Error::Unreachable(line!())),
+					_ => return Err(Error::Unreachable(file!().into(), line!())),
 				};
 				a_val = ScriptingValue::Int64(res);
 				self.push(a_val)
@@ -177,22 +177,22 @@ impl VM {
 			(ScriptingValue::Int64(a), ScriptingValue::Int64(b)) => match operator {
 				OpCode::Greater => a > b,
 				OpCode::Less => a < b,
-				_ => return Err(Error::Unreachable(line!())),
+				_ => return Err(Error::Unreachable(file!().into(), line!())),
 			},
 			(ScriptingValue::Int64(a), ScriptingValue::Float64(b)) => match operator {
 				OpCode::Greater => (a as f64) > b,
 				OpCode::Less => (a as f64) < b,
-				_ => return Err(Error::Unreachable(line!())),
+				_ => return Err(Error::Unreachable(file!().into(), line!())),
 			},
 			(ScriptingValue::Float64(a), ScriptingValue::Int64(b)) => match operator {
 				OpCode::Greater => a > (b as f64),
 				OpCode::Less => a < (b as f64),
-				_ => return Err(Error::Unreachable(line!())),
+				_ => return Err(Error::Unreachable(file!().into(), line!())),
 			},
 			(ScriptingValue::Float64(a), ScriptingValue::Float64(b)) => match operator {
 				OpCode::Greater => a > b,
 				OpCode::Less => a < b,
-				_ => return Err(Error::Unreachable(line!())),
+				_ => return Err(Error::Unreachable(file!().into(), line!())),
 			},
 			_ => return Err(Error::NoComparison),
 		};

@@ -10,7 +10,7 @@
 extern crate std;
 
 use dimas_behavior::{
-	behavior::BehaviorStatus, factory::BehaviorTreeFactory,
+	behavior::BehaviorState, factory::BehaviorTreeFactory,
 	tree::observer::tree_observer::BehaviorTreeObserver,
 };
 use test_behaviors::test_nodes::{AlwaysFailure, AlwaysSuccess};
@@ -70,7 +70,7 @@ async fn observer() -> anyhow::Result<()> {
 	println!();
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 
 	// print statistics
 	for item in tree.iter() {
@@ -116,7 +116,7 @@ async fn observer_with_plugin() -> anyhow::Result<()> {
 	println!();
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 
 	// print statistics
 	for item in tree.iter() {

@@ -7,7 +7,7 @@ extern crate alloc;
 
 // region		--- modules
 #[cfg(doc)]
-use super::BehaviorStatus;
+use super::BehaviorState;
 use dimas_core::ConstString;
 use thiserror::Error;
 // endregion:	--- modules
@@ -22,9 +22,6 @@ pub enum BehaviorError {
 	/// Error in structural composition of a behaviors children
 	#[error("{0}")]
 	Composition(ConstString),
-	/// Pass through executtion error
-	#[error("{0}")]
-	Execution(#[from] dimas_scripting::execution::error::Error),
 	/// Pass through float parsing error
 	#[error("{0}")]
 	FloatParse(#[from] core::num::ParseFloatError),
@@ -34,6 +31,12 @@ pub enum BehaviorError {
 	/// Error in internal composition of a behavior
 	#[error("{0}")]
 	Internal(ConstString),
+	/// Attribute is not a post condition
+	#[error("attribute [{0}] is not a post condition")]
+	NoPostCondition(ConstString),
+	/// Attribute is not a pre condition
+	#[error("attribute [{0}] is not a pre condition")]
+	NoPreCondition(ConstString),
 	/// VM result is not a boolean value
 	#[error("result of VM computation is not a boolean value")]
 	NotABool,
@@ -45,19 +48,25 @@ pub enum BehaviorError {
 	ParsePortValue(ConstString, ConstString),
 	/// Pass through parsing error
 	#[error("{0}")]
-	Parsing(#[from] dimas_scripting::compiling::error::Error),
+	Scripting(#[from] dimas_scripting::Error),
 	/// Port has not been defined in behavior
 	#[error("port [{0}] is not declared in behavior [{1}]")]
 	PortNotDeclared(ConstString, ConstString),
 	/// The root of the tree is not properly created
 	#[error("tree root [{0}] not found")]
 	RootNotFound(ConstString),
-	/// An illegal [`BehaviorStatus`] is reached
-	#[error("child node of [{0}] returned status [{1}] when not allowed")]
-	Status(ConstString, ConstString),
+	/// An invalid [`BehaviorState`] is reached
+	#[error("child node of [{0}] returned state [{1}] when not allowed")]
+	State(ConstString, ConstString),
 	/// The tree is not properly created
 	#[error("(sub)tree [{0}] not found in behavior tree")]
 	SubtreeNotFound(ConstString),
+	/// Unable to set the post condition
+	#[error("unable to set the post condition [{0}]")]
+	UnableToSetPostCondition(ConstString),
+	/// Unable to set the pre condition
+	#[error("unable to set the pre condition [{0}]")]
+	UnableToSetPreCondition(ConstString),
 
 	/// Something happened that should not have been possible
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]

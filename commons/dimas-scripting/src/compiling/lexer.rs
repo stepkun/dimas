@@ -10,10 +10,9 @@ use core::cmp::min;
 
 use alloc::string::ToString;
 
-use super::{
-	error::Error,
-	token::{Token, TokenKind},
-};
+use crate::Error;
+
+use super::token::{Token, TokenKind};
 
 /// Enum to handle multi charakter tokens
 enum Started {
@@ -118,7 +117,7 @@ impl Iterator for Lexer<'_> {
 				// skip whitespaces
 				c if c.is_whitespace() => continue,
 				// something is wrong in the token stream
-				c => return Some(Err(Error::UnexpectedChar(c.to_string(), self.line))),
+				c => return Some(Err(Error::UnexpectedChar(c.to_string().into(), self.line))),
 			};
 
 			// handling double & multi character token
@@ -274,7 +273,7 @@ impl Iterator for Lexer<'_> {
 						}))
 					} else {
 						return Some(Err(Error::UnterminatedString(
-							self.whole[c_at..].to_string(),
+							self.whole[c_at..].into(),
 							self.line,
 						)));
 					}

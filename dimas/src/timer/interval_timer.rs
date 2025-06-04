@@ -5,9 +5,9 @@
 // region:      --- modules
 use core::time::Duration;
 use dimas_behavior::{
-	Behavior,
+	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
@@ -31,9 +31,10 @@ pub struct IntervalTimer {
 impl BehaviorInstance for IntervalTimer {
 	async fn start(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("start IntervalTimer");
 
@@ -48,6 +49,7 @@ impl BehaviorInstance for IntervalTimer {
 			let mut my_children: BehaviorTreeElementList = BehaviorTreeElementList::default();
 			std::mem::swap(children, &mut my_children);
 
+			let runtime = runtime.clone();
 			self.handle
 				.replace(tokio::task::spawn(async move {
 					let mut interval = time::interval(interval);
@@ -57,29 +59,34 @@ impl BehaviorInstance for IntervalTimer {
 						// tick every child
 						for index in 0..my_children.len() {
 							let child = &mut my_children[index];
-							let _new_status = child.execute_tick();
+							let _new_state = child.execute_tick(&runtime);
 						}
 					}
 				}));
-			Ok(BehaviorStatus::Running)
+			Ok(BehaviorState::Running)
 		} else {
 			println!("already started IntervalTimer");
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		}
 	}
 
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ticking IntervalTimer");
-		Ok(BehaviorStatus::Running)
+		Ok(BehaviorState::Running)
 	}
 
-	async fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
-		children.reset()?;
+	async fn halt(
+		&mut self,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		children.reset(runtime)?;
 		let handle = self.handle.take();
 		if let Some(handle) = handle {
 			handle.abort();

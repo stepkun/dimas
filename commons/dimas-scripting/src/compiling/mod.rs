@@ -3,7 +3,6 @@
 //! Bytecode compiler for `DiMAS` scripting
 //!
 
-pub mod error;
 mod lexer;
 mod parselets;
 mod parser;

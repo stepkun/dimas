@@ -5,9 +5,9 @@
 
 // region:   	--- modules
 use crate::{
-	Lexer, Parser,
+	Error,
 	compiling::{
-		error::Error,
+		Lexer, Parser,
 		token::{Token, TokenKind},
 	},
 	execution::{Chunk, ScriptingValue, op_code::OpCode},

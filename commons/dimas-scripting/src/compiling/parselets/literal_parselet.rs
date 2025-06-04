@@ -3,12 +3,10 @@
 //! `LiteralParselet` for `Dimas` scripting handles any literal like 'true' and 'false'
 //!
 
-use alloc::string::ToString;
-
 use crate::{
-	Lexer, Parser,
+	Error,
 	compiling::{
-		error::Error,
+		Lexer, Parser,
 		token::{Token, TokenKind},
 	},
 	execution::{Chunk, op_code::OpCode},
@@ -41,7 +39,7 @@ impl PrefixParselet for LiteralParselet {
 				parser.emit_byte(OpCode::True as u8, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string(), line!())),
+			_ => Err(Error::Unreachable(file!().into(), line!())),
 		}
 	}
 }

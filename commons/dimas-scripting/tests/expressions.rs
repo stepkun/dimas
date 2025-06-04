@@ -2,35 +2,27 @@
 
 //! Tests of scripting expressions
 
-use dimas_scripting::{DefaultEnvironment, Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Runtime};
 
 #[test]
 fn expressions() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
+	let mut runtime = Runtime::default();
 
-	let mut parser = Parser::new();
-	let chunk = parser
-		.parse("print (5 - (3 - 1)) + -1;")
+	runtime
+		.run("print (5 - (3 - 1)) + -1;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"2\n");
+	assert_eq!(runtime.stdout(), b"2\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("print (5 - (3 - 1)) + +1;")
+	runtime.clear();
+	runtime
+		.run("print (5 - (3 - 1)) + +1;", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"4\n");
+	assert_eq!(runtime.stdout(), b"4\n");
 
-	stdout.clear();
-	let chunk = parser
-		.parse("print !(5 - 4 > 3 * 2 == !nil);")
+	runtime.clear();
+	runtime
+		.run("print !(5 - 4 > 3 * 2 == !nil);", &mut env)
 		.expect("snh");
-	vm.run(&chunk, &mut env, &mut stdout)
-		.expect("snh");
-	assert_eq!(stdout, b"true\n");
+	assert_eq!(runtime.stdout(), b"true\n");
 }

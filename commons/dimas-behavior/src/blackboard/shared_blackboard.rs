@@ -20,10 +20,7 @@ use core::{
 	str::FromStr,
 };
 use dimas_core::ConstString;
-use dimas_scripting::{
-	Environment,
-	execution::{Error as ScriptingError, ScriptingValue},
-};
+use dimas_scripting::{Environment, Error as ScriptingError, execution::ScriptingValue};
 use parking_lot::RwLock;
 
 use super::{BlackboardInterface, blackboard::Blackboard, blackboard_data::Entry, error::Error};

@@ -116,7 +116,7 @@ impl BehaviorTreeFactory {
 	/// - if behaviors or subtrees are missing
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
 		let mut parser = XmlParser::default();
-		let root = parser.create_tree_from_definition(name, &self.registry)?;
+		let root = parser.create_tree_from_definition(name, &mut self.registry)?;
 		Ok(BehaviorTree::new(root, &self.registry))
 	}
 

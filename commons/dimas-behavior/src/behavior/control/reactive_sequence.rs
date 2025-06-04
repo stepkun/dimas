@@ -5,12 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
@@ -20,9 +21,9 @@ use crate::{
 
 // region:      --- ReactiveSequence
 /// A `ReactiveSequence` ticks its children in an ordered sequence from first to last.
-/// - If any child returns [`BehaviorStatus::Failure`] the sequence returns [`BehaviorStatus::Failure`].
-/// - If all children return [`BehaviorStatus::Success`] the sequence returns [`BehaviorStatus::Success`].
-/// - While any child returns [`BehaviorStatus::Running`] the sequence returns [`BehaviorStatus::Running`].
+/// - If any child returns [`BehaviorState::Failure`] the sequence returns [`BehaviorState::Failure`].
+/// - If all children return [`BehaviorState::Success`] the sequence returns [`BehaviorState::Success`].
+/// - While any child returns [`BehaviorState::Running`] the sequence returns [`BehaviorState::Running`].
 ///
 /// If all the children return SUCCESS, this node returns SUCCESS.
 ///
@@ -40,32 +41,33 @@ pub struct ReactiveSequence {
 impl BehaviorInstance for ReactiveSequence {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
 
 		for counter in 0..children.len() {
 			let child = &mut children[counter];
-			let new_status = child.execute_tick().await?;
+			let new_state = child.execute_tick(runtime).await?;
 
-			all_skipped &= new_status == BehaviorStatus::Skipped;
+			all_skipped &= new_state == BehaviorState::Skipped;
 
-			match new_status {
-				BehaviorStatus::Failure => {
-					children.reset()?;
-					return Ok(BehaviorStatus::Failure);
+			match new_state {
+				BehaviorState::Failure => {
+					children.reset(runtime)?;
+					return Ok(BehaviorState::Failure);
 				}
-				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status(
+				BehaviorState::Idle => {
+					return Err(BehaviorError::State(
 						"ReactiveSequence".into(),
 						"Idle".into(),
 					));
 				}
-				BehaviorStatus::Running => {
+				BehaviorState::Running => {
 					for i in 0..counter {
-						children[i].execute_halt().await?;
+						children[i].execute_halt(runtime).await?;
 					}
 					if !self.running {
 						self.child_idx = counter;
@@ -76,22 +78,22 @@ impl BehaviorInstance for ReactiveSequence {
 							"[ReactiveSequence]: Only a single child can return Running.".into(),
 						));
 					}
-					return Ok(BehaviorStatus::Running);
+					return Ok(BehaviorState::Running);
 				}
-				BehaviorStatus::Skipped => {
+				BehaviorState::Skipped => {
 					// halt current child
-					child.execute_halt().await?;
+					child.execute_halt(runtime).await?;
 				}
-				BehaviorStatus::Success => {}
+				BehaviorState::Success => {}
 			}
 		}
 
 		// Reset children on failure
-		children.reset()?;
+		children.reset(runtime)?;
 		if all_skipped {
-			Ok(BehaviorStatus::Skipped)
+			Ok(BehaviorState::Skipped)
 		} else {
-			Ok(BehaviorStatus::Success)
+			Ok(BehaviorState::Success)
 		}
 	}
 }

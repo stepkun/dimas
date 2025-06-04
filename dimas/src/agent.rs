@@ -3,8 +3,8 @@
 // region:      --- modules
 use anyhow::Result;
 use dimas_behavior::{
-	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
 	tree::{BehaviorTree, BehaviorTreeElementList},
@@ -56,12 +56,13 @@ impl BehaviorInstance for NotInterrupted {
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ticking NotInterrupted");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -80,12 +81,13 @@ impl BehaviorInstance for AlwaysRunning {
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ticking AlwaysRunnin");
-		Ok(BehaviorStatus::Running)
+		Ok(BehaviorState::Running)
 	}
 }
 
@@ -104,12 +106,13 @@ impl BehaviorInstance for Shutdown {
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ticking Shutdown");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -179,7 +182,7 @@ impl Agent {
 			.tick_once()
 			.await?;
 		// run the BT using own loop with sleep to avoid busy loop
-		while result == BehaviorStatus::Running {
+		while result == BehaviorState::Running {
 			let () = tokio::time::sleep(Duration::from_millis(2000)).await;
 			result = self
 				.tree

@@ -2,7 +2,11 @@
 
 //! Tests
 
-use dimas_scripting::{Lexer, Parser, VM};
+use dimas_scripting::{
+	Runtime,
+	compiling::{Lexer, Parser},
+	execution::VM,
+};
 
 // check, that the auto traits are available
 const fn is_normal<T: Sized + Send + Sync>() {}
@@ -11,5 +15,6 @@ const fn is_normal<T: Sized + Send + Sync>() {}
 const fn normal_types() {
 	is_normal::<Lexer>();
 	is_normal::<Parser>();
+	is_normal::<Runtime>();
 	is_normal::<VM>();
 }

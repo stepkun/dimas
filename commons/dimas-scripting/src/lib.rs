@@ -39,16 +39,20 @@
 extern crate alloc;
 
 pub mod compiling;
+pub mod error;
 pub mod execution;
+pub mod runtime;
 
 // region:		--- modules
 use alloc::string::{String, ToString};
 // flatten
-pub use compiling::{Lexer, Parser, TokenKind};
-pub use execution::VM;
+// pub use compiling::{Lexer, Parser, TokenKind};
+pub use error::Error;
+pub use execution::Chunk;
+pub use runtime::{Runtime, SharedRuntime};
 
 use dimas_core::ConstString;
-use execution::{Error, ScriptingValue};
+use execution::ScriptingValue;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use rustc_hash::FxBuildHasher;

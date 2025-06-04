@@ -6,50 +6,46 @@
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,
 	port_list,
 	tree::BehaviorTreeElementList,
 };
-use alloc::{boxed::Box, string::String, vec::Vec};
-use dimas_scripting::{Parser, VM};
+use alloc::{boxed::Box, string::String};
+use dimas_scripting::SharedRuntime;
 //endregion:    --- modules
 
 /// The `ScriptCondition` behavior returns Success or Failure depending on the result of the scripted code.
 #[derive(Behavior, Debug, Default)]
-pub struct ScriptCondition {
-	parser: Parser,
-	vm: VM,
-	stdout: Vec<u8>,
-}
+pub struct ScriptCondition {}
 
 #[async_trait::async_trait]
 impl BehaviorInstance for ScriptCondition {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let code = blackboard.get::<String>("code".into())?;
-		let chunk = self.parser.parse(&code)?;
 		let mut env = blackboard.clone();
-		let value = self.vm.run(&chunk, &mut env, &mut self.stdout)?;
+		let value = runtime.lock().run(&code, &mut env)?;
 
-		let status = if value.is_bool() {
+		let state = if value.is_bool() {
 			let val = value.as_bool()?;
 			if val {
-				BehaviorStatus::Success
+				BehaviorState::Success
 			} else {
-				BehaviorStatus::Failure
+				BehaviorState::Failure
 			}
 		} else {
-			BehaviorStatus::Failure
+			BehaviorState::Failure
 		};
 
-		Ok(status)
+		Ok(state)
 	}
 }
 

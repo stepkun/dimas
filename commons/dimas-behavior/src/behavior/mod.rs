@@ -9,15 +9,17 @@ pub mod condition;
 pub mod control;
 pub mod decorator;
 pub mod error;
+pub mod pre_post_conditions;
 mod simple_behavior;
 
+use dimas_scripting::SharedRuntime;
 // flatten
+pub use error::BehaviorError;
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 
 // region:      --- modules
 use alloc::boxed::Box;
 use core::any::Any;
-use error::BehaviorError;
 
 use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 // endregion:   --- modules
@@ -27,7 +29,7 @@ use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElem
 pub type BehaviorPtr = Box<dyn BehaviorExecution>;
 
 /// Result type definition for behaviors.
-pub type BehaviorResult<Output = BehaviorStatus> = Result<Output, BehaviorError>;
+pub type BehaviorResult<Output = BehaviorState> = Result<Output, BehaviorError>;
 
 /// Type alias for a behavior creation function
 pub type BehaviorCreationFn = dyn Fn() -> BehaviorPtr + Send + Sync;
@@ -61,11 +63,15 @@ pub trait BehaviorCreation: Default {
 #[async_trait::async_trait]
 pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to stop/cancel/halt a behavior.
-	/// Default implementation just returns [`BehaviorStatus::Idle`]
+	/// Default implementation just returns [`BehaviorState::Idle`]
 	/// # Errors
-	async fn halt(&mut self, children: &mut BehaviorTreeElementList) -> Result<(), BehaviorError> {
+	async fn halt(
+		&mut self,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
 		for child in &mut **children {
-			child.halt(0)?;
+			child.halt(0, runtime)?;
 		}
 		Ok(())
 	}
@@ -75,20 +81,23 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// # Errors
 	async fn start(
 		&mut self,
-		status: BehaviorStatus,
+		state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		self.tick(status, blackboard, children).await
+		self.tick(state, blackboard, children, runtime)
+			.await
 	}
 
 	/// Method called to tick a behavior.
 	/// # Errors
 	async fn tick(
 		&mut self,
-		status: BehaviorStatus,
+		state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult;
 }
 // endregion:	--- BehaviorInstance
@@ -119,11 +128,11 @@ pub trait BehaviorStatic: Default {
 }
 // endregion:   --- BehaviorStatic
 
-// region:      --- BehaviorStatus
-/// Behavior status
+// region:      --- BehaviorState
+/// Behavior state
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(u8)]
-pub enum BehaviorStatus {
+pub enum BehaviorState {
 	/// Behavior execution failed.
 	Failure,
 	/// Behavior is not executing.
@@ -137,21 +146,21 @@ pub enum BehaviorStatus {
 	Success,
 }
 
-impl BehaviorStatus {
-	/// Check if status is signaling that the behavior is active
+impl BehaviorState {
+	/// Check if state is signaling that the behavior is active
 	#[must_use]
 	pub const fn is_active(&self) -> bool {
 		matches!(self, Self::Idle | Self::Skipped)
 	}
 
-	/// Check if status is signaling that the behavior is completed
+	/// Check if state is signaling that the behavior is completed
 	#[must_use]
 	pub const fn is_completed(&self) -> bool {
 		matches!(self, Self::Success | Self::Failure)
 	}
 }
 
-impl core::fmt::Display for BehaviorStatus {
+impl core::fmt::Display for BehaviorState {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		let text = match self {
 			Self::Failure => "Failure",
@@ -164,7 +173,7 @@ impl core::fmt::Display for BehaviorStatus {
 		write!(f, "{text}")
 	}
 }
-// endregion:   --- BehaviorStatus
+// endregion:   --- BehaviorState
 
 // region:		--- BehaviorType
 /// All types of behaviors usable in a behavior tree.

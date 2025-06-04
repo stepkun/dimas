@@ -13,6 +13,7 @@ extern crate std;
 // region:      --- modules
 use alloc::{sync::Arc, vec::Vec};
 use dimas_core::ConstString;
+use dimas_scripting::Runtime;
 use hashbrown::HashMap;
 use libloading::Library;
 use rustc_hash::FxBuildHasher;
@@ -33,6 +34,8 @@ pub struct BehaviorRegistry {
 	behaviors: HashMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>), FxBuildHasher>,
 	/// [`HashMap`] of registered behavior tree definitions.
 	tree_definitions: HashMap<ConstString, ConstString, FxBuildHasher>,
+	/// Scripting runtime
+	runtime: Runtime,
 	/// List of loaded libraries.
 	/// Every tree must keep a reference to its needed libraries to keep the libraries in memory
 	/// until end of programm.
@@ -122,6 +125,17 @@ impl BehaviorRegistry {
 			res.push(id.clone());
 		}
 		res
+	}
+
+	/// Access the runtime.
+	#[must_use]
+	pub const fn runtime(&self) -> &Runtime {
+		&self.runtime
+	}
+
+	/// Access the runtime mutable.
+	pub fn runtime_mut(&mut self) -> &mut Runtime {
+		&mut self.runtime
 	}
 }
 // endregion:   --- BehaviorRegistry

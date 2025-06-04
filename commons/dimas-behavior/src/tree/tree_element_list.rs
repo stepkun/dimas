@@ -6,6 +6,7 @@
 // region:      --- modules
 use alloc::vec::Vec;
 use core::ops::{Deref, DerefMut};
+use dimas_scripting::SharedRuntime;
 
 use crate::behavior::error::BehaviorError;
 
@@ -35,9 +36,9 @@ impl BehaviorTreeElementList {
 	/// Reset all children
 	/// # Errors
 	/// - if a child errors on `halt()`
-	pub fn reset(&mut self) -> Result<(), BehaviorError> {
+	pub fn reset(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
 		for child in &mut self.0 {
-			child.halt(0)?;
+			child.halt(0, runtime)?;
 		}
 		Ok(())
 	}
@@ -45,9 +46,9 @@ impl BehaviorTreeElementList {
 	/// Halt child at and beyond index.
 	/// # Errors
 	/// - if halt of a child fails
-	pub fn halt(&mut self, index: usize) -> Result<(), BehaviorError> {
+	pub fn halt(&mut self, index: usize, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
 		for i in index..self.0.len() {
-			self.0[i].halt(0)?;
+			self.0[i].halt(0, runtime)?;
 		}
 		Ok(())
 	}

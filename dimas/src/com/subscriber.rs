@@ -4,8 +4,8 @@
 
 // region:      --- modules
 use dimas_behavior::{
-	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
@@ -24,12 +24,13 @@ impl BehaviorInstance for Subscriber {
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ticking Subscriber");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 

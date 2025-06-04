@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t09_scripting.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 
@@ -43,7 +43,7 @@ async fn scripting_with_enums_reminder() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 
 	Ok(())
 }
@@ -59,7 +59,7 @@ async fn scripting() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 
 	Ok(())
 }
@@ -77,7 +77,7 @@ async fn scripting_with_plugin() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 
 	Ok(())
 }

@@ -7,7 +7,7 @@
 //!
 
 use cross_door::cross_door::CrossDoor;
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -54,7 +54,7 @@ async fn crossdoor() -> anyhow::Result<()> {
 
 	// Tick multiple times, until either FAILURE of SUCCESS is returned
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -71,6 +71,6 @@ async fn crossdoor_with_plugin() -> anyhow::Result<()> {
 	tree.print()?;
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }

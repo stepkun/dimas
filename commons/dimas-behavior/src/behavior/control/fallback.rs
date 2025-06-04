@@ -5,12 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::SharedBlackboard,
@@ -36,45 +37,46 @@ pub struct Fallback {
 impl BehaviorInstance for Fallback {
 	async fn tick(
 		&mut self,
-		status: BehaviorStatus,
+		state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if status == BehaviorStatus::Idle {
+		if state == BehaviorState::Idle {
 			self.all_skipped = true;
 		}
 
 		while self.child_idx < children.len() {
 			let child = &mut children[self.child_idx];
-			let new_status = child.execute_tick().await?;
+			let new_state = child.execute_tick(runtime).await?;
 
-			self.all_skipped &= new_status == BehaviorStatus::Skipped;
+			self.all_skipped &= new_state == BehaviorState::Skipped;
 
-			match new_status {
-				BehaviorStatus::Failure | BehaviorStatus::Skipped => {
+			match new_state {
+				BehaviorState::Failure | BehaviorState::Skipped => {
 					self.child_idx += 1;
 				}
-				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status("Fallback".into(), "Idle".into()));
+				BehaviorState::Idle => {
+					return Err(BehaviorError::State("Fallback".into(), "Idle".into()));
 				}
-				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
-				BehaviorStatus::Success => {
-					children.reset()?;
+				BehaviorState::Running => return Ok(BehaviorState::Running),
+				BehaviorState::Success => {
+					children.reset(runtime)?;
 					self.child_idx = 0;
-					return Ok(BehaviorStatus::Success);
+					return Ok(BehaviorState::Success);
 				}
 			}
 		}
 
 		if self.child_idx >= children.len() {
-			children.reset()?;
+			children.reset(runtime)?;
 			self.child_idx = 0;
 		}
 
 		if self.all_skipped {
-			Ok(BehaviorStatus::Skipped)
+			Ok(BehaviorState::Skipped)
 		} else {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		}
 	}
 }

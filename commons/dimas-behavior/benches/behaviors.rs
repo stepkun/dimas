@@ -6,8 +6,8 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
@@ -20,11 +20,12 @@ pub struct AlwaysSuccess {}
 impl BehaviorInstance for AlwaysSuccess {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -42,11 +43,12 @@ pub struct AlwaysFailure {}
 impl BehaviorInstance for AlwaysFailure {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		Ok(BehaviorStatus::Failure)
+		Ok(BehaviorState::Failure)
 	}
 }
 

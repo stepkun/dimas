@@ -15,8 +15,8 @@ use std::{
 };
 
 use dimas_behavior::{
-	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port, output_port,
 	port::PortList,
@@ -33,11 +33,12 @@ pub struct AlwaysSuccess {}
 impl BehaviorInstance for AlwaysSuccess {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -55,11 +56,12 @@ pub struct AlwaysFailure {}
 impl BehaviorInstance for AlwaysFailure {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		Ok(BehaviorStatus::Failure)
+		Ok(BehaviorState::Failure)
 	}
 }
 
@@ -78,12 +80,13 @@ pub struct ApproachObject {}
 impl BehaviorInstance for ApproachObject {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ApproachObject: approach_object");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -98,7 +101,7 @@ impl BehaviorStatic for ApproachObject {
 /// In this case never :-)
 pub fn check_battery() -> BehaviorResult {
 	println!("[ Battery: OK ]");
-	Ok(BehaviorStatus::Success)
+	Ok(BehaviorState::Success)
 }
 
 /// Struct for behaviors `OpenGripper` and `CloseGripper`
@@ -111,14 +114,14 @@ impl GripperInterface {
 	/// In this case never :-)
 	pub fn open(&mut self) -> BehaviorResult {
 		println!("GripperInterface::open");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 	/// Close the gripper.
 	/// # Errors
 	/// In this case never :-)
 	pub fn close(&mut self) -> BehaviorResult {
 		println!("GripperInterface::close");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 /// Behavior `SaySomething`
@@ -130,13 +133,14 @@ pub struct SaySomething {}
 impl BehaviorInstance for SaySomething {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let msg = blackboard.get::<String>("message".into())?;
 		println!("Robot says: {msg}");
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -158,12 +162,13 @@ pub struct ThinkWhatToSay {}
 impl BehaviorInstance for ThinkWhatToSay {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		blackboard.set("text".into(), String::from("The answer is 42"))?;
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -182,7 +187,7 @@ impl BehaviorStatic for ThinkWhatToSay {
 pub fn new_say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
 	let msg = blackboard.get::<String>("message".into())?;
 	println!("Robot2 says: {msg}");
-	Ok(BehaviorStatus::Success)
+	Ok(BehaviorState::Success)
 }
 
 /// `Position2D`
@@ -225,13 +230,14 @@ pub struct CalculateGoal {}
 impl BehaviorInstance for CalculateGoal {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
 		blackboard.set("goal".into(), mygoal)?;
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -253,13 +259,14 @@ pub struct PrintTarget {}
 impl BehaviorInstance for PrintTarget {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let pos = blackboard.get::<Position2D>("target".into())?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -326,9 +333,10 @@ impl Default for MoveBaseAction {
 impl BehaviorInstance for MoveBaseAction {
 	async fn start(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let pose = blackboard.get::<Pose2D>("goal".into())?;
 		println!(
@@ -337,21 +345,22 @@ impl BehaviorInstance for MoveBaseAction {
 		);
 		self.start_time = Instant::now();
 		self.completion_time = Duration::from_millis(220);
-		Ok(BehaviorStatus::Running)
+		Ok(BehaviorState::Running)
 	}
 
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		if Instant::now().duration_since(self.start_time) >= self.completion_time {
 			println!("[ MoveBase: FINISHED ]");
-			return Ok(BehaviorStatus::Success);
+			return Ok(BehaviorState::Success);
 		}
 
-		Ok(BehaviorStatus::Running)
+		Ok(BehaviorState::Running)
 	}
 }
 

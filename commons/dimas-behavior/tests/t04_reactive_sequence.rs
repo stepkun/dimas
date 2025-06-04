@@ -11,7 +11,7 @@ use std::{sync::Arc, time::Duration};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething, check_battery};
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -60,11 +60,11 @@ async fn std_sequence() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == BehaviorStatus::Running {
+	while result == BehaviorState::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -81,11 +81,11 @@ async fn reactive_sequence() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == BehaviorStatus::Running {
+	while result == BehaviorState::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -101,11 +101,11 @@ async fn std_sequence_with_plugin() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == BehaviorStatus::Running {
+	while result == BehaviorState::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -120,10 +120,10 @@ async fn reactive_sequence_with_plugin() -> anyhow::Result<()> {
 
 	// run the BT using own loop with sleep to avoid busy loop
 	let mut result = tree.tick_once().await?;
-	while result == BehaviorStatus::Running {
+	while result == BehaviorState::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
 	}
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }

@@ -9,9 +9,9 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	Behavior,
+	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus,
+		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic,
 		BehaviorType,
 	},
 	blackboard::SharedBlackboard,
@@ -42,15 +42,16 @@ pub struct ActionA {
 impl BehaviorInstance for ActionA {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 42);
 
 		assert_eq!(self.arg2, String::from("hello world"));
 		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -79,14 +80,15 @@ pub struct ActionB {
 impl BehaviorInstance for ActionB {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 69);
 		assert_eq!(self.arg2, String::from("interesting value"));
 		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -127,7 +129,7 @@ async fn additional_args() -> anyhow::Result<()> {
 	}
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 
 	// test the iterator
 	let mut iter = tree.iter();

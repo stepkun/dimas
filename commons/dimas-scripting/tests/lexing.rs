@@ -2,7 +2,7 @@
 
 //! Tests of lexing functionality
 
-use dimas_scripting::{Lexer, TokenKind};
+use dimas_scripting::compiling::{Lexer, TokenKind};
 
 #[allow(unused)]
 #[allow(clippy::upper_case_acronyms)]

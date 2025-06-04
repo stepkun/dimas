@@ -8,7 +8,7 @@
 
 use std::sync::Arc;
 
-use dimas_behavior::{behavior::BehaviorStatus, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 use parking_lot::Mutex;
 use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
@@ -61,7 +61,7 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 	// In this case, the entire sequence is executed, because all the children
 	// of the Sequence return SUCCESS.
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
 
@@ -94,6 +94,6 @@ async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }

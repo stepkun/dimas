@@ -3,11 +3,11 @@
 
 use std::io::{Write, stdin, stdout};
 
-use dimas_scripting::{DefaultEnvironment, Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Runtime};
 
 fn repl() {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
+	let mut runtime = Runtime::default();
 	let mut input = String::new();
 
 	print!("> ");
@@ -19,19 +19,17 @@ fn repl() {
 					// ignore CR/LF only input
 					if input.len() > 1 {
 						// print!("{}", &input);
-						let mut parser = Parser::new();
-						parser.parse(&input).map_or_else(
+						runtime.parse(&input).map_or_else(
 							|err| {
 								println!("parsing error: {err}");
 							},
 							|chunk| {
 								//chunk.disassemble("created chunk");
-								let mut stdout: Vec<u8> = Vec::new();
-								if let Err(error) = vm.run(&chunk, &mut env, &mut stdout) {
+								if let Err(error) = runtime.execute(&chunk, &mut env) {
 									println!("execution error: {error}");
 								} else {
-									for c in stdout {
-										print!("{}", c as char);
+									for c in runtime.stdout() {
+										print!("{}", *c as char);
 									}
 								}
 							},

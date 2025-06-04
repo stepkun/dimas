@@ -3,12 +3,10 @@
 //! `UnaryParselet` for `Dimas` scripting analyzes and handles the prefix expressions
 //!
 
-use alloc::string::ToString;
-
 use crate::{
-	Lexer, Parser,
+	Error,
 	compiling::{
-		error::Error,
+		Lexer, Parser,
 		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
@@ -54,7 +52,7 @@ impl PrefixParselet for UnaryParselet {
 				parser.emit_byte(OpCode::BitwiseNot as u8, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string(), line!())),
+			_ => Err(Error::Unreachable(file!().into(), line!())),
 		}
 	}
 }

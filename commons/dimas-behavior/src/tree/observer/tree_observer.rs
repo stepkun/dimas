@@ -17,7 +17,7 @@ use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
 use crate::{
-	behavior::BehaviorStatus,
+	behavior::BehaviorState,
 	tree::{BehaviorTree, BehaviorTreeElement},
 };
 // endregion:   --- modules
@@ -29,10 +29,10 @@ pub struct Statistics {
 	/// count ticks.
 	pub tick_count: usize,
 	/// Last result of a tick, either Success or Failure.
-	pub last_result: BehaviorStatus,
-	/// Last status. Can be any status.
-	pub current_status: BehaviorStatus,
-	/// count status transitions, excluding transition to Idle.
+	pub last_result: BehaviorState,
+	/// Last state. Can be any state.
+	pub current_state: BehaviorState,
+	/// count state transitions, excluding transition to Idle.
 	pub transitions_count: usize,
 	/// count number of transitions to Success.
 	pub success_count: usize,
@@ -49,8 +49,8 @@ impl Default for Statistics {
 	fn default() -> Self {
 		Self {
 			tick_count: Default::default(),
-			last_result: BehaviorStatus::default(),
-			current_status: BehaviorStatus::default(),
+			last_result: BehaviorState::default(),
+			current_state: BehaviorState::default(),
 			transitions_count: Default::default(),
 			success_count: Default::default(),
 			failure_count: Default::default(),
@@ -74,7 +74,7 @@ impl BehaviorTreeObserver {
 	pub fn new(root: &mut BehaviorTree) -> Self {
 		let id: ConstString = "statistics".into();
 		let statistics: Arc<Mutex<Vec<Statistics>>> = Arc::new(Mutex::new(Vec::new()));
-		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorStatus, BehaviorStatus)>(10);
+		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorState, BehaviorState)>(10);
 		// spawn receiver
 		let statistics_clone = statistics.clone();
 		let handle = tokio::spawn(async move {
@@ -85,18 +85,18 @@ impl BehaviorTreeObserver {
 				if val.3 != val.2 {
 					entry.transitions_count += 1;
 					match val.3 {
-						BehaviorStatus::Failure => {
+						BehaviorState::Failure => {
 							entry.failure_count += 1;
 							entry.last_result = val.3;
 						}
-						BehaviorStatus::Idle | BehaviorStatus::Running => {}
-						BehaviorStatus::Skipped => entry.skip_count += 1,
-						BehaviorStatus::Success => {
+						BehaviorState::Idle | BehaviorState::Running => {}
+						BehaviorState::Skipped => entry.skip_count += 1,
+						BehaviorState::Success => {
 							entry.success_count += 1;
 							entry.last_result = val.3;
 						}
 					}
-					entry.current_status = val.3;
+					entry.current_state = val.3;
 					entry.timestamp = val.1;
 				}
 				drop(stats);
@@ -108,16 +108,16 @@ impl BehaviorTreeObserver {
 		for element in root.iter_mut() {
 			statistics.lock().push(Statistics::default());
 			let tx_clone = tx.clone();
-			let callback = move |element: &BehaviorTreeElement, new_status: &mut BehaviorStatus| {
+			let callback = move |element: &BehaviorTreeElement, new_state: &mut BehaviorState| {
 				let timestamp = Instant::now();
-				let tuple = (element.uid(), timestamp, element.status(), *new_status);
+				let tuple = (element.uid(), timestamp, element.state(), *new_state);
 				// ignore any errors when sending
 				let tx_clone_cloned = tx_clone.clone();
 				tokio::spawn(async move {
 					tx_clone_cloned.send(tuple).await.expect("snh");
 				});
 			};
-			element.add_pre_status_change_callback(id.clone(), callback);
+			element.add_pre_state_change_callback(id.clone(), callback);
 		}
 		Self {
 			_handle: handle,

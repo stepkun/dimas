@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `DiMAS` scripting runtime errors
+//! `DiMAS` scripting compiletime errors
 
 // region		--- modules
 use dimas_core::ConstString;
@@ -8,9 +8,40 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `scripting` runtime error type
+/// `scripting` error type
 #[derive(Error, Debug)]
 pub enum Error {
+	/// @TODO:
+	#[error("Expecting {0} found {1} at line {2}")]
+	ExpectedToken(ConstString, ConstString, usize),
+	/// @TODO:
+	#[error("expression expected at line {0}")]
+	ExpressionExpected(usize),
+	/// @TODO:
+	#[error("could not create Chunk for VM")]
+	NoChunk,
+	/// @TODO:
+	#[error("could not parse HexNumber {0} at line {1}")]
+	ParseHex(ConstString, usize),
+	/// @TODO:
+	#[error("could not parse IntNumber {0} at line {1}")]
+	ParseInt(ConstString, usize),
+	/// @TODO:
+	#[error("could not parse Number {0} at line {1}")]
+	ParseNumber(ConstString, usize),
+	/// @TODO:
+	#[error("Value storage is full")]
+	ToManyValues,
+	/// @TODO:
+	#[error("unexpected character {0} at line {1}")]
+	UnexpectedChar(ConstString, usize),
+	/// @TODO:
+	#[error("unexpected Token at line {0}")]
+	UnexpectedToken(usize),
+	/// @TODO:
+	#[error("unterminated String {0} at line {1}")]
+	UnterminatedString(ConstString, usize),
+
 	/// Pass through core error.
 	#[error("{0}")]
 	Core(#[from] dimas_core::error::Error),
@@ -64,7 +95,7 @@ pub enum Error {
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
 	Unexpected(ConstString, ConstString, u32),
 	/// @TODO:
-	#[error("this should be unreachable in vm.rs line {0}")]
-	Unreachable(u32),
+	#[error("should be unreachable in {0} at line {1}")]
+	Unreachable(ConstString, u32),
 }
 // region:		--- Error

@@ -13,7 +13,7 @@ use core::{
 	str::FromStr,
 };
 
-use super::Error;
+use crate::Error;
 // endregion:	--- modules
 
 // region:		--- Value

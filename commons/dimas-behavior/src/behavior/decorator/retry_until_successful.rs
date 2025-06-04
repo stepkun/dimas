@@ -5,12 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
 	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType,
+		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
 		error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
@@ -63,47 +64,48 @@ impl Default for RetryUntilSuccessful {
 impl BehaviorInstance for RetryUntilSuccessful {
 	async fn tick(
 		&mut self,
-		status: BehaviorStatus,
+		state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// Load num_cycles from the port value
 		self.max_attempts = blackboard.get::<i32>("num_attempts".into())?;
 
 		let mut do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
 
-		if status == BehaviorStatus::Idle {
+		if state == BehaviorState::Idle {
 			self.all_skipped = true;
 		}
 
 		while do_loop {
 			// A `Decorator` has only 1 child
 			let child = &mut children[0];
-			let new_status = child.execute_tick().await?;
+			let new_state = child.execute_tick(runtime).await?;
 
-			self.all_skipped &= new_status == BehaviorStatus::Skipped;
+			self.all_skipped &= new_state == BehaviorState::Skipped;
 
-			match new_status {
-				BehaviorStatus::Failure => {
+			match new_state {
+				BehaviorState::Failure => {
 					self.try_count += 1;
 					do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
-					children.reset()?;
+					children.reset(runtime)?;
 				}
-				BehaviorStatus::Idle => {
-					return Err(BehaviorError::Status(
+				BehaviorState::Idle => {
+					return Err(BehaviorError::State(
 						"RetryUntilSuccessful".into(),
 						"Idle".into(),
 					));
 				}
-				BehaviorStatus::Running => return Ok(BehaviorStatus::Running),
-				BehaviorStatus::Skipped => {
-					children.reset()?;
-					return Ok(BehaviorStatus::Skipped);
+				BehaviorState::Running => return Ok(BehaviorState::Running),
+				BehaviorState::Skipped => {
+					children.reset(runtime)?;
+					return Ok(BehaviorState::Skipped);
 				}
-				BehaviorStatus::Success => {
-					children.reset()?;
+				BehaviorState::Success => {
+					children.reset(runtime)?;
 					self.try_count = 0;
-					return Ok(BehaviorStatus::Success);
+					return Ok(BehaviorState::Success);
 				}
 			}
 		}
@@ -111,9 +113,9 @@ impl BehaviorInstance for RetryUntilSuccessful {
 		self.try_count = 0;
 
 		if self.all_skipped {
-			Ok(BehaviorStatus::Skipped)
+			Ok(BehaviorState::Skipped)
 		} else {
-			Ok(BehaviorStatus::Failure)
+			Ok(BehaviorState::Failure)
 		}
 	}
 }

@@ -14,10 +14,12 @@ extern crate std;
 // region:      --- modules
 use alloc::{string::String, sync::Arc, vec, vec::Vec};
 use core::marker::PhantomData;
+use dimas_scripting::SharedRuntime;
 use libloading::Library;
+use parking_lot::Mutex;
 
 use crate::{
-	behavior::{BehaviorResult, BehaviorStatus},
+	behavior::{BehaviorResult, BehaviorState},
 	factory::BehaviorRegistry,
 };
 
@@ -143,6 +145,7 @@ impl<'a> Iterator for TeeIterMut<'a> {
 /// A certain [`BehaviorTree`] can contain up to 65536 [`BehaviorTreeElement`]s.
 pub struct BehaviorTree {
 	root: BehaviorTreeElement,
+	runtime: SharedRuntime,
 	_libraries: Vec<Arc<Library>>,
 }
 
@@ -150,6 +153,8 @@ impl BehaviorTree {
 	/// create a Tree with reference to its libraries
 	#[must_use]
 	pub fn new(root: BehaviorTreeElement, registry: &BehaviorRegistry) -> Self {
+		// create a clone of the scripting runtime
+		let runtime = Arc::new(Mutex::new(registry.runtime().clone()));
 		// clone the current state of registered libraries
 		let mut libraries = Vec::new();
 		for lib in registry.libraries() {
@@ -157,6 +162,7 @@ impl BehaviorTree {
 		}
 		Self {
 			root,
+			runtime,
 			_libraries: libraries,
 		}
 	}
@@ -178,38 +184,38 @@ impl BehaviorTree {
 	/// Ticks the tree exactly once.
 	/// # Errors
 	pub async fn tick_exactly_once(&mut self) -> BehaviorResult {
-		let status = self.root.execute_tick().await?;
+		let state = self.root.execute_tick(&self.runtime).await?;
 		tokio::task::yield_now().await;
-		Ok(status)
+		Ok(state)
 	}
 
 	/// Ticks the tree once.
 	/// @TODO: The wakeup mechanism is not yet implemented
 	/// # Errors
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		let status = self.root.execute_tick().await?;
+		let state = self.root.execute_tick(&self.runtime).await?;
 		tokio::task::yield_now().await;
-		Ok(status)
+		Ok(state)
 	}
 
-	/// Ticks the tree until it finishes either with [`BehaviorStatus::Success`] or [`BehaviorStatus::Failure`].
+	/// Ticks the tree until it finishes either with [`BehaviorState::Success`] or [`BehaviorState::Failure`].
 	/// # Errors
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
-		let mut status = BehaviorStatus::Idle;
+		let mut state = BehaviorState::Idle;
 
-		while status == BehaviorStatus::Idle || status == BehaviorStatus::Running {
-			status = self.root.execute_tick().await?;
+		while state == BehaviorState::Idle || state == BehaviorState::Running {
+			state = self.root.execute_tick(&self.runtime).await?;
 			tokio::task::yield_now().await;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 
-			if status.is_completed() {
-				self.root.execute_halt().await?;
+			if state.is_completed() {
+				self.root.execute_halt(&self.runtime).await?;
 				break;
 			}
 		}
 		tokio::task::yield_now().await;
-		Ok(status)
+		Ok(state)
 	}
 
 	/// @TODO:

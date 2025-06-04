@@ -3,12 +3,10 @@
 //! `LogicParselet` for `Dimas` scripting analyzes and handles logical expressions
 //!
 
-use alloc::string::ToString;
-
 use crate::{
-	Lexer, Parser,
+	Error,
 	compiling::{
-		error::Error,
+		Lexer, Parser,
 		precedence::Precedence,
 		token::{Token, TokenKind},
 	},
@@ -86,7 +84,7 @@ impl InfixParselet for LogicParselet {
 				Parser::patch_jump(end_pos, chunk);
 				Ok(())
 			}
-			_ => Err(Error::Unreachable(file!().to_string(), line!())),
+			_ => Err(Error::Unreachable(file!().into(), line!())),
 		}
 	}
 

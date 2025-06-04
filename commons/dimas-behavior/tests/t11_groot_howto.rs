@@ -12,8 +12,8 @@ use std::{fmt::Display, num::ParseFloatError, str::FromStr};
 
 use cross_door::cross_door::CrossDoor;
 use dimas_behavior::{
-	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorStatic, BehaviorStatus, BehaviorType},
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	output_port,
@@ -21,6 +21,8 @@ use dimas_behavior::{
 	port_list,
 	tree::BehaviorTreeElementList,
 };
+
+const CYCLES: u8 = 20;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -62,14 +64,15 @@ pub struct UpdatePosition {
 impl BehaviorInstance for UpdatePosition {
 	async fn tick(
 		&mut self,
-		_status: BehaviorStatus,
+		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		self.pos.x += 0.2;
 		self.pos.y += 0.1;
 		blackboard.set("pos".into(), self.pos.clone())?;
-		Ok(BehaviorStatus::Success)
+		Ok(BehaviorState::Success)
 	}
 }
 
@@ -120,7 +123,7 @@ impl Display for Position2D {
 async fn groot_howto() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	let cross_door = CrossDoor::default();
+	let mut cross_door = CrossDoor::default();
 	cross_door.register_nodes(&mut factory)?;
 	factory.register_node_type::<UpdatePosition>("UpdatePosition")?;
 
@@ -129,14 +132,17 @@ async fn groot_howto() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	for _ in 0..CYCLES {
+		cross_door.reset();
+		let result = tree.tick_while_running().await?;
+		assert_eq!(result, BehaviorState::Success);
+	}
 
 	Ok(())
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "reminder for reset implementation in plugins"]
 async fn groot_howto_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -148,8 +154,11 @@ async fn groot_howto_with_plugin() -> anyhow::Result<()> {
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorStatus::Success);
+	for _ in 0..CYCLES {
+		// cross_door.reset();
+		let result = tree.tick_while_running().await?;
+		assert_eq!(result, BehaviorState::Success);
+	}
 
 	Ok(())
 }

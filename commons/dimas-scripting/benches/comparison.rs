@@ -4,22 +4,19 @@
 //! Benchmarks of scripting comparison
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_scripting::{DefaultEnvironment, Parser, VM};
+use dimas_scripting::{DefaultEnvironment, Runtime};
 
 fn double_comparison(c: &mut Criterion) {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
-	let mut parser = Parser::new();
-	let chunk = parser
+	let mut runtime = Runtime::default();
+	let chunk = runtime
 		.parse("1<1; 3.1475<4.99999; -3.00987654321234>-3.00987654321234; 4>3.00987654321234;")
 		.expect("snh");
 
 	c.bench_function("double comparison", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &mut env, &mut stdout)
-					.expect("snh");
+				runtime.execute(&chunk, &mut env).expect("snh");
 			}
 			std::hint::black_box(());
 		});
@@ -28,18 +25,15 @@ fn double_comparison(c: &mut Criterion) {
 
 fn integer_comparison(c: &mut Criterion) {
 	let mut env = DefaultEnvironment::default();
-	let mut vm = VM::default();
-	let mut stdout: Vec<u8> = Vec::new();
-	let mut parser = Parser::new();
-	let chunk = parser
+	let mut runtime = Runtime::default();
+	let chunk = runtime
 		.parse("0x1<0x1; 0x1<0x2; 0x1>0x1; 0x2>0x1;")
 		.expect("snh");
 
 	c.bench_function("integer comparison", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				vm.run(&chunk, &mut env, &mut stdout)
-					.expect("snh");
+				runtime.execute(&chunk, &mut env).expect("snh");
 			}
 			std::hint::black_box(());
 		});
