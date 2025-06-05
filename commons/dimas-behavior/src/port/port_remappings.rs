@@ -19,9 +19,8 @@ type RemappingEntry = (ConstString, ConstString);
 
 // region:		--- PortRemappings
 /// Remapping list
-/// `PortRemappings` is not using a `HashMap` but a `Vec` due to two reasons:
-/// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
-/// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
+/// The `PortRemappings` is not using a `BTreeMap` but a `Vec` due to
+/// a `BTreeMap` needs more space than a `Vec` and search performance is not an issue
 #[derive(Debug, Default)]
 pub struct PortRemappings(Vec<RemappingEntry>);
 

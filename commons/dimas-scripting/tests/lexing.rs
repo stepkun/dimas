@@ -2,6 +2,8 @@
 
 //! Tests of lexing functionality
 
+use std::collections::BTreeMap;
+
 use dimas_scripting::compiling::{Lexer, TokenKind};
 
 #[allow(unused)]
@@ -15,7 +17,8 @@ enum Color {
 #[allow(clippy::cognitive_complexity)]
 #[allow(clippy::too_many_lines)]
 fn lexing_tokens(tokens: &str) {
-	let mut lexer = Lexer::new(tokens);
+	let enums: BTreeMap<String, i8> = BTreeMap::default();
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::ColonEqual
@@ -140,7 +143,8 @@ fn lexing() {
 #[test]
 fn lexing_keywords() {
 	let tokens = "true false";
-	let mut lexer = Lexer::new(tokens);
+	let enums: BTreeMap<String, i8> = BTreeMap::default();
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::True
@@ -156,7 +160,8 @@ fn lexing_keywords() {
 #[test]
 fn lexing_idents() {
 	let tokens = "a_name _another_name _aThirdName_";
-	let mut lexer = Lexer::new(tokens);
+	let enums: BTreeMap<String, i8> = BTreeMap::default();
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::Ident
@@ -176,7 +181,8 @@ fn lexing_idents() {
 #[test]
 fn lexing_numbers() {
 	let tokens = "123 123.0 123.456 0.123 0x123";
-	let mut lexer = Lexer::new(tokens);
+	let enums: BTreeMap<String, i8> = BTreeMap::default();
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::IntNumber
@@ -204,7 +210,8 @@ fn lexing_numbers() {
 #[test]
 fn lexing_hex() {
 	let tokens = "0x123 0xABC 0xabc 0xa1b2c3";
-	let mut lexer = Lexer::new(tokens);
+	let enums: BTreeMap<String, i8> = BTreeMap::default();
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::HexNumber
@@ -228,7 +235,8 @@ fn lexing_hex() {
 #[test]
 fn lexing_strings() {
 	let tokens = "'teststring' 'another_string'";
-	let mut lexer = Lexer::new(tokens);
+	let enums: BTreeMap<String, i8> = BTreeMap::default();
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::String
@@ -242,11 +250,15 @@ fn lexing_strings() {
 }
 
 #[test]
-#[ignore = "not yet implemented"]
 fn lexing_enums() {
-	let tokens = "RED BLUE GREEN";
+	let tokens = "First SECOND Third";
 	// @TODO
-	let mut lexer = Lexer::new(tokens);
+	let mut enums: BTreeMap<String, i8> = BTreeMap::default();
+	enums.insert("First".into(), 1);
+	enums.insert("SECOND".into(), 2);
+	enums.insert("Third".into(), 3);
+
+	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(
 		lexer.next().expect("snh").expect("snh").kind,
 		TokenKind::Enum

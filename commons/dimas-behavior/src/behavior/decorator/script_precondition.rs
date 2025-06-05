@@ -5,7 +5,7 @@
 
 // region:      --- modules
 use alloc::{boxed::Box, string::String};
-use dimas_scripting::{Runtime, SharedRuntime};
+use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
 use crate::behavior::error::BehaviorError;
@@ -25,9 +25,7 @@ use crate::{
 /// The `Precondition` behavior is used to check a scripted condition before
 /// executing its child.
 #[derive(Behavior, Debug, Default)]
-pub struct Precondition {
-	runtime: Runtime,
-}
+pub struct Precondition;
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Precondition {
@@ -40,7 +38,7 @@ impl BehaviorInstance for Precondition {
 	) -> BehaviorResult {
 		let if_branch = blackboard.get::<String>("if".into())?;
 		let mut env = blackboard.clone();
-		let value = self.runtime.run(&if_branch, &mut env)?;
+		let value = runtime.lock().run(&if_branch, &mut env)?;
 
 		let new_state = if value.is_bool() {
 			let val = value.as_bool()?;
@@ -59,7 +57,7 @@ impl BehaviorInstance for Precondition {
 					"Skipped" => BehaviorState::Skipped,
 					"Success" => BehaviorState::Success,
 					_ => {
-						let value = self.runtime.run(&else_branch, &mut env)?;
+						let value = runtime.lock().run(&else_branch, &mut env)?;
 						if value.is_bool() {
 							let val = value.as_bool()?;
 							if val {

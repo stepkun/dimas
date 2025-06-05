@@ -14,25 +14,21 @@ fn defining_globals() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"3\n");
 
-	runtime.clear();
 	runtime
 		.run("@test:=17;print @test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"17\n");
 
-	runtime.clear();
 	runtime
 		.run("_test:='string';print _test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"string\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=0xf;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"15\n");
 
-	runtime.clear();
 	runtime
 		.run("test:='string';print test;", &mut env)
 		.expect("snh");
@@ -49,13 +45,11 @@ fn change_globals() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"7\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=0xf;test=0x1;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"1\n");
 
-	runtime.clear();
 	runtime
 		.run("test:='string';test='other';print test;", &mut env)
 		.expect("snh");
@@ -72,31 +66,26 @@ fn assignment_with_change() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"10\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=0xf;test+=0x1;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"16\n");
 
-	runtime.clear();
 	runtime
 		.run("test:='string';test+=' other';print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"string other\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=3;test-=7;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"-4\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=3;test*=7;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"21\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=6;test/=2;print test;", &mut env)
 		.expect("snh");
@@ -113,19 +102,16 @@ fn assignment_with_complex_change() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"10\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=3;test-=(17-10)*2-7;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"-4\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=3;test*=(17-10)*2-7;print test;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"21\n");
 
-	runtime.clear();
 	runtime
 		.run("test:=6;test/=(17-10)*2-(7+5);print test;", &mut env)
 		.expect("snh");
@@ -145,7 +131,6 @@ fn complex_examples() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"10\n31\n");
 
-	runtime.clear();
 	runtime
 		.run(
 			"value:=0x7F;val_A:=value&0x0F;val_B:=value|0xF0;print val_A;print val_B",
@@ -154,13 +139,11 @@ fn complex_examples() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"15\n255\n");
 
-	runtime.clear();
 	runtime
 		.run("val_A:=2;val_B:=(val_A>1)?42:24;print val_B", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"42\n");
 
-	runtime.clear();
 	runtime
 		.run("val_A:=0;val_B:=(val_A>1)?42:24;print val_B", &mut env)
 		.expect("snh");

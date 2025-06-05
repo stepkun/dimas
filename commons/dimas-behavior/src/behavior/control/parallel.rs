@@ -5,8 +5,8 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use alloc::collections::btree_set::BTreeSet;
 use dimas_scripting::SharedRuntime;
-use hashbrown::HashSet;
 
 use crate::behavior::error::BehaviorError;
 use crate::blackboard::BlackboardInterface;
@@ -30,7 +30,7 @@ pub struct Parallel {
 	/// @TODO:
 	failure_threshold: i32,
 	/// @TODO:
-	completed_list: HashSet<usize>,
+	completed_list: BTreeSet<usize>,
 	/// @TODO:
 	success_count: usize,
 	/// @TODO:
@@ -42,7 +42,7 @@ impl Default for Parallel {
 		Self {
 			success_threshold: -1,
 			failure_threshold: -1,
-			completed_list: HashSet::default(),
+			completed_list: BTreeSet::default(),
 			success_count: 0,
 			failure_count: 0,
 		}
@@ -53,6 +53,7 @@ impl Default for Parallel {
 impl BehaviorInstance for Parallel {
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
+	#[allow(clippy::set_contains_or_insert)]
 	async fn tick(
 		&mut self,
 		_state: BehaviorState,

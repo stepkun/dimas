@@ -8,9 +8,9 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::sync::Arc;
 #[cfg(feature = "std")]
 use alloc::vec::Vec;
+use alloc::{collections::btree_map::BTreeMap, string::String, sync::Arc};
 use parking_lot::Mutex;
 
 use crate::{
@@ -32,6 +32,7 @@ pub type SharedRuntime = Arc<Mutex<Runtime>>;
 pub struct Runtime {
 	parser: Parser,
 	vm: VM,
+	enums: BTreeMap<String, i8>,
 	#[cfg(feature = "std")]
 	stdout: Vec<u8>,
 }
@@ -43,6 +44,7 @@ impl Clone for Runtime {
 		Self {
 			parser: Parser::default(),
 			vm: VM::default(),
+			enums: self.enums.clone(),
 			#[cfg(feature = "std")]
 			stdout: Vec::new(),
 		}
@@ -50,11 +52,23 @@ impl Clone for Runtime {
 }
 
 impl Runtime {
+	/// Insert enum value.
+	///
+	/// # Errors
+	/// - if en enum definition (key) already exists.
+	pub fn register_enum_tuple(&mut self, key: &str, value: i8) -> Result<(), Error> {
+		if let Some(old_value) = self.enums.get(key) {
+			return Err(Error::DuplicateEnumVariant(key.into(), *old_value, value));
+		}
+		self.enums.insert(key.into(), value);
+		Ok(())
+	}
+
 	/// Parse a scripting source.
 	/// # Errors
 	/// - if script is invalid
 	pub fn parse(&mut self, script: &str) -> Result<Chunk, Error> {
-		self.parser.parse(script)
+		self.parser.parse(&self.enums, script)
 	}
 
 	/// Execute a bytecode chunk.
@@ -72,7 +86,25 @@ impl Runtime {
 		res
 	}
 
+	/// Continue running scripts.
+	/// Does not clear stdout before execution.
+	/// # Errors
+	/// - if
+	pub fn continue_run(
+		&mut self,
+		script: &str,
+		globals: &mut dyn Environment,
+	) -> Result<ScriptingValue, Error> {
+		let chunk = self.parser.parse(&self.enums, script)?;
+		#[cfg(not(feature = "std"))]
+		let res = self.vm.run(chunk, globals)?;
+		#[cfg(feature = "std")]
+		let res = self.vm.run(&chunk, globals, &mut self.stdout)?;
+		Ok(res)
+	}
+
 	/// Run a script.
+	/// Clears stdout before execution.
 	/// # Errors
 	/// - if
 	pub fn run(
@@ -80,12 +112,8 @@ impl Runtime {
 		script: &str,
 		globals: &mut dyn Environment,
 	) -> Result<ScriptingValue, Error> {
-		let chunk = self.parser.parse(script)?;
-		#[cfg(not(feature = "std"))]
-		let res = self.vm.run(chunk, globals)?;
-		#[cfg(feature = "std")]
-		let res = self.vm.run(&chunk, globals, &mut self.stdout)?;
-		Ok(res)
+		self.stdout.clear();
+		self.continue_run(script, globals)
 	}
 
 	/// Access the stdout.

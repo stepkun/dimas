@@ -14,43 +14,36 @@ fn add() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"579\n");
 
-	runtime.clear();
 	runtime
 		.run("print 123 + 456;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"579\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'str' + 'ing';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"string\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'is ' + true;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"is true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'is ' + false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"is false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'value is ' + 123;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"value is 123\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'value is ' + 0xff;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"value is 255\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'is ' + nil;", &mut env)
 		.expect("snh");
@@ -67,13 +60,11 @@ fn subtract() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"3.3299999999999996\n");
 
-	runtime.clear();
 	runtime
 		.run("print 456 - 123;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"333\n");
 
-	runtime.clear();
 	runtime
 		.run("print 1.23 - 3.21;", &mut env)
 		.expect("snh");
@@ -90,13 +81,11 @@ fn multiply() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"56088\n");
 
-	runtime.clear();
 	runtime
 		.run("print 123.0 * 456.0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"56088\n");
 
-	runtime.clear();
 	runtime
 		.run("print 1.2 * 3.4;", &mut env)
 		.expect("snh");
@@ -113,11 +102,9 @@ fn divide() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"2\n");
 
-	runtime.clear();
 	runtime.run("print 1/3;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"0\n");
 
-	runtime.clear();
 	runtime
 		.run("print 1.0/3.0;", &mut env)
 		.expect("snh");
@@ -134,55 +121,46 @@ fn equals() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print true == true;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print true == false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 1 == 1;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 1 == 2;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'str' == 'str';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 'str' == 'ing';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print nil == false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == 0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 0 == '0';", &mut env)
 		.expect("snh");
@@ -199,13 +177,11 @@ fn precedence() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"10\n");
 
-	runtime.clear();
 	runtime
 		.run("print 1+4*3/6+1;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"4\n");
 
-	runtime.clear();
 	runtime
 		.run("print (1.1+1.9)*3.3/1.1+1.5;", &mut env)
 		.expect("snh");
@@ -222,37 +198,31 @@ fn equality() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 5 == 4.999999999999998;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 5 == 5.0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 5.0 == 4;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 5 != 4.999999999999998;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 5 != 5.0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 5.0 != 4;", &mut env)
 		.expect("snh");
@@ -267,51 +237,39 @@ fn comparison() {
 	runtime.run("print 1<2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime.run("print 2<2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print 2<1;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print 1<=2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime.run("print 2<=2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime.run("print 2<=1;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print 1>2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print 2>2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print 2>1;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime.run("print 1>=2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print 2>=2;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime.run("print 2>=1;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 2!=1;\nprint 2==1;", &mut env)
 		.expect("snh");
@@ -326,35 +284,29 @@ fn special_comparison() {
 	runtime.run("print 0<-0;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print -0<0;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print 0==-0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 0<=-0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print -0<=0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print 0>=-0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print -0>=0;", &mut env)
 		.expect("snh");
@@ -369,11 +321,9 @@ fn negate() {
 	runtime.run("print -3;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"-3\n");
 
-	runtime.clear();
 	runtime.run("print --3;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"3\n");
 
-	runtime.clear();
 	runtime.run("print ---3;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"-3\n");
 }

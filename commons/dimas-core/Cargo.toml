@@ -32,7 +32,6 @@ workspace = true
 
 [dependencies]
 futures = { workspace = true }
-hashbrown = { workspace = true }
 parking_lot = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }

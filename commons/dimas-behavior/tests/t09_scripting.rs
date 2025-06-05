@@ -6,7 +6,12 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t09_scripting.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
+#[doc(hidden)]
+extern crate alloc;
+
+use dimas_behavior::{
+	ScriptEnum, behavior::BehaviorState, factory::BehaviorTreeFactory, register_scripting_enum,
+};
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 
@@ -14,8 +19,6 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-			<!-- replacement for enum registration -->
-			<Script code=" THE_ANSWER:=42; RED:=1; BLUE:=2; GREEN:=3; FAILURE:=false " />
             <Script code=" msg:='hello world' " />
             <Script code=" A:=THE_ANSWER; B:=3.14; color:=RED " />
 			<!-- the original '&&' is a none valid xml, so it is replaced by '&amp;&amp;' -->
@@ -32,26 +35,21 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 </root>
 "#;
 
-#[tokio::test]
-#[ignore = "reminder for enums"]
-async fn scripting_with_enums_reminder() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	factory.register_node_type::<SaySomething>("SaySomething")?;
-
-	let mut tree = factory.create_from_text(XML)?;
-	drop(factory);
-
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-
-	Ok(())
+#[derive(ScriptEnum)]
+#[allow(unused, clippy::upper_case_acronyms)]
+enum Color {
+	RED = 1,
+	BLUE,
+	GREEN = 4,
 }
 
 #[tokio::test]
 #[serial]
 async fn scripting() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	register_scripting_enum!(factory, Color);
+	register_scripting_enum!(factory, "THE_ANSWER", 42, "OTHER", 43);
 
 	factory.register_node_type::<SaySomething>("SaySomething")?;
 
@@ -68,6 +66,9 @@ async fn scripting() -> anyhow::Result<()> {
 #[serial]
 async fn scripting_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	register_scripting_enum!(factory, Color);
+	register_scripting_enum!(factory, "THE_ANSWER", 42, "OTHER", 43,);
 
 	factory.register_from_plugin("test_behaviors")?;
 

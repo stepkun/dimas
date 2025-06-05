@@ -8,7 +8,7 @@
 
 use core::cmp::min;
 
-use alloc::string::ToString;
+use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}};
 
 use crate::Error;
 
@@ -25,6 +25,8 @@ enum Started {
 
 /// Lexer
 pub struct Lexer<'a> {
+	/// reference to the enum map
+	enums: &'a BTreeMap<String, i8>,
 	/// reference to the whole input 'code'
 	whole: &'a str,
 	/// reference to the start of the not yet lexed part
@@ -38,13 +40,20 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
 	/// Create a Lexer for a certain input str.
 	#[must_use]
-	pub const fn new(source_code: &'a str) -> Self {
+	pub const fn new(enums: &'a BTreeMap<String, i8>, source_code: &'a str) -> Self {
 		Self {
+			enums,
 			whole: source_code,
 			rest: source_code,
 			pos: 0,
 			line: 1,
 		}
+	}
+
+	/// Access the enum map.
+	#[must_use]
+	pub const fn enums(&self) -> &BTreeMap<String, i8> {
+		self.enums
 	}
 
 	/// Set a new input str (source code).
@@ -181,13 +190,22 @@ impl Iterator for Lexer<'_> {
 					self.pos += extra_bytes;
 					self.rest = &self.rest[extra_bytes..];
 
-					// distinguish keywords from idents
+					// distinguish keywords and enum values (aka int numbers) from idents
 					let kind = match literal {
 						"false" => TokenKind::False,
 						"nil" => TokenKind::Nil,
 						"print" => TokenKind::Print,
 						"true" => TokenKind::True,
-						_ => TokenKind::Ident,
+						_ => {
+							// extern crate std;
+							// std::dbg!(&self.enums, &literal);
+							self.enums.get(literal).map_or(
+								TokenKind::Ident, 
+								|_value| { 
+									TokenKind::Enum 
+								},
+							)
+						},
 					};
 
 					return Some(Ok(Token {

@@ -83,7 +83,6 @@ criterion = { version = "0.6.0", features = ["async_tokio"] }
 crossterm = "0.29.0"
 doc-comment = "0.3.3"
 futures = "0.3.31"
-hashbrown = "0.15.3"
 libloading = "0.8.8"
 parking_lot = "0.12.4"
 rand = "0.9.1"

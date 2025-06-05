@@ -26,7 +26,8 @@ impl PrefixParselet for AssignmentParselet {
 		chunk: &mut Chunk,
 		token: Token,
 	) -> Result<(), Error> {
-		match parser.next().kind {
+		let next = parser.next();
+		match next.kind {
 			TokenKind::ColonEqual => {
 				parser.advance(lexer)?;
 				parser.expression(lexer, chunk)?;

@@ -8,6 +8,7 @@
 use alloc::{
 	borrow::ToOwned,
 	boxed::Box,
+	collections::btree_map::BTreeMap,
 	format,
 	rc::Rc,
 	string::{String, ToString},
@@ -22,7 +23,6 @@ use core::{
 };
 use dimas_core::ConstString;
 use dimas_scripting::{Environment, Error as ScriptingError, execution::ScriptingValue};
-use hashbrown::HashMap;
 use parking_lot::RwLock;
 use rustc_hash::FxBuildHasher;
 
@@ -36,7 +36,7 @@ use super::{BlackboardInterface, error::Error};
 #[derive(Debug, Default)]
 pub struct BlackboardData {
 	/// Using the [`FxBuildHasher`] to have same hash values for keys from different sources.
-	storage: HashMap<ConstString, Entry, FxBuildHasher>,
+	storage: BTreeMap<ConstString, Entry>,
 }
 
 impl BlackboardInterface for BlackboardData {

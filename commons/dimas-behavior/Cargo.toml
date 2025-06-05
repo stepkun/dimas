@@ -46,7 +46,6 @@ dimas-macros = { workspace = true }
 dimas-scripting = { workspace = true }
 dimas-scripting-macros = { workspace = true }
 futures = { workspace = true }
-hashbrown = { workspace = true }
 libloading = { workspace = true }
 parking_lot = { workspace = true }
 roxmltree = { workspace = true }

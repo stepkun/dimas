@@ -25,6 +25,7 @@ fn repl() {
 							},
 							|chunk| {
 								//chunk.disassemble("created chunk");
+								runtime.clear();
 								if let Err(error) = runtime.execute(&chunk, &mut env) {
 									println!("execution error: {error}");
 								} else {

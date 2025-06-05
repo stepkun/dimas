@@ -28,13 +28,13 @@ fn derive_scripting_enum(input: &DeriveInput) -> TokenStream {
 			.map(|v| {
 				if let Some((_eq, expr)) = &v.discriminant {
 					match expr {
-						Expr::Lit(expr_lit) => {
-							match &expr_lit.lit {
-									Lit::Int(lit_int) => {
-										discriminant = lit_int.base10_parse::<i8>().expect("value must be i8");
-									},
-									_ => panic!("value must be i8"),
-								}
+						Expr::Lit(expr_lit) => match &expr_lit.lit {
+							Lit::Int(lit_int) => {
+								discriminant = lit_int
+									.base10_parse::<i8>()
+									.expect("value must be i8");
+							}
+							_ => panic!("value must be i8"),
 						},
 						_ => panic!("value must be i8"),
 					}

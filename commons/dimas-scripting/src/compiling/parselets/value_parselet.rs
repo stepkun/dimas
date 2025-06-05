@@ -21,12 +21,20 @@ pub struct ValueParselet;
 impl PrefixParselet for ValueParselet {
 	fn parse(
 		&self,
-		_lexer: &mut Lexer,
+		lexer: &mut Lexer,
 		parser: &mut Parser,
 		chunk: &mut Chunk,
 		token: Token,
 	) -> Result<(), Error> {
 		match token.kind {
+			TokenKind::Enum => {
+				let Some(value) = lexer.enums().get(&token.origin) else {
+					return Err(Error::EnumValNotFound(token.origin.into(), token.line));
+				};
+				let offset = chunk.add_constant(ScriptingValue::Int64(i64::from(*value)))?;
+				parser.emit_bytes(OpCode::Constant as u8, offset, chunk);
+				Ok(())
+			}
 			TokenKind::FloatNumber => {
 				let double: f64 = match token.origin.parse() {
 					Ok(n) => n,

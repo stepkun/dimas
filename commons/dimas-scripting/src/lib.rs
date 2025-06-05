@@ -45,6 +45,7 @@ pub mod runtime;
 
 // region:		--- modules
 use alloc::{
+	collections::btree_map::BTreeMap,
 	string::{String, ToString},
 	vec::Vec,
 };
@@ -56,9 +57,7 @@ pub use runtime::{Runtime, SharedRuntime};
 
 use dimas_core::ConstString;
 use execution::ScriptingValue;
-use hashbrown::HashMap;
 use parking_lot::RwLock;
-use rustc_hash::FxBuildHasher;
 // endregion:	--- modules
 
 /// The trait for script enums.
@@ -87,7 +86,7 @@ pub trait Environment: Send + Sync {
 /// A very simple default Environment for testing purpose and the REPL
 #[derive(Default)]
 pub struct DefaultEnvironment {
-	storage: RwLock<HashMap<String, ScriptingValue, FxBuildHasher>>,
+	storage: RwLock<BTreeMap<String, ScriptingValue>>,
 }
 
 impl Environment for DefaultEnvironment {

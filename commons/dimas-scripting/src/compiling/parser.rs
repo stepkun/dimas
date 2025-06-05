@@ -14,9 +14,7 @@
 extern crate std;
 
 // region:		--- modules
-use alloc::{string::ToString, sync::Arc};
-use hashbrown::HashMap;
-use rustc_hash::FxBuildHasher;
+use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}, sync::Arc};
 
 use crate::{
 	Error,
@@ -37,8 +35,8 @@ use super::{
 // region:		--- Parser
 /// Parser
 pub struct Parser {
-	prefix_parselets: HashMap<TokenKind, Arc<dyn PrefixParselet>, FxBuildHasher>,
-	infix_parselets: HashMap<TokenKind, Arc<dyn InfixParselet>, FxBuildHasher>,
+	prefix_parselets: BTreeMap<TokenKind, Arc<dyn PrefixParselet>>,
+	infix_parselets: BTreeMap<TokenKind, Arc<dyn InfixParselet>>,
 	/// current handled Token
 	current: Token,
 	/// preview on next Token
@@ -69,8 +67,8 @@ impl Parser {
 	#[allow(clippy::too_many_lines)]
 	pub fn new() -> Self {
 		let mut parser = Self {
-			prefix_parselets: HashMap::default(),
-			infix_parselets: HashMap::default(),
+			prefix_parselets: BTreeMap::default(),
+			infix_parselets: BTreeMap::default(),
 			current: Token::none(),
 			next: Token::none(),
 		};
@@ -95,6 +93,9 @@ impl Parser {
 			TokenKind::Caret,
 			Arc::from(LogicParselet::new(Precedence::BitXor)),
 		);
+		parser
+			.prefix_parselets
+			.insert(TokenKind::Enum, Arc::from(ValueParselet));
 		parser.infix_parselets.insert(
 			TokenKind::EqualEqual,
 			Arc::from(BinaryParselet::new(Precedence::Equality)),
@@ -187,9 +188,9 @@ impl Parser {
 	/// # Errors
 	/// - passes [`Lexer`] errors through
 	/// - if it could not create a proper [`Chunk`]
-	pub fn parse(&mut self, source_code: &str) -> Result<Chunk, Error> {
+	pub fn parse(&mut self, enums: &BTreeMap<String, i8>, source_code: &str) -> Result<Chunk, Error> {
 		let mut chunk = Chunk::default();
-		let mut lexer = Lexer::new(source_code);
+		let mut lexer = Lexer::new(enums, source_code);
 
 		self.advance(&mut lexer)?;
 		while !self.check_next(TokenKind::None) {

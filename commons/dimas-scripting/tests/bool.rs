@@ -15,103 +15,86 @@ fn equality() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print true == false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == true;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print true == 1;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == 0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print true == 'true';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == 'false';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == '';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print false == '';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print true != false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print false != true;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print false != false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print true != 1;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print false != 0;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print true != 'true';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print false != 'false';", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print false != '';", &mut env)
 		.expect("snh");
@@ -128,37 +111,30 @@ fn not() {
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime
 		.run("print !false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print !!true;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime
 		.run("print !!false;", &mut env)
 		.expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print !123;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print !0;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 
-	runtime.clear();
 	runtime.run("print !nil;", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"true\n");
 
-	runtime.clear();
 	runtime.run("print !'';", &mut env).expect("snh");
 	assert_eq!(runtime.stdout(), b"false\n");
 }

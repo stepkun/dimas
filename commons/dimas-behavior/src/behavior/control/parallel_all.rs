@@ -5,8 +5,8 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use alloc::collections::btree_set::BTreeSet;
 use dimas_scripting::SharedRuntime;
-use hashbrown::HashSet;
 
 use crate::blackboard::BlackboardInterface;
 use crate::{self as dimas_behavior, input_port, port_list};
@@ -30,7 +30,7 @@ pub struct ParallelAll {
 	/// @TODO:
 	failure_threshold: i32,
 	/// @TODO:
-	completed_list: HashSet<usize>,
+	completed_list: BTreeSet<usize>,
 	/// @TODO:
 	failure_count: usize,
 }
@@ -39,7 +39,7 @@ impl Default for ParallelAll {
 	fn default() -> Self {
 		Self {
 			failure_threshold: -1,
-			completed_list: HashSet::default(),
+			completed_list: BTreeSet::default(),
 			failure_count: 0,
 		}
 	}

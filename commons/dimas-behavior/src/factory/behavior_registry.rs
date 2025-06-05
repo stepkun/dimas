@@ -2,21 +2,16 @@
 
 //! [`BehaviorRegistry`] library
 //!
-//! The registry is not using a `HashMap` but a `Vec` due to two reasons:
-//! - A `HashMap` needs more space than a `Vec` and search performance is not an issue
-//! - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
 
 #[doc(hidden)]
 #[cfg(feature = "std")]
 extern crate std;
 
 // region:      --- modules
-use alloc::{sync::Arc, vec::Vec};
+use alloc::{collections::btree_map::BTreeMap, sync::Arc, vec::Vec};
 use dimas_core::ConstString;
 use dimas_scripting::Runtime;
-use hashbrown::HashMap;
 use libloading::Library;
-use rustc_hash::FxBuildHasher;
 
 use crate::behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType};
 
@@ -30,10 +25,10 @@ use super::BehaviorTreeFactory;
 /// A registry for behaviors used by the [`BehaviorTreeFactory`] for creation of behavior trees.
 #[derive(Default)]
 pub struct BehaviorRegistry {
-	/// [`HashMap`] of available behavior creation functions.
-	behaviors: HashMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>), FxBuildHasher>,
-	/// [`HashMap`] of registered behavior tree definitions.
-	tree_definitions: HashMap<ConstString, ConstString, FxBuildHasher>,
+	/// [`BTreeMap`] of available behavior creation functions.
+	behaviors: BTreeMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>)>,
+	/// [`BTreeMap`] of registered behavior tree definitions.
+	tree_definitions: BTreeMap<ConstString, ConstString>,
 	/// Scripting runtime
 	runtime: Runtime,
 	/// List of loaded libraries.
@@ -78,12 +73,12 @@ impl BehaviorRegistry {
 		id: &str,
 		tree_definition: ConstString,
 	) -> Result<(), Error> {
-		let id: ConstString = id.into();
-		if self.tree_definitions.contains_key(&id) {
-			Err(Error::SubtreeAlreadyRegistered(id))
-		} else {
-			self.tree_definitions.insert(id, tree_definition);
+		let key: ConstString = id.into();
+		if let std::collections::btree_map::Entry::Vacant(e) = self.tree_definitions.entry(key) {
+			e.insert(tree_definition);
 			Ok(())
+		} else {
+			Err(Error::SubtreeAlreadyRegistered(id.into()))
 		}
 	}
 
@@ -121,7 +116,7 @@ impl BehaviorRegistry {
 	#[must_use]
 	pub fn registered_behavior_trees(&self) -> Vec<ConstString> {
 		let mut res = Vec::new();
-		for (id, _) in &self.tree_definitions {
+		for id in self.tree_definitions.keys() {
 			res.push(id.clone());
 		}
 		res
@@ -136,6 +131,11 @@ impl BehaviorRegistry {
 	/// Access the runtime mutable.
 	pub fn runtime_mut(&mut self) -> &mut Runtime {
 		&mut self.runtime
+	}
+
+	pub(crate) fn register_enum_tuple(&mut self, key: &str, value: i8) -> Result<(), Error> {
+		self.runtime.register_enum_tuple(key, value)?;
+		Ok(())
 	}
 }
 // endregion:   --- BehaviorRegistry

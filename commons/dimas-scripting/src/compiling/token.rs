@@ -7,7 +7,7 @@ use core::fmt::Display;
 use alloc::string::String;
 
 /// Token kind
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash)]
 pub enum TokenKind {
 	/// Dummy to avoid using `Option<Token>` in many places
 	None,

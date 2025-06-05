@@ -7,12 +7,13 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::string::{String, ToString};
+use alloc::{
+	collections::btree_map::BTreeMap,
+	string::{String, ToString},
+};
 use dimas_core::ConstString;
 use dimas_scripting::Runtime;
-use hashbrown::HashMap;
 use roxmltree::{Attributes, Document, Node, NodeType};
-use rustc_hash::FxBuildHasher;
 #[cfg(feature = "std")]
 use std::path::PathBuf;
 use tracing::{Level, event, instrument};
@@ -31,8 +32,8 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
-fn attrs_to_map(attrs: Attributes) -> HashMap<ConstString, ConstString, FxBuildHasher> {
-	let mut map = HashMap::default();
+fn attrs_to_map(attrs: Attributes) -> BTreeMap<ConstString, ConstString> {
+	let mut map = BTreeMap::default();
 	//dbg!(self);
 	for attr in attrs {
 		let name = attr.name().into();
@@ -146,7 +147,7 @@ impl XmlParser {
 		name: &str,
 		is_subtree: bool,
 		bhvr: &BehaviorPtr,
-		attrs: &HashMap<ConstString, ConstString, FxBuildHasher>,
+		attrs: &BTreeMap<ConstString, ConstString>,
 		runtime: &mut Runtime,
 	) -> Result<
 		(

@@ -49,6 +49,12 @@ pub enum Error {
 	#[error("Boolean values do not allow arithmetic operations")]
 	BoolNoArithmetic,
 	/// @TODO:
+	#[error("Enum variant [{0}] already exists with value [{1}] new value: [{2}]")]
+	DuplicateEnumVariant(ConstString, i8, i8),
+	/// @TODO:
+	#[error("could not find Enum {0} at line {1}")]
+	EnumValNotFound(ConstString, usize),
+	/// @TODO:
 	#[error("Variable [{0}] exceeds type limits")]
 	GlobalExceedsLimits(ConstString),
 	/// @TODO:

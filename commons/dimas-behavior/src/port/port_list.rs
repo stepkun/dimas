@@ -16,9 +16,8 @@ use super::{PortDefinition, error::Error};
 
 // region:      --- PortList
 /// List of ports
-/// The `PortList` is not using a `HashMap` but a `Vec` due to two reasons:
-/// - A `HashMap` needs more space than a `Vec` and search performance is not an issue
-/// - A `HashMap` does not work well with loaded libraries, as the hash seeds must be synchronized
+/// The `PortList` is not using a `BTreeMap` but a `Vec` due to
+/// a `BTreeMap` needs more space than a `Vec` and search performance is not an issue
 #[derive(Debug, Default)]
 pub struct PortList(pub Vec<PortDefinition>);
 
