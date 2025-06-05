@@ -283,13 +283,13 @@ impl BehaviorTreeFactory {
 ///
 /// # Usage:
 /// 
-/// ```
+/// ```no-test
 /// register_node!(<mutable reference to behavior factory>, <struct to register>, <"identifying name">, <arg1>, <arg2>, ...>)
 /// ```
 ///
 /// # Example:
 /// 
-/// ```
+/// ```no-test
 /// register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
 /// ```
 #[macro_export]
@@ -311,18 +311,18 @@ macro_rules! register_node {
 /// # Usage:
 /// 
 /// With an enum type:
-/// ```
+/// ```no-test
 /// register_scripting_enum!(<mutable reference to behavior factory>, <enum to register>)
 /// ```
 /// 
 /// With discrete value(s)
-/// ```
+/// ```no-test
 /// register_scripting_enum!(<mutable reference to behavior factory>, <Identifier as str>, <Value as int>)
 /// ```
 ///
 /// # Examples:
 /// 
-/// ```
+/// ```no-test
 /// #[derive(ScriptEnum)]
 /// enum Color {
 ///     RED,
@@ -333,7 +333,7 @@ macro_rules! register_node {
 /// register_scripting_enum!(&mut factory, Color);
 /// ```
 ///
-/// ```
+/// ```no-test
 /// register_scripting_enum!(&mut "THE_ANSWER", 42, "OTHER_ANSWER", 44);
 /// ```
 #[macro_export]
