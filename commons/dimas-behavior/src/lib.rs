@@ -18,4 +18,6 @@ pub use behavior::Behavior;
 
 // re-export
 pub use dimas_behavior_macros::Behavior;
+pub use dimas_scripting::ScriptEnum;
 pub use dimas_scripting::SharedRuntime;
+pub use dimas_scripting_macros::ScriptEnum;

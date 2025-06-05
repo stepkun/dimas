@@ -44,6 +44,7 @@ dimas-behavior-macros = { workspace = true }
 dimas-core = { workspace = true }
 dimas-macros = { workspace = true }
 dimas-scripting = { workspace = true }
+dimas-scripting-macros = { workspace = true }
 futures = { workspace = true }
 hashbrown = { workspace = true }
 libloading = { workspace = true }

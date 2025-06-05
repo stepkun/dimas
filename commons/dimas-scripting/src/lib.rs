@@ -44,7 +44,10 @@ pub mod execution;
 pub mod runtime;
 
 // region:		--- modules
-use alloc::string::{String, ToString};
+use alloc::{
+	string::{String, ToString},
+	vec::Vec,
+};
 // flatten
 // pub use compiling::{Lexer, Parser, TokenKind};
 pub use error::Error;
@@ -57,6 +60,12 @@ use hashbrown::HashMap;
 use parking_lot::RwLock;
 use rustc_hash::FxBuildHasher;
 // endregion:	--- modules
+
+/// The trait for script enums.
+pub trait ScriptEnum {
+	/// Function to get key-value tuples for registering in behavior factory.
+	fn key_value_tuples() -> Vec<(&'static str, i8)>;
+}
 
 /// The trait for providing an [`Environment`] to a [`VM`] that stores variables persistently and externally available.
 pub trait Environment: Send + Sync {

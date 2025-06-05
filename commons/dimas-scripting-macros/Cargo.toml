@@ -1,7 +1,7 @@
 # Copyright © 2025 Stephan Kunz
 
 [package]
-name = "dimas-behavior-macros"
+name = "dimas-scripting-macros"
 rust-version.workspace = true
 edition.workspace = true
 version.workspace = true
@@ -12,8 +12,8 @@ keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
 repository.workspace = true
-description = "Procedural macros for dimas-behavior"
-documentation = "https://docs.rs/dimas-behavior-macros/latest/dimas-behavior-macros/"
+description = "Procedural macros for dimas-scripting"
+documentation = "https://docs.rs/dimas-scripting-macros/latest/dimas-scripting-macros/"
 readme = "README.md"
 exclude = [
     "benches/**",

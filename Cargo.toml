@@ -72,6 +72,8 @@ dimas-macros = { path = "commons/dimas-macros" }
 #dimas-macros = "0.5.0"
 dimas-scripting = { path = "commons/dimas-scripting" }
 #dimas-scripting = "0.5.0"
+dimas-scripting-macros = { path = "commons/dimas-scripting-macros" }
+#dimas-scripting-macros = "0.5.0"
 dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.5.0"
 anyhow = "1.0.98"
