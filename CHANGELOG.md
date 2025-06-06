@@ -15,11 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-## [0.5.0] - 2024-??-?? _Is breaking change!!_
+## [0.6.0] - 2024-??-?? _Is breaking change!!_
+
+Version 0.6.0 is a fully new design, based on behavior trees.
+
+## [0.5.0] - 2024-06-06
+
+### Added
+- Example for liveliness
 
 ### Changed
+- Made liveliness stable
+- Formatting
 
-Version 0.5.0 is a fully new design, based on a behavior tree.
+### Fixed
+- Multiple incoming liveliness messages from the same agent
+- Error message when zenoh communicator received an error  
+
+### Removed
+- Some forgotten dbg!(...) statements
 
 ## [0.4.2] - 2025-05-15
 

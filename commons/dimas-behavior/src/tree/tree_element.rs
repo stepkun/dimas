@@ -177,7 +177,7 @@ impl BehaviorTreeElement {
 	}
 
 	/// Get the children mutable.
-	pub fn children_mut(&mut self) -> &mut BehaviorTreeElementList {
+	pub const fn children_mut(&mut self) -> &mut BehaviorTreeElementList {
 		&mut self.children
 	}
 
@@ -190,7 +190,7 @@ impl BehaviorTreeElement {
 			let _ = runtime
 				.lock()
 				.execute(chunk, &mut self.blackboard)?;
-		};
+		}
 		result
 	}
 
@@ -365,7 +365,7 @@ impl BehaviorTreeElement {
 				}
 				// rest is ignored
 				_ => {}
-			};
+			}
 			if let Some(chunk) = self.post_conditions.get_chunk("_post") {
 				let _ = runtime
 					.lock()

@@ -54,7 +54,7 @@ impl XmlParser {
 	/// Get the next uid for a [`BehaviorTreeElement`].
 	/// # Panics
 	/// if more than 65536 [`BehaviorTreeElement`]s are required for a [`BehaviorTree`](crate::tree::BehaviorTree)
-	fn next_uid(&mut self) -> u16 {
+	const fn next_uid(&mut self) -> u16 {
 		let next = self.uid;
 		self.uid += 1;
 		next
@@ -277,7 +277,7 @@ impl XmlParser {
 				let (_, remappings, values, conditions) =
 					Self::handle_attributes(name, true, &bhvr, &attrs, registry.runtime_mut())?;
 				let blackboard = SharedBlackboard::new(name.into(), remappings, values);
-				let children = self.build_children(name, node, registry, blackboard.clone())?;
+				let children = self.build_children(name, node, registry, &blackboard)?;
 				// path is for root element same as name
 				let behaviortree = BehaviorTreeElement::create_subtree(
 					uid, name, name, children, blackboard, bhvr, conditions,
@@ -293,7 +293,7 @@ impl XmlParser {
 		path: &str,
 		node: Node,
 		registry: &mut BehaviorRegistry,
-		blackboard: SharedBlackboard,
+		blackboard: &SharedBlackboard,
 	) -> Result<BehaviorTreeElementList, Error> {
 		event!(Level::TRACE, "build_children");
 		let mut children = BehaviorTreeElementList::default();
@@ -393,7 +393,7 @@ impl XmlParser {
 			BehaviorType::Control | BehaviorType::Decorator => {
 				// A node gets a cloned Blackboard with own remappings
 				let blackboard = blackboard.cloned(remappings, values);
-				let children = self.build_children(&path, node, registry, blackboard.clone())?;
+				let children = self.build_children(&path, node, registry, &blackboard)?;
 
 				if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
 					return Err(Error::DecoratorOnlyOneChild(node.tag_name().name().into()));
@@ -418,7 +418,7 @@ impl XmlParser {
 								autoremap,
 							);
 							let children =
-								self.build_children(&path, node, registry, blackboard1.clone())?;
+								self.build_children(&path, node, registry, &blackboard1)?;
 							BehaviorTreeElement::create_node(
 								uid,
 								&node_name,

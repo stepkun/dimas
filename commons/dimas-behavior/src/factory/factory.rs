@@ -48,7 +48,7 @@ pub struct BehaviorTreeFactory {
 
 impl BehaviorTreeFactory {
 	/// Access the registry
-	pub fn registry(&mut self) -> &mut BehaviorRegistry {
+	pub const fn registry(&mut self) -> &mut BehaviorRegistry {
 		&mut self.registry
 	}
 

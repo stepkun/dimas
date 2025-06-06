@@ -37,7 +37,7 @@ unwrap_used = "deny"
 [workspace.package]
 rust-version = "1.85.0"
 edition = "2024"
-version = "0.5.0"
+version = "0.6.0"
 authors = [
 	"stepkun <stephan.kunz@kabelbw.de>",
 ]
@@ -55,27 +55,27 @@ repository = "https://github.com/dimas-fw/dimas/"
 
 [workspace.dependencies]
 dimas = { path = "dimas" }
-#dimas = "0.5.0"
+#dimas = "0.6.0"
 dimas-behavior = { path = "commons/dimas-behavior" }
-#dimas-behavior = "0.5.0"
+#dimas-behavior = "0.6.0"
 dimas-behavior-macros = { path = "commons/dimas-behavior-macros" }
-#dimas-behavior-macros = "0.5.0"
+#dimas-behavior-macros = "0.6.0"
 dimas-com = { path = "commons/dimas-com" }
-#dimas-com = "0.5.0"
+#dimas-com = "0.6.0"
 dimas-commands = { path = "commons/dimas-commands" }
-#dimas-commands = "0.5.0"
+#dimas-commands = "0.6.0"
 dimas-config = { path = "commons/dimas-config" }
-#dimas-config = "0.5.0"
+#dimas-config = "0.6.0"
 dimas-core = { path = "commons/dimas-core" }
-#dimas-core = "0.5.0"
+#dimas-core = "0.6.0"
 dimas-macros = { path = "commons/dimas-macros" }
-#dimas-macros = "0.5.0"
+#dimas-macros = "0.6.0"
 dimas-scripting = { path = "commons/dimas-scripting" }
-#dimas-scripting = "0.5.0"
+#dimas-scripting = "0.6.0"
 dimas-scripting-macros = { path = "commons/dimas-scripting-macros" }
-#dimas-scripting-macros = "0.5.0"
+#dimas-scripting-macros = "0.6.0"
 dimas-time = { path = "commons/dimas-time" }
-#dimas-time = "0.5.0"
+#dimas-time = "0.6.0"
 anyhow = "1.0.98"
 async-trait = "0.1.88"
 clap = "4.5.39"

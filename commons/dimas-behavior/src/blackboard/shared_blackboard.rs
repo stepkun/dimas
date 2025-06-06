@@ -135,7 +135,7 @@ impl BlackboardInterface for SharedBlackboard {
 				},
 				|val| Ok(val),
 			);
-		};
+		}
 
 		// Read needed remapping values beforehand to avoid a deadlock.
 		let final_key = self.get_remapping_info(key);

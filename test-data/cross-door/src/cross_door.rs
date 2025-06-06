@@ -93,7 +93,7 @@ impl CrossDoor {
 	}
 
 	/// Reset cross door
-	pub fn reset(&mut self) {
+	pub const fn reset(&mut self) {
 		self.door_open = false;
 		self.door_locked = true;
 		self.pick_attempts = 0;

@@ -45,7 +45,7 @@ impl PreConditions {
 	pub fn get_chunk(&mut self, name: &str) -> Option<&mut Chunk> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
-		};
+		}
 
 		let op = (0..PRE_CONDITIONS.len()).find(|&i| PRE_CONDITIONS[i] == name);
 		if let Some(index) = op {
@@ -63,7 +63,7 @@ impl PreConditions {
 	pub fn set(&mut self, name: &str, chunk: Chunk) -> Result<(), BehaviorError> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
-		};
+		}
 
 		let op = (0..PRE_CONDITIONS.len()).find(|&i| PRE_CONDITIONS[i] == name);
 		if let Some(index) = op {
@@ -108,7 +108,7 @@ impl PostConditions {
 	pub fn get_chunk(&mut self, name: &str) -> Option<&mut Chunk> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
-		};
+		}
 
 		let op = (0..POST_CONDITIONS.len()).find(|&i| POST_CONDITIONS[i] == name);
 		if let Some(index) = op {
@@ -126,7 +126,7 @@ impl PostConditions {
 	pub fn set(&mut self, name: &str, chunk: Chunk) -> Result<(), BehaviorError> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
-		};
+		}
 
 		let op = (0..POST_CONDITIONS.len()).find(|&i| POST_CONDITIONS[i] == name);
 		if let Some(index) = op {

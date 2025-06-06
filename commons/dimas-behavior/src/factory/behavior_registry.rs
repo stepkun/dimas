@@ -129,7 +129,7 @@ impl BehaviorRegistry {
 	}
 
 	/// Access the runtime mutable.
-	pub fn runtime_mut(&mut self) -> &mut Runtime {
+	pub const fn runtime_mut(&mut self) -> &mut Runtime {
 		&mut self.runtime
 	}
 

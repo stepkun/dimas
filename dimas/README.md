@@ -3,7 +3,7 @@
 [DiMAS](https://github.com/dimas-fw/dimas/tree/main/dimas) - A framework
 for building **Di**stributed **M**ulti **A**gent **S**ystems
 
-⚠️ WARNING ⚠️ : DiMAS is under active development,
+⚠️ WARNING ⚠️ : `DiMAS` is under active development,
 so expect gaps between implementation and documentation.
 
 A distributed multi agent system is a set of independant agents
@@ -32,7 +32,7 @@ changes but may include enhancements.
 
 ## Usage
 
-DiMAS uses the `tokio` runtime, you have to define your `main` function as an
+`DiMAS` uses the `tokio` runtime, you have to define your `main` function as an
 `async` function. The declaration of tokio crate is not necessary, unless you use
 tokio functionality within your implementations.
 
@@ -46,10 +46,10 @@ Your `Cargo.toml` should include:
 dimas = "0.5.0"
 ```
 
-It makes sense to return a `Result` in `main`, as most DiMAS `Agent`s functions do.
-DiMAS internally uses `anyhow::Result<T>` and re-exports it for convenience.
+It makes sense to return a `Result` in `main`, as most `DiMAS` `Agent`s functions do.
+`DiMAS` internally uses `anyhow::Result<T>` and re-exports it for convenience.
 
-DiMAS also provides a `main` attribute macro to create the runtime environment
+`DiMAS` also provides a `main` attribute macro to create the runtime environment
 and a `prelude` to import most used declarations.
 
 A suitable main program skeleton may look like:
