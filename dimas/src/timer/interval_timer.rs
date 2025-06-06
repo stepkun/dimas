@@ -36,17 +36,14 @@ impl BehaviorInstance for IntervalTimer {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		println!("start IntervalTimer");
-
 		// timer already started?
 		if self.handle.is_none() {
 			let input = blackboard.get("interval".into())?;
-			// let input = 1000;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
 
 			// @TODO: Dirty way to move access to children into spawned task
-			//        The node is not restartable/recoverable
+			//        The node is not properly restartable/recoverable
 			let mut my_children: BehaviorTreeElementList = BehaviorTreeElementList::default();
 			std::mem::swap(children, &mut my_children);
 
@@ -78,7 +75,6 @@ impl BehaviorInstance for IntervalTimer {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		println!("ticking IntervalTimer");
 		Ok(BehaviorState::Running)
 	}
 
@@ -88,8 +84,13 @@ impl BehaviorInstance for IntervalTimer {
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
 		children.reset(runtime)?;
-		let handle = self.handle.take();
-		if let Some(handle) = handle {
+		if let Some(handle) = self.handle.take() {
+			// @TODO: Dirty way to move access to children back from spawned task
+			//        The node is not properly restartable/recoverable
+			let mut my_children: BehaviorTreeElementList = BehaviorTreeElementList::default();
+			std::mem::swap(children, &mut my_children);
+			children.reset(runtime)?;
+
 			handle.abort();
 		}
 		Ok(())

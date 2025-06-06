@@ -8,7 +8,10 @@
 
 use core::cmp::min;
 
-use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}};
+use alloc::{
+	collections::btree_map::BTreeMap,
+	string::{String, ToString},
+};
 
 use crate::Error;
 
@@ -199,13 +202,10 @@ impl Iterator for Lexer<'_> {
 						_ => {
 							// extern crate std;
 							// std::dbg!(&self.enums, &literal);
-							self.enums.get(literal).map_or(
-								TokenKind::Ident, 
-								|_value| { 
-									TokenKind::Enum 
-								},
-							)
-						},
+							self.enums
+								.get(literal)
+								.map_or(TokenKind::Ident, |_value| TokenKind::Enum)
+						}
 					};
 
 					return Some(Ok(Token {

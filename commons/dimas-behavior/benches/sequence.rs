@@ -6,9 +6,6 @@
 #[doc(hidden)]
 extern crate alloc;
 
-mod behaviors;
-
-use behaviors::AlwaysSuccess;
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::factory::BehaviorTreeFactory;
 
@@ -32,9 +29,6 @@ fn sequence(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
-	factory
-		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(SEQUENCE).expect("snh");
@@ -71,9 +65,6 @@ fn reactive_sequence(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
-	factory
-		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.expect("snh");
 
 	// create the BT
 	let mut tree = factory
@@ -112,9 +103,6 @@ fn sequence_with_memory(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
-	factory
-		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.expect("snh");
 
 	// create the BT
 	let mut tree = factory

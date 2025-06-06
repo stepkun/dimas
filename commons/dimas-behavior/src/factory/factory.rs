@@ -16,18 +16,25 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		action::Script, condition::script_condition::ScriptCondition, control::{
+		Behavior, BehaviorState, BehaviorStatic, BehaviorType, ComplexBhvrTickFn, SimpleBehavior,
+		SimpleBhvrTickFn,
+		action::{Always, Script},
+		condition::script_condition::ScriptCondition,
+		control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
 			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
-			sequence::Sequence, sequence_with_memory::SequenceWithMemory, while_do_else::WhileDoElse,
-		}, decorator::{
+			sequence::Sequence, sequence_with_memory::SequenceWithMemory,
+			while_do_else::WhileDoElse,
+		},
+		decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
 			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition,
 			subtree::Subtree,
-		}, Behavior, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
+		},
 	},
 	factory::xml_parser::XmlParser,
 	port::PortList,
+	register_node,
 	tree::BehaviorTree,
 };
 
@@ -63,6 +70,9 @@ impl BehaviorTreeFactory {
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core actions
 		self.register_node_type::<Script>("Script")?;
+		register_node!(self, Always, "AlwaysFailure", BehaviorState::Failure)?;
+		register_node!(self, Always, "AlwaysRunning", BehaviorState::Running)?;
+		register_node!(self, Always, "AlwaysSuccess", BehaviorState::Success)?;
 
 		// core conditions
 		self.register_node_type::<ScriptCondition>("ScriptCondition")?;

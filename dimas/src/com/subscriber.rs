@@ -22,6 +22,20 @@ pub struct Subscriber {}
 #[async_trait::async_trait]
 impl BehaviorInstance for Subscriber {
 	/// @TODO:
+	async fn start(
+		&mut self,
+		state: BehaviorState,
+		blackboard: &mut SharedBlackboard,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		println!("starting Subscriber");
+
+		self.tick(state, blackboard, children, runtime)
+			.await
+	}
+
+	/// @TODO:
 	async fn tick(
 		&mut self,
 		_state: BehaviorState,
@@ -30,7 +44,7 @@ impl BehaviorInstance for Subscriber {
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("ticking Subscriber");
-		Ok(BehaviorState::Success)
+		Ok(BehaviorState::Running)
 	}
 }
 

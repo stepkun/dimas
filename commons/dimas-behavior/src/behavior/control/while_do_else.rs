@@ -38,13 +38,14 @@ impl BehaviorInstance for WhileDoElse {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// check composition only once at start
-        if !(2..=3).contains(&children.len()) {
-            return Err(BehaviorError::Composition(
-                "WhileDoElse must have either 2 or 3 children.".into(),
-            ));
-        }
+		if !(2..=3).contains(&children.len()) {
+			return Err(BehaviorError::Composition(
+				"WhileDoElse must have either 2 or 3 children.".into(),
+			));
+		}
 
-		self.tick(state, blackboard, children, runtime).await
+		self.tick(state, blackboard, children, runtime)
+			.await
 	}
 
 	async fn tick(
@@ -56,45 +57,45 @@ impl BehaviorInstance for WhileDoElse {
 	) -> BehaviorResult {
 		// extern crate std;
 		// std::println!("ticking WhileDoElse");
-      	let children_count = children.len();
+		let children_count = children.len();
 
-        let condition_status = children[0].execute_tick(runtime).await?;
+		let condition_status = children[0].execute_tick(runtime).await?;
 
-        if matches!(condition_status, BehaviorState::Running) {
-            return Ok(BehaviorState::Running);
-        }
+		if matches!(condition_status, BehaviorState::Running) {
+			return Ok(BehaviorState::Running);
+		}
 
-        let mut status = BehaviorState::Idle;
+		let mut status = BehaviorState::Idle;
 
-        match condition_status {
-            BehaviorState::Success => {
-                if children_count == 3 {
-                    children.halt_child(2)?;
-                }
+		match condition_status {
+			BehaviorState::Success => {
+				if children_count == 3 {
+					children.halt_child(2)?;
+				}
 
-                status = children[1].execute_tick(runtime).await?;
-            }
-            BehaviorState::Failure => match children_count {
-                3 => {
-                    children.halt_child(1)?;
-                    status = children[2].execute_tick(runtime).await?;
-                }
-                2 => {
-                    status = BehaviorState::Failure;
-                }
-                _ => {}
-            },
-            _ => {}
-        }
+				status = children[1].execute_tick(runtime).await?;
+			}
+			BehaviorState::Failure => match children_count {
+				3 => {
+					children.halt_child(1)?;
+					status = children[2].execute_tick(runtime).await?;
+				}
+				2 => {
+					status = BehaviorState::Failure;
+				}
+				_ => {}
+			},
+			_ => {}
+		}
 
-        match status {
-            BehaviorState::Running => Ok(BehaviorState::Running),
-            status => {
-                children.reset(runtime)?;
-                Ok(status)
-            }
-        }
-    }
+		match status {
+			BehaviorState::Running => Ok(BehaviorState::Running),
+			status => {
+				children.reset(runtime)?;
+				Ok(status)
+			}
+		}
+	}
 }
 
 impl BehaviorStatic for WhileDoElse {

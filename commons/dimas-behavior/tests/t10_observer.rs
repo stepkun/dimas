@@ -13,7 +13,6 @@ use dimas_behavior::{
 	behavior::BehaviorState, factory::BehaviorTreeFactory,
 	tree::observer::tree_observer::BehaviorTreeObserver,
 };
-use test_behaviors::test_nodes::{AlwaysFailure, AlwaysSuccess};
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -46,9 +45,6 @@ const XML: &str = r#"
 #[tokio::test]
 async fn observer() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	factory.register_node_type::<AlwaysFailure>("AlwaysFailure")?;
-	factory.register_node_type::<AlwaysSuccess>("AlwaysSuccess")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

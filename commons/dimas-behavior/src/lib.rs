@@ -39,12 +39,12 @@ pub use dimas_scripting_macros::ScriptEnum;
 #[macro_export]
 macro_rules! register_node {
 	($factory:expr, $tp:ty, $name:expr, $($arg:expr),* $(,)?) => {{
-		let bhvr_creation_fn = Box::new(move || -> Box<dyn BehaviorExecution> {
-		Box::new(<$tp>::new($($arg),*))
-	});
-	$factory
-		.registry()
-		.add_behavior($name, bhvr_creation_fn, <$tp>::kind())
+		let bhvr_creation_fn = alloc::boxed::Box::new(move || -> alloc::boxed::Box<dyn $crate::behavior::BehaviorExecution> {
+			alloc::boxed::Box::new(<$tp>::new($($arg),*))
+		});
+		$factory
+			.registry()
+			.add_behavior($name, bhvr_creation_fn, <$tp>::kind())
 	}};
 }
 

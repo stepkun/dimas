@@ -22,6 +22,20 @@ pub struct Publisher {}
 #[async_trait::async_trait]
 impl BehaviorInstance for Publisher {
 	/// @TODO:
+	async fn start(
+		&mut self,
+		state: BehaviorState,
+		blackboard: &mut SharedBlackboard,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		println!("starting Publisher");
+
+		self.tick(state, blackboard, children, runtime)
+			.await
+	}
+
+	/// @TODO:
 	async fn tick(
 		&mut self,
 		_state: BehaviorState,
@@ -40,12 +54,10 @@ impl BehaviorStatic for Publisher {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port!(
-			String,
-			"topic",
-			"",
-			"Topic to publish."
-		)]
+		port_list![
+			input_port!(String, "topic", "", "Topic to publish."),
+			input_port!(String, "message", "", "Message to publish.")
+		]
 	}
 }
 // endregion:   --- Publisher

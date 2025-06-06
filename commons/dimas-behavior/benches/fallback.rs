@@ -6,9 +6,6 @@
 #[doc(hidden)]
 extern crate alloc;
 
-mod behaviors;
-
-use behaviors::{AlwaysFailure, AlwaysSuccess};
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::factory::BehaviorTreeFactory;
 
@@ -32,12 +29,6 @@ fn fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
-	factory
-		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.expect("snh");
-	factory
-		.register_node_type::<AlwaysFailure>("AlwaysFailure")
-		.expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
@@ -74,12 +65,6 @@ fn reactive_fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
-	factory
-		.register_node_type::<AlwaysSuccess>("AlwaysSuccess")
-		.expect("snh");
-	factory
-		.register_node_type::<AlwaysFailure>("AlwaysFailure")
-		.expect("snh");
 
 	// create the BT
 	let mut tree = factory

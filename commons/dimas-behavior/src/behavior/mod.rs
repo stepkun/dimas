@@ -12,7 +12,6 @@ pub mod error;
 pub mod pre_post_conditions;
 mod simple_behavior;
 
-use dimas_scripting::SharedRuntime;
 // flatten
 pub use error::BehaviorError;
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
@@ -20,6 +19,7 @@ pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 // region:      --- modules
 use alloc::boxed::Box;
 use core::any::Any;
+use dimas_scripting::SharedRuntime;
 
 use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 // endregion:   --- modules

@@ -6,7 +6,7 @@ use dimas::prelude::*;
 const XML: &str = r#"
 <root BTCPP_format="4">
     <BehaviorTree ID="AgentBehavior">
-        <IntervalTimer>
+        <IntervalTimer interval = "1000">
 			<Publisher/>
         </IntervalTimer>
     </BehaviorTree>

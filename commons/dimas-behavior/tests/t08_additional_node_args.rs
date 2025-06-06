@@ -10,10 +10,7 @@ extern crate alloc;
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{
-		BehaviorExecution, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic,
-		BehaviorType,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
 	register_node,
@@ -110,7 +107,24 @@ impl ActionB {
 #[ignore = "reminder for behavior name etc."]
 async fn behavior_name_reminder() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
+	factory.register_node_type::<ActionB>("Action_B")?;
+
 	let mut tree = factory.create_from_text(XML)?;
+	drop(factory);
+
+	// initialize ActionB with the help of an iterator
+	for node in tree.iter_mut() {
+		if node.name() == ("Action_B") {
+			let action = node
+				.behavior_mut()
+				.as_any_mut()
+				.downcast_mut::<ActionB>()
+				.expect("snh");
+			action.initialize(69, "interesting value".into());
+		}
+	}
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);

@@ -3,6 +3,9 @@
 //! Built in scripted condition behavior of `DiMAS`
 
 // region:      --- modules
+use alloc::{boxed::Box, string::String};
+use dimas_scripting::SharedRuntime;
+
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
@@ -13,13 +16,11 @@ use crate::{
 	port_list,
 	tree::BehaviorTreeElementList,
 };
-use alloc::{boxed::Box, string::String};
-use dimas_scripting::SharedRuntime;
 //endregion:    --- modules
 
 /// The `ScriptCondition` behavior returns Success or Failure depending on the result of the scripted code.
 #[derive(Behavior, Debug, Default)]
-pub struct ScriptCondition {}
+pub struct ScriptCondition;
 
 #[async_trait::async_trait]
 impl BehaviorInstance for ScriptCondition {

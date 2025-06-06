@@ -49,7 +49,7 @@ const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 
 /// Condition `NotInterrupted`
 #[derive(Behavior, Debug, Default)]
-struct NotInterrupted {}
+struct NotInterrupted;
 
 #[async_trait::async_trait]
 impl BehaviorInstance for NotInterrupted {
@@ -69,31 +69,6 @@ impl BehaviorInstance for NotInterrupted {
 impl BehaviorStatic for NotInterrupted {
 	fn kind() -> BehaviorType {
 		BehaviorType::Condition
-	}
-}
-
-/// Action `AlwaysRunning`
-#[derive(Behavior, Debug, Default)]
-struct AlwaysRunning {}
-
-#[async_trait::async_trait]
-impl BehaviorInstance for AlwaysRunning {
-	/// @TODO:
-	async fn tick(
-		&mut self,
-		_state: BehaviorState,
-		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeElementList,
-		_runtime: &SharedRuntime,
-	) -> BehaviorResult {
-		// println!("ticking AlwaysRunning");
-		Ok(BehaviorState::Running)
-	}
-}
-
-impl BehaviorStatic for AlwaysRunning {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
 	}
 }
 
@@ -144,7 +119,6 @@ impl Agent {
 
 		// register core nodes
 		factory.register_node_type::<NotInterrupted>("NotInterrupted")?;
-		factory.register_node_type::<AlwaysRunning>("AlwaysRunning")?;
 		factory.register_node_type::<Shutdown>("Shutdown")?;
 
 		Ok(Self {
@@ -155,7 +129,7 @@ impl Agent {
 
 	/// Register a behavior within the [`Agent`].
 	/// # Errors
-	pub fn register_behavior<T>(&mut self, name: &str)  -> Result<(), Error>
+	pub fn register_behavior<T>(&mut self, name: &str) -> Result<(), Error>
 	where
 		T: Behavior,
 	{

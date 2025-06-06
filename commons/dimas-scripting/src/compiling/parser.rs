@@ -14,7 +14,11 @@
 extern crate std;
 
 // region:		--- modules
-use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}, sync::Arc};
+use alloc::{
+	collections::btree_map::BTreeMap,
+	string::{String, ToString},
+	sync::Arc,
+};
 
 use crate::{
 	Error,
@@ -188,7 +192,11 @@ impl Parser {
 	/// # Errors
 	/// - passes [`Lexer`] errors through
 	/// - if it could not create a proper [`Chunk`]
-	pub fn parse(&mut self, enums: &BTreeMap<String, i8>, source_code: &str) -> Result<Chunk, Error> {
+	pub fn parse(
+		&mut self,
+		enums: &BTreeMap<String, i8>,
+		source_code: &str,
+	) -> Result<Chunk, Error> {
 		let mut chunk = Chunk::default();
 		let mut lexer = Lexer::new(enums, source_code);
 

@@ -75,7 +75,8 @@ impl BehaviorInstance for ParallelAll {
 			));
 		}
 
-		self.tick(state, blackboard, children, runtime).await
+		self.tick(state, blackboard, children, runtime)
+			.await
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
