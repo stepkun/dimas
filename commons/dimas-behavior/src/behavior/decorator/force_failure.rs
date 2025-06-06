@@ -45,7 +45,7 @@ impl BehaviorInstance for ForceFailure {
 				children.reset(runtime)?;
 				Ok(BehaviorState::Failure)
 			}
-			BehaviorState::Idle => Err(BehaviorError::State("Inverter".into(), "Idle".into())),
+			BehaviorState::Idle => Err(BehaviorError::State("ForceFailure".into(), "Idle".into())),
 			state @ (BehaviorState::Running | BehaviorState::Skipped) => Ok(state),
 			BehaviorState::Success => {
 				children.reset(runtime)?;

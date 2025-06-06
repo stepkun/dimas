@@ -53,14 +53,15 @@ impl Default for Parallel {
 impl BehaviorInstance for Parallel {
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
-	#[allow(clippy::set_contains_or_insert)]
-	async fn tick(
+	#[allow(clippy::match_same_arms)]
+	async fn start(
 		&mut self,
-		_state: BehaviorState,
+		state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
+		// check composition only once at start
 		self.success_threshold = blackboard
 			.get("success_count".into())
 			.unwrap_or(-1);
@@ -72,7 +73,6 @@ impl BehaviorInstance for Parallel {
 
 		if children_count < self.success_threshold(children_count as i32) {
 			return Err(BehaviorError::Composition(
-				#[allow(clippy::match_same_arms)]
 				"Number of children is less than the threshold. Can never succeed.".into(),
 			));
 		}
@@ -82,6 +82,21 @@ impl BehaviorInstance for Parallel {
 				"Number of children is less than the threshold. Can never fail.".into(),
 			));
 		}
+
+		self.tick(state, blackboard, children, runtime).await
+	}
+
+	#[allow(clippy::cast_possible_truncation)]
+	#[allow(clippy::cast_possible_wrap)]
+	#[allow(clippy::set_contains_or_insert)]
+	async fn tick(
+		&mut self,
+		_state: BehaviorState,
+		_blackboard: &mut SharedBlackboard,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		let children_count = children.len();
 
 		let mut skipped_count = 0;
 

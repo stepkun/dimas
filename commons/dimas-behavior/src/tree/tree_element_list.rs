@@ -4,8 +4,8 @@
 //!
 
 // region:      --- modules
-use alloc::vec::Vec;
-use core::ops::{Deref, DerefMut};
+use alloc::{format, vec::Vec};
+use core::{ops::{Deref, DerefMut}};
 use dimas_scripting::SharedRuntime;
 
 use crate::behavior::error::BehaviorError;
@@ -55,8 +55,16 @@ impl BehaviorTreeElementList {
 
 	/// Halt child at index.
 	/// # Errors
-	/// - if halt of that child fails
+	/// - if index is out of bounds
+	/// - if halt of the child fails
 	pub fn halt_child(&mut self, index: usize) -> Result<(), BehaviorError> {
+		// An empty children list is ok for Action and Condition
+		if self.0.is_empty() {
+			return Ok(())
+		} else if index >= self.0.len() {
+			let txt = format!("behavior tries to halt a non-existent child at index [{index}]");
+			return Err(BehaviorError::Composition(txt.into()))
+		}
 		self.0[index].halt_child(0)
 	}
 }

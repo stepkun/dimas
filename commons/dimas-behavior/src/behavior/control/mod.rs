@@ -10,6 +10,7 @@ pub mod reactive_fallback;
 pub mod reactive_sequence;
 pub mod sequence;
 pub mod sequence_with_memory;
+pub mod while_do_else;
 
 // region:      --- modules
 use crate::behavior::BehaviorInstance;

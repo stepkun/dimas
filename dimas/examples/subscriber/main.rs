@@ -4,7 +4,6 @@
 use dimas::prelude::*;
 
 const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
     <BehaviorTree ID="AgentBehavior">
         <Subscriber/>
@@ -20,7 +19,7 @@ async fn main() -> Result<()> {
 	let mut agent = Agent::create()?;
 
 	// nodes must be registered before they are addressed in a behavior tree
-	// agent.register_behavior(Subscriber::register);
+	agent.register_behavior::<Subscriber>("Subscriber")?;
 
 	agent.set_behavior(XML)?;
 

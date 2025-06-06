@@ -61,7 +61,7 @@ impl BehaviorInstance for NotInterrupted {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		println!("ticking NotInterrupted");
+		// println!("ticking NotInterrupted");
 		Ok(BehaviorState::Success)
 	}
 }
@@ -86,14 +86,14 @@ impl BehaviorInstance for AlwaysRunning {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		println!("ticking AlwaysRunnin");
+		// println!("ticking AlwaysRunning");
 		Ok(BehaviorState::Running)
 	}
 }
 
 impl BehaviorStatic for AlwaysRunning {
 	fn kind() -> BehaviorType {
-		BehaviorType::Decorator
+		BehaviorType::Action
 	}
 }
 
@@ -151,6 +151,15 @@ impl Agent {
 			factory,
 			tree: None,
 		})
+	}
+
+	/// Register a behavior within the [`Agent`].
+	/// # Errors
+	pub fn register_behavior<T>(&mut self, name: &str)  -> Result<(), Error>
+	where
+		T: Behavior,
+	{
+		self.factory.register_node_type::<T>(name)
 	}
 
 	/// Set the [`Agent`]s behavior

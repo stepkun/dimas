@@ -16,19 +16,15 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		Behavior, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::Script,
-		condition::script_condition::ScriptCondition,
-		control::{
+		action::Script, condition::script_condition::ScriptCondition, control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
 			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
-			sequence::Sequence, sequence_with_memory::SequenceWithMemory,
-		},
-		decorator::{
+			sequence::Sequence, sequence_with_memory::SequenceWithMemory, while_do_else::WhileDoElse,
+		}, decorator::{
 			force_failure::ForceFailure, inverter::Inverter,
 			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition,
 			subtree::Subtree,
-		},
+		}, Behavior, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
 	},
 	factory::xml_parser::XmlParser,
 	port::PortList,
@@ -79,6 +75,7 @@ impl BehaviorTreeFactory {
 		self.register_node_type::<ReactiveSequence>("ReactiveSequence")?;
 		self.register_node_type::<Sequence>("Sequence")?;
 		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory")?;
+		self.register_node_type::<WhileDoElse>("WhileDoElse")?;
 
 		// core decorators
 		self.register_node_type::<ForceFailure>("ForceFailure")?;

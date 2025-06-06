@@ -4,7 +4,6 @@
 use dimas::prelude::*;
 
 const XML: &str = r#"
-<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
     <BehaviorTree ID="AgentBehavior">
         <IntervalTimer>
@@ -22,7 +21,8 @@ async fn main() -> Result<()> {
 	let mut agent = Agent::create()?;
 
 	// nodes must be registered before they are addressed in a behavior tree
-	// agent.register_behavior(IntervalTimer::register);
+	agent.register_behavior::<IntervalTimer>("IntervalTimer")?;
+	// agent.register_behavior::<Observer>("Observer")?;
 
 	agent.set_behavior(XML)?;
 

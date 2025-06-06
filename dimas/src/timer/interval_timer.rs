@@ -41,6 +41,7 @@ impl BehaviorInstance for IntervalTimer {
 		// timer already started?
 		if self.handle.is_none() {
 			let input = blackboard.get("interval".into())?;
+			// let input = 1000;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
 
@@ -59,7 +60,7 @@ impl BehaviorInstance for IntervalTimer {
 						// tick every child
 						for index in 0..my_children.len() {
 							let child = &mut my_children[index];
-							let _new_state = child.execute_tick(&runtime);
+							let _new_state = child.execute_tick(&runtime).await;
 						}
 					}
 				}));
@@ -97,7 +98,7 @@ impl BehaviorInstance for IntervalTimer {
 
 impl BehaviorStatic for IntervalTimer {
 	fn kind() -> BehaviorType {
-		BehaviorType::Action
+		BehaviorType::Decorator
 	}
 
 	fn provided_ports() -> PortList {

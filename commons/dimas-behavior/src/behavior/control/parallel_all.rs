@@ -57,23 +57,37 @@ impl BehaviorInstance for ParallelAll {
 
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
-	async fn tick(
+	async fn start(
 		&mut self,
-		_state: BehaviorState,
+		state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
+		// check composition only once at start
 		self.failure_threshold = blackboard
 			.get("max_failures".into())
 			.unwrap_or(-1_i32);
 
-		let children_count = children.len();
-		if (children_count as i32) < self.failure_threshold {
+		if (children.len() as i32) < self.failure_threshold {
 			return Err(BehaviorError::Composition(
 				"Number of children is less than the threshold. Can never fail.".into(),
 			));
 		}
+
+		self.tick(state, blackboard, children, runtime).await
+	}
+
+	#[allow(clippy::cast_possible_truncation)]
+	#[allow(clippy::cast_possible_wrap)]
+	async fn tick(
+		&mut self,
+		_state: BehaviorState,
+		_blackboard: &mut SharedBlackboard,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		let children_count = children.len();
 
 		let mut skipped_count = 0;
 
