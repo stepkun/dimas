@@ -35,6 +35,10 @@ harness = false
 name = "sequence"
 harness = false
 
+[[bench]]
+name = "complex"
+harness = false
+
 [lints]
 workspace = true
 
@@ -68,5 +72,6 @@ tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "ti
 
 [features]
 default = ["std"]
+spawn = ["std"]
 std = []
-unstable = []
+unstable = ["std"]

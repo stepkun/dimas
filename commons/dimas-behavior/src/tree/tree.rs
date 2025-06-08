@@ -12,7 +12,11 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{string::String, sync::Arc, vec, vec::Vec};
+use alloc::{sync::Arc, vec, vec::Vec};
+#[cfg(feature = "std")]
+use alloc::string::String;
+#[cfg(feature = "spawn")]
+use alloc::string::ToString;
 use core::marker::PhantomData;
 use dimas_scripting::SharedRuntime;
 use libloading::Library;
@@ -22,6 +26,8 @@ use crate::{
 	behavior::{BehaviorResult, BehaviorState},
 	factory::BehaviorRegistry,
 };
+#[cfg(feature = "spawn")]
+use crate::behavior::BehaviorError;
 
 use super::{BehaviorTreeElement, error::Error};
 // endregion:   --- modules
@@ -74,9 +80,9 @@ struct TreeIter<'a> {
 impl<'a> TreeIter<'a> {
 	/// @TODO:
 	#[must_use]
-	pub fn new(root: &'a BehaviorTreeElement) -> Self {
+	pub fn new(root: Option<&'a BehaviorTreeElement>) -> Self {
 		Self {
-			stack: vec![root],
+			stack: vec![root.as_ref().expect("snh")],
 			marker: PhantomData,
 		}
 	}
@@ -113,9 +119,9 @@ struct TeeIterMut<'a> {
 impl<'a> TeeIterMut<'a> {
 	/// @TODO:
 	#[must_use]
-	pub fn new(root: &'a mut BehaviorTreeElement) -> Self {
+	pub fn new(root: &'a mut Option<BehaviorTreeElement>) -> Self {
 		Self {
-			stack: vec![root],
+			stack: vec![root.as_mut().expect("snh")],
 			marker: PhantomData,
 		}
 	}
@@ -144,8 +150,13 @@ impl<'a> Iterator for TeeIterMut<'a> {
 /// A Tree of [`BehaviorTreeElement`]s.
 /// A certain [`BehaviorTree`] can contain up to 65536 [`BehaviorTreeElement`]s.
 pub struct BehaviorTree {
-	root: BehaviorTreeElement,
+	/// `root` beeing an [`Option`] allows to extract `root` temporarily
+	/// and hand it ower to a spawned task.
+	root: Option<BehaviorTreeElement>,
+	/// `runtime` is shared between elements
 	runtime: SharedRuntime,
+	/// `libraries` stores a reference to the used shared libraries aka plugins.
+	/// This is necessary to avoid memory deallocation of libs while tree is in use.
 	_libraries: Vec<Arc<Library>>,
 }
 
@@ -161,7 +172,7 @@ impl BehaviorTree {
 			libraries.push(lib.clone());
 		}
 		Self {
-			root,
+			root: Some(root),
 			runtime,
 			_libraries: libraries,
 		}
@@ -170,8 +181,10 @@ impl BehaviorTree {
 	/// Pretty print the tree.
 	/// # Errors
 	/// - if tree depth exceeds 127 (sub)tree levels.
+	/// # Panics
+	/// - if tree has no root
 	pub fn print(&self) -> Result<(), Error> {
-		print_recursively(0, &self.root)
+		print_recursively(0, self.root.as_ref().expect("snh"))
 	}
 
 	/// Get a (sub)tree where index 0 is root tree.
@@ -183,44 +196,86 @@ impl BehaviorTree {
 
 	/// Ticks the tree exactly once.
 	/// # Errors
+	/// # Panics
+	/// - if tree has no root
 	pub async fn tick_exactly_once(&mut self) -> BehaviorResult {
-		let state = self.root.execute_tick(&self.runtime).await?;
-		tokio::task::yield_now().await;
-		Ok(state)
+		let root = self.root.as_mut().expect("snh");
+
+		root.execute_tick(&self.runtime).await
 	}
 
 	/// Ticks the tree once.
 	/// @TODO: The wakeup mechanism is not yet implemented
 	/// # Errors
+	/// # Panics
+	/// - if tree has no root
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		let state = self.root.execute_tick(&self.runtime).await?;
-		tokio::task::yield_now().await;
-		Ok(state)
+		let root = self.root.as_mut().expect("snh");
+
+		root.execute_tick(&self.runtime).await
 	}
 
 	/// Ticks the tree until it finishes either with [`BehaviorState::Success`] or [`BehaviorState::Failure`].
 	/// # Errors
+	/// # Panics
+	/// - if tree has no root
+	/// 
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
-		let mut state = BehaviorState::Idle;
-
-		while state == BehaviorState::Idle || state == BehaviorState::Running {
-			state = self.root.execute_tick(&self.runtime).await?;
-			tokio::task::yield_now().await;
-
-			// Not implemented: Check for wake-up conditions and tick again if so
-
-			if state.is_completed() {
-				self.root.execute_halt(&self.runtime).await?;
-				break;
+		// will become #[cfg(feature = "std")]
+		#[cfg(feature = "spawn")] 
+		{
+			let root = self.root.take();
+			let runtime = self.runtime.clone();
+			if let Some(mut task_root) = root {
+				match tokio::spawn(async move {
+					let mut state = BehaviorState::Running;
+					while state == BehaviorState::Running || state == BehaviorState::Idle {
+						state = match task_root.execute_tick(&runtime).await {
+								Ok(state) => state,
+								Err(err) => return (Err(err), task_root),
+							};
+						// Not implemented: Check for wake-up conditions and tick again if so
+					}
+					// halt eventually still running tasks
+					match task_root.execute_halt(&runtime).await {
+						Ok(()) => {},
+						Err(err) => return (Err(err), task_root),
+					};
+					(Ok(state), task_root)
+				}).await {
+					Ok((result, root)) => {
+						self.root.replace(root);
+						result
+					},
+					Err(err) => {
+						Err(BehaviorError::JoinError(err.to_string().into()))	
+					},
+				}
+			} else {
+				Err(BehaviorError::NoRoot)
 			}
 		}
-		tokio::task::yield_now().await;
-		Ok(state)
+
+		// will become #[cfg(not(feature = "std"))]
+		#[cfg(not(feature = "spawn"))] 
+		{
+			let root = self.root.as_mut().expect("snh");
+			let mut state = BehaviorState::Running;
+			while state == BehaviorState::Running || state == BehaviorState::Idle {
+				state = root.execute_tick(&self.runtime).await?;
+				// Not implemented: Check for wake-up conditions and tick again if so
+			}
+			// halt eventually still running tasks
+			root.execute_halt(&self.runtime).await?;
+			// allow pending tasks to catch up
+			tokio::task::yield_now().await;
+			Ok(state)
+		}
 	}
 
 	/// @TODO:
 	pub fn iter(&self) -> impl Iterator<Item = &BehaviorTreeElement> {
-		TreeIter::new(&self.root)
+		TreeIter::new(self.root.as_ref())
 	}
 
 	/// @TODO:

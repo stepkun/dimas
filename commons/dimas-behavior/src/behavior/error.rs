@@ -31,12 +31,18 @@ pub enum BehaviorError {
 	/// Error in internal composition of a behavior
 	#[error("{0}")]
 	Internal(ConstString),
+	/// Pass through join error
+	#[error("{0}")]
+	JoinError(ConstString),
 	/// Attribute is not a post condition
 	#[error("attribute [{0}] is not a post condition")]
 	NoPostCondition(ConstString),
 	/// Attribute is not a pre condition
 	#[error("attribute [{0}] is not a pre condition")]
 	NoPreCondition(ConstString),
+	/// Attribute is not a pre condition
+	#[error("tree has no root element")]
+	NoRoot,
 	/// VM result is not a boolean value
 	#[error("result of VM computation is not a boolean value")]
 	NotABool,

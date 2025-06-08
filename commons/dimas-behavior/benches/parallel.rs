@@ -1,7 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
 
-//! Benchmarks of Sequence behaviors
+//! Benchmarks of parallel behaviors [`Parallel`] and [`ParallelAll`]
 
 #[doc(hidden)]
 extern crate alloc;
@@ -9,15 +9,61 @@ extern crate alloc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::factory::BehaviorTreeFactory;
 
-const PARALLEL: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const PARALLEL: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<Parallel name="root_parallel" failure_count="-1" success_count="2">
+		<Parallel name="root_parallel" failure_count="-1" success_count="25">
 			<AlwaysFailure	name="step1"/>
-			<AlwaysFailure	name="step2"/>
-			<AlwaysSuccess	name="step3"/>
+			<AlwaysSuccess	name="step2"/>
+			<AlwaysFailure	name="step3"/>
 			<AlwaysSuccess	name="step4"/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
 		</Parallel>
 	</BehaviorTree>
 </root>
@@ -32,6 +78,7 @@ fn parallel(c: &mut Criterion) {
 
 	// create the BT
 	let mut tree = factory.create_from_text(PARALLEL).expect("snh");
+	drop(factory);
 
 	c.bench_function("parallel", |b| {
 		b.iter(|| {
@@ -45,15 +92,61 @@ fn parallel(c: &mut Criterion) {
 	});
 }
 
-const PARALLEL_ALL: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const PARALLEL_ALL: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
 		<ParallelAll name="root_parallel_all">
 			<AlwaysFailure	name="step1"/>
-			<AlwaysFailure	name="step2"/>
-			<AlwaysSuccess	name="step3"/>
+			<AlwaysSuccess	name="step2"/>
+			<AlwaysFailure	name="step3"/>
 			<AlwaysSuccess	name="step4"/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
 		</ParallelAll>
 	</BehaviorTree>
 </root>
@@ -70,6 +163,7 @@ fn parallel_all(c: &mut Criterion) {
 	let mut tree = factory
 		.create_from_text(PARALLEL_ALL)
 		.expect("snh");
+	drop(factory);
 
 	c.bench_function("parallel all", |b| {
 		b.iter(|| {

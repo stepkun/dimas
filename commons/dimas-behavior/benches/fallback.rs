@@ -1,7 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
 
-//! Benchmarks of Sequence behaviors
+//! Benchmarks of Fallback behaviors [`Fallback`] and [`ReactiveFallback`]
 
 #[doc(hidden)]
 extern crate alloc;
@@ -9,7 +9,7 @@ extern crate alloc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::factory::BehaviorTreeFactory;
 
-const FALLBACK: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const FALLBACK: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
@@ -17,7 +17,53 @@ const FALLBACK: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 			<AlwaysFailure	name="step1"/>
 			<AlwaysFailure	name="step2"/>
 			<AlwaysFailure	name="step3"/>
-			<AlwaysSuccess	name="step4"/>
+			<AlwaysFailure	name="step4"/>
+			<AlwaysFailure	name="step5"/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
 		</Fallback>
 	</BehaviorTree>
 </root>
@@ -32,6 +78,7 @@ fn fallback(c: &mut Criterion) {
 
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
+	drop(factory);
 
 	c.bench_function("fallback", |b| {
 		b.iter(|| {
@@ -45,7 +92,7 @@ fn fallback(c: &mut Criterion) {
 	});
 }
 
-const REACTIVE_FALLBACK: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const REACTIVE_FALLBACK: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
@@ -53,7 +100,53 @@ const REACTIVE_FALLBACK: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 			<AlwaysFailure	name="step1"/>
 			<AlwaysFailure	name="step2"/>
 			<AlwaysFailure	name="step3"/>
-			<AlwaysSuccess	name="step4"/>
+			<AlwaysFailure	name="step4"/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
 		</ReactiveFallback>
 	</BehaviorTree>
 </root>
@@ -70,6 +163,7 @@ fn reactive_fallback(c: &mut Criterion) {
 	let mut tree = factory
 		.create_from_text(REACTIVE_FALLBACK)
 		.expect("snh");
+	drop(factory);
 
 	c.bench_function("reactive fallback", |b| {
 		b.iter(|| {

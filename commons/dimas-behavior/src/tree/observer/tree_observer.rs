@@ -74,7 +74,7 @@ impl BehaviorTreeObserver {
 	pub fn new(root: &mut BehaviorTree) -> Self {
 		let id: ConstString = "statistics".into();
 		let statistics: Arc<Mutex<Vec<Statistics>>> = Arc::new(Mutex::new(Vec::new()));
-		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorState, BehaviorState)>(10);
+		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorState, BehaviorState)>(1);
 		// spawn receiver
 		let statistics_clone = statistics.clone();
 		let handle = tokio::spawn(async move {

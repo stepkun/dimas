@@ -1,7 +1,7 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
 
-//! Benchmarks of Sequence behaviors
+//! Benchmarks of sequence behaviors [`Sequence`], [`ReactiveSequence`] and [`SequenceWithMemory`]
 
 #[doc(hidden)]
 extern crate alloc;
@@ -9,7 +9,7 @@ extern crate alloc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::factory::BehaviorTreeFactory;
 
-const SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const SEQUENCE: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
@@ -18,6 +18,52 @@ const SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 			<AlwaysSuccess	name="step2"/>
 			<AlwaysSuccess	name="step3"/>
 			<AlwaysSuccess	name="step4"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
 		</Sequence>
 	</BehaviorTree>
 </root>
@@ -32,6 +78,7 @@ fn sequence(c: &mut Criterion) {
 
 	// create the BT
 	let mut tree = factory.create_from_text(SEQUENCE).expect("snh");
+	drop(factory);
 
 	c.bench_function("sequence", |b| {
 		b.iter(|| {
@@ -45,7 +92,7 @@ fn sequence(c: &mut Criterion) {
 	});
 }
 
-const REACTIVE_SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const REACTIVE_SEQUENCE: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
@@ -54,6 +101,52 @@ const REACTIVE_SEQUENCE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 			<AlwaysSuccess	name="step2"/>
 			<AlwaysSuccess	name="step3"/>
 			<AlwaysSuccess	name="step4"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
 		</ReactiveSequence>
 	</BehaviorTree>
 </root>
@@ -70,6 +163,7 @@ fn reactive_sequence(c: &mut Criterion) {
 	let mut tree = factory
 		.create_from_text(REACTIVE_SEQUENCE)
 		.expect("snh");
+	drop(factory);
 
 	c.bench_function("reactive sequence", |b| {
 		b.iter(|| {
@@ -83,7 +177,7 @@ fn reactive_sequence(c: &mut Criterion) {
 	});
 }
 
-const SEQUENCE_WITH_MEMORY: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+const SEQUENCE_WITH_MEMORY: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
@@ -92,6 +186,52 @@ const SEQUENCE_WITH_MEMORY: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 			<AlwaysSuccess	name="step2"/>
 			<AlwaysSuccess	name="step3"/>
 			<AlwaysSuccess	name="step4"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess/>
 		</SequenceWithMemory>
 	</BehaviorTree>
 </root>
@@ -108,6 +248,7 @@ fn sequence_with_memory(c: &mut Criterion) {
 	let mut tree = factory
 		.create_from_text(SEQUENCE_WITH_MEMORY)
 		.expect("snh");
+	drop(factory);
 
 	c.bench_function("sequence with memory", |b| {
 		b.iter(|| {
