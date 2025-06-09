@@ -3,11 +3,11 @@
 //! Action behavior library
 //!
 
-mod always;
+mod always_after;
 mod script;
 
 // flatten
-pub use always::Always;
+pub use always_after::AlwaysAfter;
 pub use script::Script;
 
 // region:      --- modules

@@ -41,12 +41,7 @@ impl BehaviorRegistry {
 	/// Add a behavior to the registry
 	/// # Errors
 	/// - if the entry already exists
-	pub fn add_behavior<F>(
-		&mut self,
-		name: &str,
-		bhvr_creation_fn: F,
-		bhvr_type: BehaviorType,
-	) -> Result<(), Error>
+	pub fn add_behavior<F>(&mut self, name: &str, bhvr_creation_fn: F, bhvr_type: BehaviorType) -> Result<(), Error>
 	where
 		F: Fn() -> BehaviorPtr + Send + Sync + 'static,
 	{
@@ -68,11 +63,7 @@ impl BehaviorRegistry {
 	/// Add a behavior tree definition to the registry.
 	/// # Errors
 	/// - if the behavior tree definition is already registered.
-	pub(super) fn add_tree_defintion(
-		&mut self,
-		id: &str,
-		tree_definition: ConstString,
-	) -> Result<(), Error> {
+	pub(super) fn add_tree_defintion(&mut self, id: &str, tree_definition: ConstString) -> Result<(), Error> {
 		let key: ConstString = id.into();
 		if let std::collections::btree_map::Entry::Vacant(e) = self.tree_definitions.entry(key) {
 			e.insert(tree_definition);

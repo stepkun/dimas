@@ -37,9 +37,7 @@ fn parse_config(args: Arguments) -> Result<Config, syn::Error> {
 				let ident = named_value
 					.path
 					.get_ident()
-					.ok_or_else(|| {
-						syn::Error::new_spanned(&named_value, "must have a specified ident")
-					})?
+					.ok_or_else(|| syn::Error::new_spanned(&named_value, "must have a specified ident"))?
 					.to_string()
 					.to_lowercase();
 
@@ -95,26 +93,17 @@ pub fn main(args: TokenStream, main_fn: TokenStream) -> TokenStream {
 
 	// check given function beeing a proper `asyn main()` function
 	if main_fn.sig.ident != "main" {
-		let err = syn::Error::new_spanned(
-			&main_fn.sig.ident,
-			"macro can only be used for main function",
-		);
+		let err = syn::Error::new_spanned(&main_fn.sig.ident, "macro can only be used for main function");
 		origin_with_error.extend(err.into_compile_error());
 		return origin_with_error;
 	}
 	if !main_fn.sig.inputs.is_empty() {
-		let err = syn::Error::new_spanned(
-			&main_fn.sig.ident,
-			"the main function cannot accept arguments",
-		);
+		let err = syn::Error::new_spanned(&main_fn.sig.ident, "the main function cannot accept arguments");
 		origin_with_error.extend(err.into_compile_error());
 		return origin_with_error;
 	}
 	if main_fn.sig.asyncness.is_none() {
-		let err = syn::Error::new_spanned(
-			main_fn.sig.fn_token,
-			"missing `async` keyword in function declaration",
-		);
+		let err = syn::Error::new_spanned(main_fn.sig.fn_token, "missing `async` keyword in function declaration");
 		origin_with_error.extend(err.into_compile_error());
 		return origin_with_error;
 	}

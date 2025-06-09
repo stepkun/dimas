@@ -58,11 +58,6 @@ fn string_addition(c: &mut Criterion) {
 	});
 }
 
-criterion_group!(
-	benches,
-	simple_expression,
-	moderate_expression,
-	string_addition,
-);
+criterion_group!(benches, simple_expression, moderate_expression, string_addition,);
 
 criterion_main!(benches);

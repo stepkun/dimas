@@ -10,8 +10,7 @@ use dimas_scripting::SharedRuntime;
 use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 
 use super::{
-	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult,
-	BehaviorState,
+	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult, BehaviorState,
 };
 // endregion:   --- modules
 
@@ -20,8 +19,7 @@ use super::{
 pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
 
 /// Signature of a registered behavior function called by `SimpleBehavior`'s tick
-pub type ComplexBhvrTickFn =
-	Arc<dyn Fn(&mut SharedBlackboard) -> BehaviorResult + Send + Sync + 'static>;
+pub type ComplexBhvrTickFn = Arc<dyn Fn(&mut SharedBlackboard) -> BehaviorResult + Send + Sync + 'static>;
 // endregion:   --- types
 
 // region:      --- BehaviorFunction
@@ -92,10 +90,7 @@ impl SimpleBehavior {
 	}
 
 	/// Create a `SimpleBehavior` with the given function and list of ports
-	pub fn new_create_with_ports(
-		tick_fn: ComplexBhvrTickFn,
-		port_list: PortList,
-	) -> Box<BehaviorCreationFn> {
+	pub fn new_create_with_ports(tick_fn: ComplexBhvrTickFn, port_list: PortList) -> Box<BehaviorCreationFn> {
 		Box::new(move || {
 			Box::new(Self {
 				simple_tick_fn: None,

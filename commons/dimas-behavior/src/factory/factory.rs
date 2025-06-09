@@ -16,20 +16,17 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		Behavior, BehaviorState, BehaviorStatic, BehaviorType, ComplexBhvrTickFn, SimpleBehavior,
-		SimpleBhvrTickFn,
-		action::{Always, Script},
+		Behavior, BehaviorState, BehaviorStatic, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		action::{AlwaysAfter, Script},
 		condition::script_condition::ScriptCondition,
 		control::{
-			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll,
-			reactive_fallback::ReactiveFallback, reactive_sequence::ReactiveSequence,
-			sequence::Sequence, sequence_with_memory::SequenceWithMemory,
+			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
+			reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory,
 			while_do_else::WhileDoElse,
 		},
 		decorator::{
-			force_failure::ForceFailure, inverter::Inverter,
-			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition,
-			subtree::Subtree,
+			force_failure::ForceFailure, inverter::Inverter, retry_until_successful::RetryUntilSuccessful,
+			script_precondition::Precondition, subtree::Subtree,
 		},
 	},
 	factory::xml_parser::XmlParser,
@@ -43,10 +40,23 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 
 // region:      --- BehaviorTreeFactory
 /// Factory for creation and modification of [`BehaviorTree`]s
-#[derive(Default)]
 pub struct BehaviorTreeFactory {
 	registry: BehaviorRegistry,
 	main_tree_name: Option<ConstString>,
+}
+
+impl Default for BehaviorTreeFactory {
+	fn default() -> Self {
+		let mut f = Self {
+			registry: BehaviorRegistry::default(),
+			main_tree_name: None,
+		};
+		// minimum required behaviors for the factory to work
+		f.register_node_type::<Subtree>("SubTree")
+			.expect("snh");
+
+		f
+	}
 }
 
 impl BehaviorTreeFactory {
@@ -70,9 +80,9 @@ impl BehaviorTreeFactory {
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core actions
 		self.register_node_type::<Script>("Script")?;
-		register_node!(self, Always, "AlwaysFailure", BehaviorState::Failure)?;
-		register_node!(self, Always, "AlwaysRunning", BehaviorState::Running)?;
-		register_node!(self, Always, "AlwaysSuccess", BehaviorState::Success)?;
+		register_node!(self, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
+		register_node!(self, AlwaysAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
+		register_node!(self, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
 
 		// core conditions
 		self.register_node_type::<ScriptCondition>("ScriptCondition")?;
@@ -91,8 +101,7 @@ impl BehaviorTreeFactory {
 		self.register_node_type::<ForceFailure>("ForceFailure")?;
 		self.register_node_type::<Inverter>("Inverter")?;
 		self.register_node_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
-		self.register_node_type::<Precondition>("Precondition")?;
-		self.register_node_type::<Subtree>("SubTree")
+		self.register_node_type::<Precondition>("Precondition")
 	}
 
 	/// Register an enums key/value pair.
@@ -235,11 +244,7 @@ impl BehaviorTreeFactory {
 	/// Register a function as [`BehaviorType::Action`].
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
-	pub fn register_simple_action(
-		&mut self,
-		name: &str,
-		tick_fn: SimpleBhvrTickFn,
-	) -> Result<(), Error> {
+	pub fn register_simple_action(&mut self, name: &str, tick_fn: SimpleBhvrTickFn) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = BehaviorType::Action;
 		self.registry
@@ -264,11 +269,7 @@ impl BehaviorTreeFactory {
 	/// Register a function as [`BehaviorType::Condition`].
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
-	pub fn register_simple_condition(
-		&mut self,
-		name: &str,
-		tick_fn: SimpleBhvrTickFn,
-	) -> Result<(), Error> {
+	pub fn register_simple_condition(&mut self, name: &str, tick_fn: SimpleBhvrTickFn) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		let bhvr_type = BehaviorType::Condition;
 		self.registry

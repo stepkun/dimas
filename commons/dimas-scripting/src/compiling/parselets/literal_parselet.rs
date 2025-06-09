@@ -17,13 +17,7 @@ use super::PrefixParselet;
 pub struct LiteralParselet;
 
 impl PrefixParselet for LiteralParselet {
-	fn parse(
-		&self,
-		_lexer: &mut Lexer,
-		parser: &mut Parser,
-		chunk: &mut Chunk,
-		_token: Token,
-	) -> Result<(), Error> {
+	fn parse(&self, _lexer: &mut Lexer, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
 		let kind = parser.current().kind;
 
 		match kind {

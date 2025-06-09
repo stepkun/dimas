@@ -18,13 +18,7 @@ use super::PrefixParselet;
 pub struct UnaryParselet;
 
 impl PrefixParselet for UnaryParselet {
-	fn parse(
-		&self,
-		lexer: &mut Lexer,
-		parser: &mut Parser,
-		chunk: &mut Chunk,
-		_token: Token,
-	) -> Result<(), Error> {
+	fn parse(&self, lexer: &mut Lexer, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
 		let token = parser.current();
 		// there must be a current token
 		if parser.next().kind == TokenKind::None {

@@ -26,13 +26,7 @@ impl LogicParselet {
 }
 
 impl InfixParselet for LogicParselet {
-	fn parse(
-		&self,
-		lexer: &mut Lexer,
-		parser: &mut Parser,
-		chunk: &mut Chunk,
-		_token: Token,
-	) -> Result<(), Error> {
+	fn parse(&self, lexer: &mut Lexer, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
 		// The bitwise logic does not return a boolean result but an integer
 		// and resembles therefore more how arithmetic operations work.
 		// The QMark Colon expression is special again.

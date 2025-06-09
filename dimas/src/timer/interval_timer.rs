@@ -6,10 +6,7 @@
 use core::time::Duration;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-		error::BehaviorError,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,

@@ -28,8 +28,8 @@ use crate::{
 
 use super::{
 	parselets::{
-		AssignmentParselet, BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet,
-		LogicParselet, PrefixParselet, UnaryParselet, ValueParselet,
+		AssignmentParselet, BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet, LogicParselet,
+		PrefixParselet, UnaryParselet, ValueParselet,
 	},
 	precedence::Precedence,
 	token::{Token, TokenKind},
@@ -78,14 +78,12 @@ impl Parser {
 		};
 
 		// Register the parselets for the grammar
-		parser.infix_parselets.insert(
-			TokenKind::Ampersand,
-			Arc::from(LogicParselet::new(Precedence::BitAnd)),
-		);
-		parser.infix_parselets.insert(
-			TokenKind::And,
-			Arc::from(LogicParselet::new(Precedence::And)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Ampersand, Arc::from(LogicParselet::new(Precedence::BitAnd)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::And, Arc::from(LogicParselet::new(Precedence::And)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Bang, Arc::from(UnaryParselet));
@@ -93,10 +91,9 @@ impl Parser {
 			TokenKind::BangEqual,
 			Arc::from(BinaryParselet::new(Precedence::Equality)),
 		);
-		parser.infix_parselets.insert(
-			TokenKind::Caret,
-			Arc::from(LogicParselet::new(Precedence::BitXor)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Caret, Arc::from(LogicParselet::new(Precedence::BitXor)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Enum, Arc::from(ValueParselet));
@@ -127,10 +124,9 @@ impl Parser {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::LeftParen, Arc::from(GroupingParselet));
-		parser.infix_parselets.insert(
-			TokenKind::Less,
-			Arc::from(BinaryParselet::new(Precedence::Comparison)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Less, Arc::from(BinaryParselet::new(Precedence::Comparison)));
 		parser.infix_parselets.insert(
 			TokenKind::LessEqual,
 			Arc::from(BinaryParselet::new(Precedence::Equality)),
@@ -138,10 +134,9 @@ impl Parser {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Minus, Arc::from(UnaryParselet));
-		parser.infix_parselets.insert(
-			TokenKind::Minus,
-			Arc::from(BinaryParselet::new(Precedence::Term)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Minus, Arc::from(BinaryParselet::new(Precedence::Term)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Nil, Arc::from(LiteralParselet));
@@ -151,29 +146,24 @@ impl Parser {
 		parser
 			.infix_parselets
 			.insert(TokenKind::Or, Arc::from(LogicParselet::new(Precedence::Or)));
-		parser.infix_parselets.insert(
-			TokenKind::Pipe,
-			Arc::from(LogicParselet::new(Precedence::BitOr)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Pipe, Arc::from(LogicParselet::new(Precedence::BitOr)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Plus, Arc::from(UnaryParselet));
-		parser.infix_parselets.insert(
-			TokenKind::Plus,
-			Arc::from(BinaryParselet::new(Precedence::Term)),
-		);
-		parser.infix_parselets.insert(
-			TokenKind::QMark,
-			Arc::from(LogicParselet::new(Precedence::Ternary)),
-		);
-		parser.infix_parselets.insert(
-			TokenKind::Slash,
-			Arc::from(BinaryParselet::new(Precedence::Factor)),
-		);
-		parser.infix_parselets.insert(
-			TokenKind::Star,
-			Arc::from(BinaryParselet::new(Precedence::Factor)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Plus, Arc::from(BinaryParselet::new(Precedence::Term)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::QMark, Arc::from(LogicParselet::new(Precedence::Ternary)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Slash, Arc::from(BinaryParselet::new(Precedence::Factor)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::Star, Arc::from(BinaryParselet::new(Precedence::Factor)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::String, Arc::from(ValueParselet));
@@ -192,11 +182,7 @@ impl Parser {
 	/// # Errors
 	/// - passes [`Lexer`] errors through
 	/// - if it could not create a proper [`Chunk`]
-	pub fn parse(
-		&mut self,
-		enums: &BTreeMap<String, i8>,
-		source_code: &str,
-	) -> Result<Chunk, Error> {
+	pub fn parse(&mut self, enums: &BTreeMap<String, i8>, source_code: &str) -> Result<Chunk, Error> {
 		let mut chunk = Chunk::default();
 		let mut lexer = Lexer::new(enums, source_code);
 

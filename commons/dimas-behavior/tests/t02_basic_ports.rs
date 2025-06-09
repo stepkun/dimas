@@ -11,9 +11,7 @@ extern crate alloc;
 
 use std::sync::Arc;
 
-use dimas_behavior::{
-	behavior::BehaviorState, factory::BehaviorTreeFactory, input_port, port_list,
-};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, input_port, port_list};
 use serial_test::serial;
 use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, new_say_something_simple};
 

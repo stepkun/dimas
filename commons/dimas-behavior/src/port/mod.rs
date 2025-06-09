@@ -82,13 +82,7 @@ pub fn create_port<T: 'static>(
 ) -> Result<PortDefinition, Error> {
 	if is_allowed_port_name(name) {
 		let type_id = TypeId::of::<T>();
-		Ok(PortDefinition::new(
-			direction,
-			type_id,
-			name,
-			default,
-			description,
-		)?)
+		Ok(PortDefinition::new(direction, type_id, name, default, description)?)
 	} else {
 		Err(Error::NameNotAllowed(name.into()))
 	}
@@ -145,16 +139,13 @@ impl core::fmt::Display for PortDirection {
 #[macro_export]
 macro_rules! input_port {
 	($tp:ty, $name:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, "", "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, "", "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, $desc)
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, $desc).expect("snh")
 	};
 }
 
@@ -162,16 +153,13 @@ macro_rules! input_port {
 #[macro_export]
 macro_rules! inout_port {
 	($tp:ty, $name:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, "", "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, "", "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, $desc)
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, $desc).expect("snh")
 	};
 }
 
@@ -179,16 +167,13 @@ macro_rules! inout_port {
 #[macro_export]
 macro_rules! output_port {
 	($tp:ty, $name:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, "", "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, "", "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, $desc)
-			.expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, $desc).expect("snh")
 	};
 }
 

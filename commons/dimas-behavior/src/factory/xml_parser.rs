@@ -79,21 +79,14 @@ impl XmlParser {
 	}
 
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub(super) fn register_document_root(
-		registry: &mut BehaviorRegistry,
-		element: Node,
-	) -> Result<(), Error> {
+	pub(super) fn register_document_root(registry: &mut BehaviorRegistry, element: Node) -> Result<(), Error> {
 		event!(Level::TRACE, "register_document_root");
 		for element in element.children() {
 			match element.node_type() {
 				NodeType::Comment | NodeType::Text => {} // ignore
 				NodeType::Root => {
 					// this should not happen
-					return Err(Error::Unexpected(
-						"root element".into(),
-						file!().into(),
-						line!(),
-					));
+					return Err(Error::Unexpected("root element".into(), file!().into(), line!()));
 				}
 				NodeType::Element => {
 					// only 'BehaviorTree' or 'TreeNodesModel' are valid
@@ -103,8 +96,7 @@ impl XmlParser {
 						"BehaviorTree" => {
 							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
-								let source: ConstString =
-									element.document().input_text()[element.range()].into();
+								let source: ConstString = element.document().input_text()[element.range()].into();
 								registry.add_tree_defintion(id, source)?;
 							} else {
 								return Err(Error::MissingId(element.tag_name().name().into()));
@@ -127,9 +119,7 @@ impl XmlParser {
 							Self::register_document(registry, &xml)?;
 						}
 						_ => {
-							return Err(Error::ElementNotSupported(
-								element.tag_name().name().into(),
-							));
+							return Err(Error::ElementNotSupported(element.tag_name().name().into()));
 						}
 					}
 				}
@@ -229,9 +219,7 @@ impl XmlParser {
 								if is_allowed_port_name(stripped) {
 									remappings.add(key, stripped)?;
 								} else {
-									return Err(crate::factory::error::Error::NameNotAllowed(
-										key.into(),
-									));
+									return Err(crate::factory::error::Error::NameNotAllowed(key.into()));
 								}
 							} else {
 								// this is a normal string, representing a port value
@@ -239,11 +227,7 @@ impl XmlParser {
 							}
 						}
 						None => {
-							return Err(Error::PortInvalid(
-								key.into(),
-								name.into(),
-								port_list.entries(),
-							));
+							return Err(Error::PortInvalid(key.into(), name.into(), port_list.entries()));
 						}
 					}
 				}
@@ -279,9 +263,8 @@ impl XmlParser {
 				let blackboard = SharedBlackboard::new(name.into(), remappings, values);
 				let children = self.build_children(name, node, registry, &blackboard)?;
 				// path is for root element same as name
-				let behaviortree = BehaviorTreeElement::create_subtree(
-					uid, name, name, children, blackboard, bhvr, conditions,
-				);
+				let behaviortree =
+					BehaviorTreeElement::create_subtree(uid, name, name, children, blackboard, bhvr, conditions);
 				Ok(behaviortree)
 			},
 		)
@@ -302,20 +285,14 @@ impl XmlParser {
 				NodeType::Comment | NodeType::Text => {} // ignore
 				NodeType::Root => {
 					// this should not happen
-					return Err(Error::Unexpected(
-						"root element".into(),
-						file!().into(),
-						line!(),
-					));
+					return Err(Error::Unexpected("root element".into(), file!().into(), line!()));
 				}
 				NodeType::Element => {
 					let element = self.build_child(path, child, registry, blackboard.clone())?;
 					children.push(element);
 				}
 				NodeType::PI => {
-					return Err(Error::UnsupportedProcessingInstruction(
-						node.tag_name().name().into(),
-					));
+					return Err(Error::UnsupportedProcessingInstruction(node.tag_name().name().into()));
 				}
 			}
 		}
@@ -372,13 +349,8 @@ impl XmlParser {
 			registry.fetch(tag_name)?
 		};
 		let bhvr = bhvr_creation_fn();
-		let (autoremap, remappings, values, conditions) = Self::handle_attributes(
-			&node_name,
-			is_subtree,
-			&bhvr,
-			&attrs,
-			registry.runtime_mut(),
-		)?;
+		let (autoremap, remappings, values, conditions) =
+			Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs, registry.runtime_mut())?;
 		let tree_node = match bhvr_type {
 			BehaviorType::Action | BehaviorType::Condition => {
 				if node.has_children() {
@@ -386,9 +358,7 @@ impl XmlParser {
 				}
 				// A leaf gets a cloned Blackboard with own remappings
 				let blackboard = blackboard.cloned(remappings, values);
-				BehaviorTreeElement::create_leaf(
-					uid, &node_name, &path, blackboard, bhvr, conditions,
-				)
+				BehaviorTreeElement::create_leaf(uid, &node_name, &path, blackboard, bhvr, conditions)
 			}
 			BehaviorType::Control | BehaviorType::Decorator => {
 				// A node gets a cloned Blackboard with own remappings
@@ -398,9 +368,7 @@ impl XmlParser {
 				if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
 					return Err(Error::DecoratorOnlyOneChild(node.tag_name().name().into()));
 				}
-				BehaviorTreeElement::create_node(
-					uid, &node_name, &path, children, blackboard, bhvr, conditions,
-				)
+				BehaviorTreeElement::create_node(uid, &node_name, &path, children, blackboard, bhvr, conditions)
 			}
 			BehaviorType::SubTree => {
 				if let Some(id) = attrs.get("ID") {
@@ -417,8 +385,7 @@ impl XmlParser {
 								values,
 								autoremap,
 							);
-							let children =
-								self.build_children(&path, node, registry, &blackboard1)?;
+							let children = self.build_children(&path, node, registry, &blackboard1)?;
 							BehaviorTreeElement::create_node(
 								uid,
 								&node_name,

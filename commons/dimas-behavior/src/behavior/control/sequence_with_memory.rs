@@ -10,10 +10,7 @@ use dimas_scripting::SharedRuntime;
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-		error::BehaviorError,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
@@ -63,10 +60,7 @@ impl BehaviorInstance for SequenceWithMemory {
 					return Ok(BehaviorState::Failure);
 				}
 				BehaviorState::Idle => {
-					return Err(BehaviorError::State(
-						"SequenceWithMemory".into(),
-						"Idle".into(),
-					));
+					return Err(BehaviorError::State("SequenceWithMemory".into(), "Idle".into()));
 				}
 				BehaviorState::Running => return Ok(BehaviorState::Running),
 				BehaviorState::Skipped | BehaviorState::Success => {

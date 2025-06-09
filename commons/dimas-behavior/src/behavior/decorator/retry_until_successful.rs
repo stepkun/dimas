@@ -10,10 +10,7 @@ use dimas_scripting::SharedRuntime;
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-		error::BehaviorError,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,
@@ -92,10 +89,7 @@ impl BehaviorInstance for RetryUntilSuccessful {
 					children.reset(runtime)?;
 				}
 				BehaviorState::Idle => {
-					return Err(BehaviorError::State(
-						"RetryUntilSuccessful".into(),
-						"Idle".into(),
-					));
+					return Err(BehaviorError::State("RetryUntilSuccessful".into(), "Idle".into()));
 				}
 				BehaviorState::Running => return Ok(BehaviorState::Running),
 				BehaviorState::Skipped => {

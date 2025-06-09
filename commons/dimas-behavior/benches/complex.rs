@@ -62,7 +62,7 @@ fn complex(c: &mut Criterion) {
 				let h2 = tree2.tick_while_running();
 				let h3 = tree3.tick_while_running();
 				runtime.block_on(async {
-					let _ = join!(h1,h2,h3);
+					let _ = join!(h1, h2, h3);
 				});
 			}
 			std::hint::black_box(());

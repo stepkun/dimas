@@ -191,6 +191,7 @@ impl BehaviorTreeElement {
 				.lock()
 				.execute(chunk, &mut self.blackboard)?;
 		}
+		self.state = BehaviorState::Idle;
 		result
 	}
 
@@ -202,21 +203,11 @@ impl BehaviorTreeElement {
 			result
 		} else if self.state == BehaviorState::Idle {
 			self.behavior
-				.start(
-					self.state,
-					&mut self.blackboard,
-					&mut self.children,
-					runtime,
-				)
+				.start(self.state, &mut self.blackboard, &mut self.children, runtime)
 				.await?
 		} else {
 			self.behavior
-				.tick(
-					self.state,
-					&mut self.blackboard,
-					&mut self.children,
-					runtime,
-				)
+				.tick(self.state, &mut self.blackboard, &mut self.children, runtime)
 				.await?
 		};
 
@@ -286,10 +277,7 @@ impl BehaviorTreeElement {
 		self.children_mut().iter_mut()
 	}
 
-	async fn check_pre_conditions(
-		&mut self,
-		runtime: &SharedRuntime,
-	) -> Result<Option<BehaviorState>, Error> {
+	async fn check_pre_conditions(&mut self, runtime: &SharedRuntime) -> Result<Option<BehaviorState>, Error> {
 		if self.pre_conditions.is_some() {
 			// Preconditions only applied when the node state is `Idle` or `Skipped`
 			if self.state == BehaviorState::Idle || self.state == BehaviorState::Skipped {
@@ -348,10 +336,7 @@ impl BehaviorTreeElement {
 			match state {
 				BehaviorState::Failure => {
 					if let Some(chunk) = self.post_conditions.get_chunk("_onFailure") {
-						let _: Result<
-							dimas_scripting::execution::ScriptingValue,
-							dimas_scripting::Error,
-						> = runtime
+						let _: Result<dimas_scripting::execution::ScriptingValue, dimas_scripting::Error> = runtime
 							.lock()
 							.execute(chunk, &mut self.blackboard);
 					}

@@ -7,8 +7,8 @@ use dimas_behavior::{factory::BehaviorTreeFactory, input_port, port_list};
 use parking_lot::Mutex;
 
 use crate::test_nodes::{
-	ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction,
-	PrintTarget, SaySomething, ThinkWhatToSay, check_battery, new_say_something_simple,
+	ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction, PrintTarget, SaySomething, ThinkWhatToSay,
+	check_battery, new_say_something_simple,
 };
 
 /// Registration function for all external symbols
@@ -44,11 +44,7 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	// or set_output();
 	let say_something_ports = port_list![input_port!(String, "message")];
 	factory
-		.register_simple_action_with_ports(
-			"SaySomething2",
-			Arc::new(new_say_something_simple),
-			say_something_ports,
-		)
+		.register_simple_action_with_ports("SaySomething2", Arc::new(new_say_something_simple), say_something_ports)
 		.expect("snh");
 
 	// t03

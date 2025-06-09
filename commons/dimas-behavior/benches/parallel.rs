@@ -7,7 +7,15 @@
 extern crate alloc;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::factory::BehaviorTreeFactory;
+use dimas_behavior::{
+	behavior::{
+		BehaviorState, BehaviorStatic,
+		action::AlwaysAfter,
+		control::{parallel::Parallel, parallel_all::ParallelAll},
+	},
+	factory::BehaviorTreeFactory,
+	register_node,
+};
 
 const PARALLEL: &str = r#"
 <root BTCPP_format="4"
@@ -74,7 +82,12 @@ fn parallel(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<Parallel>("Parallel")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(PARALLEL).expect("snh");
@@ -157,7 +170,12 @@ fn parallel_all(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<ParallelAll>("ParallelAll")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory

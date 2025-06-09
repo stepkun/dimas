@@ -290,10 +290,7 @@ impl Iterator for Lexer<'_> {
 							kind: TokenKind::String,
 						}))
 					} else {
-						return Some(Err(Error::UnterminatedString(
-							self.whole[c_at..].into(),
-							self.line,
-						)));
+						return Some(Err(Error::UnterminatedString(self.whole[c_at..].into(), self.line)));
 					}
 				}
 			};

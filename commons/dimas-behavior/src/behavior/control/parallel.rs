@@ -126,8 +126,7 @@ impl BehaviorInstance for Parallel {
 
 			// Check if success condition has been met
 			if self.success_count >= required_success_count
-				|| (self.success_threshold < 0
-					&& (self.success_count + skipped_count) >= required_success_count)
+				|| (self.success_threshold < 0 && (self.success_count + skipped_count) >= required_success_count)
 			{
 				self.clear();
 				children.reset(runtime)?;

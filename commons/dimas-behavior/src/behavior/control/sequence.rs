@@ -10,10 +10,7 @@ use dimas_scripting::SharedRuntime;
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-		error::BehaviorError,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };

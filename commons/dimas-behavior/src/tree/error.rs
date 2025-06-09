@@ -18,9 +18,7 @@ pub enum Error {
 	#[error("{0}")]
 	Behavior(#[from] crate::behavior::error::BehaviorError),
 	/// The root of the tree s not properly created
-	#[error(
-		"search for subtree [{0}] caused a deadlock, most probably because this subtree contains himself"
-	)]
+	#[error("search for subtree [{0}] caused a deadlock, most probably because this subtree contains himself")]
 	DeadLock(ConstString),
 	/// The index of a behavior is out of bounds
 	#[error("index [{0}] out of bounds")]

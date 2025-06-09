@@ -19,13 +19,7 @@ use super::PrefixParselet;
 pub struct ValueParselet;
 
 impl PrefixParselet for ValueParselet {
-	fn parse(
-		&self,
-		lexer: &mut Lexer,
-		parser: &mut Parser,
-		chunk: &mut Chunk,
-		token: Token,
-	) -> Result<(), Error> {
+	fn parse(&self, lexer: &mut Lexer, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		match token.kind {
 			TokenKind::Enum => {
 				let Some(value) = lexer.enums().get(&token.origin) else {

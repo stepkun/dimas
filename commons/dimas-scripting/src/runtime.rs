@@ -74,11 +74,7 @@ impl Runtime {
 	/// Execute a bytecode chunk.
 	/// # Errors
 	/// - if
-	pub fn execute(
-		&mut self,
-		chunk: &Chunk,
-		globals: &mut dyn Environment,
-	) -> Result<ScriptingValue, Error> {
+	pub fn execute(&mut self, chunk: &Chunk, globals: &mut dyn Environment) -> Result<ScriptingValue, Error> {
 		#[cfg(not(feature = "std"))]
 		let res = self.vm.run(chunk, globals);
 		#[cfg(feature = "std")]
@@ -90,11 +86,7 @@ impl Runtime {
 	/// Does not clear stdout before execution.
 	/// # Errors
 	/// - if
-	pub fn continue_run(
-		&mut self,
-		script: &str,
-		globals: &mut dyn Environment,
-	) -> Result<ScriptingValue, Error> {
+	pub fn continue_run(&mut self, script: &str, globals: &mut dyn Environment) -> Result<ScriptingValue, Error> {
 		let chunk = self.parser.parse(&self.enums, script)?;
 		#[cfg(not(feature = "std"))]
 		let res = self.vm.run(chunk, globals)?;
@@ -107,11 +99,7 @@ impl Runtime {
 	/// Clears stdout before execution.
 	/// # Errors
 	/// - if
-	pub fn run(
-		&mut self,
-		script: &str,
-		globals: &mut dyn Environment,
-	) -> Result<ScriptingValue, Error> {
+	pub fn run(&mut self, script: &str, globals: &mut dyn Environment) -> Result<ScriptingValue, Error> {
 		self.stdout.clear();
 		self.continue_run(script, globals)
 	}

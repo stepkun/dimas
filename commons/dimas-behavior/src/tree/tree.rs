@@ -12,22 +12,22 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{sync::Arc, vec, vec::Vec};
 #[cfg(feature = "std")]
 use alloc::string::String;
 #[cfg(feature = "spawn")]
 use alloc::string::ToString;
+use alloc::{sync::Arc, vec, vec::Vec};
 use core::marker::PhantomData;
 use dimas_scripting::SharedRuntime;
 use libloading::Library;
 use parking_lot::Mutex;
 
+#[cfg(feature = "spawn")]
+use crate::behavior::BehaviorError;
 use crate::{
 	behavior::{BehaviorResult, BehaviorState},
 	factory::BehaviorRegistry,
 };
-#[cfg(feature = "spawn")]
-use crate::behavior::BehaviorError;
 
 use super::{BehaviorTreeElement, error::Error};
 // endregion:   --- modules
@@ -219,10 +219,10 @@ impl BehaviorTree {
 	/// # Errors
 	/// # Panics
 	/// - if tree has no root
-	/// 
+	///
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
 		// will become #[cfg(feature = "std")]
-		#[cfg(feature = "spawn")] 
+		#[cfg(feature = "spawn")]
 		{
 			let root = self.root.take();
 			let runtime = self.runtime.clone();
@@ -231,25 +231,25 @@ impl BehaviorTree {
 					let mut state = BehaviorState::Running;
 					while state == BehaviorState::Running || state == BehaviorState::Idle {
 						state = match task_root.execute_tick(&runtime).await {
-								Ok(state) => state,
-								Err(err) => return (Err(err), task_root),
-							};
+							Ok(state) => state,
+							Err(err) => return (Err(err), task_root),
+						};
 						// Not implemented: Check for wake-up conditions and tick again if so
 					}
 					// halt eventually still running tasks
 					match task_root.execute_halt(&runtime).await {
-						Ok(()) => {},
+						Ok(()) => {}
 						Err(err) => return (Err(err), task_root),
 					};
 					(Ok(state), task_root)
-				}).await {
+				})
+				.await
+				{
 					Ok((result, root)) => {
 						self.root.replace(root);
 						result
-					},
-					Err(err) => {
-						Err(BehaviorError::JoinError(err.to_string().into()))	
-					},
+					}
+					Err(err) => Err(BehaviorError::JoinError(err.to_string().into())),
 				}
 			} else {
 				Err(BehaviorError::NoRoot)
@@ -257,7 +257,7 @@ impl BehaviorTree {
 		}
 
 		// will become #[cfg(not(feature = "std"))]
-		#[cfg(not(feature = "spawn"))] 
+		#[cfg(not(feature = "spawn"))]
 		{
 			let root = self.root.as_mut().expect("snh");
 			let mut state = BehaviorState::Running;

@@ -7,7 +7,15 @@
 extern crate alloc;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::factory::BehaviorTreeFactory;
+use dimas_behavior::{
+	behavior::{
+		BehaviorState, BehaviorStatic,
+		action::AlwaysAfter,
+		control::{fallback::Fallback, reactive_fallback::ReactiveFallback},
+	},
+	factory::BehaviorTreeFactory,
+	register_node,
+};
 
 const FALLBACK: &str = r#"
 <root BTCPP_format="4"
@@ -74,7 +82,12 @@ fn fallback(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<Fallback>("Fallback")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
@@ -157,7 +170,12 @@ fn reactive_fallback(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<ReactiveFallback>("ReactiveFallback")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory

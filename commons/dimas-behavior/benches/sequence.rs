@@ -7,7 +7,15 @@
 extern crate alloc;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::factory::BehaviorTreeFactory;
+use dimas_behavior::{
+	behavior::{
+		BehaviorState, BehaviorStatic,
+		action::AlwaysAfter,
+		control::{reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory},
+	},
+	factory::BehaviorTreeFactory,
+	register_node,
+};
 
 const SEQUENCE: &str = r#"
 <root BTCPP_format="4"
@@ -74,7 +82,12 @@ fn sequence(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<Sequence>("Sequence")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(SEQUENCE).expect("snh");
@@ -157,7 +170,12 @@ fn reactive_sequence(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<ReactiveSequence>("ReactiveSequence")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory
@@ -242,7 +260,12 @@ fn sequence_with_memory(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	factory
+		.register_node_type::<SequenceWithMemory>("SequenceWithMemory")
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory

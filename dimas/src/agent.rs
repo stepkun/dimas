@@ -121,10 +121,7 @@ impl Agent {
 		factory.register_node_type::<NotInterrupted>("NotInterrupted")?;
 		factory.register_node_type::<Shutdown>("Shutdown")?;
 
-		Ok(Self {
-			factory,
-			tree: None,
-		})
+		Ok(Self { factory, tree: None })
 	}
 
 	/// Register a behavior within the [`Agent`].

@@ -24,8 +24,7 @@ pub fn init_tracing() {
 		|content| {
 			let levels = content.split(',');
 			if levels.count() == 1 {
-				tracing_subscriber::fmt()
-					.with_env_filter(EnvFilter::new(std::format!("dimas={content},zenoh=warn")))
+				tracing_subscriber::fmt().with_env_filter(EnvFilter::new(std::format!("dimas={content},zenoh=warn")))
 			} else {
 				tracing_subscriber::fmt().with_env_filter(EnvFilter::new(content))
 			}

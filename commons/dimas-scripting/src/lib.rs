@@ -101,10 +101,7 @@ impl Environment for DefaultEnvironment {
 		self.storage
 			.read()
 			.get(name.as_ref())
-			.map_or_else(
-				|| Err(Error::GlobalNotDefined(name)),
-				|value| Ok(value.clone()),
-			)
+			.map_or_else(|| Err(Error::GlobalNotDefined(name)), |value| Ok(value.clone()))
 	}
 
 	fn set_env(&mut self, name: ConstString, value: ScriptingValue) -> Result<(), Error> {

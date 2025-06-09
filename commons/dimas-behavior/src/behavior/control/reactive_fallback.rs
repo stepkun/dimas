@@ -10,10 +10,7 @@ use dimas_scripting::SharedRuntime;
 use crate as dimas_behavior;
 use crate::{
 	Behavior,
-	behavior::{
-		BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-		error::BehaviorError,
-	},
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
@@ -31,39 +28,74 @@ use crate::{
 ///
 /// IMPORTANT: to work properly, this node should not have more than
 ///            a single asynchronous child.
-#[derive(Behavior, Debug, Default)]
-pub struct ReactiveFallback {}
+#[derive(Behavior, Debug)]
+pub struct ReactiveFallback {
+	/// Defaults to '-1'
+	running_child_idx: i32,
+}
+
+impl Default for ReactiveFallback {
+	fn default() -> Self {
+		Self { running_child_idx: -1 }
+	}
+}
 
 #[async_trait::async_trait]
 impl BehaviorInstance for ReactiveFallback {
+	async fn halt(
+		&mut self,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		self.running_child_idx = -1;
+		children.halt(0, runtime)?;
+		Ok(())
+	}
+
+	#[allow(clippy::cast_possible_truncation)]
+	#[allow(clippy::cast_possible_wrap)]
+	#[allow(clippy::cast_sign_loss)]
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		state: BehaviorState,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
+		if state == BehaviorState::Idle {
+			self.running_child_idx = -1;
+		}
 
-		for index in 0..children.len() {
-			let child = &mut children[index];
+		for child_idx in 0..children.len() {
+			let child = &mut children[child_idx];
 			let new_state = child.execute_tick(runtime).await?;
 
 			all_skipped &= new_state == BehaviorState::Skipped;
 
 			match new_state {
-				BehaviorState::Failure => {}
+				BehaviorState::Failure => {
+					self.running_child_idx = -1;
+					continue;
+				}
 				BehaviorState::Idle => {
-					return Err(BehaviorError::State(
-						"ReactiveFallback".into(),
-						"Idle".into(),
-					));
+					return Err(BehaviorError::State("ReactiveFallback".into(), "Idle".into()));
 				}
 				BehaviorState::Running => {
-					// stop later children
-					for i in 0..index {
-						let cd = &mut children[i];
-						cd.execute_halt(runtime).await?;
+					// halt previously running child
+					if self.running_child_idx != (child_idx as i32) && self.running_child_idx != -1 {
+						children[self.running_child_idx as usize]
+							.execute_halt(runtime)
+							.await?;
+					}
+					self.running_child_idx = child_idx as i32;
+					if self.running_child_idx == -1 {
+						self.running_child_idx = child_idx as i32;
+					} else if self.running_child_idx != (child_idx as i32) {
+						// Multiple children running at the same time
+						return Err(BehaviorError::Composition(
+							"[ReactiveFallback]: Only a single child can return Running.".into(),
+						));
 					}
 					return Ok(BehaviorState::Running);
 				}
@@ -72,12 +104,14 @@ impl BehaviorInstance for ReactiveFallback {
 				}
 				BehaviorState::Success => {
 					children.reset(runtime)?;
+					self.running_child_idx = -1;
 					return Ok(BehaviorState::Success);
 				}
 			}
 		}
 
 		children.reset(runtime)?;
+		self.running_child_idx = -1;
 
 		if all_skipped {
 			Ok(BehaviorState::Skipped)

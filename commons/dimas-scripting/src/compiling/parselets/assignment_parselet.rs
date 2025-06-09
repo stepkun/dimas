@@ -19,13 +19,7 @@ use super::PrefixParselet;
 pub struct AssignmentParselet;
 
 impl PrefixParselet for AssignmentParselet {
-	fn parse(
-		&self,
-		lexer: &mut Lexer,
-		parser: &mut Parser,
-		chunk: &mut Chunk,
-		token: Token,
-	) -> Result<(), Error> {
+	fn parse(&self, lexer: &mut Lexer, parser: &mut Parser, chunk: &mut Chunk, token: Token) -> Result<(), Error> {
 		let next = parser.next();
 		match next.kind {
 			TokenKind::ColonEqual => {

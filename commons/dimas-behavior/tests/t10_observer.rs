@@ -10,8 +10,7 @@
 extern crate std;
 
 use dimas_behavior::{
-	behavior::BehaviorState, factory::BehaviorTreeFactory,
-	tree::observer::tree_observer::BehaviorTreeObserver,
+	behavior::BehaviorState, factory::BehaviorTreeFactory, tree::observer::tree_observer::BehaviorTreeObserver,
 };
 
 const XML: &str = r#"

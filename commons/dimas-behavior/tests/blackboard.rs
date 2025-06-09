@@ -132,21 +132,18 @@ fn blackboard_node_hierarchy() {
 	let values1 = PortRemappings::default();
 
 	remappings1.add("levelB", "levelA");
-	let mut level1 =
-		SharedBlackboard::with("level1".into(), level0.clone(), remappings1, values1, true);
+	let mut level1 = SharedBlackboard::with("level1".into(), level0.clone(), remappings1, values1, true);
 
 	let mut remappings2 = PortRemappings::default();
 	let values2 = PortRemappings::default();
 
 	remappings2.add("levelC", "levelB");
-	let mut level2 =
-		SharedBlackboard::with("level2".into(), level1.clone(), remappings2, values2, true);
+	let mut level2 = SharedBlackboard::with("level2".into(), level1.clone(), remappings2, values2, true);
 
 	let mut remappings3 = PortRemappings::default();
 	let values3 = PortRemappings::default();
 	remappings3.add("levelD", "levelC");
-	let mut level3 =
-		SharedBlackboard::with("level3".into(), level2.clone(), remappings3, values3, true);
+	let mut level3 = SharedBlackboard::with("level3".into(), level2.clone(), remappings3, values3, true);
 
 	let old = level0
 		.set("levelA".into(), String::from("testA"))

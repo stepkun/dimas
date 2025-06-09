@@ -1,0 +1,93 @@
+// Copyright © 2025 Stephan Kunz
+
+//! Built in Always behavior of `DiMAS`
+//!
+
+// region:      --- modules
+use alloc::boxed::Box;
+use dimas_scripting::SharedRuntime;
+
+use crate as dimas_behavior;
+use crate::behavior::BehaviorError;
+use crate::{
+	Behavior,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	blackboard::SharedBlackboard,
+	tree::BehaviorTreeElementList,
+};
+//endregion:    --- modules
+
+/// The `AlwaysAfter` behavior returns Failure, Running or Success afer a certain amount of ticks,
+/// depending on the stored state and count value.
+#[derive(Behavior, Debug, Default)]
+pub struct AlwaysAfter {
+	/// The [`BehaviorState`] to return finally.
+	state: BehaviorState,
+	/// The amount of ticks after whih the state will be returned.
+	count: u8,
+	remaining: u8,
+}
+
+#[async_trait::async_trait]
+impl BehaviorInstance for AlwaysAfter {
+	async fn halt(
+		&mut self,
+		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		self.remaining = 0;
+		Ok(())
+	}
+
+	async fn start(
+		&mut self,
+		state: BehaviorState,
+		blackboard: &mut SharedBlackboard,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		self.remaining = self.count;
+		self.tick(state, blackboard, children, runtime)
+			.await
+	}
+
+	async fn tick(
+		&mut self,
+		_state: BehaviorState,
+		_blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		if self.remaining == 0 {
+			// self.remaining self.count;
+			Ok(self.state)
+		} else {
+			self.remaining -= 1;
+			Ok(BehaviorState::Running)
+		}
+	}
+}
+
+impl BehaviorStatic for AlwaysAfter {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+}
+
+impl AlwaysAfter {
+	/// Constructor with arguments.
+	#[must_use]
+	pub const fn new(state: BehaviorState, count: u8) -> Self {
+		Self {
+			state,
+			count,
+			remaining: count,
+		}
+	}
+	/// Initialization function.
+	pub fn initialize(&mut self, state: BehaviorState, count: u8) {
+		self.state = state;
+		self.count = count;
+		self.remaining = count;
+	}
+}

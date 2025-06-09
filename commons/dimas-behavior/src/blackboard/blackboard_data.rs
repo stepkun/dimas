@@ -152,11 +152,7 @@ impl BlackboardInterface for BlackboardData {
 }
 
 impl Environment for BlackboardData {
-	fn define_env(
-		&mut self,
-		key: ConstString,
-		value: ScriptingValue,
-	) -> Result<(), ScriptingError> {
+	fn define_env(&mut self, key: ConstString, value: ScriptingValue) -> Result<(), ScriptingError> {
 		if self.contains(key.clone()) {
 			self.set_env(key, value)
 		} else {

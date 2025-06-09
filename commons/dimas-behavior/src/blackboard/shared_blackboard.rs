@@ -127,12 +127,7 @@ impl BlackboardInterface for SharedBlackboard {
 		let value_option = self.read().values.find(&key);
 		if let Some(value) = value_option {
 			return <T as FromStr>::from_str(&value).map_or_else(
-				|_| {
-					Err(Error::ParsePortValue(
-						key,
-						format!("{:?}", TypeId::of::<T>()).into(),
-					))
-				},
+				|_| Err(Error::ParsePortValue(key, format!("{:?}", TypeId::of::<T>()).into())),
 				|val| Ok(val),
 			);
 		}
@@ -224,11 +219,7 @@ impl BlackboardInterface for SharedBlackboard {
 }
 
 impl Environment for SharedBlackboard {
-	fn define_env(
-		&mut self,
-		key: ConstString,
-		value: ScriptingValue,
-	) -> Result<(), ScriptingError> {
+	fn define_env(&mut self, key: ConstString, value: ScriptingValue) -> Result<(), ScriptingError> {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.strip_prefix('@') {
 			return self.root().define_env(key_stripped.into(), value);

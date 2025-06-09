@@ -118,22 +118,14 @@ impl CrossDoor {
 		let cross_door3 = cross_door1.clone();
 		let cross_door4 = cross_door1.clone();
 		let cross_door5 = cross_door1.clone();
-		factory.register_simple_action(
-			"IsDoorClosed",
-			Arc::new(move || cross_door1.lock().is_door_closed()),
-		)?;
-		factory
-			.register_simple_action("OpenDoor", Arc::new(move || cross_door2.lock().open_door()))?;
+		factory.register_simple_action("IsDoorClosed", Arc::new(move || cross_door1.lock().is_door_closed()))?;
+		factory.register_simple_action("OpenDoor", Arc::new(move || cross_door2.lock().open_door()))?;
 		factory.register_simple_action(
 			"PassThroughDoor",
 			Arc::new(move || cross_door3.lock().pass_through_door()),
 		)?;
-		factory
-			.register_simple_action("PickLock", Arc::new(move || cross_door4.lock().pick_lock()))?;
-		factory.register_simple_action(
-			"SmashDoor",
-			Arc::new(move || cross_door5.lock().smash_door()),
-		)?;
+		factory.register_simple_action("PickLock", Arc::new(move || cross_door4.lock().pick_lock()))?;
+		factory.register_simple_action("SmashDoor", Arc::new(move || cross_door5.lock().smash_door()))?;
 
 		Ok(())
 	}

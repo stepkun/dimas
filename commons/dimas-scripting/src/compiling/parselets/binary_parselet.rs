@@ -26,13 +26,7 @@ impl BinaryParselet {
 }
 
 impl InfixParselet for BinaryParselet {
-	fn parse(
-		&self,
-		lexer: &mut Lexer,
-		parser: &mut Parser,
-		chunk: &mut Chunk,
-		_token: Token,
-	) -> Result<(), Error> {
+	fn parse(&self, lexer: &mut Lexer, parser: &mut Parser, chunk: &mut Chunk, _token: Token) -> Result<(), Error> {
 		let kind = parser.current().kind;
 		parser.with_precedence(lexer, self.precedence.next_higher(), chunk)?;
 		match kind {

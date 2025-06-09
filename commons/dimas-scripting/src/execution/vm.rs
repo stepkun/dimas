@@ -145,9 +145,7 @@ impl VM {
 				self.push(ScriptingValue::String(res))
 			}
 			(ScriptingValue::Nil(), _) | (_, ScriptingValue::Nil()) => Err(Error::NilValue),
-			(ScriptingValue::Boolean(_), _) | (_, ScriptingValue::Boolean(_)) => {
-				Err(Error::BoolNoArithmetic)
-			}
+			(ScriptingValue::Boolean(_), _) | (_, ScriptingValue::Boolean(_)) => Err(Error::BoolNoArithmetic),
 		}
 	}
 
