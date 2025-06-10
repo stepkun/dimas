@@ -3,12 +3,12 @@
 //! Action behavior library
 //!
 
-mod always_after;
 mod script;
+mod state_after;
 
 // flatten
-pub use always_after::AlwaysAfter;
 pub use script::Script;
+pub use state_after::StateAfter;
 
 // region:      --- modules
 use crate::behavior::BehaviorInstance;

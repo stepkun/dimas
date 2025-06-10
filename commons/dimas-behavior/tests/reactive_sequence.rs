@@ -5,7 +5,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorStatic, action::AlwaysAfter, control::reactive_sequence::ReactiveSequence},
+	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::reactive_sequence::ReactiveSequence},
 	factory::BehaviorTreeFactory,
 	register_node,
 };
@@ -28,7 +28,7 @@ const SUCCESS: &str = r#"
 #[serial]
 async fn success() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
 	factory
 		.register_node_type::<ReactiveSequence>("ReactiveSequence")
 		.expect("snh");
@@ -58,8 +58,8 @@ const FAILURE: &str = r#"
 #[serial]
 async fn failure() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
-	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
 	factory
 		.register_node_type::<ReactiveSequence>("ReactiveSequence")
 		.expect("snh");

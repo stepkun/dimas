@@ -10,7 +10,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
-		action::AlwaysAfter,
+		action::StateAfter,
 		control::{fallback::Fallback, reactive_fallback::ReactiveFallback},
 	},
 	factory::BehaviorTreeFactory,
@@ -23,55 +23,14 @@ const FALLBACK: &str = r#"
 	<BehaviorTree ID="MainTree">
 		<Fallback name="root_fallback">
 			<AlwaysFailure	name="step1"/>
+			<AlwaysFailure/>
 			<AlwaysFailure	name="step2"/>
+			<AlwaysFailure/>
 			<AlwaysFailure	name="step3"/>
+			<AlwaysFailure/>
 			<AlwaysFailure	name="step4"/>
-			<AlwaysFailure	name="step5"/>
 			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
+			<AlwaysSuccess	name="step5"/>
 		</Fallback>
 	</BehaviorTree>
 </root>
@@ -83,8 +42,8 @@ fn fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	factory
 		.register_node_type::<Fallback>("Fallback")
 		.expect("snh");
@@ -96,6 +55,7 @@ fn fallback(c: &mut Criterion) {
 	c.bench_function("fallback", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
+				tree.reset().expect("snh");
 				runtime.block_on(async {
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
@@ -111,55 +71,14 @@ const REACTIVE_FALLBACK: &str = r#"
 	<BehaviorTree ID="MainTree">
 		<ReactiveFallback name="root_reactive_fallback">
 			<AlwaysFailure	name="step1"/>
+			<AlwaysFailure/>
 			<AlwaysFailure	name="step2"/>
+			<AlwaysFailure/>
 			<AlwaysFailure	name="step3"/>
+			<AlwaysFailure/>
 			<AlwaysFailure	name="step4"/>
 			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
+			<AlwaysFailure	name="step5"/>
 		</ReactiveFallback>
 	</BehaviorTree>
 </root>
@@ -171,8 +90,8 @@ fn reactive_fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	factory
 		.register_node_type::<ReactiveFallback>("ReactiveFallback")
 		.expect("snh");
@@ -186,6 +105,7 @@ fn reactive_fallback(c: &mut Criterion) {
 	c.bench_function("reactive fallback", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
+				tree.reset().expect("snh");
 				runtime.block_on(async {
 					let _result = tree.tick_while_running().await.expect("snh");
 				});

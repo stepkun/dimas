@@ -20,7 +20,7 @@ use crate::{
 /// The `AlwaysAfter` behavior returns Failure, Running or Success afer a certain amount of ticks,
 /// depending on the stored state and count value.
 #[derive(Behavior, Debug, Default)]
-pub struct AlwaysAfter {
+pub struct StateAfter {
 	/// The [`BehaviorState`] to return finally.
 	state: BehaviorState,
 	/// The amount of ticks after whih the state will be returned.
@@ -29,7 +29,7 @@ pub struct AlwaysAfter {
 }
 
 #[async_trait::async_trait]
-impl BehaviorInstance for AlwaysAfter {
+impl BehaviorInstance for StateAfter {
 	async fn halt(
 		&mut self,
 		_children: &mut BehaviorTreeElementList,
@@ -68,13 +68,13 @@ impl BehaviorInstance for AlwaysAfter {
 	}
 }
 
-impl BehaviorStatic for AlwaysAfter {
+impl BehaviorStatic for StateAfter {
 	fn kind() -> BehaviorType {
 		BehaviorType::Action
 	}
 }
 
-impl AlwaysAfter {
+impl StateAfter {
 	/// Constructor with arguments.
 	#[must_use]
 	pub const fn new(state: BehaviorState, count: u8) -> Self {

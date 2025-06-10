@@ -26,8 +26,6 @@ use crate::{
 /// Structure to collect various statistic data.
 #[derive(Clone)]
 pub struct Statistics {
-	/// count ticks.
-	pub tick_count: usize,
 	/// Last result of a tick, either Success or Failure.
 	pub last_result: BehaviorState,
 	/// Last state. Can be any state.
@@ -48,7 +46,6 @@ pub struct Statistics {
 impl Default for Statistics {
 	fn default() -> Self {
 		Self {
-			tick_count: Default::default(),
 			last_result: BehaviorState::default(),
 			current_state: BehaviorState::default(),
 			transitions_count: Default::default(),
@@ -59,12 +56,24 @@ impl Default for Statistics {
 		}
 	}
 }
+
+impl Statistics {
+	fn reset(&mut self) {
+		self.last_result = BehaviorState::default();
+		self.current_state = BehaviorState::default();
+		self.transitions_count = Default::default();
+		self.success_count = Default::default();
+		self.failure_count = Default::default();
+		self.skip_count = Default::default();
+		self.timestamp = Instant::now();
+	}
+}
 // endregion:   --- Statistics
 
 // region:      --- BehaviorTreeObserver
 /// An observer collecting [`BehaviorTree`] statistics
 pub struct BehaviorTreeObserver {
-	_handle: JoinHandle<i32>,
+	_handle: JoinHandle<()>,
 	statistics: Arc<Mutex<Vec<Statistics>>>,
 }
 
@@ -74,14 +83,13 @@ impl BehaviorTreeObserver {
 	pub fn new(root: &mut BehaviorTree) -> Self {
 		let id: ConstString = "statistics".into();
 		let statistics: Arc<Mutex<Vec<Statistics>>> = Arc::new(Mutex::new(Vec::new()));
-		let (tx, mut rx) = mpsc::channel::<(u16, Instant, BehaviorState, BehaviorState)>(1);
+		let (tx, mut rx) = mpsc::unbounded_channel::<(u16, Instant, BehaviorState, BehaviorState)>();
 		// spawn receiver
 		let statistics_clone = statistics.clone();
 		let handle = tokio::spawn(async move {
 			while let Some(val) = rx.recv().await {
 				let mut stats = statistics_clone.lock();
 				let entry = &mut stats[val.0 as usize];
-				entry.tick_count += 1;
 				if val.3 != val.2 {
 					entry.transitions_count += 1;
 					match val.3 {
@@ -101,7 +109,6 @@ impl BehaviorTreeObserver {
 				}
 				drop(stats);
 			}
-			-1
 		});
 
 		// add a statistics entry and a callback for each tree element
@@ -112,10 +119,7 @@ impl BehaviorTreeObserver {
 				let timestamp = Instant::now();
 				let tuple = (element.uid(), timestamp, element.state(), *new_state);
 				// ignore any errors when sending
-				let tx_clone_cloned = tx_clone.clone();
-				tokio::spawn(async move {
-					tx_clone_cloned.send(tuple).await.expect("snh");
-				});
+				tx_clone.send(tuple).expect("snh");
 			};
 			element.add_pre_state_change_callback(id.clone(), callback);
 		}
@@ -132,6 +136,13 @@ impl BehaviorTreeObserver {
 			return Some((self.statistics.lock()[uid as usize]).clone());
 		}
 		None
+	}
+
+	/// Reset the [`BehaviorTreeObserver`].
+	pub fn reset(&self) {
+		for stats in &mut (*self.statistics.lock()) {
+			stats.reset();
+		}
 	}
 }
 // endregion:   --- BehaviorTreeObserver

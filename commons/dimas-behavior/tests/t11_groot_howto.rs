@@ -119,7 +119,7 @@ impl Display for Position2D {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "groot publishing missing"]
 async fn groot_howto() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -134,6 +134,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 
 	for _ in 0..CYCLES {
 		cross_door.reset();
+		tree.reset()?;
 		let result = tree.tick_while_running().await?;
 		assert_eq!(result, BehaviorState::Success);
 	}
@@ -142,7 +143,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ignore = "reminder for reset implementation in plugins"]
+#[ignore = "reset implementation in plugins missing"]
 async fn groot_howto_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -156,6 +157,7 @@ async fn groot_howto_with_plugin() -> anyhow::Result<()> {
 
 	for _ in 0..CYCLES {
 		// cross_door.reset();
+		tree.reset()?;
 		let result = tree.tick_while_running().await?;
 		assert_eq!(result, BehaviorState::Success);
 	}

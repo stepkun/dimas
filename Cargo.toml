@@ -78,7 +78,7 @@ dimas-time = { path = "commons/dimas-time" }
 #dimas-time = "0.6.0"
 anyhow = "1.0.98"
 async-trait = "0.1.88"
-clap = "4.5.39"
+clap = "4.5.40"
 criterion = { version = "0.6.0", features = ["async_tokio"] }
 crossterm = "0.29.0"
 doc-comment = "0.3.3"

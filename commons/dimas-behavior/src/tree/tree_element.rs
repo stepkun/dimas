@@ -213,7 +213,7 @@ impl BehaviorTreeElement {
 
 		self.check_post_conditions(state, runtime);
 
-		// Callback after running tick before remembering & propagating state
+		// Callback after finishing tick before remembering & propagating state
 		for (_, callback) in &self.pre_state_change_hooks {
 			callback(self, &mut state);
 		}
@@ -238,6 +238,13 @@ impl BehaviorTreeElement {
 	/// - if index is out of childrens bounds.
 	pub fn halt(&mut self, index: usize, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
 		self.children.halt(index, runtime)
+	}
+
+	/// Halt all children at and beyond `index`.
+	/// # Errors
+	/// - if index is out of childrens bounds.
+	pub fn reset(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
+		self.children.reset(runtime)
 	}
 
 	/// Add a pre state change callback with the given name.

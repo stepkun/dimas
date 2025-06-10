@@ -10,7 +10,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
-		action::AlwaysAfter,
+		action::StateAfter,
 		control::{parallel::Parallel, parallel_all::ParallelAll},
 	},
 	factory::BehaviorTreeFactory,
@@ -21,57 +21,20 @@ const PARALLEL: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<Parallel name="root_parallel" failure_count="-1" success_count="25">
+		<Parallel name="root_parallel" failure_count="-1" success_count="6">
 			<AlwaysFailure	name="step1"/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
 			<AlwaysSuccess	name="step2"/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
 			<AlwaysFailure	name="step3"/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
 			<AlwaysSuccess	name="step4"/>
 			<AlwaysFailure/>
 			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
+			<AlwaysFailure	name="step5"/>
 		</Parallel>
 	</BehaviorTree>
 </root>
@@ -83,8 +46,8 @@ fn parallel(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	factory
 		.register_node_type::<Parallel>("Parallel")
 		.expect("snh");
@@ -96,6 +59,7 @@ fn parallel(c: &mut Criterion) {
 	c.bench_function("parallel", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
+				tree.reset().expect("snh");
 				runtime.block_on(async {
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
@@ -111,55 +75,18 @@ const PARALLEL_ALL: &str = r#"
 	<BehaviorTree ID="MainTree">
 		<ParallelAll name="root_parallel_all">
 			<AlwaysFailure	name="step1"/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
 			<AlwaysSuccess	name="step2"/>
+			<AlwaysFailure/>
+			<AlwaysSuccess/>
 			<AlwaysFailure	name="step3"/>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
 			<AlwaysSuccess	name="step4"/>
 			<AlwaysFailure/>
 			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
+			<AlwaysFailure	name="step5"/>
 		</ParallelAll>
 	</BehaviorTree>
 </root>
@@ -171,8 +98,8 @@ fn parallel_all(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	factory
 		.register_node_type::<ParallelAll>("ParallelAll")
 		.expect("snh");
@@ -186,6 +113,7 @@ fn parallel_all(c: &mut Criterion) {
 	c.bench_function("parallel all", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
+				tree.reset().expect("snh");
 				runtime.block_on(async {
 					let _result = tree.tick_while_running().await.expect("snh");
 				});

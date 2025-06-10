@@ -17,7 +17,7 @@ use roxmltree::Document;
 use crate::{
 	behavior::{
 		Behavior, BehaviorState, BehaviorStatic, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::{AlwaysAfter, Script},
+		action::{Script, StateAfter},
 		condition::script_condition::ScriptCondition,
 		control::{
 			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
@@ -80,9 +80,9 @@ impl BehaviorTreeFactory {
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core actions
 		self.register_node_type::<Script>("Script")?;
-		register_node!(self, AlwaysAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
-		register_node!(self, AlwaysAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
-		register_node!(self, AlwaysAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
+		register_node!(self, StateAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
+		register_node!(self, StateAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
+		register_node!(self, StateAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
 
 		// core conditions
 		self.register_node_type::<ScriptCondition>("ScriptCondition")?;

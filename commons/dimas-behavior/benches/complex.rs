@@ -1,42 +1,24 @@
 // Copyright © 2025 Stephan Kunz
 #![allow(missing_docs)]
 
-//! Benchmarks of complex scenarios
+//! Benchmarks of complex scenario
 
 #[doc(hidden)]
 extern crate alloc;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use dimas_behavior::factory::BehaviorTreeFactory;
-use tokio::join;
+use dimas_behavior::{
+	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::fallback::Fallback},
+	factory::BehaviorTreeFactory,
+	register_node,
+};
 
-const TREE1: &str = r#"
+const TREE: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree1">
 	<BehaviorTree ID="MainTree1">
 		<Fallback name="root_fallback">
-			<AlwaysSuccess/>
-		</Fallback>
-	</BehaviorTree>
-</root>
-"#;
-
-const TREE2: &str = r#"
-<root BTCPP_format="4"
-		main_tree_to_execute="MainTree2">
-	<BehaviorTree ID="MainTree2">
-		<Fallback name="root_fallback">
-			<AlwaysSuccess/>
-		</Fallback>
-	</BehaviorTree>
-</root>
-"#;
-
-const TREE3: &str = r#"
-<root BTCPP_format="4"
-		main_tree_to_execute="MainTree3">
-	<BehaviorTree ID="MainTree3">
-		<Fallback name="root_fallback">
+			<AlwaysFailure/>
 			<AlwaysSuccess/>
 		</Fallback>
 	</BehaviorTree>
@@ -48,21 +30,22 @@ fn complex(c: &mut Criterion) {
 		.build()
 		.expect("snh");
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors().expect("snh");
+	let mut factory = BehaviorTreeFactory::default();
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	factory
+		.register_node_type::<Fallback>("Fallback")
+		.expect("snh");
 
-	// create the BT*s
-	let mut tree1 = factory.create_from_text(TREE1).expect("snh");
-	let mut tree2 = factory.create_from_text(TREE2).expect("snh");
-	let mut tree3 = factory.create_from_text(TREE3).expect("snh");
+	let mut tree = factory.create_from_text(TREE).expect("snh");
+	drop(factory);
 
 	c.bench_function("complex", |b| {
 		b.iter(|| {
-			for _ in 1..=100 {
-				let h1 = tree1.tick_while_running();
-				let h2 = tree2.tick_while_running();
-				let h3 = tree3.tick_while_running();
+			for _ in 1..=50 {
+				tree.reset().expect("snh");
 				runtime.block_on(async {
-					let _ = join!(h1, h2, h3);
+					tree.tick_while_running().await.expect("snh");
 				});
 			}
 			std::hint::black_box(());
