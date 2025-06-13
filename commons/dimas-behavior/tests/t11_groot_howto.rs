@@ -26,7 +26,6 @@ const CYCLES: u8 = 20;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
-
   	<BehaviorTree ID="MainTree">
     	<Sequence>
       		<Script code="door_open:=false" />

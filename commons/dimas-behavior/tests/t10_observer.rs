@@ -15,7 +15,6 @@ use dimas_behavior::{
 
 const XML: &str = r#"
 <root BTCPP_format="4">
-
     <BehaviorTree ID="MainTree">
         <Sequence>
             <Fallback>

@@ -1,0 +1,121 @@
+// Copyright © 2025 Stephan Kunz
+#![allow(unused)]
+
+//! This test implements the sixteenth tutorial/example from [BehaviorTree.CPP](https://www.behaviortree.dev)
+//!
+//! [tutorial:](https://https://www.behaviortree.dev/docs/tutorial-advanced/tutorial_16_global_blackboard)
+//! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t16_global_blackboard.cpp)
+//!
+
+extern crate alloc;
+
+use dimas_behavior::{
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{error::Error, BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, tree::BehaviorTreeElementList, Behavior, SharedRuntime
+};
+
+const XML: &str = r#"
+<root BTCPP_format="4">
+	<BehaviorTree ID="MainTree">
+		<Sequence>
+			<PrintNumber name="main_print" val="{@value}" />
+			<SubTree ID="MySub"/>
+		</Sequence>
+	</BehaviorTree>
+
+	<BehaviorTree ID="MySub">
+		<Sequence>
+			<PrintNumber name="sub_print" val="{@value}" />
+			<Script code="@value_sqr := @value * @value" />
+			<SubTree ID="MySubSub"/>
+		</Sequence>
+	</BehaviorTree>
+
+	<BehaviorTree ID="MySubSub">
+        <Sequence>
+            <PrintNumber name="sub_sub_print" val="{@value}" />
+            <Script code="@value_pow3 := @value * @value * @value" />
+            <SubTree ID="MySubSubSub"/>
+        </Sequence>
+    </BehaviorTree>
+
+    <BehaviorTree ID="MySubSubSub">
+        <Sequence>
+            <PrintNumber name="sub_sub_sub_print" val="{@value}" />
+            <Script code="@value_pow4 := @value * @value * @value * @value" />
+        </Sequence>
+    </BehaviorTree>
+</root>
+"#;
+
+/// Behavior `PrintNumber`
+#[derive(Behavior, Debug, Default)]
+struct PrintNumber {}
+
+#[async_trait::async_trait]
+impl BehaviorInstance for PrintNumber {
+	async fn tick(&mut self,
+		_state: BehaviorState,
+		blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		let value: i64 = blackboard.get("val".into())?;
+		println!("PrintNumber [{}] has val: {value}", "todo!"); // @TODO:access to the behvior name!!
+
+		Ok(BehaviorState::Success)
+	}
+}
+
+impl BehaviorStatic for PrintNumber {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list!(
+			input_port!(i64, "val"),
+		)
+	}
+}
+
+#[tokio::test]
+#[ignore]
+async fn global_blackboard() -> anyhow::Result<()> {
+	// create an external blackboard which will survive the tree
+	// let global_blackboard = SharedBlackboard::default();
+	// BT-Trees blackboard has global blackboard as parent
+	// let blackboard = SharedBlackboard::new(&global_blackboard);
+
+
+	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+
+	factory.register_node_type::<PrintNumber>("PrintNumber")?;
+
+	factory.register_behavior_tree_from_text(XML)?;
+
+	let mut tree = factory.create_tree("MainTree")?;
+	drop(factory);
+
+	// direct interaction with the global blackboard
+	for value in 1..=3 {
+		// global_blackboard.set("value", value);
+		let result = tree.tick_once().await?;
+		assert_eq!(result, BehaviorState::Success);
+
+		// let value_sqr = global_blackboard
+		// 	.get::<i64>("@value_sqr")
+		// 	.ok_or_else(|| Error::PortError("value_sqr".into()))?;
+		// let value_pow3 = global_blackboard
+		// 	.get::<i64>("@value_pow3")
+		// 	.ok_or_else(|| Error::PortError("value_pow3".into()))?;
+		// let value_pow4 = global_blackboard
+		// 	.get::<i64>("@value_pow4")
+		// 	.ok_or_else(|| Error::PortError("value_pow3".into()))?;
+
+		// assert_eq!(value_sqr, value * value);
+		// assert_eq!(value_pow3, value * value * value);
+		// assert_eq!(value_pow4, value * value * value * value);
+	}
+
+	Ok(())
+}
