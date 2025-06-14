@@ -47,8 +47,18 @@ impl Display for ScriptingValue {
 impl FromStr for ScriptingValue {
 	type Err = Error;
 
-	fn from_str(_s: &str) -> Result<Self, Self::Err> {
-		todo!()
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		// extern crate std;
+		// std::dbg!(&s);
+		str::parse::<i64>(s).map_or_else(
+			|_| {
+				str::parse::<f64>(s).map_or_else(
+					|_| str::parse::<bool>(s).map_or_else(|_| Ok(Self::String(s.into())), |b| Ok(Self::Boolean(b))),
+					|f| Ok(Self::Float64(f)),
+				)
+			},
+			|i| Ok(Self::Int64(i)),
+		)
 	}
 }
 

@@ -25,7 +25,7 @@ type RemappingEntry = (ConstString, ConstString);
 pub struct PortRemappings(Vec<RemappingEntry>);
 
 impl PortRemappings {
-	/// Add an entry to the [`PortRemappings`]
+	/// Add an entry to the [`PortRemappings`].
 	/// # Errors
 	/// - if entry already exists
 	pub fn add(&mut self, name: &str, remapped_name: &str) -> Result<(), Error> {
@@ -36,6 +36,12 @@ impl PortRemappings {
 		}
 		self.0.push((name.into(), remapped_name.into()));
 		Ok(())
+	}
+
+	/// Add an entry to the [`PortRemappings`].
+	/// Already existing values will be overwritten
+	pub fn overwrite(&mut self, key: &str, value: &str) {
+		self.0.push((key.into(), value.into()));
 	}
 
 	/// Lookup the remapped name.

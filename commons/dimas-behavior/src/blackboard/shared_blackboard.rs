@@ -30,7 +30,7 @@ use crate::port::PortRemappings;
 
 // region:      --- SharedBlackboard
 /// Thread safe reference to a [`Blackboard`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SharedBlackboard {
 	/// Hierarchy of this shared reference.
 	path: ConstString,
@@ -134,6 +134,10 @@ impl BlackboardInterface for SharedBlackboard {
 
 		// Read needed remapping values beforehand to avoid a deadlock.
 		let final_key = self.get_remapping_info(key);
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = final_key.strip_prefix('@') {
+			return self.root().get(key_stripped.into());
+		}
 		// Try to find in current Blackboard
 		let a = self
 			.read()
@@ -163,6 +167,10 @@ impl BlackboardInterface for SharedBlackboard {
 
 		// Read needed remapping values beforehand to avoid a deadlock.
 		let final_key = self.get_remapping_info(key);
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = final_key.strip_prefix('@') {
+			return self.root().get_entry(key_stripped.into());
+		}
 		// try to find key in current Blackboard
 		let a = self
 			.read()
@@ -195,6 +203,10 @@ impl BlackboardInterface for SharedBlackboard {
 
 		// Read needed remapping values beforehand to avoid a deadlock.
 		let final_key = self.get_remapping_info(key);
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = final_key.strip_prefix('@') {
+			return self.root().set(key_stripped.into(), value);
+		}
 		// Try to find key in current Blackboard
 		let a = self
 			.read()
@@ -330,7 +342,7 @@ impl SharedBlackboard {
 		}
 	}
 
-	/// Create a `SharedBlackboard` with parent and a path extension.
+	/// Create a `SharedBlackboard` with parent and remappings.
 	#[must_use]
 	pub fn with(
 		creator: ConstString,
@@ -344,6 +356,22 @@ impl SharedBlackboard {
 			path: path.into(),
 			node: Arc::new(RwLock::new(Blackboard::with(
 				creator, parent, remappings, values, autoremap,
+			))),
+		}
+	}
+
+	/// Create a `SharedBlackboard` with parent and a path extension.
+	#[must_use]
+	pub fn with_parent(creator: ConstString, parent: Self) -> Self {
+		let path = String::from(&*parent.path) + "/" + &creator;
+		Self {
+			path: path.into(),
+			node: Arc::new(RwLock::new(Blackboard::with(
+				creator,
+				parent,
+				PortRemappings::default(),
+				PortRemappings::default(),
+				false,
 			))),
 		}
 	}

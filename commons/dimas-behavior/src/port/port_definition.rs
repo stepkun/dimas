@@ -18,14 +18,14 @@ use super::{PortDirection, error::Error, is_allowed_port_name};
 /// Access to members is public within crate to maximize performance
 #[derive(Clone, Debug)]
 pub struct PortDefinition {
-	/// Directiopn of the port.
+	/// Direction of the port.
 	_direction: PortDirection,
 	/// Type of the port.
 	_type_id: TypeId,
 	/// Name of the port.
 	name: ConstString,
 	/// Default value for the port.
-	_default_value: ConstString,
+	default_value: ConstString,
 	/// Description of the port.
 	_description: ConstString,
 }
@@ -46,7 +46,7 @@ impl PortDefinition {
 				_direction: direction,
 				_type_id: type_id,
 				name: name.into(),
-				_default_value: default_value.into(),
+				default_value: default_value.into(),
 				_description: description.into(),
 			})
 		} else {
@@ -58,6 +58,16 @@ impl PortDefinition {
 	#[must_use]
 	pub fn name(&self) -> ConstString {
 		self.name.clone()
+	}
+
+	/// Get the default value.
+	#[must_use]
+	pub fn default_value(&self) -> Option<ConstString> {
+		if self.default_value.is_empty() {
+			None
+		} else {
+			Some(self.default_value.clone())
+		}
 	}
 }
 // endregion:   --- PortDefinition

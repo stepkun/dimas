@@ -10,7 +10,14 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{error::Error, BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, tree::BehaviorTreeElementList, Behavior, SharedRuntime
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	blackboard::{BlackboardInterface, SharedBlackboard, error::Error},
+	factory::BehaviorTreeFactory,
+	input_port,
+	port::PortList,
+	port_list,
+	tree::BehaviorTreeElementList,
 };
 
 const XML: &str = r#"
@@ -53,7 +60,8 @@ struct PrintNumber {}
 
 #[async_trait::async_trait]
 impl BehaviorInstance for PrintNumber {
-	async fn tick(&mut self,
+	async fn tick(
+		&mut self,
 		_state: BehaviorState,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
@@ -72,20 +80,16 @@ impl BehaviorStatic for PrintNumber {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list!(
-			input_port!(i64, "val"),
-		)
+		port_list!(input_port!(i64, "val"),)
 	}
 }
 
 #[tokio::test]
-#[ignore]
 async fn global_blackboard() -> anyhow::Result<()> {
 	// create an external blackboard which will survive the tree
-	// let global_blackboard = SharedBlackboard::default();
+	let mut global_blackboard = SharedBlackboard::default();
 	// BT-Trees blackboard has global blackboard as parent
-	// let blackboard = SharedBlackboard::new(&global_blackboard);
-
+	let root_blackboard = SharedBlackboard::with_parent("global".into(), global_blackboard.clone());
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -93,28 +97,24 @@ async fn global_blackboard() -> anyhow::Result<()> {
 
 	factory.register_behavior_tree_from_text(XML)?;
 
-	let mut tree = factory.create_tree("MainTree")?;
+	let mut tree = factory.create_tree_with("MainTree", root_blackboard)?;
 	drop(factory);
 
 	// direct interaction with the global blackboard
 	for value in 1..=3 {
-		// global_blackboard.set("value", value);
+		global_blackboard.set("value".into(), value);
 		let result = tree.tick_once().await?;
 		assert_eq!(result, BehaviorState::Success);
 
-		// let value_sqr = global_blackboard
-		// 	.get::<i64>("@value_sqr")
-		// 	.ok_or_else(|| Error::PortError("value_sqr".into()))?;
-		// let value_pow3 = global_blackboard
-		// 	.get::<i64>("@value_pow3")
-		// 	.ok_or_else(|| Error::PortError("value_pow3".into()))?;
-		// let value_pow4 = global_blackboard
-		// 	.get::<i64>("@value_pow4")
-		// 	.ok_or_else(|| Error::PortError("value_pow3".into()))?;
+		let value_sqr = global_blackboard.get::<i64>("@value_sqr".into())?;
+		assert_eq!(value_sqr, value * value);
+		println!("[While loop] value: {value} value_sqr: {value_sqr}");
 
-		// assert_eq!(value_sqr, value * value);
-		// assert_eq!(value_pow3, value * value * value);
-		// assert_eq!(value_pow4, value * value * value * value);
+		let value_pow3 = global_blackboard.get::<i64>("@value_pow3".into())?;
+		assert_eq!(value_pow3, value * value * value);
+
+		let value_pow4 = global_blackboard.get::<i64>("@value_pow4".into())?;
+		assert_eq!(value_pow4, value * value * value * value);
 	}
 
 	Ok(())

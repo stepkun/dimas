@@ -36,7 +36,7 @@ pub struct Blackboard {
 	pub(super) autoremap_to_parent: bool,
 	/// List of internal [`PortRemappings`].
 	pub(super) remappings: PortRemappings,
-	/// List of direct assigned values to a `Port`.
+	/// List of direct assigned values to a `Port`, e.g. default values.
 	pub(super) values: PortRemappings,
 }
 impl Blackboard {

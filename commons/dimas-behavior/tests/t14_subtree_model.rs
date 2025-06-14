@@ -8,9 +8,7 @@
 
 extern crate alloc;
 
-use std::{
-	fmt::{Display, Formatter},
-};
+use std::fmt::{Display, Formatter};
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
@@ -51,7 +49,6 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-#[ignore]
 async fn subtree_model() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -76,9 +73,9 @@ mod move_robot {
 
 	use dimas_behavior::factory::error::Error;
 
-use super::*;
+	use super::*;
 
-#[derive(Clone, Copy, Debug)]
+	#[derive(Clone, Copy, Debug)]
 	pub struct Position2D {
 		x: f64,
 		y: f64,
@@ -118,12 +115,13 @@ use super::*;
 
 	#[async_trait::async_trait]
 	impl BehaviorInstance for MoveBase {
-		async fn  start(&mut self,
-		_state: BehaviorState,
-		blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeElementList,
-		_runtime: &SharedRuntime,
-	) -> BehaviorResult {
+		async fn start(
+			&mut self,
+			_state: BehaviorState,
+			blackboard: &mut SharedBlackboard,
+			_children: &mut BehaviorTreeElementList,
+			_runtime: &SharedRuntime,
+		) -> BehaviorResult {
 			let pos = blackboard.get::<Position2D>("goal".into())?;
 
 			println!(
@@ -134,12 +132,13 @@ use super::*;
 			Ok(BehaviorState::Running)
 		}
 
-		async fn tick(&mut self,
-		_state: BehaviorState,
-		_blackboard: &mut SharedBlackboard,
-		_children: &mut BehaviorTreeElementList,
-		_runtime: &SharedRuntime,
-	) -> BehaviorResult {
+		async fn tick(
+			&mut self,
+			_state: BehaviorState,
+			_blackboard: &mut SharedBlackboard,
+			_children: &mut BehaviorTreeElementList,
+			_runtime: &SharedRuntime,
+		) -> BehaviorResult {
 			if self.counter < 5 {
 				self.counter += 1;
 				println!("--- status: RUNNING");
@@ -149,7 +148,6 @@ use super::*;
 				Ok(BehaviorState::Success)
 			}
 		}
-
 	}
 
 	impl BehaviorStatic for MoveBase {
@@ -158,12 +156,9 @@ use super::*;
 		}
 
 		fn provided_ports() -> PortList {
-			port_list!(
-				input_port!(Position2D, "goal"),
-			)
+			port_list!(input_port!(Position2D, "goal"),)
 		}
 	}
-
 
 	pub fn register_nodes(factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
 		factory.register_node_type::<MoveBase>("MoveBase")

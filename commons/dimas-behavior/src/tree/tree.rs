@@ -22,6 +22,7 @@ use parking_lot::Mutex;
 
 use crate::{
 	behavior::{BehaviorError, BehaviorResult, BehaviorState},
+	blackboard::SharedBlackboard,
 	factory::BehaviorRegistry,
 };
 
@@ -76,9 +77,9 @@ struct TreeIter<'a> {
 impl<'a> TreeIter<'a> {
 	/// @TODO:
 	#[must_use]
-	pub fn new(root: Option<&'a BehaviorTreeElement>) -> Self {
+	pub fn new(root: &'a BehaviorTreeElement) -> Self {
 		Self {
-			stack: vec![root.as_ref().expect("snh")],
+			stack: vec![root],
 			marker: PhantomData,
 		}
 	}
@@ -115,9 +116,9 @@ struct TeeIterMut<'a> {
 impl<'a> TeeIterMut<'a> {
 	/// @TODO:
 	#[must_use]
-	pub fn new(root: &'a mut Option<BehaviorTreeElement>) -> Self {
+	pub fn new(root: &'a mut BehaviorTreeElement) -> Self {
 		Self {
-			stack: vec![root.as_mut().expect("snh")],
+			stack: vec![root],
 			marker: PhantomData,
 		}
 	}
@@ -146,9 +147,8 @@ impl<'a> Iterator for TeeIterMut<'a> {
 /// A Tree of [`BehaviorTreeElement`]s.
 /// A certain [`BehaviorTree`] can contain up to 65536 [`BehaviorTreeElement`]s.
 pub struct BehaviorTree {
-	/// `root` beeing an [`Option`] allows to extract `root` temporarily
-	/// and hand it ower to a spawned task.
-	root: Option<BehaviorTreeElement>,
+	/// The root element
+	root: BehaviorTreeElement,
 	/// `runtime` is shared between elements
 	runtime: SharedRuntime,
 	/// `libraries` stores a reference to the used shared libraries aka plugins.
@@ -168,10 +168,16 @@ impl BehaviorTree {
 			libraries.push(lib.clone());
 		}
 		Self {
-			root: Some(root),
+			root,
 			runtime,
 			_libraries: libraries,
 		}
+	}
+
+	/// Access the root blackboard of the tree.
+	#[must_use]
+	pub fn blackboard(&self) -> SharedBlackboard {
+		self.root.blackboard()
 	}
 
 	/// Pretty print the tree.
@@ -180,7 +186,7 @@ impl BehaviorTree {
 	/// # Panics
 	/// - if tree has no root
 	pub fn print(&self) -> Result<(), Error> {
-		print_recursively(0, self.root.as_ref().expect("snh"))
+		print_recursively(0, &self.root)
 	}
 
 	/// Get a (sub)tree where index 0 is root tree.
@@ -195,9 +201,7 @@ impl BehaviorTree {
 	/// # Panics
 	/// - if tree has no root
 	pub async fn tick_exactly_once(&mut self) -> BehaviorResult {
-		let root = self.root.as_mut().expect("snh");
-
-		root.execute_tick(&self.runtime).await
+		self.root.execute_tick(&self.runtime).await
 	}
 
 	/// Ticks the tree once.
@@ -206,9 +210,7 @@ impl BehaviorTree {
 	/// # Panics
 	/// - if tree has no root
 	pub async fn tick_once(&mut self) -> BehaviorResult {
-		let root = self.root.as_mut().expect("snh");
-
-		root.execute_tick(&self.runtime).await
+		self.root.execute_tick(&self.runtime).await
 	}
 
 	/// Ticks the tree until it finishes either with [`BehaviorState::Success`] or [`BehaviorState::Failure`].
@@ -217,11 +219,9 @@ impl BehaviorTree {
 	/// - if tree has no root
 	///
 	pub async fn tick_while_running(&mut self) -> BehaviorResult {
-		let root = self.root.as_mut().expect("snh");
-
 		let mut state = BehaviorState::Running;
 		while state == BehaviorState::Running || state == BehaviorState::Idle {
-			state = root.execute_tick(&self.runtime).await?;
+			state = self.root.execute_tick(&self.runtime).await?;
 
 			// Not implemented: Check for wake-up conditions and tick again if so
 			// @TODO!
@@ -232,7 +232,7 @@ impl BehaviorTree {
 		}
 
 		// halt eventually still running tasks
-		root.execute_halt(&self.runtime).await?;
+		self.root.execute_halt(&self.runtime).await?;
 
 		// be cooperative & allow pending tasks to catch up
 		// crucial for spawned tasks with bounded channels
@@ -243,7 +243,7 @@ impl BehaviorTree {
 
 	/// @TODO:
 	pub fn iter(&self) -> impl Iterator<Item = &BehaviorTreeElement> {
-		TreeIter::new(self.root.as_ref())
+		TreeIter::new(&self.root)
 	}
 
 	/// @TODO:
@@ -255,9 +255,7 @@ impl BehaviorTree {
 	/// # Errors
 	/// - if reset of children failed
 	pub fn reset(&mut self) -> Result<(), BehaviorError> {
-		if let Some(root) = self.root.as_mut() {
-			root.reset(&self.runtime)?;
-		}
+		self.root.reset(&self.runtime)?;
 		self.runtime.lock().clear();
 		Ok(())
 	}

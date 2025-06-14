@@ -97,7 +97,7 @@ pub fn is_allowed_port_name(name: &str) -> bool {
 		return false;
 	}
 	let first = name.chars().next().expect("snh");
-	if !first.is_alphabetic() {
+	if !first.is_alphabetic() && first != '@' {
 		return false;
 	}
 
@@ -147,6 +147,14 @@ macro_rules! input_port {
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
 		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, $desc).expect("snh")
 	};
+	($tp:ty, $name:literal, $default:expr $(,)?) => {
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, &$default.to_string(), "")
+			.expect("snh")
+	};
+	($tp:ty, $name:literal, $default:expr, $desc:literal $(,)?) => {
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, &$default.to_string(), $desc)
+			.expect("snh")
+	};
 }
 
 /// macro for creation of an in/out port definition
@@ -161,6 +169,14 @@ macro_rules! inout_port {
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
 		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, $desc).expect("snh")
 	};
+	($tp:ty, $name:literal, $default:expr $(,)?) => {
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, &$default.to_string(), "")
+			.expect("snh")
+	};
+	($tp:ty, $name:literal, $default:expr, $desc:literal $(,)?) => {
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, &$default.to_string(), $desc)
+			.expect("snh")
+	};
 }
 
 /// macro for creation of an output port definition
@@ -174,6 +190,14 @@ macro_rules! output_port {
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
 		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, $desc).expect("snh")
+	};
+	($tp:ty, $name:literal, $default:expr $(,)?) => {
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, &$default.to_string(), "")
+			.expect("snh")
+	};
+	($tp:ty, $name:literal, $default:expr, $desc:literal $(,)?) => {
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, &$default.to_string(), $desc)
+			.expect("snh")
 	};
 }
 

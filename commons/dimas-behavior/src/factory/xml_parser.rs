@@ -143,7 +143,7 @@ impl XmlParser {
 		(
 			/*autoremap:*/ bool,
 			/*remappings:*/ PortRemappings,
-			/*values:*/ PortRemappings,
+			/*default values:*/ PortRemappings,
 			/*pre&post conditions:*/ Conditions,
 		),
 		Error,
@@ -154,6 +154,35 @@ impl XmlParser {
 		let mut preconditions = PreConditions::default();
 		let mut postconditions = PostConditions::default();
 
+		// port list is needed twice:
+		// - for checking port names in given attributes
+		// - to add default values
+		let port_list = bhvr.static_provided_ports();
+		// first check for default values given in port definition.
+		// this value can later be overwritten by default values given by xml attribute
+		for port_definition in port_list.iter() {
+			if let Some(default_value) = port_definition.default_value() {
+				// check if it is a BB pointer
+				if default_value.starts_with('{') && default_value.ends_with('}') {
+					let stripped = default_value
+						.strip_prefix('{')
+						.unwrap_or_else(|| todo!())
+						.strip_suffix('}')
+						.unwrap_or_else(|| todo!());
+
+					if stripped == "=" {
+						// remapping to itself not necessary
+					} else if is_allowed_port_name(stripped) {
+						remappings.add(&port_definition.name(), stripped)?;
+					} else {
+						return Err(crate::factory::error::Error::NameNotAllowed(port_definition.name()));
+					}
+				} else {
+					values.add(&port_definition.name(), &default_value)?;
+				}
+			};
+		}
+		// handle attributes
 		for (key, value) in attrs {
 			let key = key.as_ref();
 			if key == "name" {
@@ -196,7 +225,7 @@ impl XmlParser {
 						if is_allowed_port_name(stripped) {
 							remappings.add(key, stripped)?;
 						} else {
-							return Err(crate::factory::error::Error::NameNotAllowed(key.into()));
+							return Err(crate::factory::error::Error::NameNotAllowed(stripped.into()));
 						}
 					} else {
 						// this is a normal string, representing a port value
@@ -204,7 +233,6 @@ impl XmlParser {
 					}
 				} else {
 					// check found port name against list of provided ports
-					let port_list = bhvr.static_provided_ports();
 					match port_list.find(key) {
 						Some(_) => {
 							// check if it is a BB pointer
@@ -219,11 +247,11 @@ impl XmlParser {
 								if is_allowed_port_name(stripped) {
 									remappings.add(key, stripped)?;
 								} else {
-									return Err(crate::factory::error::Error::NameNotAllowed(key.into()));
+									return Err(crate::factory::error::Error::NameNotAllowed(stripped.into()));
 								}
 							} else {
 								// this is a normal string, representing a port value
-								values.add(key, value)?;
+								values.overwrite(key, value);
 							}
 						}
 						None => {
@@ -240,11 +268,13 @@ impl XmlParser {
 		Ok((autoremap, remappings, values, conditions))
 	}
 
+	#[allow(clippy::option_if_let_else)]
 	#[instrument(level = Level::DEBUG, skip_all)]
 	pub(super) fn create_tree_from_definition(
 		&mut self,
 		name: &str,
 		registry: &mut BehaviorRegistry,
+		external_blackboard: Option<SharedBlackboard>,
 	) -> Result<BehaviorTreeElement, Error> {
 		event!(Level::TRACE, "create_tree_from_definition");
 		registry.find_tree_definition(name).map_or_else(
@@ -260,7 +290,11 @@ impl XmlParser {
 				let attrs = attrs_to_map(node.attributes());
 				let (_, remappings, values, conditions) =
 					Self::handle_attributes(name, true, &bhvr, &attrs, registry.runtime_mut())?;
-				let blackboard = SharedBlackboard::new(name.into(), remappings, values);
+				let blackboard = if let Some(external_bb) = external_blackboard {
+					SharedBlackboard::with_parent(name.into(), external_bb)
+				} else {
+					SharedBlackboard::new(name.into(), remappings, values)
+				};
 				let children = self.build_children(name, node, registry, &blackboard)?;
 				// path is for root element same as name
 				let behaviortree =

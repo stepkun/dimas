@@ -29,6 +29,7 @@ use crate::{
 			script_precondition::Precondition, subtree::Subtree,
 		},
 	},
+	blackboard::SharedBlackboard,
 	factory::xml_parser::XmlParser,
 	port::PortList,
 	register_node,
@@ -133,13 +134,23 @@ impl BehaviorTreeFactory {
 		}
 	}
 
-	/// Create the named [`BehaviorTree`] from registration
+	/// Create the named [`BehaviorTree`] from registration.
 	/// # Errors
 	/// - if no tree with `name` can be found
 	/// - if behaviors or subtrees are missing
 	pub fn create_tree(&mut self, name: &str) -> Result<BehaviorTree, Error> {
 		let mut parser = XmlParser::default();
-		let root = parser.create_tree_from_definition(name, &mut self.registry)?;
+		let root = parser.create_tree_from_definition(name, &mut self.registry, None)?;
+		Ok(BehaviorTree::new(root, &self.registry))
+	}
+
+	/// Create the named [`BehaviorTree`] from registration using external created blackboard.
+	/// # Errors
+	/// - if no tree with `name` can be found
+	/// - if behaviors or subtrees are missing
+	pub fn create_tree_with(&mut self, name: &str, blackboard: SharedBlackboard) -> Result<BehaviorTree, Error> {
+		let mut parser = XmlParser::default();
+		let root = parser.create_tree_from_definition(name, &mut self.registry, Some(blackboard))?;
 		Ok(BehaviorTree::new(root, &self.registry))
 	}
 
