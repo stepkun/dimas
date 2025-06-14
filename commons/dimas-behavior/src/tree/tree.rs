@@ -75,7 +75,7 @@ struct TreeIter<'a> {
 }
 
 impl<'a> TreeIter<'a> {
-	/// @TODO:
+	/// Create a new tree iterator.
 	#[must_use]
 	pub fn new(root: &'a BehaviorTreeElement) -> Self {
 		Self {
@@ -114,7 +114,7 @@ struct TeeIterMut<'a> {
 }
 
 impl<'a> TeeIterMut<'a> {
-	/// @TODO:
+	/// Create a new mutable tree iterator.
 	#[must_use]
 	pub fn new(root: &'a mut BehaviorTreeElement) -> Self {
 		Self {
@@ -241,12 +241,12 @@ impl BehaviorTree {
 		Ok(state)
 	}
 
-	/// @TODO:
+	/// Get an iterator over the tree.
 	pub fn iter(&self) -> impl Iterator<Item = &BehaviorTreeElement> {
 		TreeIter::new(&self.root)
 	}
 
-	/// @TODO:
+	/// Get a mutable iterator over the tree.
 	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut BehaviorTreeElement> {
 		TeeIterMut::new(&mut self.root)
 	}

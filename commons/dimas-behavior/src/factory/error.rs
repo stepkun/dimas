@@ -110,7 +110,7 @@ pub enum Error {
 	#[error("{0}")]
 	XmlParser(#[from] roxmltree::Error),
 
-	/// @TODO:
+	/// A really unexpected error happened
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
 	Unexpected(ConstString, ConstString, u32),
 }

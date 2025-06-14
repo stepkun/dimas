@@ -11,96 +11,96 @@ use thiserror::Error;
 /// `scripting` error type
 #[derive(Error, Debug)]
 pub enum Error {
-	/// @TODO:
+	/// Did not get the expected `Token`.
 	#[error("Expecting {0} found {1} at line {2}")]
 	ExpectedToken(ConstString, ConstString, usize),
-	/// @TODO:
+	/// Whatever it is: It is not an expression.
 	#[error("expression expected at line {0}")]
 	ExpressionExpected(usize),
-	/// @TODO:
+	/// Compile failed to create a `Chunk`.
 	#[error("could not create Chunk for VM")]
 	NoChunk,
-	/// @TODO:
+	/// Not a hex number.
 	#[error("could not parse HexNumber {0} at line {1}")]
 	ParseHex(ConstString, usize),
-	/// @TODO:
+	/// Not an int number.
 	#[error("could not parse IntNumber {0} at line {1}")]
 	ParseInt(ConstString, usize),
-	/// @TODO:
+	/// Not a float number.
 	#[error("could not parse Number {0} at line {1}")]
 	ParseNumber(ConstString, usize),
-	/// @TODO:
+	/// Exceeded the size of storage for values.
 	#[error("Value storage is full")]
 	ToManyValues,
-	/// @TODO:
+	/// This Char should not be here.
 	#[error("unexpected character {0} at line {1}")]
 	UnexpectedChar(ConstString, usize),
-	/// @TODO:
+	/// Got an unexpected `Token`.
 	#[error("unexpected Token at line {0}")]
 	UnexpectedToken(usize),
-	/// @TODO:
+	/// Missing string termination.
 	#[error("unterminated String {0} at line {1}")]
 	UnterminatedString(ConstString, usize),
 
 	/// Pass through core error.
 	#[error("{0}")]
 	Core(#[from] dimas_core::error::Error),
-	/// @TODO:
+	/// No arithemetic with boolean for now.
 	#[error("Boolean values do not allow arithmetic operations")]
 	BoolNoArithmetic,
-	/// @TODO:
+	/// Tried to redefine an enum value.
 	#[error("Enum variant [{0}] already exists with value [{1}] new value: [{2}]")]
 	DuplicateEnumVariant(ConstString, i8, i8),
-	/// @TODO:
+	/// Enum value is not defined.
 	#[error("could not find Enum {0} at line {1}")]
 	EnumValNotFound(ConstString, usize),
-	/// @TODO:
+	/// Storage for global values exceeded.
 	#[error("Variable [{0}] exceeds type limits")]
 	GlobalExceedsLimits(ConstString),
-	/// @TODO:
+	/// This is a type that is not knpwn in Scripting.
 	#[error("Variable [{0}] has an unknown type")]
 	GlobalHasUnknownType(ConstString),
-	/// @TODO:
+	/// Tried to read a non existing variable.
 	#[error("Variable [{0}] has not been defined")]
 	GlobalNotDefined(ConstString),
-	/// @TODO:
+	/// Type of variable is different than expected.
 	#[error("Variable [{0}] has a wrong type")]
 	GlobalWrongType(ConstString),
-	/// @TODO:
+	/// Nil does not allow anything.
 	#[error("Value is 'Nil' which does not allow any operation")]
 	NilValue,
-	/// @TODO:
+	/// Expected Boolean, got something else.
 	#[error("Value is not a Boolean type")]
 	NoBoolean,
-	/// @TODO:
+	/// Comparisons (greater, less) only with numbers
 	#[error("comparing Values needs two numeric types")]
 	NoComparison,
-	/// @TODO:
+	/// Expected Double, got something else.
 	#[error("Value is not a Double type")]
 	NoDouble,
-	/// @TODO:
+	/// Expected Integer, got something else.
 	#[error("Value is not an Integer type")]
 	NoInteger,
-	/// @TODO:
+	/// Expected String, got something else.
 	#[error("Value is not a String type")]
 	NoString,
-	/// @TODO:
+	/// Expected Number, got something else.
 	#[error("Value is not a number type")]
 	NoNumber,
-	/// @TODO:
+	/// Strings only allow additions.
 	#[error("to Strings you can only 'ADD' something")]
 	OnlyAdd,
-	/// @TODO:
+	/// Stack of values exceeded.
 	#[error("Value stack overflow")]
 	StackOverflow,
-	/// @TODO:
+	/// An unknown `OpCode`.
 	#[error("unknown Operation Code")]
 	UnknownOpCode,
 
-	/// @TODO:
+	/// A really unexpected error happened.
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
 	Unexpected(ConstString, ConstString, u32),
-	/// @TODO:
+	/// This code line never should have been reached.
 	#[error("should be unreachable in {0} at line {1}")]
 	Unreachable(ConstString, u32),
 }

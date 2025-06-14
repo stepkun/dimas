@@ -24,11 +24,12 @@ use crate::{
 ///
 #[derive(Behavior, Debug)]
 pub struct ParallelAll {
-	/// @TODO:
+	/// The maximum allowed failures.
+	/// "-1" signals any number.
 	failure_threshold: i32,
-	/// @TODO:
+	/// The list of completed sub behaviors
 	completed_list: BTreeSet<usize>,
-	/// @TODO:
+	/// The amount of completed sub behaviors that failed.
 	failure_count: usize,
 }
 

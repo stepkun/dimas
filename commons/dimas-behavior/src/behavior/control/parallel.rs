@@ -25,15 +25,17 @@ use crate::{
 ///
 #[derive(Behavior, Debug)]
 pub struct Parallel {
-	/// @TODO:
+	/// The minimum needed Successes to retrun a Success.
+	/// "-1" signals any number.
 	success_threshold: i32,
-	/// @TODO:
+	/// The maximum allowed failures.
+	/// "-1" signals any number.
 	failure_threshold: i32,
-	/// @TODO:
+	/// The list of completed sub behaviors
 	completed_list: BTreeSet<usize>,
-	/// @TODO:
+	/// The amount of completed sub behaviors that succeeded.
 	success_count: usize,
-	/// @TODO:
+	/// The amount of completed sub behaviors that failed.
 	failure_count: usize,
 }
 

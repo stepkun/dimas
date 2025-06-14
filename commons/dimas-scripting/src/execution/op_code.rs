@@ -2,63 +2,63 @@
 
 //! Op-Code implementation for `DiMAS` scripting bytecode
 
-/// @TODO:
+/// The available instructions for the virtual machine-
 #[derive(Debug)]
 #[repr(u8)]
 pub enum OpCode {
-	/// @TODO:
+	/// No operation
 	None = 0,
-	/// @TODO:
+	/// Defining a constant
 	Constant,
-	/// @TODO:
+	/// Nil value
 	Nil,
-	/// @TODO:
+	/// True
 	True,
-	/// @TODO:
+	/// False:
 	False,
-	/// @TODO:
+	/// Get next instruction
 	Pop,
-	/// @TODO:
+	/// Define a global/external variable
 	DefineExternal,
-	/// @TODO:
+	/// Get a global/external variable
 	GetExternal,
-	/// @TODO:
+	/// Set a global/external variable
 	SetExternal,
-	/// @TODO:
+	/// Equality
 	Equal,
-	/// @TODO:
+	/// Comparison greater
 	Greater,
-	/// @TODO:
+	/// Comparison less
 	Less,
-	/// @TODO:
+	/// Jump
 	Jmp,
-	/// @TODO:
+	/// Jump if condition is fulfilled
 	JmpIfTrue,
-	/// @TODO:
+	/// Jump if condition is not fulfilled
 	JmpIfFalse,
-	/// @TODO:
+	/// Add two numbers
 	Add,
-	/// @TODO:
+	/// Subtract number
 	Subtract,
-	/// @TODO:
+	/// Multiply two numbers
 	Multiply,
-	/// @TODO:
+	/// Divide number
 	Divide,
-	/// @TODO:
+	/// Bitwise not
 	BitwiseNot,
-	/// @TODO:
+	/// Bitwise and
 	BitwiseAnd,
-	/// @TODO:
+	/// Bitwise or
 	BitwiseOr,
-	/// @TODO:
+	/// Bitwise exclusive or
 	BitwiseXor,
-	/// @TODO:
+	/// Not Equal
 	Not,
-	/// @TODO:
+	/// Negation
 	Negate,
-	/// @TODO:
+	/// Return value to caller
 	Return,
-	/// @TODO:
+	/// Print value to "stdout"
 	#[cfg(feature = "std")]
 	Print = 254,
 }

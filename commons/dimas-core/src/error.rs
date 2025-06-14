@@ -14,11 +14,11 @@ use thiserror::Error;
 /// `dimas` error type
 #[derive(Error, Debug)]
 pub enum Error {
-	/// @TODO:
+	/// Value is not a boolean.:
 	#[error("Value is not a bool")]
 	NoBoolean,
 
-	/// @TODO:
+	/// A really unexpected error happened.
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
 	Unexpected(String, String, u32),
 }
