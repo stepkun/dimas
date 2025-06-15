@@ -29,9 +29,7 @@ async fn tree_observer() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	factory
-		.register_node_type::<Fallback>("Fallback")
-		.expect("snh");
+	register_node!(factory, Fallback, "Fallback").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE)?;
 	let observer = BehaviorTreeObserver::new(&mut tree);

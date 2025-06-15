@@ -44,9 +44,8 @@ fn fallback(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	factory
-		.register_node_type::<Fallback>("Fallback")
-		.expect("snh");
+	register_node!(factory, Fallback, "Fallback").expect("snh");
+
 
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
@@ -92,9 +91,7 @@ fn reactive_fallback(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	factory
-		.register_node_type::<ReactiveFallback>("ReactiveFallback")
-		.expect("snh");
+	register_node!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
 
 	// create the BT
 	let mut tree = factory

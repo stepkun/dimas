@@ -48,9 +48,7 @@ fn parallel(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	factory
-		.register_node_type::<Parallel>("Parallel")
-		.expect("snh");
+	register_node!(factory, Parallel, "Parallel").expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(PARALLEL).expect("snh");
@@ -100,9 +98,7 @@ fn parallel_all(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	factory
-		.register_node_type::<ParallelAll>("ParallelAll")
-		.expect("snh");
+	register_node!(factory, ParallelAll, "ParallelAll").expect("snh");
 
 	// create the BT
 	let mut tree = factory

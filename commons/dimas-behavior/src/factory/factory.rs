@@ -53,9 +53,7 @@ impl Default for BehaviorTreeFactory {
 			main_tree_name: None,
 		};
 		// minimum required behaviors for the factory to work
-		f.register_node_type::<Subtree>("SubTree")
-			.expect("snh");
-
+		register_node!(f, Subtree, "SubTree").expect("snh");
 		f
 	}
 }
@@ -80,29 +78,29 @@ impl BehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core actions
-		self.register_node_type::<Script>("Script")?;
+		register_node!(self, Script, "Script").expect("snh");
 		register_node!(self, StateAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
 		register_node!(self, StateAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
 		register_node!(self, StateAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
 
 		// core conditions
-		self.register_node_type::<ScriptCondition>("ScriptCondition")?;
+		register_node!(self, ScriptCondition, "ScriptCondition")?;
 
 		// core controls
-		self.register_node_type::<Fallback>("Fallback")?;
-		self.register_node_type::<Parallel>("Parallel")?;
-		self.register_node_type::<ParallelAll>("ParallelAll")?;
-		self.register_node_type::<ReactiveFallback>("ReactiveFallback")?;
-		self.register_node_type::<ReactiveSequence>("ReactiveSequence")?;
-		self.register_node_type::<Sequence>("Sequence")?;
-		self.register_node_type::<SequenceWithMemory>("SequenceWithMemory")?;
-		self.register_node_type::<WhileDoElse>("WhileDoElse")?;
+		register_node!(self, Fallback, "Fallback")?;
+		register_node!(self, Parallel, "Parallel")?;
+		register_node!(self, ParallelAll, "ParallelAll")?;
+		register_node!(self, ReactiveFallback, "ReactiveFallback")?;
+		register_node!(self, ReactiveSequence, "ReactiveSequence")?;
+		register_node!(self, Sequence, "Sequence")?;
+		register_node!(self, SequenceWithMemory, "SequenceWithMemory")?;
+		register_node!(self, WhileDoElse, "WhileDoElse")?;
 
 		// core decorators
-		self.register_node_type::<ForceFailure>("ForceFailure")?;
-		self.register_node_type::<Inverter>("Inverter")?;
-		self.register_node_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
-		self.register_node_type::<Precondition>("Precondition")
+		register_node!(self, ForceFailure, "ForceFailure")?;
+		register_node!(self, Inverter, "Inverter")?;
+		register_node!(self, RetryUntilSuccessful, "RetryUntilSuccessful")?;
+		register_node!(self, Precondition, "Precondition")
 	}
 
 	/// Register an enums key/value pair.

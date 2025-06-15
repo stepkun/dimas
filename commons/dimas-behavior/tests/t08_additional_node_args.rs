@@ -39,7 +39,7 @@ pub struct ActionA {
 impl BehaviorInstance for ActionA {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -47,7 +47,7 @@ impl BehaviorInstance for ActionA {
 		assert_eq!(self.arg1, 42);
 
 		assert_eq!(self.arg2, String::from("hello world"));
-		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
+		println!("{}: {}, {}", behavior.name(), &self.arg1, &self.arg2);
 		Ok(BehaviorState::Success)
 	}
 }
@@ -77,14 +77,14 @@ pub struct ActionB {
 impl BehaviorInstance for ActionB {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 69);
 		assert_eq!(self.arg2, String::from("interesting value"));
-		println!("{}: {}, {}", String::from("?"), &self.arg1, &self.arg2);
+		println!("{}: {}, {}", behavior.name(), &self.arg1, &self.arg2);
 		Ok(BehaviorState::Success)
 	}
 }
@@ -104,40 +104,11 @@ impl ActionB {
 }
 
 #[tokio::test]
-#[ignore = "reminder for behavior name etc."]
-async fn behavior_name_reminder() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
-	factory.register_node_type::<ActionB>("Action_B")?;
-
-	let mut tree = factory.create_from_text(XML)?;
-	drop(factory);
-
-	// initialize ActionB with the help of an iterator
-	for node in tree.iter_mut() {
-		if node.name() == ("Action_B") {
-			let action = node
-				.behavior_mut()
-				.as_any_mut()
-				.downcast_mut::<ActionB>()
-				.expect("snh");
-			action.initialize(69, "interesting value".into());
-		}
-	}
-
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-
-	Ok(())
-}
-
-#[tokio::test]
 async fn additional_args() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
-	factory.register_node_type::<ActionB>("Action_B")?;
+	register_node!(factory, ActionB, "Action_B")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);

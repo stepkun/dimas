@@ -12,14 +12,7 @@ use std::{fmt::Display, num::ParseFloatError, str::FromStr};
 
 use cross_door::cross_door::CrossDoor;
 use dimas_behavior::{
-	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
-	blackboard::{BlackboardInterface, SharedBlackboard},
-	factory::BehaviorTreeFactory,
-	output_port,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeElementList,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, output_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
 };
 
 const CYCLES: u8 = 20;
@@ -124,7 +117,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 
 	let mut cross_door = CrossDoor::default();
 	cross_door.register_nodes(&mut factory)?;
-	factory.register_node_type::<UpdatePosition>("UpdatePosition")?;
+	register_node!(factory, UpdatePosition, "UpdatePosition")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 
@@ -147,7 +140,7 @@ async fn groot_howto_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("cross_door")?;
-	factory.register_node_type::<UpdatePosition>("UpdatePosition")?;
+	register_node!(factory, UpdatePosition, "UpdatePosition")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

@@ -33,9 +33,7 @@ fn complex(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	factory
-		.register_node_type::<Fallback>("Fallback")
-		.expect("snh");
+	register_node!(factory, Fallback, "Fallback").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE).expect("snh");
 	drop(factory);

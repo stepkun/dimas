@@ -11,14 +11,7 @@ extern crate alloc;
 use std::fmt::{Display, Formatter};
 
 use dimas_behavior::{
-	Behavior, SharedRuntime,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
-	blackboard::{BlackboardInterface, SharedBlackboard},
-	factory::BehaviorTreeFactory,
-	input_port,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeElementList,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
 };
 use test_behaviors::test_nodes::SaySomething;
 
@@ -52,7 +45,7 @@ const XML: &str = r#"
 async fn subtree_model() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_node_type::<SaySomething>("SaySomething")?;
+	register_node!(factory, SaySomething, "SaySomething")?;
 	// register subtrees nodes
 	move_robot::register_nodes(&mut factory)?;
 
@@ -161,6 +154,6 @@ mod move_robot {
 	}
 
 	pub fn register_nodes(factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
-		factory.register_node_type::<MoveBase>("MoveBase")
+		register_node!(factory, MoveBase, "MoveBase")
 	}
 }

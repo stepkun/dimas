@@ -11,7 +11,7 @@ use std::{sync::Arc, time::Duration};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething, check_battery};
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -52,8 +52,8 @@ async fn std_sequence() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_simple_condition("BatteryOK", Arc::new(check_battery))?;
-	factory.register_node_type::<MoveBaseAction>("MoveBase")?;
-	factory.register_node_type::<SaySomething>("SaySomething")?;
+	register_node!(factory, MoveBaseAction, "MoveBase")?;
+	register_node!(factory, SaySomething, "SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);
@@ -74,8 +74,8 @@ async fn reactive_sequence() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_simple_condition("BatteryOK", Arc::new(check_battery))?;
-	factory.register_node_type::<MoveBaseAction>("MoveBase")?;
-	factory.register_node_type::<SaySomething>("SaySomething")?;
+	register_node!(factory, MoveBaseAction, "MoveBase")?;
+	register_node!(factory, SaySomething, "SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 

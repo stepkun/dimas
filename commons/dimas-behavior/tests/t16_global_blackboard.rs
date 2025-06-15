@@ -10,14 +10,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
-	blackboard::{BlackboardInterface, SharedBlackboard, error::Error},
-	factory::BehaviorTreeFactory,
-	input_port,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeElementList,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{error::Error, BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
 };
 
 const XML: &str = r#"
@@ -93,7 +86,7 @@ async fn global_blackboard() -> anyhow::Result<()> {
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_node_type::<PrintNumber>("PrintNumber")?;
+	register_node!(factory, PrintNumber, "PrintNumber")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

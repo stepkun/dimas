@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t06_subtree_port_remapping.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething};
 
@@ -39,8 +39,8 @@ const XML: &str = r#"
 async fn subtree_port_remapping() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_node_type::<SaySomething>("SaySomething")?;
-	factory.register_node_type::<MoveBaseAction>("MoveBase")?;
+	register_node!(factory, SaySomething, "SaySomething")?;
+	register_node!(factory, MoveBaseAction, "MoveBase")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_tree("MainTree")?;

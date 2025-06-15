@@ -62,15 +62,9 @@ fn multitree(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	factory
-		.register_node_type::<Fallback>("Fallback")
-		.expect("snh");
-	factory
-		.register_node_type::<ParallelAll>("ParallelAll")
-		.expect("snh");
-	factory
-		.register_node_type::<Sequence>("Sequence")
-		.expect("snh");
+	register_node!(factory, Fallback, "Fallback").expect("snh");
+	register_node!(factory, ParallelAll, "ParallelAll").expect("snh");
+	register_node!(factory, Sequence, "Sequence").expect("snh");
 
 	let mut tree1 = factory.create_from_text(TREE1).expect("snh");
 	let mut tree2 = factory.create_from_text(TREE2).expect("snh");

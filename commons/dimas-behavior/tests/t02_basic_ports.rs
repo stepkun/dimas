@@ -11,7 +11,7 @@ extern crate alloc;
 
 use std::sync::Arc;
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, input_port, port_list};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, input_port, port_list, register_node};
 use serial_test::serial;
 use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, new_say_something_simple};
 
@@ -37,11 +37,11 @@ async fn basic_ports() -> anyhow::Result<()> {
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.
 	// In this case, it requires an input called "message"
-	factory.register_node_type::<SaySomething>("SaySomething")?;
+	register_node!(factory, SaySomething, "SaySomething")?;
 
 	// Similarly to SaySomething, ThinkWhatToSay has an OUTPUT port called "text"
 	// Both these ports are of type `String`, therefore they can connect to each other
-	factory.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay")?;
+	register_node!(factory, ThinkWhatToSay, "ThinkWhatToSay")?;
 
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()

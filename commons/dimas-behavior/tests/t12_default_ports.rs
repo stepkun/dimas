@@ -15,16 +15,9 @@ use std::{
 };
 
 use dimas_behavior::{
-	Behavior, SharedRuntime,
 	behavior::{
 		BehaviorData, BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-	},
-	blackboard::{BlackboardInterface, SharedBlackboard},
-	factory::BehaviorTreeFactory,
-	input_port,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeElementList,
+	}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
 };
 
 const XML: &str = r#"
@@ -134,7 +127,7 @@ impl BehaviorStatic for BehaviorWithDefaultPoints {
 async fn default_ports() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_node_type::<BehaviorWithDefaultPoints>("NodeWithDefaultPoints")?;
+	register_node!(factory, BehaviorWithDefaultPoints, "NodeWithDefaultPoints")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

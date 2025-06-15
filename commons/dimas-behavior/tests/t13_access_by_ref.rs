@@ -15,14 +15,7 @@ use std::{
 };
 
 use dimas_behavior::{
-	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
-	blackboard::{BlackboardInterface, SharedBlackboard},
-	factory::BehaviorTreeFactory,
-	input_port, output_port,
-	port::PortList,
-	port_list,
-	tree::BehaviorTreeElementList,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, output_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
 };
 
 const XML: &str = r#"
@@ -171,8 +164,8 @@ impl BehaviorStatic for SegmentObject {
 async fn access_by_ref() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_node_type::<AcquirePointCloud>("AcquirePointCloud")?;
-	factory.register_node_type::<SegmentObject>("SegmentObject")?;
+	register_node!(factory, AcquirePointCloud, "AcquirePointCloud")?;
+	register_node!(factory, SegmentObject, "SegmentObject")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

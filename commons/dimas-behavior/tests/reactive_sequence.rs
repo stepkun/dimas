@@ -29,9 +29,7 @@ const SUCCESS: &str = r#"
 async fn success() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	factory
-		.register_node_type::<ReactiveSequence>("ReactiveSequence")
-		.expect("snh");
+	register_node!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
 
 	let mut tree = factory.create_from_text(SUCCESS)?;
 	drop(factory);
@@ -60,9 +58,7 @@ async fn failure() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	factory
-		.register_node_type::<ReactiveSequence>("ReactiveSequence")
-		.expect("snh");
+	register_node!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
 
 	let mut tree = factory.create_from_text(FAILURE)?;
 	drop(factory);

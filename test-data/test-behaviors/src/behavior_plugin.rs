@@ -3,7 +3,7 @@
 //! A library with test behaviors
 
 use alloc::sync::Arc;
-use dimas_behavior::{factory::BehaviorTreeFactory, input_port, port_list};
+use dimas_behavior::{factory::BehaviorTreeFactory, input_port, port_list, register_node};
 use parking_lot::Mutex;
 
 use crate::test_nodes::{
@@ -19,9 +19,7 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	factory
 		.register_simple_condition("CheckBattery", Arc::new(check_battery))
 		.expect("snh");
-	factory
-		.register_node_type::<ApproachObject>("ApproachObject")
-		.expect("snh");
+	register_node!(factory, ApproachObject, "ApproachObject").expect("snh");
 	let gripper1 = Arc::new(Mutex::new(GripperInterface::default()));
 	let gripper2 = gripper1.clone();
 	// @TODO: replace the workaround with a solution!
@@ -33,12 +31,8 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 		.expect("snh");
 
 	// t02
-	factory
-		.register_node_type::<SaySomething>("SaySomething")
-		.expect("snh");
-	factory
-		.register_node_type::<ThinkWhatToSay>("ThinkWhatToSay")
-		.expect("snh");
+	register_node!(factory, SaySomething, "SaySomething").expect("snh");
+	register_node!(factory, ThinkWhatToSay, "ThinkWhatToSay").expect("snh");
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
@@ -48,20 +42,14 @@ extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 		.expect("snh");
 
 	// t03
-	factory
-		.register_node_type::<CalculateGoal>("CalculateGoal")
-		.expect("snh");
-	factory
-		.register_node_type::<PrintTarget>("PrintTarget")
-		.expect("snh");
+	register_node!(factory, CalculateGoal, "CalculateGoal").expect("snh");
+	register_node!(factory, PrintTarget, "PrintTarget").expect("snh");
 
 	// t04
 	factory
 		.register_simple_condition("BatteryOK", Arc::new(check_battery))
 		.expect("snh");
-	factory
-		.register_node_type::<MoveBaseAction>("MoveBase")
-		.expect("snh");
+	register_node!(factory, MoveBaseAction, "MoveBase").expect("snh");
 
 	// A return value of 0 signals success
 	0

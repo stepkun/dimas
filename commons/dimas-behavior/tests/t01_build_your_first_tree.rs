@@ -8,7 +8,7 @@
 
 use std::sync::Arc;
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
 use parking_lot::Mutex;
 use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
@@ -36,7 +36,7 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities
 	// like ports (we will discuss this in future tutorials).
-	factory.register_node_type::<ApproachObject>("ApproachObject")?;
+	register_node!(&mut factory, ApproachObject, "ApproachObject")?;
 
 	// Registering a SimpleAction/SimpleCondition using a function pointer.
 	factory.register_simple_condition("CheckBattery", Arc::new(check_battery))?;

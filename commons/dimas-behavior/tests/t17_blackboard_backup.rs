@@ -39,7 +39,7 @@ const XML: &str = r#"
 async fn blackboard_backup() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	// factory.register_node_type::<UpdatePosition>("UpdatePosition")?;
+	// register_node!(factory, SaySomething, "SaySomething")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

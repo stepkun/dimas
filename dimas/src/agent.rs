@@ -3,11 +3,7 @@
 // region:      --- modules
 use anyhow::Result;
 use dimas_behavior::{
-	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
-	blackboard::SharedBlackboard,
-	factory::{BehaviorTreeFactory, error::Error},
-	tree::{BehaviorTree, BehaviorTreeElementList},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::SharedBlackboard, factory::{error::Error, BehaviorTreeFactory}, register_node, tree::{BehaviorTree, BehaviorTreeElementList}, Behavior, SharedRuntime
 };
 use std::time::Duration;
 use tracing::{Level, event, instrument};
@@ -118,8 +114,8 @@ impl Agent {
 		let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 		// register core nodes
-		factory.register_node_type::<NotInterrupted>("NotInterrupted")?;
-		factory.register_node_type::<Shutdown>("Shutdown")?;
+		register_node!(factory, NotInterrupted, "NotInterrupted")?;
+		register_node!(factory, Shutdown, "Shutdown")?;
 
 		Ok(Self { factory, tree: None })
 	}
