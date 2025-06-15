@@ -4,38 +4,26 @@
 //!
 
 // region:      --- modules
-use alloc::{boxed::Box, vec::Vec};
 use dimas_core::ConstString;
 use dimas_scripting::{Error, SharedRuntime};
 
 use crate::{
 	behavior::{
-		BehaviorPtr, BehaviorResult, BehaviorState,
+		BehaviorData, BehaviorPtr, BehaviorResult, BehaviorState,
 		error::BehaviorError,
 		pre_post_conditions::{Conditions, PostConditions, PreConditions},
 	},
 	blackboard::SharedBlackboard,
 };
 
-use super::{BehaviorTreeElementList, BehaviorTreeElementTickCallback};
+use super::BehaviorTreeElementList;
 // endregion:   --- modules
 
 // region:		--- BehaviorTreeElement
 /// A tree elements.
 pub struct BehaviorTreeElement {
-	/// UID of the element within the [`BehaviorTree`](crate::tree::BehaviorTree).
-	/// 65536 [`BehaviorTreeElement`]s in a [`BehaviorTree`](crate::tree::BehaviorTree) should be sufficient.
-	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
-	/// This should end up in a depth first ordering.
-	uid: u16,
-	/// Name of the element.
-	name: ConstString,
-	/// Path to the element.
-	/// In contrast to BehaviorTree.CPP this path is fully qualified,
-	/// which means that every level is denoted explicitly, including the tree root.
-	path: ConstString,
-	/// Current [`BehaviorState`] of the element.
-	state: BehaviorState,
+	/// Data of the Behavior.
+	data: BehaviorData,
 	/// Reference to the [`Blackboard`] for the element.
 	blackboard: SharedBlackboard,
 	/// The behavior of that element.
@@ -46,10 +34,6 @@ pub struct BehaviorTreeElement {
 	pre_conditions: PreConditions,
 	/// Post conditions, checked after a tick.
 	post_conditions: PostConditions,
-	/// List of pre state change callbacks with an identifier.
-	/// These callbacks can be used for observation of the [`BehaviorTreeElement`] and
-	/// for manipulation of the resulting [`BehaviorState`] of a tick.
-	pre_state_change_hooks: Vec<(ConstString, Box<BehaviorTreeElementTickCallback>)>,
 }
 
 impl BehaviorTreeElement {
@@ -66,17 +50,17 @@ impl BehaviorTreeElement {
 		behavior: BehaviorPtr,
 		conditions: Conditions,
 	) -> Self {
+		let mut data = BehaviorData::default();
+		data.uid = uid;
+		data.name = name.into();
+		data.path = path.into();
 		Self {
-			uid,
-			name: name.into(),
-			path: path.into(),
-			state: BehaviorState::Idle,
+			data,
 			blackboard,
 			behavior,
 			children,
 			pre_conditions: conditions.pre,
 			post_conditions: conditions.post,
-			pre_state_change_hooks: Vec::new(),
 		}
 	}
 
@@ -132,30 +116,30 @@ impl BehaviorTreeElement {
 	/// Get the uid.
 	#[must_use]
 	pub const fn uid(&self) -> u16 {
-		self.uid
+		self.data.uid
 	}
 
 	/// Get the name.
 	#[must_use]
 	pub fn name(&self) -> &str {
-		&self.name
+		&self.data.name
 	}
 
 	/// Get the path.
 	#[must_use]
 	pub fn path(&self) -> &str {
-		&self.path
+		&self.data.path
 	}
 
-	/// Get the state.
+	/// Get a reference to the [`BehaviorData`].
 	#[must_use]
-	pub const fn state(&self) -> BehaviorState {
-		self.state
+	pub const fn data(&self) -> &BehaviorData {
+		&self.data
 	}
 
-	/// Get a reference to the behavior.
+	/// Get a reference to the behavior functions.
 	#[must_use]
-	pub fn behavior(&self) -> &BehaviorPtr {
+	pub fn behavior_fn(&self) -> &BehaviorPtr {
 		&self.behavior
 	}
 
@@ -185,42 +169,37 @@ impl BehaviorTreeElement {
 	/// # Errors
 	#[allow(clippy::unused_async)]
 	pub async fn execute_halt(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
-		let result = self.halt(0, runtime);
+		self.halt(0, runtime)?;
 		if let Some(chunk) = self.post_conditions.get_chunk("_onHalted") {
 			let _ = runtime
 				.lock()
 				.execute(chunk, &mut self.blackboard)?;
 		}
-		self.state = BehaviorState::Idle;
-		result
+		self.data.set_state(BehaviorState::Idle);
+		Ok(())
 	}
 
 	/// Tick the element and its children.
 	/// # Errors
 	pub async fn execute_tick(&mut self, runtime: &SharedRuntime) -> BehaviorResult {
 		// A pre-condition may return the next state which will override the current tick().
-		let mut state = if let Some(result) = self.check_pre_conditions(runtime).await? {
+		let state = if let Some(result) = self.check_pre_conditions(runtime).await? {
 			result
-		} else if self.state == BehaviorState::Idle {
+		} else if self.data.state() == BehaviorState::Idle {
 			self.behavior
-				.start(self.state, &mut self.blackboard, &mut self.children, runtime)
+				.start(&mut self.data, &mut self.blackboard, &mut self.children, runtime)
 				.await?
 		} else {
 			self.behavior
-				.tick(self.state, &mut self.blackboard, &mut self.children, runtime)
+				.tick(&mut self.data, &mut self.blackboard, &mut self.children, runtime)
 				.await?
 		};
 
 		self.check_post_conditions(state, runtime);
 
-		// Callback after finishing tick before remembering & propagating state
-		for (_, callback) in &self.pre_state_change_hooks {
-			callback(self, &mut state);
-		}
-
-		// Preserve the last (`Idle`) state if skipped, but communicate `Skipped` to parent
+		// Preserve the last state if skipped, but communicate `Skipped` to parent
 		if state != BehaviorState::Skipped {
-			self.state = state;
+			self.data.set_state(state);
 		}
 
 		Ok(state)
@@ -251,25 +230,15 @@ impl BehaviorTreeElement {
 	/// The name is not unique, which is important when removing callback.
 	pub fn add_pre_state_change_callback<T>(&mut self, name: ConstString, callback: T)
 	where
-		T: Fn(&Self, &mut BehaviorState) + Send + Sync + 'static,
+		T: Fn(&BehaviorData, &mut BehaviorState) + Send + Sync + 'static,
 	{
-		self.pre_state_change_hooks
-			.push((name, Box::new(callback)));
+		self.data
+			.add_pre_state_change_callback(name, callback);
 	}
 
 	/// Remove any pre state change callback with the given name.
 	pub fn remove_pre_state_change_callback(&mut self, name: &ConstString) {
-		// first collect all subscriber with that name ...
-		let mut indices = Vec::new();
-		for (index, (cb_name, _)) in self.pre_state_change_hooks.iter().enumerate() {
-			if cb_name == name {
-				indices.push(index);
-			}
-		}
-		// ... then remove them from vec
-		for index in indices {
-			let _ = self.pre_state_change_hooks.remove(index);
-		}
+		self.data.remove_pre_state_change_callback(name);
 	}
 
 	/// Return an iterator over the children.
@@ -287,7 +256,7 @@ impl BehaviorTreeElement {
 	async fn check_pre_conditions(&mut self, runtime: &SharedRuntime) -> Result<Option<BehaviorState>, Error> {
 		if self.pre_conditions.is_some() {
 			// Preconditions only applied when the node state is `Idle` or `Skipped`
-			if self.state == BehaviorState::Idle || self.state == BehaviorState::Skipped {
+			if self.data.state() == BehaviorState::Idle || self.data.state() == BehaviorState::Skipped {
 				if let Some(chunk) = self.pre_conditions.get_chunk("_failureif") {
 					let res = runtime
 						.lock()
@@ -322,7 +291,7 @@ impl BehaviorTreeElement {
 				}
 			} else
 			// Preconditions only applied when the node state is `Running`
-			if self.state == BehaviorState::Running {
+			if self.data.state() == BehaviorState::Running {
 				if let Some(chunk) = self.pre_conditions.get_chunk("_while") {
 					let res = runtime
 						.lock()

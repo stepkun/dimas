@@ -12,12 +12,13 @@ pub mod error;
 pub mod pre_post_conditions;
 mod simple_behavior;
 
+use dimas_core::ConstString;
 // flatten
 pub use error::BehaviorError;
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 
 // region:      --- modules
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 use core::any::Any;
 use dimas_scripting::SharedRuntime;
 
@@ -33,7 +34,12 @@ pub type BehaviorResult<Output = BehaviorState> = Result<Output, BehaviorError>;
 
 /// Type alias for a behavior creation function
 pub type BehaviorCreationFn = dyn Fn() -> BehaviorPtr + Send + Sync;
-// endregion:	--- types
+
+/// [`BehaviorData`] state change callback signature.
+///
+/// This callback can be used to observe [`BehaviorData`] and manipulate the resulting [`BehaviorState`] of a tick.
+pub type BehaviorTickCallback = dyn Fn(&BehaviorData, &mut BehaviorState) + Send + Sync + 'static;
+// endregion:   --- types
 
 // region:      --- supertraits
 /// Supertrait for a behavior.
@@ -63,16 +69,19 @@ pub trait BehaviorCreation: Default {
 #[async_trait::async_trait]
 pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to stop/cancel/halt a behavior.
-	/// Default implementation just returns [`BehaviorState::Idle`]
+	/// Default implementation halts all children and sets state to idle.
 	/// # Errors
 	async fn halt(
 		&mut self,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
 		for child in &mut **children {
 			child.halt(0, runtime)?;
 		}
+
+		behavior.set_state(BehaviorState::Idle);
 		Ok(())
 	}
 
@@ -81,12 +90,12 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// # Errors
 	async fn start(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		self.tick(state, blackboard, children, runtime)
+		self.tick(behavior, blackboard, children, runtime)
 			.await
 	}
 
@@ -94,7 +103,7 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// # Errors
 	async fn tick(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
@@ -127,6 +136,85 @@ pub trait BehaviorStatic: Default {
 	}
 }
 // endregion:   --- BehaviorStatic
+
+// region:      --- BehaviorData
+/// Structure for implementing behaviors.
+#[derive(Default)]
+pub struct BehaviorData {
+	/// UID of the behavior within the [`BehaviorTree`](crate::tree::BehaviorTree).
+	/// 65536 behaviors in a [`BehaviorTree`](crate::tree::BehaviorTree) should be sufficient.
+	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
+	/// This should end up in a depth first ordering.
+	pub(crate) uid: u16,
+	/// Name of the element.
+	pub(crate) name: ConstString,
+	/// Path to the element.
+	/// In contrast to BehaviorTree.CPP this path is fully qualified,
+	/// which means that every level is denoted explicitly, including the tree root.
+	pub(crate) path: ConstString,
+	/// Current state of the behavior.
+	state: BehaviorState,
+	/// List of pre state change callbacks with an identifier.
+	/// These callbacks can be used for observation of the [`BehaviorTreeElement`] and
+	/// for manipulation of the resulting [`BehaviorState`] of a tick.
+	pre_state_change_hooks: Vec<(ConstString, Box<BehaviorTickCallback>)>,
+}
+
+impl BehaviorData {
+	/// Method to get the name.
+	#[must_use]
+	pub fn name(&self) -> &str {
+		&self.name
+	}
+
+	/// Method to get the uid.
+	#[must_use]
+	pub const fn uid(&self) -> u16 {
+		self.uid
+	}
+
+	/// Method to get the state.
+	#[must_use]
+	pub const fn state(&self) -> BehaviorState {
+		self.state
+	}
+
+	/// Method to set the state.
+	pub fn set_state(&mut self, state: BehaviorState) {
+		// Callback before setting state
+		let mut state = state;
+		for (_, callback) in &self.pre_state_change_hooks {
+			callback(self, &mut state);
+		}
+		self.state = state;
+	}
+
+	/// Add a pre state change callback with the given name.
+	/// The name is not unique, which is important when removing callback.
+	pub fn add_pre_state_change_callback<T>(&mut self, name: ConstString, callback: T)
+	where
+		T: Fn(&Self, &mut BehaviorState) + Send + Sync + 'static,
+	{
+		self.pre_state_change_hooks
+			.push((name, Box::new(callback)));
+	}
+
+	/// Remove any pre state change callback with the given name.
+	pub fn remove_pre_state_change_callback(&mut self, name: &ConstString) {
+		// first collect all subscriber with that name ...
+		let mut indices = Vec::new();
+		for (index, (cb_name, _)) in self.pre_state_change_hooks.iter().enumerate() {
+			if cb_name == name {
+				indices.push(index);
+			}
+		}
+		// ... then remove them from vec
+		for index in indices {
+			let _ = self.pre_state_change_hooks.remove(index);
+		}
+	}
+}
+// endregion:	--- BehaviorData
 
 // region:      --- BehaviorState
 /// Behavior state

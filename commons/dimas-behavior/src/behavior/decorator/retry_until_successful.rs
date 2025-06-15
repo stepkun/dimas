@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
@@ -61,7 +62,7 @@ impl Default for RetryUntilSuccessful {
 impl BehaviorInstance for RetryUntilSuccessful {
 	async fn tick(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
@@ -71,7 +72,7 @@ impl BehaviorInstance for RetryUntilSuccessful {
 
 		let mut do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
 
-		if state == BehaviorState::Idle {
+		if behavior.state() == BehaviorState::Idle {
 			self.all_skipped = true;
 		}
 

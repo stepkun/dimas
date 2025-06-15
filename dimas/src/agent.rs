@@ -4,7 +4,7 @@
 use anyhow::Result;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
 	tree::{BehaviorTree, BehaviorTreeElementList},
@@ -56,7 +56,7 @@ impl BehaviorInstance for NotInterrupted {
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -81,7 +81,7 @@ impl BehaviorInstance for Shutdown {
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,

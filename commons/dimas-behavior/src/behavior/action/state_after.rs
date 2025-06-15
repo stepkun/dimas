@@ -8,7 +8,7 @@ use alloc::boxed::Box;
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
-use crate::behavior::BehaviorError;
+use crate::behavior::{BehaviorData, BehaviorError};
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
@@ -32,6 +32,7 @@ pub struct StateAfter {
 impl BehaviorInstance for StateAfter {
 	async fn halt(
 		&mut self,
+		_behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
@@ -41,30 +42,31 @@ impl BehaviorInstance for StateAfter {
 
 	async fn start(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		self.remaining = self.count;
-		self.tick(state, blackboard, children, runtime)
+		self.tick(behavior, blackboard, children, runtime)
 			.await
 	}
 
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		if self.remaining == 0 {
 			// self.remaining self.count;
-			Ok(self.state)
+			behavior.set_state(self.state);
 		} else {
 			self.remaining -= 1;
-			Ok(BehaviorState::Running)
+			behavior.set_state(BehaviorState::Running);
 		}
+		Ok(behavior.state())
 	}
 }
 

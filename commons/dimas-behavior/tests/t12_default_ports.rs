@@ -16,7 +16,9 @@ use std::{
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{
+		BehaviorData, BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
+	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port,
@@ -72,7 +74,7 @@ struct BehaviorWithDefaultPoints {}
 impl BehaviorInstance for BehaviorWithDefaultPoints {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,

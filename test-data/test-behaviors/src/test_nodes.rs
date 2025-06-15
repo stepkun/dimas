@@ -16,7 +16,7 @@ use std::{
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port, output_port,
 	port::PortList,
@@ -34,7 +34,7 @@ pub struct ApproachObject {}
 impl BehaviorInstance for ApproachObject {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -87,7 +87,7 @@ pub struct SaySomething {}
 impl BehaviorInstance for SaySomething {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -116,7 +116,7 @@ pub struct ThinkWhatToSay {}
 impl BehaviorInstance for ThinkWhatToSay {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -184,7 +184,7 @@ pub struct CalculateGoal {}
 impl BehaviorInstance for CalculateGoal {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -213,7 +213,7 @@ pub struct PrintTarget {}
 impl BehaviorInstance for PrintTarget {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -287,7 +287,7 @@ impl Default for MoveBaseAction {
 impl BehaviorInstance for MoveBaseAction {
 	async fn start(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
@@ -304,7 +304,7 @@ impl BehaviorInstance for MoveBaseAction {
 
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,

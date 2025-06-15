@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
@@ -25,15 +26,18 @@ pub struct Subtree {}
 impl BehaviorInstance for Subtree {
 	async fn halt(
 		&mut self,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		children[0].execute_halt(runtime).await
+		children[0].execute_halt(runtime).await?;
+		behavior.set_state(BehaviorState::Idle);
+		Ok(())
 	}
 
 	async fn start(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
@@ -43,7 +47,7 @@ impl BehaviorInstance for Subtree {
 
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,

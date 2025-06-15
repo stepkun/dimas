@@ -5,7 +5,7 @@
 // region:      --- modules
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
@@ -24,21 +24,21 @@ impl BehaviorInstance for Subscriber {
 	/// @TODO:
 	async fn start(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("starting Subscriber");
 
-		self.tick(state, blackboard, children, runtime)
+		self.tick(behavior, blackboard, children, runtime)
 			.await
 	}
 
 	/// @TODO:
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,

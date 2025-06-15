@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
@@ -29,7 +30,7 @@ pub struct WhileDoElse;
 impl BehaviorInstance for WhileDoElse {
 	async fn start(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
@@ -41,17 +42,19 @@ impl BehaviorInstance for WhileDoElse {
 			));
 		}
 
-		self.tick(state, blackboard, children, runtime)
+		self.tick(behavior, blackboard, children, runtime)
 			.await
 	}
 
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
+		behavior.set_state(BehaviorState::Running);
+
 		// extern crate std;
 		// std::println!("ticking WhileDoElse");
 		let children_count = children.len();

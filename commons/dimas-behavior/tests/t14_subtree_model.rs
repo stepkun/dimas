@@ -71,7 +71,7 @@ async fn subtree_model() -> anyhow::Result<()> {
 mod move_robot {
 	use std::{num::ParseFloatError, str::FromStr};
 
-	use dimas_behavior::factory::error::Error;
+	use dimas_behavior::{behavior::BehaviorData, factory::error::Error};
 
 	use super::*;
 
@@ -117,7 +117,7 @@ mod move_robot {
 	impl BehaviorInstance for MoveBase {
 		async fn start(
 			&mut self,
-			_state: BehaviorState,
+			_behavior: &mut BehaviorData,
 			blackboard: &mut SharedBlackboard,
 			_children: &mut BehaviorTreeElementList,
 			_runtime: &SharedRuntime,
@@ -134,7 +134,7 @@ mod move_robot {
 
 		async fn tick(
 			&mut self,
-			_state: BehaviorState,
+			_behavior: &mut BehaviorData,
 			_blackboard: &mut SharedBlackboard,
 			_children: &mut BehaviorTreeElementList,
 			_runtime: &SharedRuntime,

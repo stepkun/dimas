@@ -7,11 +7,9 @@ use alloc::{boxed::Box, sync::Arc};
 use core::any::Any;
 use dimas_scripting::SharedRuntime;
 
-use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
+use crate::{behavior::BehaviorData, blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
 
-use super::{
-	BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult, BehaviorState,
-};
+use super::{BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult};
 // endregion:   --- modules
 
 // region:      --- types
@@ -55,7 +53,7 @@ impl BehaviorExecution for SimpleBehavior {
 impl BehaviorInstance for SimpleBehavior {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,

@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 use alloc::collections::btree_set::BTreeSet;
 use dimas_scripting::SharedRuntime;
 
+use crate::behavior::BehaviorData;
 use crate::blackboard::BlackboardInterface;
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
@@ -47,17 +48,20 @@ impl Default for ParallelAll {
 impl BehaviorInstance for ParallelAll {
 	async fn halt(
 		&mut self,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		children.halt(0, runtime)
+		children.halt(0, runtime)?;
+		behavior.set_state(BehaviorState::Idle);
+		Ok(())
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
 	async fn start(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
@@ -73,7 +77,7 @@ impl BehaviorInstance for ParallelAll {
 			));
 		}
 
-		self.tick(state, blackboard, children, runtime)
+		self.tick(behavior, blackboard, children, runtime)
 			.await
 	}
 
@@ -81,11 +85,13 @@ impl BehaviorInstance for ParallelAll {
 	#[allow(clippy::cast_possible_wrap)]
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
+		behavior.set_state(BehaviorState::Running);
+
 		let children_count = children.len();
 
 		let mut skipped_count = 0;

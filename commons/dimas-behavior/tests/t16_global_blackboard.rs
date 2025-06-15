@@ -11,7 +11,7 @@ extern crate alloc;
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::{BlackboardInterface, SharedBlackboard, error::Error},
 	factory::BehaviorTreeFactory,
 	input_port,
@@ -62,13 +62,13 @@ struct PrintNumber {}
 impl BehaviorInstance for PrintNumber {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let value: i64 = blackboard.get("val".into())?;
-		println!("PrintNumber [{}] has val: {value}", "todo!"); // @TODO:access to the behvior name!!
+		println!("PrintNumber [{}] has val: {value}", behavior.name());
 
 		Ok(BehaviorState::Success)
 	}

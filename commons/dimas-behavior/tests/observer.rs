@@ -25,7 +25,7 @@ const TREE: &str = r#"
 "#;
 
 #[tokio::test]
-async fn success() -> anyhow::Result<()> {
+async fn tree_observer() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
@@ -55,13 +55,13 @@ async fn success() -> anyhow::Result<()> {
 			.transitions_count,
 		2
 	);
-	// The tree should change state 2 times
+	// The tree should change state 3 times
 	assert_eq!(
 		observer
 			.get_statistics(0)
 			.expect("snh")
 			.transitions_count,
-		2
+		3
 	);
 	Ok(())
 }

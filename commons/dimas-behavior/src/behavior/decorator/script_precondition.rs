@@ -8,6 +8,7 @@ use alloc::{boxed::Box, string::String};
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::behavior::error::BehaviorError;
 use crate::blackboard::BlackboardInterface;
 use crate::{
@@ -31,7 +32,7 @@ pub struct Precondition;
 impl BehaviorInstance for Precondition {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,

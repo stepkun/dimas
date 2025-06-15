@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
@@ -44,11 +45,13 @@ impl Default for ReactiveFallback {
 impl BehaviorInstance for ReactiveFallback {
 	async fn halt(
 		&mut self,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
 		self.running_child_idx = -1;
 		children.halt(0, runtime)?;
+		behavior.set_state(BehaviorState::Idle);
 		Ok(())
 	}
 
@@ -57,15 +60,17 @@ impl BehaviorInstance for ReactiveFallback {
 	#[allow(clippy::cast_sign_loss)]
 	async fn tick(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
-		if state == BehaviorState::Idle {
+		if behavior.state() == BehaviorState::Idle {
 			self.running_child_idx = -1;
 		}
+
+		behavior.set_state(BehaviorState::Running);
 
 		for child_idx in 0..children.len() {
 			let child = &mut children[child_idx];

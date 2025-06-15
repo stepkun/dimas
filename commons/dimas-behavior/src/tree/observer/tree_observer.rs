@@ -17,8 +17,8 @@ use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
 use crate::{
-	behavior::BehaviorState,
-	tree::{BehaviorTree, BehaviorTreeElement},
+	behavior::{BehaviorData, BehaviorState},
+	tree::BehaviorTree,
 };
 // endregion:   --- modules
 
@@ -115,11 +115,14 @@ impl BehaviorTreeObserver {
 		for element in root.iter_mut() {
 			statistics.lock().push(Statistics::default());
 			let tx_clone = tx.clone();
-			let callback = move |element: &BehaviorTreeElement, new_state: &mut BehaviorState| {
-				let timestamp = Instant::now();
-				let tuple = (element.uid(), timestamp, element.state(), *new_state);
-				// ignore any errors when sending
-				tx_clone.send(tuple).expect("snh");
+			let callback = move |behavior: &BehaviorData, new_state: &mut BehaviorState| {
+				let old_state = behavior.state();
+				if old_state != *new_state {
+					let timestamp = Instant::now();
+					let tuple = (behavior.uid(), timestamp, behavior.state(), *new_state);
+					// ignore any errors when sending
+					tx_clone.send(tuple).expect("snh");
+				}
 			};
 			element.add_pre_state_change_callback(id.clone(), callback);
 		}

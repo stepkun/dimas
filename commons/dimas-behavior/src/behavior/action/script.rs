@@ -7,6 +7,7 @@ use alloc::{boxed::Box, string::String};
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
@@ -26,7 +27,7 @@ pub struct Script;
 impl BehaviorInstance for Script {
 	async fn tick(
 		&mut self,
-		_state: BehaviorState,
+		_behavior: &mut BehaviorData,
 		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,

@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 use dimas_scripting::SharedRuntime;
 
 use crate as dimas_behavior;
+use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
@@ -37,14 +38,16 @@ pub struct SequenceWithMemory {
 impl BehaviorInstance for SequenceWithMemory {
 	async fn tick(
 		&mut self,
-		state: BehaviorState,
+		behavior: &mut BehaviorData,
 		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if state == BehaviorState::Idle {
+		if behavior.state() == BehaviorState::Idle {
 			self.all_skipped = true;
 		}
+
+		behavior.set_state(BehaviorState::Running);
 
 		while self.child_idx < children.len() {
 			let child = &mut children[self.child_idx];
