@@ -90,7 +90,7 @@ fn reactive_sequence(c: &mut Criterion) {
 	let mut factory = BehaviorTreeFactory::default();
 	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	register_node!(factory, ReactiveSequence, "SReactiveequence").expect("snh");
+	register_node!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
 
 	// create the BT
 	let mut tree = factory

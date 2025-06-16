@@ -46,7 +46,6 @@ fn fallback(c: &mut Criterion) {
 	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	register_node!(factory, Fallback, "Fallback").expect("snh");
 
-
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
 	drop(factory);

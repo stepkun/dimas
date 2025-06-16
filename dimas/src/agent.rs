@@ -3,7 +3,12 @@
 // region:      --- modules
 use anyhow::Result;
 use dimas_behavior::{
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::SharedBlackboard, factory::{error::Error, BehaviorTreeFactory}, register_node, tree::{BehaviorTree, BehaviorTreeElementList}, Behavior, SharedRuntime
+	Behavior, SharedRuntime,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	blackboard::SharedBlackboard,
+	factory::{BehaviorTreeFactory, error::Error},
+	register_node,
+	tree::{BehaviorTree, BehaviorTreeElementList},
 };
 use std::time::Duration;
 use tracing::{Level, event, instrument};

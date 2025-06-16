@@ -10,7 +10,14 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{error::Error, BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
+	Behavior, SharedRuntime,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	blackboard::{BlackboardInterface, SharedBlackboard, error::Error},
+	factory::BehaviorTreeFactory,
+	input_port,
+	port::PortList,
+	port_list, register_node,
+	tree::BehaviorTreeElementList,
 };
 
 const XML: &str = r#"

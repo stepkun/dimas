@@ -12,7 +12,14 @@ use std::{fmt::Display, num::ParseFloatError, str::FromStr};
 
 use cross_door::cross_door::CrossDoor;
 use dimas_behavior::{
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, output_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
+	Behavior, SharedRuntime,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	blackboard::{BlackboardInterface, SharedBlackboard},
+	factory::BehaviorTreeFactory,
+	output_port,
+	port::PortList,
+	port_list, register_node,
+	tree::BehaviorTreeElementList,
 };
 
 const CYCLES: u8 = 20;

@@ -9,7 +9,9 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node, register_scripting_enum, ScriptEnum};
+use dimas_behavior::{
+	ScriptEnum, behavior::BehaviorState, factory::BehaviorTreeFactory, register_node, register_scripting_enum,
+};
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
 

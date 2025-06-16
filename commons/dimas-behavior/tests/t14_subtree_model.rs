@@ -11,7 +11,14 @@ extern crate alloc;
 use std::fmt::{Display, Formatter};
 
 use dimas_behavior::{
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
+	Behavior, SharedRuntime,
+	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	blackboard::{BlackboardInterface, SharedBlackboard},
+	factory::BehaviorTreeFactory,
+	input_port,
+	port::PortList,
+	port_list, register_node,
+	tree::BehaviorTreeElementList,
 };
 use test_behaviors::test_nodes::SaySomething;
 

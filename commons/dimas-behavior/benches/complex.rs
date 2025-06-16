@@ -8,7 +8,15 @@ extern crate alloc;
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::fallback::Fallback},
+	behavior::{
+		BehaviorState, BehaviorStatic,
+		action::StateAfter,
+		control::{
+			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
+			reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory,
+			while_do_else::WhileDoElse,
+		},
+	},
 	factory::BehaviorTreeFactory,
 	register_node,
 };
@@ -18,9 +26,71 @@ const TREE: &str = r#"
 		main_tree_to_execute="MainTree1">
 	<BehaviorTree ID="MainTree1">
 		<Fallback name="root_fallback">
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
+			<ParallelAll>
+				<Sequence>
+					<AlwaysSuccess/>
+					<Fallback>
+						<AlwaysFailure/>
+						<AlwaysFailure/>
+						<AlwaysFailure/>
+						<AlwaysSuccess/>
+					</Fallback>
+					<AlwaysSuccess/>
+				</Sequence>
+				<ReactiveSequence>
+					<AlwaysSuccess/>
+					<Fallback>
+						<AlwaysFailure/>
+						<AlwaysSuccess/>
+					</Fallback>
+					<AlwaysSuccess/>
+				</ReactiveSequence>
+				<SequenceWithMemory>
+					<AlwaysSuccess/>
+					<ReactiveFallback>
+						<AlwaysFailure/>
+						<AlwaysSuccess/>
+					</ReactiveFallback>
+					<AlwaysSuccess/>
+				</SequenceWithMemory>
+				<WhileDoElse>
+					<ReactiveSequence>
+						<AlwaysSuccess/>
+						<AlwaysSuccess/>
+						<AlwaysSuccess/>
+					</ReactiveSequence>
+					<SubTree ID="subtree1" />
+					<Fallback>
+						<AlwaysFailure/>
+						<AlwaysSuccess/>
+					</Fallback>
+				</WhileDoElse>
+			</ParallelAll>
 		</Fallback>
+	</BehaviorTree>
+
+	<BehaviorTree ID="subtree1">
+		<Parallel failure_count="3">
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+			<Sequence>
+				<AlwaysSuccess/>
+				<Fallback>
+					<AlwaysFailure/>
+					<ReactiveSequence>
+						<ReactiveFallback>
+							<AlwaysFailure/>
+							<AlwaysSuccess/>
+						</ReactiveFallback>
+						<AlwaysFailure/>
+					</ReactiveSequence>
+					<AlwaysSuccess/>
+				</Fallback>
+				<AlwaysSuccess/>
+			</Sequence>
+			<AlwaysSuccess/>
+			<AlwaysFailure/>
+		</Parallel>
 	</BehaviorTree>
 </root>
 "#;
@@ -31,9 +101,16 @@ fn complex(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
-	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	register_node!(factory, Fallback, "Fallback").expect("snh");
+	register_node!(factory, Parallel, "Parallel").expect("snh");
+	register_node!(factory, ParallelAll, "ParallelAll").expect("snh");
+	register_node!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
+	register_node!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
+	register_node!(factory, Sequence, "Sequence").expect("snh");
+	register_node!(factory, SequenceWithMemory, "SequenceWithMemory").expect("snh");
+	register_node!(factory, WhileDoElse, "WhileDoElse").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE).expect("snh");
 	drop(factory);

@@ -15,9 +15,16 @@ use std::{
 };
 
 use dimas_behavior::{
+	Behavior, SharedRuntime,
 	behavior::{
 		BehaviorData, BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
-	}, blackboard::{BlackboardInterface, SharedBlackboard}, factory::BehaviorTreeFactory, input_port, port::PortList, port_list, register_node, tree::BehaviorTreeElementList, Behavior, SharedRuntime
+	},
+	blackboard::{BlackboardInterface, SharedBlackboard},
+	factory::BehaviorTreeFactory,
+	input_port,
+	port::PortList,
+	port_list, register_node,
+	tree::BehaviorTreeElementList,
 };
 
 const XML: &str = r#"
