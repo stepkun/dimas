@@ -23,7 +23,7 @@ use dimas_behavior::{
 	factory::BehaviorTreeFactory,
 	input_port,
 	port::PortList,
-	port_list, register_node,
+	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
 
@@ -134,7 +134,7 @@ impl BehaviorStatic for BehaviorWithDefaultPoints {
 async fn default_ports() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, BehaviorWithDefaultPoints, "NodeWithDefaultPoints")?;
+	register_behavior!(factory, BehaviorWithDefaultPoints, "NodeWithDefaultPoints")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

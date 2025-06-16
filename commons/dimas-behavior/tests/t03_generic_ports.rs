@@ -9,7 +9,7 @@
 use serial_test::serial;
 use test_behaviors::test_nodes::{CalculateGoal, PrintTarget};
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -33,8 +33,8 @@ const XML: &str = r#"
 async fn generic_ports() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, CalculateGoal, "CalculateGoal")?;
-	register_node!(factory, PrintTarget, "PrintTarget")?;
+	register_behavior!(factory, CalculateGoal, "CalculateGoal")?;
+	register_behavior!(factory, PrintTarget, "PrintTarget")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);

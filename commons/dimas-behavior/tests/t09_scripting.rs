@@ -10,7 +10,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	ScriptEnum, behavior::BehaviorState, factory::BehaviorTreeFactory, register_node, register_scripting_enum,
+	ScriptEnum, behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior, register_scripting_enum,
 };
 use serial_test::serial;
 use test_behaviors::test_nodes::SaySomething;
@@ -51,7 +51,7 @@ async fn scripting() -> anyhow::Result<()> {
 	register_scripting_enum!(factory, Color);
 	register_scripting_enum!(factory, "THE_ANSWER", 42, "OTHER", 43);
 
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);

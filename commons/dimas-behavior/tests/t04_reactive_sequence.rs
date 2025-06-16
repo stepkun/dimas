@@ -6,12 +6,16 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t04_reactive_sequence.cpp)
 //!
 
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
 use serial_test::serial;
 use test_behaviors::test_nodes::{MoveBaseAction, SaySomething, check_battery};
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
+use dimas_behavior::{
+	behavior::{BehaviorState, BehaviorType},
+	factory::BehaviorTreeFactory,
+	register_behavior,
+};
 
 #[doc(hidden)]
 extern crate alloc;
@@ -51,9 +55,9 @@ const XML_REACTIVE: &str = r#"
 async fn std_sequence() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_simple_condition("BatteryOK", Arc::new(check_battery))?;
-	register_node!(factory, MoveBaseAction, "MoveBase")?;
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, check_battery, "BatteryOK", BehaviorType::Condition)?;
+	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);
@@ -73,9 +77,9 @@ async fn std_sequence() -> anyhow::Result<()> {
 async fn reactive_sequence() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_simple_condition("BatteryOK", Arc::new(check_battery))?;
-	register_node!(factory, MoveBaseAction, "MoveBase")?;
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, check_battery, "BatteryOK", BehaviorType::Condition)?;
+	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 

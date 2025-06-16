@@ -6,10 +6,13 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t01_build_your_first_tree.cpp)
 //!
 
-use std::sync::Arc;
+extern crate alloc;
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
-use parking_lot::Mutex;
+use dimas_behavior::{
+	behavior::{BehaviorState, BehaviorType},
+	factory::BehaviorTreeFactory,
+	register_behavior,
+};
 use serial_test::serial;
 use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
 
@@ -36,20 +39,24 @@ async fn build_your_first_tree() -> anyhow::Result<()> {
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities
 	// like ports (we will discuss this in future tutorials).
-	register_node!(&mut factory, ApproachObject, "ApproachObject")?;
+	register_behavior!(factory, ApproachObject, "ApproachObject")?;
 
 	// Registering a SimpleAction/SimpleCondition using a function pointer.
-	factory.register_simple_condition("CheckBattery", Arc::new(check_battery))?;
+	register_behavior!(factory, check_battery, "CheckBattery", BehaviorType::Condition)?;
 
 	// You can also create SimpleAction/SimpleCondition using methods of a struct.
-	// In Rust this needs to be done with Closures and an Arc to the struct.
-	let gripper1 = Arc::new(Mutex::new(GripperInterface::default()));
-	let gripper2 = gripper1.clone();
-	// @TODO: replace the workaround with a solution!
-	factory.register_simple_action("OpenGripper", Arc::new(move || gripper1.lock().open()))?;
-	factory.register_simple_action("CloseGripper", Arc::new(move || gripper2.lock().close()))?;
+	register_behavior!(
+		factory,
+		GripperInterface::default(),
+		open,
+		"OpenGripper",
+		BehaviorType::Action,
+		close,
+		"CloseGripper",
+		BehaviorType::Action,
+	)?;
 
-	// Trees are created at run-time, but only once at the beginning).
+	// Trees are created at run-time, but only once at the beginning.
 	// The currently supported format is XML.
 	// IMPORTANT: When the object "tree" goes out of scope, all the tree components are destroyed
 	let mut tree = factory.create_from_text(XML)?;

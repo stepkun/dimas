@@ -32,7 +32,7 @@ use crate::{
 	blackboard::SharedBlackboard,
 	factory::xml_parser::XmlParser,
 	port::PortList,
-	register_node,
+	register_behavior,
 	tree::BehaviorTree,
 };
 
@@ -53,7 +53,7 @@ impl Default for BehaviorTreeFactory {
 			main_tree_name: None,
 		};
 		// minimum required behaviors for the factory to work
-		register_node!(f, Subtree, "SubTree").expect("snh");
+		register_behavior!(f, Subtree, "SubTree").expect("snh");
 		f
 	}
 }
@@ -78,29 +78,29 @@ impl BehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core actions
-		register_node!(self, Script, "Script").expect("snh");
-		register_node!(self, StateAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
-		register_node!(self, StateAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
-		register_node!(self, StateAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
+		register_behavior!(self, Script, "Script")?;
+		register_behavior!(self, StateAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
+		register_behavior!(self, StateAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
+		register_behavior!(self, StateAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
 
 		// core conditions
-		register_node!(self, ScriptCondition, "ScriptCondition")?;
+		register_behavior!(self, ScriptCondition, "ScriptCondition")?;
 
 		// core controls
-		register_node!(self, Fallback, "Fallback")?;
-		register_node!(self, Parallel, "Parallel")?;
-		register_node!(self, ParallelAll, "ParallelAll")?;
-		register_node!(self, ReactiveFallback, "ReactiveFallback")?;
-		register_node!(self, ReactiveSequence, "ReactiveSequence")?;
-		register_node!(self, Sequence, "Sequence")?;
-		register_node!(self, SequenceWithMemory, "SequenceWithMemory")?;
-		register_node!(self, WhileDoElse, "WhileDoElse")?;
+		register_behavior!(self, Fallback, "Fallback")?;
+		register_behavior!(self, Parallel, "Parallel")?;
+		register_behavior!(self, ParallelAll, "ParallelAll")?;
+		register_behavior!(self, ReactiveFallback, "ReactiveFallback")?;
+		register_behavior!(self, ReactiveSequence, "ReactiveSequence")?;
+		register_behavior!(self, Sequence, "Sequence")?;
+		register_behavior!(self, SequenceWithMemory, "SequenceWithMemory")?;
+		register_behavior!(self, WhileDoElse, "WhileDoElse")?;
 
 		// core decorators
-		register_node!(self, ForceFailure, "ForceFailure")?;
-		register_node!(self, Inverter, "Inverter")?;
-		register_node!(self, RetryUntilSuccessful, "RetryUntilSuccessful")?;
-		register_node!(self, Precondition, "Precondition")
+		register_behavior!(self, ForceFailure, "ForceFailure")?;
+		register_behavior!(self, Inverter, "Inverter")?;
+		register_behavior!(self, RetryUntilSuccessful, "RetryUntilSuccessful")?;
+		register_behavior!(self, Precondition, "Precondition")
 	}
 
 	/// Register an enums key/value pair.
@@ -240,7 +240,7 @@ impl BehaviorTreeFactory {
 	/// Register a `Behavior` of type `<T>`.
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
-	pub fn register_node_type<T>(&mut self, name: &str) -> Result<(), Error>
+	pub fn register_behavior_type<T>(&mut self, name: &str) -> Result<(), Error>
 	where
 		T: Behavior,
 	{
@@ -250,54 +250,33 @@ impl BehaviorTreeFactory {
 			.add_behavior(name, bhvr_creation_fn, bhvr_type)
 	}
 
-	/// Register a function as [`BehaviorType::Action`].
+	/// Register a function either as [`BehaviorType::Action`] or as [`BehaviorType::Condition`].
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
-	pub fn register_simple_action(&mut self, name: &str, tick_fn: SimpleBhvrTickFn) -> Result<(), Error> {
+	pub fn register_simple_function(
+		&mut self,
+		name: &str,
+		tick_fn: SimpleBhvrTickFn,
+		kind: BehaviorType,
+	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
-		let bhvr_type = BehaviorType::Action;
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type)
+			.add_behavior(name, bhvr_creation_fn, kind)
 	}
 
-	/// Register a function as [`BehaviorType::Action`] which is using ports.
+	/// Register a function as [`BehaviorType::Action`] or [`BehaviorType::Condition`] which is using ports.
 	/// # Errors
 	/// - if a behavior with that `name` is already registered
-	pub fn register_simple_action_with_ports(
+	pub fn register_simple_function_with_ports(
 		&mut self,
 		name: &str,
 		tick_fn: ComplexBhvrTickFn,
+		kind: BehaviorType,
 		port_list: PortList,
 	) -> Result<(), Error> {
 		let bhvr_creation_fn = SimpleBehavior::new_create_with_ports(tick_fn, port_list);
-		let bhvr_type = BehaviorType::Action;
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type)
-	}
-
-	/// Register a function as [`BehaviorType::Condition`].
-	/// # Errors
-	/// - if a behavior with that `name` is already registered
-	pub fn register_simple_condition(&mut self, name: &str, tick_fn: SimpleBhvrTickFn) -> Result<(), Error> {
-		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
-		let bhvr_type = BehaviorType::Condition;
-		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type)
-	}
-
-	/// Register a function as [`BehaviorType::Condition`] which is using ports.
-	/// # Errors
-	/// - if a behavior with that `name` is already registered
-	pub fn register_simple_condition_with_ports(
-		&mut self,
-		name: &str,
-		tick_fn: ComplexBhvrTickFn,
-		port_list: PortList,
-	) -> Result<(), Error> {
-		let bhvr_creation_fn = SimpleBehavior::new_create_with_ports(tick_fn, port_list);
-		let bhvr_type = BehaviorType::Condition;
-		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type)
+			.add_behavior(name, bhvr_creation_fn, kind)
 	}
 }
 // endregion:   --- BehaviorTreeFactory

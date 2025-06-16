@@ -18,7 +18,7 @@ use dimas_behavior::{
 	factory::BehaviorTreeFactory,
 	output_port,
 	port::PortList,
-	port_list, register_node,
+	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
 
@@ -123,8 +123,8 @@ async fn groot_howto() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	let mut cross_door = CrossDoor::default();
-	cross_door.register_nodes(&mut factory)?;
-	register_node!(factory, UpdatePosition, "UpdatePosition")?;
+	cross_door.register_behaviors(&mut factory)?;
+	register_behavior!(factory, UpdatePosition, "UpdatePosition")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 
@@ -147,7 +147,7 @@ async fn groot_howto_with_plugin() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	factory.register_from_plugin("cross_door")?;
-	register_node!(factory, UpdatePosition, "UpdatePosition")?;
+	register_behavior!(factory, UpdatePosition, "UpdatePosition")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

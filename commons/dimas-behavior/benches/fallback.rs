@@ -14,7 +14,7 @@ use dimas_behavior::{
 		control::{fallback::Fallback, reactive_fallback::ReactiveFallback},
 	},
 	factory::BehaviorTreeFactory,
-	register_node,
+	register_behavior,
 };
 
 const FALLBACK: &str = r#"
@@ -42,9 +42,9 @@ fn fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	register_node!(factory, Fallback, "Fallback").expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(FALLBACK).expect("snh");
@@ -88,9 +88,9 @@ fn reactive_fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	register_node!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_behavior!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
 
 	// create the BT
 	let mut tree = factory

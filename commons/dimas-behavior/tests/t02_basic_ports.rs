@@ -9,11 +9,13 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use std::sync::Arc;
-
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, input_port, port_list, register_node};
+use dimas_behavior::{
+	behavior::{BehaviorState, BehaviorType},
+	factory::BehaviorTreeFactory,
+	input_port, port_list, register_behavior,
+};
 use serial_test::serial;
-use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, new_say_something_simple};
+use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, say_something_simple};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -37,20 +39,22 @@ async fn basic_ports() -> anyhow::Result<()> {
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.
 	// In this case, it requires an input called "message"
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	// Similarly to SaySomething, ThinkWhatToSay has an OUTPUT port called "text"
 	// Both these ports are of type `String`, therefore they can connect to each other
-	register_node!(factory, ThinkWhatToSay, "ThinkWhatToSay")?;
+	register_behavior!(factory, ThinkWhatToSay, "ThinkWhatToSay")?;
 
-	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
+	// `SimpleBehavior` can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
 	let say_something_ports = port_list! {input_port!(String, "message")};
-	factory.register_simple_action_with_ports(
+	register_behavior!(
+		factory,
+		say_something_simple,
 		"SaySomething2",
-		Arc::new(new_say_something_simple),
 		say_something_ports,
+		BehaviorType::Action
 	)?;
 
 	let mut tree = factory.create_from_text(XML)?;

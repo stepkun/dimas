@@ -66,7 +66,8 @@ pub trait ScriptEnum {
 	fn key_value_tuples() -> Vec<(&'static str, i8)>;
 }
 
-/// The trait for providing an [`Environment`] to a [`VM`] that stores variables persistently and externally available.
+/// The trait for providing an [`Environment`] to a [`VM`](crate::execution::VM)
+/// that stores variables persistently and externally available.
 pub trait Environment: Send + Sync {
 	/// Define the variable with `key` to `value`.
 	/// It has to be created if it does not already exist.

@@ -138,7 +138,7 @@ impl BehaviorStatic for ThinkWhatToSay {
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
-pub fn new_say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
+pub fn say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
 	let msg = blackboard.get::<String>("message".into())?;
 	println!("Robot2 says: {msg}");
 	Ok(BehaviorState::Success)

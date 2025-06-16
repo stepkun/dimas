@@ -21,7 +21,7 @@ use dimas_behavior::{
 	factory::BehaviorTreeFactory,
 	input_port, output_port,
 	port::PortList,
-	port_list, register_node,
+	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
 
@@ -171,8 +171,8 @@ impl BehaviorStatic for SegmentObject {
 async fn access_by_ref() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, AcquirePointCloud, "AcquirePointCloud")?;
-	register_node!(factory, SegmentObject, "SegmentObject")?;
+	register_behavior!(factory, AcquirePointCloud, "AcquirePointCloud")?;
+	register_behavior!(factory, SegmentObject, "SegmentObject")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

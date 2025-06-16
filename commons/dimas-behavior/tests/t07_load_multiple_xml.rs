@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t07_load_multiple_xml.cpp)
 //!
 
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_node};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
 use test_behaviors::test_nodes::SaySomething;
 
 const XML_MAIN: &str = r#"
@@ -41,7 +41,7 @@ const XML_SUB_B: &str = r#"
 async fn load_multiple_xml() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	// Register the behavior tree definitions, but do not instantiate them yet.
 	// Order is not important.
@@ -95,7 +95,7 @@ async fn load_external_xml() -> anyhow::Result<()> {
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	// Register the behavior tree definition, but do not instantiate the tree yet.
 	factory.register_behavior_tree_from_text(XML_WITH_INCLUDE)?;

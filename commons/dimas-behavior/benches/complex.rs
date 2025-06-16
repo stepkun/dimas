@@ -18,7 +18,7 @@ use dimas_behavior::{
 		},
 	},
 	factory::BehaviorTreeFactory,
-	register_node,
+	register_behavior,
 };
 
 const TREE: &str = r#"
@@ -101,16 +101,16 @@ fn complex(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
-	register_node!(factory, Fallback, "Fallback").expect("snh");
-	register_node!(factory, Parallel, "Parallel").expect("snh");
-	register_node!(factory, ParallelAll, "ParallelAll").expect("snh");
-	register_node!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
-	register_node!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
-	register_node!(factory, Sequence, "Sequence").expect("snh");
-	register_node!(factory, SequenceWithMemory, "SequenceWithMemory").expect("snh");
-	register_node!(factory, WhileDoElse, "WhileDoElse").expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_behavior!(factory, Fallback, "Fallback").expect("snh");
+	register_behavior!(factory, Parallel, "Parallel").expect("snh");
+	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");
+	register_behavior!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
+	register_behavior!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
+	register_behavior!(factory, Sequence, "Sequence").expect("snh");
+	register_behavior!(factory, SequenceWithMemory, "SequenceWithMemory").expect("snh");
+	register_behavior!(factory, WhileDoElse, "WhileDoElse").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE).expect("snh");
 	drop(factory);

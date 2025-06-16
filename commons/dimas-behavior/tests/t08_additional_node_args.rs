@@ -13,7 +13,7 @@ use dimas_behavior::{
 	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
-	register_node,
+	register_behavior,
 	tree::BehaviorTreeElementList,
 };
 
@@ -107,8 +107,8 @@ impl ActionB {
 async fn additional_args() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(&mut factory, ActionA, "Action_A", 42, "hello world".into())?;
-	register_node!(factory, ActionB, "Action_B")?;
+	register_behavior!(factory, ActionA, "Action_A", 42, "hello world".into())?;
+	register_behavior!(factory, ActionB, "Action_B")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);

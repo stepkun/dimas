@@ -16,7 +16,7 @@ use dimas_behavior::{
 	factory::BehaviorTreeFactory,
 	input_port,
 	port::PortList,
-	port_list, register_node,
+	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
 
@@ -93,7 +93,7 @@ async fn global_blackboard() -> anyhow::Result<()> {
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, PrintNumber, "PrintNumber")?;
+	register_behavior!(factory, PrintNumber, "PrintNumber")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

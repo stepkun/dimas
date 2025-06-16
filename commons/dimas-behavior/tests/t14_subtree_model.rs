@@ -17,7 +17,7 @@ use dimas_behavior::{
 	factory::BehaviorTreeFactory,
 	input_port,
 	port::PortList,
-	port_list, register_node,
+	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
 use test_behaviors::test_nodes::SaySomething;
@@ -52,9 +52,9 @@ const XML: &str = r#"
 async fn subtree_model() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_node!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
 	// register subtrees nodes
-	move_robot::register_nodes(&mut factory)?;
+	move_robot::register_behaviors(&mut factory)?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 
@@ -160,7 +160,7 @@ mod move_robot {
 		}
 	}
 
-	pub fn register_nodes(factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
-		register_node!(factory, MoveBase, "MoveBase")
+	pub fn register_behaviors(factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
+		register_behavior!(factory, MoveBase, "MoveBase")
 	}
 }

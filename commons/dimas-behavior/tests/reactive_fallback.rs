@@ -7,7 +7,7 @@ extern crate alloc;
 use dimas_behavior::{
 	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::reactive_fallback::ReactiveFallback},
 	factory::BehaviorTreeFactory,
-	register_node,
+	register_behavior,
 };
 use serial_test::serial;
 
@@ -28,9 +28,9 @@ const SUCCESS: &str = r#"
 #[serial]
 async fn success() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
-	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	register_node!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	register_behavior!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
 
 	let mut tree = factory.create_from_text(SUCCESS)?;
 	drop(factory);
@@ -57,8 +57,8 @@ const FAILURE: &str = r#"
 #[serial]
 async fn failure() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
-	register_node!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
+	register_behavior!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
 
 	let mut tree = factory.create_from_text(FAILURE)?;
 	drop(factory);

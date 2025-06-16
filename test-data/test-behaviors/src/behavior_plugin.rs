@@ -2,13 +2,11 @@
 
 //! A library with test behaviors
 
-use alloc::sync::Arc;
-use dimas_behavior::{factory::BehaviorTreeFactory, input_port, port_list, register_node};
-use parking_lot::Mutex;
+use dimas_behavior::{behavior::BehaviorType, factory::BehaviorTreeFactory, input_port, port_list, register_behavior};
 
 use crate::test_nodes::{
 	ApproachObject, CalculateGoal, GripperInterface, MoveBaseAction, PrintTarget, SaySomething, ThinkWhatToSay,
-	check_battery, new_say_something_simple,
+	check_battery, say_something_simple,
 };
 
 /// Registration function for all external symbols
@@ -16,40 +14,43 @@ use crate::test_nodes::{
 #[unsafe(no_mangle)]
 extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	// t01
-	factory
-		.register_simple_condition("CheckBattery", Arc::new(check_battery))
-		.expect("snh");
-	register_node!(factory, ApproachObject, "ApproachObject").expect("snh");
-	let gripper1 = Arc::new(Mutex::new(GripperInterface::default()));
-	let gripper2 = gripper1.clone();
-	// @TODO: replace the workaround with a solution!
-	factory
-		.register_simple_action("OpenGripper", Arc::new(move || gripper1.lock().open()))
-		.expect("snh");
-	factory
-		.register_simple_action("CloseGripper", Arc::new(move || gripper2.lock().close()))
-		.expect("snh");
+	register_behavior!(factory, check_battery, "CheckBattery", BehaviorType::Condition).expect("snh");
+	register_behavior!(factory, ApproachObject, "ApproachObject").expect("snh");
+	register_behavior!(
+		factory,
+		GripperInterface::default(),
+		open,
+		"OpenGripper",
+		BehaviorType::Action,
+		close,
+		"CloseGripper",
+		BehaviorType::Action,
+	)
+	.expect("snh");
 
 	// t02
-	register_node!(factory, SaySomething, "SaySomething").expect("snh");
-	register_node!(factory, ThinkWhatToSay, "ThinkWhatToSay").expect("snh");
+	register_behavior!(factory, SaySomething, "SaySomething").expect("snh");
+	register_behavior!(factory, ThinkWhatToSay, "ThinkWhatToSay").expect("snh");
 	// [`SimpleBehavior`]s can not define their own method provided_ports(), therefore
 	// we have to pass the PortsList explicitly if we want the Action to use get_input()
 	// or set_output();
 	let say_something_ports = port_list![input_port!(String, "message")];
-	factory
-		.register_simple_action_with_ports("SaySomething2", Arc::new(new_say_something_simple), say_something_ports)
-		.expect("snh");
+	register_behavior!(
+		factory,
+		say_something_simple,
+		"SaySomething2",
+		say_something_ports,
+		BehaviorType::Action
+	)
+	.expect("snh");
 
 	// t03
-	register_node!(factory, CalculateGoal, "CalculateGoal").expect("snh");
-	register_node!(factory, PrintTarget, "PrintTarget").expect("snh");
+	register_behavior!(factory, CalculateGoal, "CalculateGoal").expect("snh");
+	register_behavior!(factory, PrintTarget, "PrintTarget").expect("snh");
 
 	// t04
-	factory
-		.register_simple_condition("BatteryOK", Arc::new(check_battery))
-		.expect("snh");
-	register_node!(factory, MoveBaseAction, "MoveBase").expect("snh");
+	register_behavior!(factory, check_battery, "BatteryOK", BehaviorType::Condition).expect("snh");
+	register_behavior!(factory, MoveBaseAction, "MoveBase").expect("snh");
 
 	// A return value of 0 signals success
 	0

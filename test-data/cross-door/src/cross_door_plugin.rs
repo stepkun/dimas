@@ -11,6 +11,8 @@ use crate::cross_door::CrossDoor;
 #[unsafe(no_mangle)]
 extern "Rust" fn register(factory: &mut BehaviorTreeFactory) -> u32 {
 	let cross_door = CrossDoor::default();
-	cross_door.register_nodes(factory).expect("snh");
+	cross_door
+		.register_behaviors(factory)
+		.expect("snh");
 	0
 }

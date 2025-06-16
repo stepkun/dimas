@@ -7,7 +7,7 @@ use dimas_behavior::{
 	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
 	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
-	register_node,
+	register_behavior,
 	tree::{BehaviorTree, BehaviorTreeElementList},
 };
 use std::time::Duration;
@@ -119,8 +119,8 @@ impl Agent {
 		let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 		// register core nodes
-		register_node!(factory, NotInterrupted, "NotInterrupted")?;
-		register_node!(factory, Shutdown, "Shutdown")?;
+		register_behavior!(factory, NotInterrupted, "NotInterrupted")?;
+		register_behavior!(factory, Shutdown, "Shutdown")?;
 
 		Ok(Self { factory, tree: None })
 	}
@@ -131,7 +131,7 @@ impl Agent {
 	where
 		T: Behavior,
 	{
-		self.factory.register_node_type::<T>(name)
+		self.factory.register_behavior_type::<T>(name)
 	}
 
 	/// Set the [`Agent`]s behavior

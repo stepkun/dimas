@@ -14,7 +14,7 @@ use dimas_behavior::{
 		control::{fallback::Fallback, parallel_all::ParallelAll, sequence::Sequence},
 	},
 	factory::BehaviorTreeFactory,
-	register_node,
+	register_behavior,
 };
 use tokio::join;
 
@@ -60,11 +60,11 @@ fn multitree(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_node!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
-	register_node!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
-	register_node!(factory, Fallback, "Fallback").expect("snh");
-	register_node!(factory, ParallelAll, "ParallelAll").expect("snh");
-	register_node!(factory, Sequence, "Sequence").expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
+	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	register_behavior!(factory, Fallback, "Fallback").expect("snh");
+	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");
+	register_behavior!(factory, Sequence, "Sequence").expect("snh");
 
 	let mut tree1 = factory.create_from_text(TREE1).expect("snh");
 	let mut tree2 = factory.create_from_text(TREE2).expect("snh");

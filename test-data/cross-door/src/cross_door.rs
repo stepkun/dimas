@@ -3,13 +3,13 @@
 //! Test behaviors
 //!
 
-use std::{sync::Arc, thread, time::Duration};
+use std::{thread, time::Duration};
 
 use dimas_behavior::{
-	behavior::{BehaviorResult, BehaviorState},
+	behavior::{BehaviorResult, BehaviorState, BehaviorType},
 	factory::{BehaviorTreeFactory, error::Error},
+	register_behavior,
 };
-use parking_lot::Mutex;
 
 #[doc(hidden)]
 extern crate alloc;
@@ -111,21 +111,26 @@ impl CrossDoor {
 
 	/// Registration function for the `CrossDoor` interface
 	/// # Errors
-	pub fn register_nodes(&self, factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
-		// @TODO: replace the workaround with a solution!
-		let cross_door1 = Arc::new(Mutex::new(Self::default()));
-		let cross_door2 = cross_door1.clone();
-		let cross_door3 = cross_door1.clone();
-		let cross_door4 = cross_door1.clone();
-		let cross_door5 = cross_door1.clone();
-		factory.register_simple_action("IsDoorClosed", Arc::new(move || cross_door1.lock().is_door_closed()))?;
-		factory.register_simple_action("OpenDoor", Arc::new(move || cross_door2.lock().open_door()))?;
-		factory.register_simple_action(
+	pub fn register_behaviors(&self, factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
+		register_behavior!(
+			factory,
+			Self::default(),
+			is_door_closed,
+			"IsDoorClosed",
+			BehaviorType::Condition,
+			open_door,
+			"OpenDoor",
+			BehaviorType::Action,
+			pass_through_door,
 			"PassThroughDoor",
-			Arc::new(move || cross_door3.lock().pass_through_door()),
+			BehaviorType::Action,
+			pick_lock,
+			"PickLock",
+			BehaviorType::Action,
+			smash_door,
+			"SmashDoor",
+			BehaviorType::Action,
 		)?;
-		factory.register_simple_action("PickLock", Arc::new(move || cross_door4.lock().pick_lock()))?;
-		factory.register_simple_action("SmashDoor", Arc::new(move || cross_door5.lock().smash_door()))?;
 
 		Ok(())
 	}

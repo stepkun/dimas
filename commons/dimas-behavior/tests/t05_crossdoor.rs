@@ -40,7 +40,7 @@ async fn crossdoor() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	let cross_door = CrossDoor::default();
-	cross_door.register_nodes(&mut factory)?;
+	cross_door.register_behaviors(&mut factory)?;
 
 	// In this example a single XML contains multiple <BehaviorTree>
 	// To determine which one is the "main one", we should first register
