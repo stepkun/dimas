@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `Parallel` behavior implementation
+//! `SubTree` behavior implementation
 //!
 
 // region:      --- modules
@@ -42,6 +42,10 @@ impl BehaviorInstance for Subtree {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
+		// check composition only on start
+		if children.len() != 1 {
+			return Err(BehaviorError::Composition("SubTree must have a single child!".into()));
+		}
 		children[0].execute_tick(runtime).await
 	}
 

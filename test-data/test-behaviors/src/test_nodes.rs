@@ -236,10 +236,13 @@ impl BehaviorStatic for PrintTarget {
 
 /// `Position2D`
 #[derive(Clone, Debug, Default)]
-struct Pose2D {
-	x: f64,
-	y: f64,
-	theta: f64,
+pub struct Pose2D {
+	/// x
+	pub x: f64,
+	/// y
+	pub y: f64,
+	/// rotation
+	pub theta: f64,
 }
 
 impl FromStr for Pose2D {

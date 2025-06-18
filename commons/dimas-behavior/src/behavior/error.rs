@@ -49,6 +49,9 @@ pub enum BehaviorError {
 	/// Variable/Port is not in Blackboard
 	#[error("could not find entry [{0}] in blackboard")]
 	NotInBlackboard(ConstString),
+	/// Parsing error duriong type conversion
+	#[error("could not parse value [{0}] in [{1}]")]
+	ParseError(ConstString, ConstString),
 	/// Type mismatch between port definiton and found value
 	#[error("could not parse value for port [{0}] into specified type [{1}]")]
 	ParsePortValue(ConstString, ConstString),

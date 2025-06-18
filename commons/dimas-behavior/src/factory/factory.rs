@@ -10,7 +10,10 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{string::ToString, vec::Vec};
+use alloc::{
+	string::{String, ToString},
+	vec::Vec,
+};
 use dimas_core::ConstString;
 use roxmltree::Document;
 
@@ -25,8 +28,8 @@ use crate::{
 			while_do_else::WhileDoElse,
 		},
 		decorator::{
-			force_failure::ForceFailure, inverter::Inverter, retry_until_successful::RetryUntilSuccessful,
-			script_precondition::Precondition, subtree::Subtree,
+			loop_queue::Loop, force_failure::ForceFailure, inverter::Inverter,
+			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition, subtree::Subtree,
 		},
 	},
 	blackboard::SharedBlackboard,
@@ -43,14 +46,12 @@ use super::{behavior_registry::BehaviorRegistry, error::Error};
 /// Factory for creation and modification of [`BehaviorTree`]s
 pub struct BehaviorTreeFactory {
 	registry: BehaviorRegistry,
-	main_tree_name: Option<ConstString>,
 }
 
 impl Default for BehaviorTreeFactory {
 	fn default() -> Self {
 		let mut f = Self {
 			registry: BehaviorRegistry::default(),
-			main_tree_name: None,
 		};
 		// minimum required behaviors for the factory to work
 		register_behavior!(f, Subtree, "SubTree").expect("snh");
@@ -99,6 +100,11 @@ impl BehaviorTreeFactory {
 		// core decorators
 		register_behavior!(self, ForceFailure, "ForceFailure")?;
 		register_behavior!(self, Inverter, "Inverter")?;
+		// @TODO:
+		self.register_behavior_type::<Loop<i32>>("LoopInt")?;
+		self.register_behavior_type::<Loop<bool>>("LoopBool")?;
+		self.register_behavior_type::<Loop<f64>>("LoopDouble")?;
+		self.register_behavior_type::<Loop<String>>("LoopString")?;
 		register_behavior!(self, RetryUntilSuccessful, "RetryUntilSuccessful")?;
 		register_behavior!(self, Precondition, "Precondition")
 	}
@@ -125,7 +131,7 @@ impl BehaviorTreeFactory {
 	/// - if no main tree has been defined during regisration
 	/// - if behaviors or subtrees are missing
 	pub fn create_main_tree(&mut self) -> Result<BehaviorTree, Error> {
-		if let Some(name) = self.main_tree_name.clone() {
+		if let Some(name) = self.registry.main_tree_id() {
 			self.create_tree(&name)
 		} else {
 			self.create_tree("MainTree")
@@ -176,9 +182,9 @@ impl BehaviorTreeFactory {
 		}
 
 		// handle the attribute 'main_tree_to_execute`
-		self.main_tree_name = root
-			.attribute("main_tree_to_execute")
-			.map(Into::into);
+		if let Some(name) = root.attribute("main_tree_to_execute") {
+			self.registry.set_main_tree_id(name);
+		}
 
 		XmlParser::register_document_root(&mut self.registry, root)?;
 		Ok(())

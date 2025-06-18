@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `Fallback` behavior implementation
+//! `ScriptPrecondition` behavior implementation
 //!
 
 // region:      --- modules

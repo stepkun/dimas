@@ -261,6 +261,23 @@ impl core::fmt::Display for BehaviorState {
 		write!(f, "{text}")
 	}
 }
+
+impl core::str::FromStr for BehaviorState {
+	type Err = BehaviorError;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let s = s.to_ascii_lowercase();
+		let res = match s.as_ref() {
+			"failure" => Self::Failure,
+			"idle" => Self::Idle,
+			"running" => Self::Running,
+			"skipped" => Self::Skipped,
+			"success" => Self::Success,
+			_ => return Err(BehaviorError::ParseError(s.into(), "BehaviorState::from_str()".into()))
+		};
+		Ok(res)
+	}
+}
 // endregion:   --- BehaviorState
 
 // region:		--- BehaviorType

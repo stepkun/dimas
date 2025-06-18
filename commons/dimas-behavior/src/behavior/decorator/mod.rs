@@ -5,6 +5,7 @@
 
 pub mod force_failure;
 pub mod inverter;
+pub mod loop_queue;
 pub mod retry_until_successful;
 pub mod script_precondition;
 pub mod subtree;

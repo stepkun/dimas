@@ -29,6 +29,8 @@ pub struct BehaviorRegistry {
 	behaviors: BTreeMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>)>,
 	/// [`BTreeMap`] of registered behavior tree definitions.
 	tree_definitions: BTreeMap<ConstString, ConstString>,
+	/// Main tree ID
+	main_tree_id: Option<ConstString>,
 	/// Scripting runtime
 	runtime: Runtime,
 	/// List of loaded libraries.
@@ -58,6 +60,17 @@ impl BehaviorRegistry {
 	/// reference is handed over to every created tree.
 	pub fn add_library(&mut self, library: Library) {
 		self.libraries.push(Arc::new(library));
+	}
+
+	/// Set the main tree id
+	pub fn set_main_tree_id(&mut self, id: &str) {
+		self.main_tree_id = Some(id.into());
+	}
+
+	/// Get the main tree id
+	#[must_use]
+	pub fn main_tree_id(&self) -> Option<ConstString> {
+		self.main_tree_id.clone()
 	}
 
 	/// Add a behavior tree definition to the registry.

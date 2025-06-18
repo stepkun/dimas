@@ -1,5 +1,4 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(unused)]
 
 //! This test implements the eighteenth tutorial/example from [BehaviorTree.CPP](https://www.behaviortree.dev)
 //!
@@ -10,40 +9,148 @@
 
 extern crate alloc;
 
-use std::{
-	fmt::{Display, Formatter},
-	num::ParseIntError,
-	str::FromStr,
-};
+use std::time::Duration;
 
+use dimas_behavior::behavior::decorator::loop_queue::SharedQueue;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{
+		BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
+		decorator::loop_queue::Loop,
+	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port, output_port,
 	port::PortList,
-	port_list,
+	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
+use test_behaviors::test_nodes::Pose2D;
+
+#[derive(Behavior, Debug, Default)]
+struct GenerateWaypoints;
+
+#[async_trait::async_trait]
+impl BehaviorInstance for GenerateWaypoints {
+	async fn tick(
+		&mut self,
+		_behavior: &mut BehaviorData,
+		blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		let shared_queue = SharedQueue::default();
+		for i in 0..5 {
+			shared_queue.push_back(Pose2D{x: f64::from(i), y: f64::from(i), theta: 0_f64});
+		}
+
+		blackboard.set("waypoints".into(), shared_queue)?;
+
+		Ok(BehaviorState::Success)
+	}
+}
+
+impl BehaviorStatic for GenerateWaypoints {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![output_port!(SharedQueue<Pose2D>, "waypoints"),]
+	}
+}
+
+#[derive(Behavior, Debug, Default)]
+struct PrintNumber;
+
+#[async_trait::async_trait]
+impl BehaviorInstance for PrintNumber {
+	async fn tick(
+		&mut self,
+		_behavior: &mut BehaviorData,
+		blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		let value: f64 = blackboard.get("value".into())?;
+		println!("PrintNumber: {}", value);
+
+		Ok(BehaviorState::Success)
+	}
+}
+
+impl BehaviorStatic for PrintNumber {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![input_port!(f64, "value"),]
+	}
+}
+
+#[derive(Behavior, Debug, Default)]
+struct UseWaypoint;
+
+#[async_trait::async_trait]
+impl BehaviorInstance for UseWaypoint {
+	async fn tick(
+		&mut self,
+		_behavior: &mut BehaviorData,
+		blackboard: &mut SharedBlackboard,
+		_children: &mut BehaviorTreeElementList,
+		_runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		if let Ok(wp) = blackboard.get::<Pose2D>("waypoint".into()) {
+			tokio::time::sleep(Duration::from_millis(100)).await;
+			println!("Using waypoint: {}/{}", wp.x, wp.y);
+			Ok(BehaviorState::Success)
+		} else {
+			Ok(BehaviorState::Failure)
+		}
+	}
+}
+
+impl BehaviorStatic for UseWaypoint {
+	fn kind() -> BehaviorType {
+		BehaviorType::Action
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![input_port!(Pose2D, "waypoint",),]
+	}
+}
 
 const XML: &str = r#"
 <root BTCPP_format="4">
-  	<BehaviorTree ID="MainTree">
-  	</BehaviorTree>
+	<BehaviorTree ID="TreeA">
+		<Sequence>
+			<LoopDouble queue="1;2;3"  value="{number}">
+				<PrintNumber value="{number}" />
+			</LoopDouble>
+
+			<GenerateWaypoints waypoints="{waypoints}" />
+			<LoopPose queue="{waypoints}"  value="{wp}">
+				<UseWaypoint waypoint="{wp}" />
+			</LoopPose>
+		</Sequence>
+	</BehaviorTree>
 </root>
 "#;
 
 #[tokio::test]
-#[ignore = "not yet available"]
 async fn waypoints() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	// register_behavior!(factory, SaySomething, "SaySomething")?;
+	// @TODO:
+	factory.register_behavior_type::<Loop<Pose2D>>("LoopPose")?;
+	//register_behavior!(factory, Loop<Pose2D>, "LoopPose")?;
 
-	factory.register_behavior_tree_from_text(XML)?;
+	register_behavior!(factory, UseWaypoint, "UseWaypoint")?;
+	register_behavior!(factory, PrintNumber, "PrintNumber")?;
+	register_behavior!(factory, GenerateWaypoints, "GenerateWaypoints")?;
 
-	let mut tree = factory.create_tree("MainTree")?;
+	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;

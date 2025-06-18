@@ -96,6 +96,10 @@ impl XmlParser {
 						"BehaviorTree" => {
 							// check for tree ID
 							if let Some(id) = element.attribute("ID") {
+								// if no explicit main tree id is given, the first found id will be used for main tree
+								if registry.main_tree_id().is_none() {
+									registry.set_main_tree_id(id);
+								}
 								let source: ConstString = element.document().input_text()[element.range()].into();
 								registry.add_tree_defintion(id, source)?;
 							} else {
