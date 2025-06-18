@@ -40,36 +40,35 @@ pub struct BlackboardData {
 }
 
 impl BlackboardInterface for BlackboardData {
-	fn contains(&self, key: ConstString) -> bool {
-		self.storage.contains_key(key.as_ref())
+	fn contains(&self, key: &str) -> bool {
+		self.storage.contains_key(key)
 	}
 
-	fn delete<T>(&mut self, key: ConstString) -> Result<T, Error>
+	fn delete<T>(&mut self, key: &str) -> Result<T, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static,
 	{
-		if let Some(old_entry) = self.storage.get(key.as_ref()) {
+		if let Some(old_entry) = self.storage.get(key) {
 			let e = &*old_entry.0;
 			let e = e as &dyn Any;
 			let e = e.downcast_ref::<T>().cloned();
 			if let Some(old) = e {
-				self.storage.remove(key.as_ref());
+				self.storage.remove(key);
 				Ok(old)
 			} else {
-				Err(Error::WrongType(key))
+				Err(Error::WrongType(key.into()))
 			}
 		} else {
-			Err(Error::NotFound(key))
+			Err(Error::NotFound(key.into()))
 		}
 	}
 
-	fn get<T>(&self, key: ConstString) -> Result<T, Error>
+	fn get<T>(&self, key: &str) -> Result<T, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static,
 	{
-		let t_key = key.as_ref();
-		self.storage.get(key.as_ref()).map_or_else(
-			|| Err(Error::NotFound(key.clone())),
+		self.storage.get(key).map_or_else(
+			|| Err(Error::NotFound(key.into())),
 			|entry| {
 				let en = &*entry.0;
 				en.downcast_ref::<T>().map_or_else(
@@ -77,8 +76,8 @@ impl BlackboardInterface for BlackboardData {
 						en.downcast_ref::<String>().map_or_else(
 							|| {
 								// maybe it is a value set by scripting
-								self.get_env(key.clone()).map_or_else(
-									|_| Err(Error::WrongType(t_key.into())),
+								self.get_env(key).map_or_else(
+									|_| Err(Error::WrongType(key.into())),
 									|val| {
 										let s = match val {
 											ScriptingValue::Nil() => todo!(),
@@ -90,7 +89,7 @@ impl BlackboardInterface for BlackboardData {
 										T::from_str(&s).map_or_else(
 											|_| {
 												Err(Error::ParsePortValue(
-													t_key.into(),
+													key.into(),
 													format!("{:?}", TypeId::of::<T>()).into(),
 												))
 											},
@@ -103,7 +102,7 @@ impl BlackboardInterface for BlackboardData {
 								T::from_str(s).map_or_else(
 									|_| {
 										Err(Error::ParsePortValue(
-											t_key.into(),
+											key.into(),
 											format!("{:?}", TypeId::of::<T>()).into(),
 										))
 									},
@@ -118,8 +117,8 @@ impl BlackboardInterface for BlackboardData {
 		)
 	}
 
-	fn get_entry(&self, key: ConstString) -> Option<Entry> {
-		self.storage.get(key.as_ref()).map_or_else(
+	fn get_entry(&self, key: &str) -> Option<Entry> {
+		self.storage.get(key).map_or_else(
 			|| None,
 			|entry| {
 				let e = entry.0.clone();
@@ -128,32 +127,32 @@ impl BlackboardInterface for BlackboardData {
 		)
 	}
 
-	fn set<T>(&mut self, key: ConstString, value: T) -> Result<Option<T>, Error>
+	fn set<T>(&mut self, key: &str, value: T) -> Result<Option<T>, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static,
 	{
-		if let Some(old_entry) = self.storage.get(key.as_ref()) {
+		if let Some(old_entry) = self.storage.get(key) {
 			let e = &*old_entry.0;
 			let e = e as &dyn Any;
 			let e = e.downcast_ref::<T>().cloned();
 			if e.is_some() {
 				let entry = Entry(Arc::new(value));
-				self.storage.insert(key, entry);
+				self.storage.insert(key.into(), entry);
 				Ok(e)
 			} else {
-				Err(Error::WrongType(key))
+				Err(Error::WrongType(key.into()))
 			}
 		} else {
 			let entry = Entry(Arc::new(value));
-			self.storage.insert(key, entry);
+			self.storage.insert(key.into(), entry);
 			Ok(None)
 		}
 	}
 }
 
 impl Environment for BlackboardData {
-	fn define_env(&mut self, key: ConstString, value: ScriptingValue) -> Result<(), ScriptingError> {
-		if self.contains(key.clone()) {
+	fn define_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), ScriptingError> {
+		if self.contains(key) {
 			self.set_env(key, value)
 		} else {
 			match value {
@@ -175,9 +174,9 @@ impl Environment for BlackboardData {
 		}
 	}
 
-	fn get_env(&self, name: ConstString) -> Result<ScriptingValue, ScriptingError> {
-		self.get_entry(name.clone()).map_or_else(
-			|| Err(ScriptingError::GlobalNotDefined(name.clone())),
+	fn get_env(&self, name: &str) -> Result<ScriptingValue, ScriptingError> {
+		self.get_entry(name).map_or_else(
+			|| Err(ScriptingError::GlobalNotDefined(name.into())),
 			|entry| {
 				// let entry = **(entry);
 				let type_id = (**entry).type_id();
@@ -212,7 +211,7 @@ impl Environment for BlackboardData {
 					let i = entry.downcast_ref::<i8>().expect("snh");
 					Ok(ScriptingValue::Int64(i64::from(i.to_owned())))
 				} else {
-					Err(ScriptingError::GlobalHasUnknownType(name.clone()))
+					Err(ScriptingError::GlobalHasUnknownType(name.into()))
 				}
 			},
 		)
@@ -220,12 +219,12 @@ impl Environment for BlackboardData {
 
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_sign_loss)]
-	fn set_env(&mut self, name: ConstString, value: ScriptingValue) -> Result<(), ScriptingError> {
-		let entry_type_id = if let Some(entry) = self.get_entry(name.clone()) {
+	fn set_env(&mut self, name: &str, value: ScriptingValue) -> Result<(), ScriptingError> {
+		let entry_type_id = if let Some(entry) = self.get_entry(name) {
 			let inner_entry = &entry;
 			(*(inner_entry.0)).type_id()
 		} else {
-			return Err(ScriptingError::GlobalNotDefined(name));
+			return Err(ScriptingError::GlobalNotDefined(name.into()));
 		};
 		match value {
 			ScriptingValue::Nil() => todo!(),
@@ -233,7 +232,7 @@ impl Environment for BlackboardData {
 				if TypeId::of::<bool>() == entry_type_id {
 					self.set(name, b);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 			ScriptingValue::Float64(f) => {
@@ -241,11 +240,11 @@ impl Environment for BlackboardData {
 					self.set(name, f);
 				} else if TypeId::of::<f32>() == entry_type_id {
 					if f > f64::from(f32::MAX) || f < f64::from(f32::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, f as f32);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 			ScriptingValue::Int64(i) => {
@@ -253,43 +252,43 @@ impl Environment for BlackboardData {
 					self.set(name, i);
 				} else if TypeId::of::<i32>() == entry_type_id {
 					if i > i64::from(i32::MAX) || i < i64::from(i32::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as i32);
 				} else if TypeId::of::<u32>() == entry_type_id {
 					if i > i64::from(u32::MAX) || i < i64::from(u32::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as u32);
 				} else if TypeId::of::<i16>() == entry_type_id {
 					if i > i64::from(i16::MAX) || i < i64::from(i16::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as i16);
 				} else if TypeId::of::<u16>() == entry_type_id {
 					if i > i64::from(u16::MAX) || i < i64::from(u16::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as u16);
 				} else if TypeId::of::<i8>() == entry_type_id {
 					if i > i64::from(i8::MAX) || i < i64::from(i8::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as i8);
 				} else if TypeId::of::<u8>() == entry_type_id {
 					if i > i64::from(u8::MAX) || i < i64::from(u8::MIN) {
-						return Err(ScriptingError::GlobalExceedsLimits(name));
+						return Err(ScriptingError::GlobalExceedsLimits(name.into()));
 					}
 					self.set(name, i as u8);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 			ScriptingValue::String(s) => {
 				if TypeId::of::<String>() == entry_type_id {
 					self.set(name, s);
 				} else {
-					return Err(ScriptingError::GlobalWrongType(name));
+					return Err(ScriptingError::GlobalWrongType(name.into()));
 				}
 			}
 		}

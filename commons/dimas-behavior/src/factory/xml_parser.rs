@@ -295,9 +295,9 @@ impl XmlParser {
 				let (_, remappings, values, conditions) =
 					Self::handle_attributes(name, true, &bhvr, &attrs, registry.runtime_mut())?;
 				let blackboard = if let Some(external_bb) = external_blackboard {
-					SharedBlackboard::with_parent(name.into(), external_bb)
+					SharedBlackboard::with_parent(name, external_bb)
 				} else {
-					SharedBlackboard::new(name.into(), remappings, values)
+					SharedBlackboard::new(name, remappings, values)
 				};
 				let children = self.build_children(name, node, registry, &blackboard)?;
 				// path is for root element same as name
@@ -416,13 +416,8 @@ impl XmlParser {
 							let doc = Document::parse(&definition)?;
 							let node = doc.root_element();
 							// A SubTree gets a new Blackboard with parent and remappings.
-							let blackboard1 = SharedBlackboard::with(
-								node_name.clone().into(),
-								blackboard,
-								remappings,
-								values,
-								autoremap,
-							);
+							let blackboard1 =
+								SharedBlackboard::with(&node_name, blackboard, remappings, values, autoremap);
 							let children = self.build_children(&path, node, registry, &blackboard1)?;
 							BehaviorTreeElement::create_node(
 								uid,

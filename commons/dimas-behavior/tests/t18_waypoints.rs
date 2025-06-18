@@ -5,7 +5,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t18_waypoints.cpp)
 //!
 
-// //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_11_groot2)
+// //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-advanced/tutorial_18_XXX)
 
 extern crate alloc;
 mod test_data;
@@ -49,7 +49,7 @@ impl BehaviorInstance for GenerateWaypoints {
 			});
 		}
 
-		blackboard.set("waypoints".into(), shared_queue)?;
+		blackboard.set("waypoints", shared_queue)?;
 
 		Ok(BehaviorState::Success)
 	}
@@ -77,7 +77,7 @@ impl BehaviorInstance for PrintNumber {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let value: f64 = blackboard.get("value".into())?;
+		let value: f64 = blackboard.get("value")?;
 		println!("PrintNumber: {}", value);
 
 		Ok(BehaviorState::Success)
@@ -106,7 +106,7 @@ impl BehaviorInstance for UseWaypoint {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if let Ok(wp) = blackboard.get::<Pose2D>("waypoint".into()) {
+		if let Ok(wp) = blackboard.get::<Pose2D>("waypoint") {
 			tokio::time::sleep(Duration::from_millis(100)).await;
 			println!("Using waypoint: {}/{}", wp.x, wp.y);
 			Ok(BehaviorState::Success)

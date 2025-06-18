@@ -136,9 +136,9 @@ where
 				return Err(BehaviorError::Composition("Loop must have a single child!".into()));
 			}
 			// fetch if_empty value
-			self.state = blackboard.get::<BehaviorState>("if_empty".into())?;
+			self.state = blackboard.get::<BehaviorState>("if_empty")?;
 			// fetch the shared queue
-			self.queue = Some(blackboard.get::<SharedQueue<T>>("queue".into())?);
+			self.queue = Some(blackboard.get::<SharedQueue<T>>("queue")?);
 		}
 		self.tick(behavior, blackboard, children, runtime)
 			.await
@@ -153,7 +153,7 @@ where
 	) -> BehaviorResult {
 		if let Some(queue) = &self.queue {
 			if let Some(value) = queue.pop_front() {
-				blackboard.set::<T>("value".into(), value)?;
+				blackboard.set::<T>("value", value)?;
 				let child_state = children[0].execute_tick(runtime).await?;
 				if child_state.is_completed() {
 					children[0].reset(runtime)?;

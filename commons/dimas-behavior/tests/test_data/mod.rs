@@ -96,7 +96,7 @@ impl BehaviorInstance for SaySomething {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let msg = blackboard.get::<String>("message".into())?;
+		let msg = blackboard.get::<String>("message")?;
 		println!("Robot says: {msg}");
 		Ok(BehaviorState::Success)
 	}
@@ -125,7 +125,7 @@ impl BehaviorInstance for ThinkWhatToSay {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		blackboard.set("text".into(), String::from("The answer is 42"))?;
+		blackboard.set("text", String::from("The answer is 42"))?;
 		Ok(BehaviorState::Success)
 	}
 }
@@ -144,7 +144,7 @@ impl BehaviorStatic for ThinkWhatToSay {
 /// # Errors
 #[allow(clippy::needless_pass_by_ref_mut)]
 pub fn say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
-	let msg = blackboard.get::<String>("message".into())?;
+	let msg = blackboard.get::<String>("message")?;
 	println!("Robot2 says: {msg}");
 	Ok(BehaviorState::Success)
 }
@@ -195,7 +195,7 @@ impl BehaviorInstance for CalculateGoal {
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
-		blackboard.set("goal".into(), mygoal)?;
+		blackboard.set("goal", mygoal)?;
 		Ok(BehaviorState::Success)
 	}
 }
@@ -223,7 +223,7 @@ impl BehaviorInstance for PrintTarget {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let pos = blackboard.get::<Position2D>("target".into())?;
+		let pos = blackboard.get::<Position2D>("target")?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
 		Ok(BehaviorState::Success)
 	}
@@ -300,7 +300,7 @@ impl BehaviorInstance for MoveBaseAction {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let pose = blackboard.get::<Pose2D>("goal".into())?;
+		let pose = blackboard.get::<Pose2D>("goal")?;
 		println!(
 			"[ MoveBase: SEND REQUEST ]. goal: x={} y={} theta={}",
 			pose.x, pose.y, pose.theta

@@ -37,7 +37,7 @@ impl BehaviorInstance for Precondition {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let if_branch = blackboard.get::<String>("if".into())?;
+		let if_branch = blackboard.get::<String>("if")?;
 		let mut env = blackboard.clone();
 		let value = runtime.lock().run(&if_branch, &mut env)?;
 
@@ -50,7 +50,7 @@ impl BehaviorInstance for Precondition {
 			} else {
 				// halt eventually running child
 				child.execute_halt(runtime).await?;
-				let else_branch = blackboard.get::<String>("else".into())?;
+				let else_branch = blackboard.get::<String>("else")?;
 				match else_branch.as_ref() {
 					"Failure" => BehaviorState::Failure,
 					"Idle" => BehaviorState::Idle,

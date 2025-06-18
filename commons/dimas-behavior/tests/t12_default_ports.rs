@@ -79,33 +79,33 @@ impl BehaviorInstance for BehaviorWithDefaultPoints {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let msg: String = blackboard.get("input".into())?;
+		let msg: String = blackboard.get("input")?;
 		let point = Point2D::from_str(&msg).map_err(|_| BehaviorError::ParsePortValue("input".into(), msg.into()))?;
 		assert_eq!(point, Point2D { x: -1, y: -2 });
 		println!("input:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = blackboard.get("pointA".into())?;
+		let point: Point2D = blackboard.get("pointA")?;
 		assert_eq!(point, Point2D { x: 1, y: 2 });
 		println!("pointA:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = blackboard.get("pointB".into())?;
+		let point: Point2D = blackboard.get("pointB")?;
 		assert_eq!(point, Point2D { x: 3, y: 4 });
 		println!("pointB:  [{},{}]", point.x, point.y);
 
-		let msg: String = blackboard.get("pointC".into())?;
+		let msg: String = blackboard.get("pointC")?;
 		let point = Point2D::from_str(&msg).map_err(|_| BehaviorError::ParsePortValue("pointC".into(), msg.into()))?;
 		assert_eq!(point, Point2D { x: 5, y: 6 });
 		println!("pointC:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = blackboard.get("pointD".into())?;
+		let point: Point2D = blackboard.get("pointD")?;
 		assert_eq!(point, Point2D { x: 7, y: 8 });
 		println!("pointD:  [{},{}]", point.x, point.y);
 
 		// @TODO: parsing json
-		// let msg: String = blackboard.get("pointE".into())?;
+		// let msg: String = blackboard.get("pointE")?;
 		// dbg!(&msg);
 		// let point = Point2D::from_str(&msg).map_err(|_| BehaviorError::ParsePortValue("pointE".into(), msg.into()))?;
-		// // let point: Point2D = blackboard.get("pointE".into())?;
+		// // let point: Point2D = blackboard.get("pointE")?;
 		// assert_eq!(point, Point2D{x:9, y:10});
 		// println!("pointE:  [{},{}]", point.x, point.y);
 
@@ -143,9 +143,9 @@ async fn default_ports() -> anyhow::Result<()> {
 
 	// initialize blackboard values
 	tree.blackboard()
-		.set("point".into(), Point2D { x: 3, y: 4 })?;
+		.set("point", Point2D { x: 3, y: 4 })?;
 	tree.blackboard()
-		.set("pointD".into(), Point2D { x: 7, y: 8 })?;
+		.set("pointD", Point2D { x: 7, y: 8 })?;
 
 	// run the BT
 	let result = tree.tick_while_running().await?;

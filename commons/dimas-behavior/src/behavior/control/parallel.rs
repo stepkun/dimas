@@ -65,12 +65,8 @@ impl BehaviorInstance for Parallel {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// check composition only once at start
-		self.success_threshold = blackboard
-			.get("success_count".into())
-			.unwrap_or(-1);
-		self.failure_threshold = blackboard
-			.get("failure_count".into())
-			.unwrap_or(-1);
+		self.success_threshold = blackboard.get("success_count").unwrap_or(-1);
+		self.failure_threshold = blackboard.get("failure_count").unwrap_or(-1);
 
 		let children_count = children.len();
 

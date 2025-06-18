@@ -42,9 +42,9 @@ pub struct Blackboard {
 impl Blackboard {
 	/// Create a new [`Blackboard`] with remappings.
 	#[must_use]
-	pub fn new(creator: ConstString, remappings: PortRemappings, values: PortRemappings) -> Self {
+	pub fn new(creator: &str, remappings: PortRemappings, values: PortRemappings) -> Self {
 		Self {
-			creator,
+			creator: creator.into(),
 			content: Arc::new(RwLock::new(BlackboardData::default())),
 			parent: None,
 			remappings_to_parent: None,
@@ -58,14 +58,14 @@ impl Blackboard {
 	/// In that case the remappings are against parent.
 	#[must_use]
 	pub fn with(
-		creator: ConstString,
+		creator: &str,
 		parent: SharedBlackboard,
 		remappings: PortRemappings,
 		values: PortRemappings,
 		autoremap: bool,
 	) -> Self {
 		Self {
-			creator,
+			creator: creator.into(),
 			content: Arc::new(RwLock::new(BlackboardData::default())),
 			parent: Some(parent),
 			remappings_to_parent: Some(Arc::new(remappings)),

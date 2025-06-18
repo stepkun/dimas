@@ -15,7 +15,6 @@ mod shared_blackboard;
 // flatten
 pub use blackboard::Blackboard;
 pub use blackboard_data::BlackboardData;
-use dimas_core::ConstString;
 pub use shared_blackboard::SharedBlackboard;
 
 // region:      --- modules
@@ -30,14 +29,14 @@ use self::error::Error;
 /// Contract for interacting with a [`Blackboard`], the [`BlackboardData`] or a [`SharedBlackboard`].
 pub trait BlackboardInterface {
 	/// Check whether a certain key is within the [`Blackboard`].
-	fn contains(&self, key: ConstString) -> bool;
+	fn contains(&self, key: &str) -> bool;
 
 	/// Delete a value of type T with key from [`Blackboard`].
 	/// Return the old value.
 	/// # Errors
 	/// - if key is not in [`Blackboard`]
 	/// - if key has different type than expected
-	fn delete<T>(&mut self, key: ConstString) -> Result<T, Error>
+	fn delete<T>(&mut self, key: &str) -> Result<T, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
 
@@ -45,18 +44,18 @@ pub trait BlackboardInterface {
 	/// # Errors
 	/// - if key is not in [`Blackboard`]
 	/// - if key has different type than expected
-	fn get<T>(&self, key: ConstString) -> Result<T, Error>
+	fn get<T>(&self, key: &str) -> Result<T, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
 
 	/// Get raw [`Entry`] with key from [`Blackboard`].
-	fn get_entry(&self, key: ConstString) -> Option<Entry>;
+	fn get_entry(&self, key: &str) -> Option<Entry>;
 
 	/// Set a value of type T with key in the [`Blackboard`].
 	/// Returns an eventually existing value.
 	/// # Errors
 	/// - if key already exists with a different type
-	fn set<T>(&mut self, key: ConstString, value: T) -> Result<Option<T>, Error>
+	fn set<T>(&mut self, key: &str, value: T) -> Result<Option<T>, Error>
 	where
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
 }

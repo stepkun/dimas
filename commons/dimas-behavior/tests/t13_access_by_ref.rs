@@ -112,7 +112,7 @@ impl BehaviorInstance for AcquirePointCloud {
 			],
 		};
 
-		blackboard.set("cloud".into(), p_cloud)?;
+		blackboard.set("cloud", p_cloud)?;
 
 		Ok(BehaviorState::Success)
 	}

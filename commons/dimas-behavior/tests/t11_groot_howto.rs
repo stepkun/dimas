@@ -71,7 +71,7 @@ impl BehaviorInstance for UpdatePosition {
 	) -> BehaviorResult {
 		self.pos.x += 0.2;
 		self.pos.y += 0.1;
-		blackboard.set("pos".into(), self.pos.clone())?;
+		blackboard.set("pos", self.pos.clone())?;
 		Ok(BehaviorState::Success)
 	}
 }

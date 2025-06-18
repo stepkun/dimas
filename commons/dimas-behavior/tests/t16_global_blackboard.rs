@@ -67,7 +67,7 @@ impl BehaviorInstance for PrintNumber {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let value: i64 = blackboard.get("val".into())?;
+		let value: i64 = blackboard.get("val")?;
 		println!("PrintNumber [{}] has val: {value}", behavior.name());
 
 		Ok(BehaviorState::Success)
@@ -89,7 +89,7 @@ async fn global_blackboard() -> anyhow::Result<()> {
 	// create an external blackboard which will survive the tree
 	let mut global_blackboard = SharedBlackboard::default();
 	// BT-Trees blackboard has global blackboard as parent
-	let root_blackboard = SharedBlackboard::with_parent("global".into(), global_blackboard.clone());
+	let root_blackboard = SharedBlackboard::with_parent("global", global_blackboard.clone());
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -102,18 +102,18 @@ async fn global_blackboard() -> anyhow::Result<()> {
 
 	// direct interaction with the global blackboard
 	for value in 1..=3 {
-		global_blackboard.set("value".into(), value);
+		global_blackboard.set("value", value);
 		let result = tree.tick_once().await?;
 		assert_eq!(result, BehaviorState::Success);
 
-		let value_sqr = global_blackboard.get::<i64>("@value_sqr".into())?;
+		let value_sqr = global_blackboard.get::<i64>("@value_sqr")?;
 		assert_eq!(value_sqr, value * value);
 		println!("[While loop] value: {value} value_sqr: {value_sqr}");
 
-		let value_pow3 = global_blackboard.get::<i64>("@value_pow3".into())?;
+		let value_pow3 = global_blackboard.get::<i64>("@value_pow3")?;
 		assert_eq!(value_pow3, value * value * value);
 
-		let value_pow4 = global_blackboard.get::<i64>("@value_pow4".into())?;
+		let value_pow4 = global_blackboard.get::<i64>("@value_pow4")?;
 		assert_eq!(value_pow4, value * value * value * value);
 	}
 

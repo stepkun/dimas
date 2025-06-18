@@ -123,7 +123,7 @@ mod move_robot {
 			_children: &mut BehaviorTreeElementList,
 			_runtime: &SharedRuntime,
 		) -> BehaviorResult {
-			let pos = blackboard.get::<Position2D>("goal".into())?;
+			let pos = blackboard.get::<Position2D>("goal")?;
 
 			println!(
 				"[ MoveBase: SEND REQUEST ]. goal: x={:2.1} y={:2.1} theta={:2.1}",

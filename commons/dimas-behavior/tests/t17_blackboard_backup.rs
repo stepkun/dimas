@@ -6,7 +6,7 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t17_blackboard_backup.cpp)
 //!
 
-// //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_11_groot2)
+// //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-advanced/tutorial_17_XXX)
 
 extern crate alloc;
 

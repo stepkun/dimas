@@ -32,7 +32,7 @@ impl BehaviorInstance for ScriptCondition {
 		_children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let code = blackboard.get::<String>("code".into())?;
+		let code = blackboard.get::<String>("code")?;
 		let mut env = blackboard.clone();
 		let value = runtime.lock().run(&code, &mut env)?;
 

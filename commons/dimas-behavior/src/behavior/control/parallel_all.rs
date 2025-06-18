@@ -67,9 +67,7 @@ impl BehaviorInstance for ParallelAll {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// check composition only once at start
-		self.failure_threshold = blackboard
-			.get("max_failures".into())
-			.unwrap_or(-1_i32);
+		self.failure_threshold = blackboard.get("max_failures").unwrap_or(-1_i32);
 
 		if (children.len() as i32) < self.failure_threshold {
 			return Err(BehaviorError::Composition(
