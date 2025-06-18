@@ -157,7 +157,7 @@ where
 				let child_state = children[0].execute_tick(runtime).await?;
 				if child_state.is_completed() {
 					children[0].reset(runtime)?;
-				};
+				}
 				if child_state == BehaviorState::Failure {
 					Ok(BehaviorState::Failure)
 				} else {

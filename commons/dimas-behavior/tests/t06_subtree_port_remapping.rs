@@ -60,7 +60,8 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 async fn subtree_blackboard_access_reminder() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	factory.register_from_plugin("test_behaviors")?;
+	register_behavior!(factory, SaySomething, "SaySomething")?;
+	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 	let mut tree = factory.create_tree("MainTree")?;

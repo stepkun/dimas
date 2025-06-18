@@ -81,7 +81,6 @@ impl BehaviorInstance for ReactiveFallback {
 			match new_state {
 				BehaviorState::Failure => {
 					self.running_child_idx = -1;
-					continue;
 				}
 				BehaviorState::Idle => {
 					return Err(BehaviorError::State("ReactiveFallback".into(), "Idle".into()));

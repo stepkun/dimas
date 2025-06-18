@@ -87,7 +87,7 @@ impl StateAfter {
 		}
 	}
 	/// Initialization function.
-	pub fn initialize(&mut self, state: BehaviorState, count: u8) {
+	pub const fn initialize(&mut self, state: BehaviorState, count: u8) {
 		self.state = state;
 		self.count = count;
 		self.remaining = count;

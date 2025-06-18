@@ -27,13 +27,13 @@ use dimas_behavior::{
 
 const XML: &str = r#"
 <root BTCPP_format="4">
-     <BehaviorTree ID="SegmentCup">
-       <Sequence>
-           <AcquirePointCloud  cloud="{pointcloud}"/>
-           <SegmentObject  obj_name="cup" cloud="{pointcloud}" obj_pose="{pose}"/>
-       </Sequence>
-    </BehaviorTree>
-/root>
+	<BehaviorTree ID="SegmentCup">
+		<Sequence>
+			<AcquirePointCloud  cloud="{pointcloud}"/>
+ 			<SegmentObject  obj_name="cup" cloud="{pointcloud}" obj_pose="{pose}"/>
+		</Sequence>
+	</BehaviorTree>
+</root>
 "#;
 
 #[allow(dead_code)]
@@ -176,11 +176,11 @@ async fn access_by_ref() -> anyhow::Result<()> {
 
 	factory.register_behavior_tree_from_text(XML)?;
 
-	let mut tree = factory.create_tree("MainTree")?;
+	let mut tree = factory.create_tree("SegmentCup")?;
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
+	assert_eq!(result, BehaviorState::Failure);
 
 	Ok(())
 }

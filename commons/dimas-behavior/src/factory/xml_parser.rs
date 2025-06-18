@@ -184,7 +184,7 @@ impl XmlParser {
 				} else {
 					values.add(&port_definition.name(), &default_value)?;
 				}
-			};
+			}
 		}
 		// handle attributes
 		for (key, value) in attrs {
