@@ -6,8 +6,9 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t03_generic_ports.cpp)
 //!
 
-use serial_test::serial;
-use test_behaviors::test_nodes::{CalculateGoal, PrintTarget};
+mod test_data;
+
+use test_data::{CalculateGoal, PrintTarget};
 
 use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
 
@@ -29,27 +30,11 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
 async fn generic_ports() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	register_behavior!(factory, CalculateGoal, "CalculateGoal")?;
 	register_behavior!(factory, PrintTarget, "PrintTarget")?;
-
-	let mut tree = factory.create_from_text(XML)?;
-	drop(factory);
-
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-	Ok(())
-}
-
-#[tokio::test]
-#[serial]
-async fn generic_ports_with_plugin() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	drop(factory);

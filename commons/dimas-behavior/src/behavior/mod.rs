@@ -273,7 +273,7 @@ impl core::str::FromStr for BehaviorState {
 			"running" => Self::Running,
 			"skipped" => Self::Skipped,
 			"success" => Self::Success,
-			_ => return Err(BehaviorError::ParseError(s.into(), "BehaviorState::from_str()".into()))
+			_ => return Err(BehaviorError::ParseError(s.into(), "BehaviorState::from_str()".into())),
 		};
 		Ok(res)
 	}

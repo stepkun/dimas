@@ -6,8 +6,10 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t07_load_multiple_xml.cpp)
 //!
 
+mod test_data;
+
 use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
-use test_behaviors::test_nodes::SaySomething;
+use test_data::SaySomething;
 
 const XML_MAIN: &str = r#"
 <root BTCPP_format="4">

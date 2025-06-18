@@ -8,12 +8,12 @@
 
 #[doc(hidden)]
 extern crate alloc;
+mod test_data;
 
 use dimas_behavior::{
 	ScriptEnum, behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior, register_scripting_enum,
 };
-use serial_test::serial;
-use test_behaviors::test_nodes::SaySomething;
+use test_data::SaySomething;
 
 const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
@@ -44,7 +44,6 @@ enum Color {
 }
 
 #[tokio::test]
-#[serial]
 async fn scripting() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -54,27 +53,6 @@ async fn scripting() -> anyhow::Result<()> {
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 
 	let mut tree = factory.create_from_text(XML)?;
-	drop(factory);
-
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-
-	Ok(())
-}
-
-#[tokio::test]
-#[serial]
-async fn scripting_with_plugin() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	register_scripting_enum!(factory, Color);
-	register_scripting_enum!(factory, "THE_ANSWER", 42, "OTHER", 43,);
-
-	factory.register_from_plugin("test_behaviors")?;
-
-	factory.register_behavior_tree_from_text(XML)?;
-
-	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
 	let result = tree.tick_while_running().await?;

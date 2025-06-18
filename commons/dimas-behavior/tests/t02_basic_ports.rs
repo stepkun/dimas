@@ -8,14 +8,14 @@
 
 #[doc(hidden)]
 extern crate alloc;
+mod test_data;
 
 use dimas_behavior::{
 	behavior::{BehaviorState, BehaviorType},
 	factory::BehaviorTreeFactory,
 	input_port, port_list, register_behavior,
 };
-use serial_test::serial;
-use test_behaviors::test_nodes::{SaySomething, ThinkWhatToSay, say_something_simple};
+use test_data::{SaySomething, ThinkWhatToSay, say_something_simple};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -33,7 +33,6 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
 async fn basic_ports() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
@@ -56,22 +55,6 @@ async fn basic_ports() -> anyhow::Result<()> {
 		say_something_ports,
 		BehaviorType::Action
 	)?;
-
-	let mut tree = factory.create_from_text(XML)?;
-	// dropping the factory to free memory
-	drop(factory);
-
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-	Ok(())
-}
-
-#[tokio::test]
-#[serial]
-async fn basic_ports_with_plugin() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	factory.register_from_plugin("test_behaviors")?;
 
 	let mut tree = factory.create_from_text(XML)?;
 	// dropping the factory to free memory

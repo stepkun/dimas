@@ -1,7 +1,11 @@
 // Copyright © 2025 Stephan Kunz
+#![allow(clippy::unnecessary_wraps)]
+#![allow(unused)]
 
-//! Test behaviors
+//! Cross door behaviors
 //!
+
+extern crate alloc;
 
 use std::{thread, time::Duration};
 
@@ -10,12 +14,6 @@ use dimas_behavior::{
 	factory::{BehaviorTreeFactory, error::Error},
 	register_behavior,
 };
-
-#[doc(hidden)]
-extern crate alloc;
-
-// region:		--- modules
-// endregion:	--- modules
 
 fn sleep_ms(millisecs: u64) {
 	thread::sleep(Duration::from_millis(millisecs));
@@ -42,7 +40,7 @@ impl CrossDoor {
 	/// SUCCESS if `door_open` == true
 	/// # Errors
 	/// never
-	pub fn is_door_closed(&mut self) -> BehaviorResult {
+	pub fn is_door_closed(&self) -> BehaviorResult {
 		sleep_ms(200);
 		if self.door_open {
 			Ok(BehaviorState::Failure)
@@ -67,7 +65,7 @@ impl CrossDoor {
 	/// SUCCESS if `door_open` == true
 	/// # Errors
 	/// never
-	pub fn pass_through_door(&mut self) -> BehaviorResult {
+	pub fn pass_through_door(&self) -> BehaviorResult {
 		sleep_ms(500);
 		if self.door_open {
 			Ok(BehaviorState::Success)
@@ -111,7 +109,7 @@ impl CrossDoor {
 
 	/// Registration function for the `CrossDoor` interface
 	/// # Errors
-	pub fn register_behaviors(&self, factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
+	pub fn register_behaviors(factory: &mut BehaviorTreeFactory) -> Result<(), Error> {
 		register_behavior!(
 			factory,
 			Self::default(),

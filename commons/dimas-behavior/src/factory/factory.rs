@@ -28,7 +28,7 @@ use crate::{
 			while_do_else::WhileDoElse,
 		},
 		decorator::{
-			loop_queue::Loop, force_failure::ForceFailure, inverter::Inverter,
+			force_failure::ForceFailure, inverter::Inverter, loop_queue::Loop,
 			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition, subtree::Subtree,
 		},
 	},

@@ -3,11 +3,10 @@
 //! `Loop` behavior implementation
 //!
 
-
 // region:      --- modules
+use alloc::collections::vec_deque::VecDeque;
 use alloc::sync::Arc;
 use alloc::{boxed::Box, string::ToString};
-use alloc::collections::vec_deque::VecDeque;
 use core::fmt::{Debug, Display, Formatter};
 use core::str::FromStr;
 use dimas_scripting::SharedRuntime;
@@ -31,7 +30,8 @@ use crate::{
 pub struct SharedQueue<T: FromStr + ToString>(pub Arc<Mutex<VecDeque<T>>>);
 
 impl<T> Clone for SharedQueue<T>
-	where T: FromStr + ToString
+where
+	T: FromStr + ToString,
 {
 	fn clone(&self) -> Self {
 		Self(self.0.clone())
@@ -39,7 +39,8 @@ impl<T> Clone for SharedQueue<T>
 }
 
 impl<T> Display for SharedQueue<T>
-	where T: FromStr + ToString
+where
+	T: FromStr + ToString,
 {
 	fn fmt(&self, _f: &mut Formatter) -> core::fmt::Result {
 		todo!()
@@ -47,11 +48,12 @@ impl<T> Display for SharedQueue<T>
 }
 
 impl<T> FromStr for SharedQueue<T>
-	where T: FromStr + ToString
+where
+	T: FromStr + ToString,
 {
-    type Err = dimas_behavior::behavior::BehaviorError;
+	type Err = dimas_behavior::behavior::BehaviorError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let queue: Self = Self::with_capacity(s.split(';').count());
 		let vals = s.split(';');
 		for val in vals {
@@ -62,11 +64,12 @@ impl<T> FromStr for SharedQueue<T>
 			queue.push_back(item);
 		}
 		Ok(queue)
-    }
+	}
 }
 
 impl<T> SharedQueue<T>
-	where T: FromStr + ToString
+where
+	T: FromStr + ToString,
 {
 	/// Create a shared queue with a given starting capacity.
 	#[must_use]
@@ -104,7 +107,7 @@ impl<T> SharedQueue<T>
 /// The [`Loop`] behavior is used to `pop_front` elements from a [`VecDeque`].
 /// This element is copied into the port "value" and the child will be executed
 /// as long as there are elements in the queue.
-/// 
+///
 #[derive(Behavior, Debug, Default)]
 pub struct Loop<T>
 where
@@ -136,9 +139,9 @@ where
 			self.state = blackboard.get::<BehaviorState>("if_empty".into())?;
 			// fetch the shared queue
 			self.queue = Some(blackboard.get::<SharedQueue<T>>("queue".into())?);
-
 		}
-		self.tick(behavior, blackboard, children, runtime).await
+		self.tick(behavior, blackboard, children, runtime)
+			.await
 	}
 
 	async fn tick(
@@ -164,7 +167,9 @@ where
 				Ok(self.state)
 			}
 		} else {
-			Err(BehaviorError::Composition("Queue was not initiialized properly!".into()))
+			Err(BehaviorError::Composition(
+				"Queue was not initiialized properly!".into(),
+			))
 		}
 	}
 }

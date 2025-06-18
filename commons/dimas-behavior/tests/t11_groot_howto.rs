@@ -7,10 +7,11 @@
 //!
 
 extern crate alloc;
+mod cross_door;
 
 use std::{fmt::Display, num::ParseFloatError, str::FromStr};
 
-use cross_door::cross_door::CrossDoor;
+use cross_door::CrossDoor;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
@@ -122,8 +123,7 @@ impl Display for Position2D {
 async fn groot_howto() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	let mut cross_door = CrossDoor::default();
-	cross_door.register_behaviors(&mut factory)?;
+	CrossDoor::register_behaviors(&mut factory)?;
 	register_behavior!(factory, UpdatePosition, "UpdatePosition")?;
 
 	factory.register_behavior_tree_from_text(XML)?;
@@ -132,30 +132,6 @@ async fn groot_howto() -> anyhow::Result<()> {
 	drop(factory);
 
 	for _ in 0..CYCLES {
-		cross_door.reset();
-		tree.reset()?;
-		let result = tree.tick_while_running().await?;
-		assert_eq!(result, BehaviorState::Success);
-	}
-
-	Ok(())
-}
-
-#[tokio::test]
-#[ignore = "reset implementation in plugins missing"]
-async fn groot_howto_with_plugin() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	factory.register_from_plugin("cross_door")?;
-	register_behavior!(factory, UpdatePosition, "UpdatePosition")?;
-
-	factory.register_behavior_tree_from_text(XML)?;
-
-	let mut tree = factory.create_tree("MainTree")?;
-	drop(factory);
-
-	for _ in 0..CYCLES {
-		// cross_door.reset();
 		tree.reset()?;
 		let result = tree.tick_while_running().await?;
 		assert_eq!(result, BehaviorState::Success);

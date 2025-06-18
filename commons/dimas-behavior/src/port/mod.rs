@@ -2,6 +2,9 @@
 
 //! `dimas-behavior` Port module
 
+#[doc(hidden)]
+extern crate alloc;
+
 pub mod error;
 mod port_definition;
 mod port_list;
@@ -204,6 +207,6 @@ macro_rules! output_port {
 /// macro for creation of a [`PortList`]
 #[macro_export]
 macro_rules! port_list {
-	($($e:expr),* $(,)?) => {$crate::port::PortList(::alloc::vec![$($e),*])};
+	($($e:expr),* $(,)?) => {$crate::port::PortList(alloc::vec![$($e),*])};
 }
 // endregion:	--- macros

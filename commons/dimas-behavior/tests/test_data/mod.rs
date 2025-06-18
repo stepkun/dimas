@@ -1,9 +1,9 @@
 // Copyright © 2025 Stephan Kunz
+#![allow(clippy::unnecessary_wraps)]
+#![allow(unused)]
 
 //! Test behaviors
-//!
 
-#[doc(hidden)]
 extern crate alloc;
 
 // region:		--- modules
@@ -60,7 +60,9 @@ pub fn check_battery() -> BehaviorResult {
 
 /// Struct for behaviors `OpenGripper` and `CloseGripper`
 #[derive(Default)]
-pub struct GripperInterface {}
+pub struct GripperInterface {
+	open: bool,
+}
 
 impl GripperInterface {
 	/// Open the gripper.
@@ -68,6 +70,7 @@ impl GripperInterface {
 	/// In this case never :-)
 	pub fn open(&mut self) -> BehaviorResult {
 		println!("GripperInterface::open");
+		self.open = true;
 		Ok(BehaviorState::Success)
 	}
 	/// Close the gripper.
@@ -75,6 +78,7 @@ impl GripperInterface {
 	/// In this case never :-)
 	pub fn close(&mut self) -> BehaviorResult {
 		println!("GripperInterface::close");
+		self.open = false;
 		Ok(BehaviorState::Success)
 	}
 }
@@ -138,6 +142,7 @@ impl BehaviorStatic for ThinkWhatToSay {
 
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
+#[allow(clippy::needless_pass_by_ref_mut)]
 pub fn say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
 	let msg = blackboard.get::<String>("message".into())?;
 	println!("Robot2 says: {msg}");

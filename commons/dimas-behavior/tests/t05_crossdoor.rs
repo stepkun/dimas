@@ -6,7 +6,9 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t01_build_your_first_tree.cpp)
 //!
 
-use cross_door::cross_door::CrossDoor;
+mod cross_door;
+
+use cross_door::CrossDoor;
 use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 
 const XML: &str = r#"
@@ -39,8 +41,7 @@ const XML: &str = r#"
 async fn crossdoor() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	let cross_door = CrossDoor::default();
-	cross_door.register_behaviors(&mut factory)?;
+	CrossDoor::register_behaviors(&mut factory)?;
 
 	// In this example a single XML contains multiple <BehaviorTree>
 	// To determine which one is the "main one", we should first register
@@ -53,23 +54,6 @@ async fn crossdoor() -> anyhow::Result<()> {
 	tree.print()?;
 
 	// Tick multiple times, until either FAILURE of SUCCESS is returned
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-	Ok(())
-}
-
-#[tokio::test]
-async fn crossdoor_with_plugin() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
-
-	factory.register_from_plugin("cross_door")?;
-
-	factory.register_behavior_tree_from_text(XML)?;
-	let mut tree = factory.create_main_tree()?;
-	drop(factory);
-
-	tree.print()?;
-
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);
 	Ok(())

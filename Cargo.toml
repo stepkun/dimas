@@ -16,8 +16,6 @@ members = [
 	"dimas",
 	"dimasctl",
 	"dimasmon",
-	"test-data/cross-door",
-	"test-data/test-behaviors",
 ]
 
 [workspace.lints.rust]

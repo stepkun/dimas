@@ -34,16 +34,16 @@ fn derive_behavior_struct(input: &DeriveInput) -> TokenStream {
 		#derived
 		#diagnostic
 		impl #impl_generics dimas_behavior::behavior::BehaviorCreation for #ident #type_generics #where_clause {
-			fn creation_fn() -> ::alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
-				::alloc::boxed::Box::new(|| ::alloc::boxed::Box::new(Self::default()))
+			fn creation_fn() -> alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
+				alloc::boxed::Box::new(|| alloc::boxed::Box::new(Self::default()))
 			}
 		}
 
 		#derived
 		#diagnostic
 		impl #impl_generics dimas_behavior::behavior::BehaviorExecution for #ident #type_generics #where_clause {
-			fn as_any(&self) -> &dyn ::core::any::Any { self }
-			fn as_any_mut(&mut self) -> &mut dyn ::core::any::Any { self }
+			fn as_any(&self) -> &dyn core::any::Any { self }
+			fn as_any_mut(&mut self) -> &mut dyn core::any::Any { self }
 		}
 
 		#derived
@@ -92,16 +92,16 @@ fn derive_behavior_struct(input: &DeriveInput) -> TokenStream {
 /// #[automatically_derived]
 /// #[diagnostic::do_not_recommend]
 /// impl dimas_behavior::behavior::BehaviorCreation for Fallback {
-///     fn creation_fn() -> ::alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
-///         ::alloc::boxed::Box::new(|| ::alloc::boxed::Box::new(Self::default()))
+///     fn creation_fn() -> alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
+///         alloc::boxed::Box::new(|| alloc::boxed::Box::new(Self::default()))
 ///     }
 /// }
 ///
 /// #[automatically_derived]
 /// #[diagnostic::do_not_recommend]
 /// impl dimas_behavior::behavior::BehaviorExecution for MyBehavior {
-///     fn as_any(&self) -> &dyn ::core::any::AnyAny { self }
-///     fn as_any_mut(&mut self) -> &mut dyn ::core::any::AnyAny { self }
+///     fn as_any(&self) -> &dyn core::any::AnyAny { self }
+///     fn as_any_mut(&mut self) -> &mut dyn core::any::AnyAny { self }
 /// }
 ///
 /// #[automatically_derived]

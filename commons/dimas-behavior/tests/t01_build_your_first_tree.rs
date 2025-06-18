@@ -7,14 +7,14 @@
 //!
 
 extern crate alloc;
+mod test_data;
 
 use dimas_behavior::{
 	behavior::{BehaviorState, BehaviorType},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 };
-use serial_test::serial;
-use test_behaviors::test_nodes::{ApproachObject, GripperInterface, check_battery};
+use test_data::{ApproachObject, GripperInterface, check_battery};
 
 /// This definition uses implicit node ID's
 const XML: &str = r#"
@@ -32,8 +32,7 @@ const XML: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
-async fn build_your_first_tree() -> anyhow::Result<()> {
+async fn build_your_first_tree_implicit() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
 	// The recommended way to create a Behavior is through inheritance/composition.
@@ -88,13 +87,28 @@ const XML_EXPLICIT: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
-async fn build_your_first_tree_with_plugin() -> anyhow::Result<()> {
+async fn build_your_first_tree_explicit() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	// Load a plugin and register the Behaviors it contains.
-	// This automates the registering step.
-	factory.register_from_plugin("test_behaviors")?;
+	// The recommended way to create a Behavior is through inheritance/composition.
+	// Even if it requires more boilerplate, it allows you to use more functionalities
+	// like ports (we will discuss this in future tutorials).
+	register_behavior!(factory, ApproachObject, "ApproachObject")?;
+
+	// Registering a SimpleAction/SimpleCondition using a function pointer.
+	register_behavior!(factory, check_battery, "CheckBattery", BehaviorType::Condition)?;
+
+	// You can also create SimpleAction/SimpleCondition using methods of a struct.
+	register_behavior!(
+		factory,
+		GripperInterface::default(),
+		open,
+		"OpenGripper",
+		BehaviorType::Action,
+		close,
+		"CloseGripper",
+		BehaviorType::Action,
+	)?;
 
 	let mut tree = factory.create_from_text(XML_EXPLICIT)?;
 	// dropping the factory to free memory

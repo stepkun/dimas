@@ -9,7 +9,6 @@ use dimas_behavior::{
 	factory::BehaviorTreeFactory,
 	register_behavior,
 };
-use serial_test::serial;
 
 const SUCCESS: &str = r#"
 <root BTCPP_format="4"
@@ -25,7 +24,6 @@ const SUCCESS: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
 async fn success() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
@@ -54,7 +52,6 @@ const FAILURE: &str = r#"
 "#;
 
 #[tokio::test]
-#[serial]
 async fn failure() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");

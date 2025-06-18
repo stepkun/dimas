@@ -8,6 +8,7 @@
 // //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_11_groot2)
 
 extern crate alloc;
+mod test_data;
 
 use std::time::Duration;
 
@@ -25,7 +26,7 @@ use dimas_behavior::{
 	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
-use test_behaviors::test_nodes::Pose2D;
+use test_data::Pose2D;
 
 #[derive(Behavior, Debug, Default)]
 struct GenerateWaypoints;
@@ -41,7 +42,11 @@ impl BehaviorInstance for GenerateWaypoints {
 	) -> BehaviorResult {
 		let shared_queue = SharedQueue::default();
 		for i in 0..5 {
-			shared_queue.push_back(Pose2D{x: f64::from(i), y: f64::from(i), theta: 0_f64});
+			shared_queue.push_back(Pose2D {
+				x: f64::from(i),
+				y: f64::from(i),
+				theta: 0_f64,
+			});
 		}
 
 		blackboard.set("waypoints".into(), shared_queue)?;

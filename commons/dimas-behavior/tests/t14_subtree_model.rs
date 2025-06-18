@@ -7,6 +7,7 @@
 //!
 
 extern crate alloc;
+mod test_data;
 
 use std::fmt::{Display, Formatter};
 
@@ -20,7 +21,7 @@ use dimas_behavior::{
 	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
-use test_behaviors::test_nodes::SaySomething;
+use test_data::SaySomething;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
