@@ -13,7 +13,7 @@ use dimas_core::ConstString;
 use dimas_scripting::Runtime;
 use libloading::Library;
 
-use crate::behavior::{BehaviorCreationFn, BehaviorPtr, BehaviorType};
+use crate::behavior::{BehaviorCreationFn, BehaviorDescription, BehaviorPtr};
 
 use super::error::Error;
 
@@ -26,7 +26,7 @@ use super::BehaviorTreeFactory;
 #[derive(Default)]
 pub struct BehaviorRegistry {
 	/// [`BTreeMap`] of available behavior creation functions.
-	behaviors: BTreeMap<ConstString, (BehaviorType, Arc<BehaviorCreationFn>)>,
+	behaviors: BTreeMap<ConstString, (BehaviorDescription, Arc<BehaviorCreationFn>)>,
 	/// [`BTreeMap`] of registered behavior tree definitions.
 	tree_definitions: BTreeMap<ConstString, ConstString>,
 	/// Main tree ID
@@ -43,16 +43,23 @@ impl BehaviorRegistry {
 	/// Add a behavior to the registry
 	/// # Errors
 	/// - if the entry already exists
-	pub fn add_behavior<F>(&mut self, name: &str, bhvr_creation_fn: F, bhvr_type: BehaviorType) -> Result<(), Error>
+	pub fn add_behavior<F>(&mut self, bhvr_description: BehaviorDescription, bhvr_creation_fn: F) -> Result<(), Error>
 	where
 		F: Fn() -> BehaviorPtr + Send + Sync + 'static,
 	{
-		if self.behaviors.contains_key(name) {
-			return Err(Error::BehaviorAlreadyRegistered(name.into()));
+		if self
+			.behaviors
+			.contains_key(&bhvr_description.name())
+		{
+			return Err(Error::BehaviorAlreadyRegistered(bhvr_description.name()));
 		}
 		self.behaviors
-			.insert(name.into(), (bhvr_type, Arc::from(bhvr_creation_fn)));
+			.insert(bhvr_description.name(), (bhvr_description, Arc::from(bhvr_creation_fn)));
 		Ok(())
+	}
+
+	pub(crate) const fn behaviors(&self) -> &BTreeMap<ConstString, (BehaviorDescription, Arc<BehaviorCreationFn>)> {
+		&self.behaviors
 	}
 
 	/// The Library must be kept in storage until the behaviort tree is destroyed.
@@ -76,7 +83,7 @@ impl BehaviorRegistry {
 	/// Add a behavior tree definition to the registry.
 	/// # Errors
 	/// - if the behavior tree definition is already registered.
-	pub(super) fn add_tree_defintion(&mut self, id: &str, tree_definition: ConstString) -> Result<(), Error> {
+	pub(crate) fn add_tree_defintion(&mut self, id: &str, tree_definition: ConstString) -> Result<(), Error> {
 		let key: ConstString = id.into();
 		if let std::collections::btree_map::Entry::Vacant(e) = self.tree_definitions.entry(key) {
 			e.insert(tree_definition);
@@ -89,14 +96,14 @@ impl BehaviorRegistry {
 	/// Fetch a behavior creation function from the registry.
 	/// # Errors
 	/// - if the behavior is not found in the registry
-	pub fn fetch(&self, id: &str) -> Result<(BehaviorType, Arc<BehaviorCreationFn>), Error> {
+	pub(crate) fn fetch(&self, id: &str) -> Result<(BehaviorDescription, Arc<BehaviorCreationFn>), Error> {
 		self.behaviors.get(id).map_or_else(
 			|| Err(Error::BehaviorNotRegistered(id.into())),
 			|value| Ok(value.clone()),
 		)
 	}
 
-	pub(super) fn find_tree_definition(&self, name: &str) -> Option<ConstString> {
+	pub(crate) fn find_tree_definition(&self, name: &str) -> Option<ConstString> {
 		self.tree_definitions.get(name).cloned()
 	}
 

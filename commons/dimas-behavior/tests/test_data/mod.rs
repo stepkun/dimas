@@ -16,7 +16,7 @@ use std::{
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port, output_port,
 	port::PortList,
@@ -45,8 +45,8 @@ impl BehaviorInstance for ApproachObject {
 }
 
 impl BehaviorStatic for ApproachObject {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 }
 
@@ -103,8 +103,8 @@ impl BehaviorInstance for SaySomething {
 }
 
 impl BehaviorStatic for SaySomething {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -131,8 +131,8 @@ impl BehaviorInstance for ThinkWhatToSay {
 }
 
 impl BehaviorStatic for ThinkWhatToSay {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -151,9 +151,9 @@ pub fn say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult
 
 /// `Position2D`
 #[derive(Clone, Debug, Default)]
-struct Position2D {
-	x: f64,
-	y: f64,
+pub struct Position2D {
+	pub x: f64,
+	pub y: f64,
 }
 
 impl FromStr for Position2D {
@@ -201,8 +201,8 @@ impl BehaviorInstance for CalculateGoal {
 }
 
 impl BehaviorStatic for CalculateGoal {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -230,8 +230,8 @@ impl BehaviorInstance for PrintTarget {
 }
 
 impl BehaviorStatic for PrintTarget {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -327,8 +327,8 @@ impl BehaviorInstance for MoveBaseAction {
 }
 
 impl BehaviorStatic for MoveBaseAction {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {

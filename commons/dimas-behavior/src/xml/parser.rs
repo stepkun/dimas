@@ -20,7 +20,7 @@ use tracing::{Level, event, instrument};
 
 use crate::{
 	behavior::{
-		BehaviorPtr, BehaviorType,
+		BehaviorData, BehaviorKind, BehaviorPtr,
 		pre_post_conditions::{Conditions, PostConditions, PreConditions},
 	},
 	blackboard::SharedBlackboard,
@@ -28,7 +28,7 @@ use crate::{
 	tree::{BehaviorTreeElement, BehaviorTreeElementList},
 };
 
-use super::{behavior_registry::BehaviorRegistry, error::Error};
+use crate::factory::{behavior_registry::BehaviorRegistry, error::Error};
 // endregion:   --- modules
 
 // region:		--- helper
@@ -79,7 +79,7 @@ impl XmlParser {
 	}
 
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub(super) fn register_document_root(registry: &mut BehaviorRegistry, element: Node) -> Result<(), Error> {
+	pub(crate) fn register_document_root(registry: &mut BehaviorRegistry, element: Node) -> Result<(), Error> {
 		event!(Level::TRACE, "register_document_root");
 		for element in element.children() {
 			match element.node_type() {
@@ -274,7 +274,7 @@ impl XmlParser {
 
 	#[allow(clippy::option_if_let_else)]
 	#[instrument(level = Level::DEBUG, skip_all)]
-	pub(super) fn create_tree_from_definition(
+	pub(crate) fn create_tree_from_definition(
 		&mut self,
 		name: &str,
 		registry: &mut BehaviorRegistry,
@@ -287,12 +287,12 @@ impl XmlParser {
 				let doc = Document::parse(&definition)?;
 				let node = doc.root_element();
 				// look for the "SubTree" behavior in the `BehaviorRegistry` and create it.
-				let (_bhvr_type, bhvr_creation_fn) = registry.fetch("SubTree")?;
+				let (bhvr_desc, bhvr_creation_fn) = registry.fetch("SubTree")?;
 				let bhvr = bhvr_creation_fn();
 				let uid = self.next_uid();
 				// handle the nodes attributes
 				let attrs = attrs_to_map(node.attributes());
-				let (_, remappings, values, conditions) =
+				let (_autoremap, remappings, values, conditions) =
 					Self::handle_attributes(name, true, &bhvr, &attrs, registry.runtime_mut())?;
 				let blackboard = if let Some(external_bb) = external_blackboard {
 					SharedBlackboard::with_parent(name, external_bb)
@@ -300,9 +300,10 @@ impl XmlParser {
 					SharedBlackboard::new(name, remappings, values)
 				};
 				let children = self.build_children(name, node, registry, &blackboard)?;
+				let bhvr_data = BehaviorData::new(uid, name, name);
 				// path is for root element same as name
 				let behaviortree =
-					BehaviorTreeElement::create_subtree(uid, name, name, children, blackboard, bhvr, conditions);
+					BehaviorTreeElement::create_subtree(bhvr_data, bhvr_desc, children, blackboard, bhvr, conditions);
 				Ok(behaviortree)
 			},
 		)
@@ -381,7 +382,7 @@ impl XmlParser {
 		}
 
 		// look for the behavior in the `BehaviorRegistry`
-		let (bhvr_type, bhvr_creation_fn) = if is_subtree {
+		let (bhvr_desc, bhvr_creation_fn) = if is_subtree {
 			registry.fetch("SubTree")?
 		} else {
 			registry.fetch(tag_name)?
@@ -389,26 +390,27 @@ impl XmlParser {
 		let bhvr = bhvr_creation_fn();
 		let (autoremap, remappings, values, conditions) =
 			Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs, registry.runtime_mut())?;
-		let tree_node = match bhvr_type {
-			BehaviorType::Action | BehaviorType::Condition => {
+		let bhvr_data = BehaviorData::new(uid, &node_name, &path);
+		let tree_node = match bhvr_desc.kind() {
+			BehaviorKind::Action | BehaviorKind::Condition => {
 				if node.has_children() {
 					return Err(Error::ChildrenNotAllowed(node_name.into()));
 				}
 				// A leaf gets a cloned Blackboard with own remappings
 				let blackboard = blackboard.cloned(remappings, values);
-				BehaviorTreeElement::create_leaf(uid, &node_name, &path, blackboard, bhvr, conditions)
+				BehaviorTreeElement::create_leaf(bhvr_data, bhvr_desc, blackboard, bhvr, conditions)
 			}
-			BehaviorType::Control | BehaviorType::Decorator => {
+			BehaviorKind::Control | BehaviorKind::Decorator => {
 				// A node gets a cloned Blackboard with own remappings
 				let blackboard = blackboard.cloned(remappings, values);
 				let children = self.build_children(&path, node, registry, &blackboard)?;
 
-				if bhvr_type == BehaviorType::Decorator && children.len() > 1 {
+				if bhvr_desc.kind() == BehaviorKind::Decorator && children.len() > 1 {
 					return Err(Error::DecoratorOnlyOneChild(node.tag_name().name().into()));
 				}
-				BehaviorTreeElement::create_node(uid, &node_name, &path, children, blackboard, bhvr, conditions)
+				BehaviorTreeElement::create_node(bhvr_data, bhvr_desc, children, blackboard, bhvr, conditions)
 			}
-			BehaviorType::SubTree => {
+			BehaviorKind::SubTree => {
 				if let Some(id) = attrs.get("ID") {
 					let definition = registry.find_tree_definition(id);
 					match definition {
@@ -419,10 +421,9 @@ impl XmlParser {
 							let blackboard1 =
 								SharedBlackboard::with(&node_name, blackboard, remappings, values, autoremap);
 							let children = self.build_children(&path, node, registry, &blackboard1)?;
-							BehaviorTreeElement::create_node(
-								uid,
-								&node_name,
-								&path,
+							BehaviorTreeElement::create_subtree(
+								bhvr_data,
+								bhvr_desc,
 								children,
 								blackboard1,
 								bhvr,

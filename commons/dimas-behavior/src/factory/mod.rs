@@ -3,11 +3,10 @@
 //! Factory library
 //!
 
-mod behavior_registry;
+pub(crate) mod behavior_registry;
 pub mod error;
 #[allow(clippy::module_inception)]
 mod factory;
-mod xml_parser;
 
 // flatten
 pub use behavior_registry::BehaviorRegistry;

@@ -9,11 +9,9 @@
 extern crate alloc;
 mod test_data;
 
-use std::fmt::{Display, Formatter};
-
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port,
@@ -70,43 +68,11 @@ async fn subtree_model() -> anyhow::Result<()> {
 
 /// Implementation of `MoveRobot` tree
 mod move_robot {
-	use std::{num::ParseFloatError, str::FromStr};
-
 	use dimas_behavior::{behavior::BehaviorData, factory::error::Error};
 
+	use crate::test_data::Pose2D;
+
 	use super::*;
-
-	#[derive(Clone, Copy, Debug)]
-	pub struct Position2D {
-		x: f64,
-		y: f64,
-		theta: f64,
-	}
-
-	impl FromStr for Position2D {
-		type Err = ParseFloatError;
-
-		fn from_str(value: &str) -> Result<Self, Self::Err> {
-			// remove redundant ' and &apos; from string
-			let s = value
-				.replace('\'', "")
-				.trim()
-				.replace("&apos;", "")
-				.trim()
-				.to_string();
-			let v: Vec<&str> = s.split(';').collect();
-			let x = f64::from_str(v[0])?;
-			let y = f64::from_str(v[1])?;
-			let theta = f64::from_str(v[2])?;
-			Ok(Self { x, y, theta })
-		}
-	}
-
-	impl Display for Position2D {
-		fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
-			todo!()
-		}
-	}
 
 	/// Behavior `MoveBase`
 	#[derive(Behavior, Debug, Default)]
@@ -123,7 +89,7 @@ mod move_robot {
 			_children: &mut BehaviorTreeElementList,
 			_runtime: &SharedRuntime,
 		) -> BehaviorResult {
-			let pos = blackboard.get::<Position2D>("goal")?;
+			let pos = blackboard.get::<Pose2D>("goal")?;
 
 			println!(
 				"[ MoveBase: SEND REQUEST ]. goal: x={:2.1} y={:2.1} theta={:2.1}",
@@ -152,12 +118,12 @@ mod move_robot {
 	}
 
 	impl BehaviorStatic for MoveBase {
-		fn kind() -> BehaviorType {
-			BehaviorType::Action
+		fn kind() -> BehaviorKind {
+			BehaviorKind::Action
 		}
 
 		fn provided_ports() -> PortList {
-			port_list!(input_port!(Position2D, "goal"),)
+			port_list!(input_port!(Pose2D, "goal"),)
 		}
 	}
 

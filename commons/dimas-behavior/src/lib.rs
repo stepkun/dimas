@@ -12,11 +12,15 @@ pub mod blackboard;
 pub mod factory;
 pub mod port;
 pub mod tree;
+pub mod xml;
 
 // flatten:
 pub use behavior::Behavior;
+pub use tree::observer::groot2_publisher::Groot2Publisher;
+pub use tree::observer::tree_observer::BehaviorTreeObserver;
+pub use xml::creator::XmlCreator;
 
-// re-export
+// re-exports:
 pub use dimas_behavior_macros::Behavior;
 pub use dimas_scripting::ScriptEnum;
 pub use dimas_scripting::SharedRuntime;
@@ -88,12 +92,13 @@ macro_rules! register_behavior {
 	}};
 	// a behavior struct with arguments for construction
 	($factory:expr, $tp:ty, $name:literal, $($arg:expr),* $(,)?) => {{
+		let bhvr_desc = $crate::behavior::BehaviorDescription::new($name, <$tp>::kind(), false, <$tp>::provided_ports());
 		let bhvr_creation_fn = alloc::boxed::Box::new(move || -> alloc::boxed::Box<dyn $crate::behavior::BehaviorExecution> {
 			alloc::boxed::Box::new(<$tp>::new($($arg),*))
 		});
 		$factory
-			.registry()
-			.add_behavior($name, bhvr_creation_fn, <$tp>::kind())
+			.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)
 	}};
 }
 

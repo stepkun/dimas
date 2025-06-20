@@ -17,8 +17,6 @@ pub use port_list::PortList;
 pub use port_remappings::PortRemappings;
 
 // region:      --- modules
-use core::any::TypeId;
-
 use dimas_core::ConstString;
 use error::Error;
 // endregion:   --- modules
@@ -79,13 +77,13 @@ pub fn is_bb_pointer(port: &str) -> bool {
 /// - if the name violates the conventions.
 pub fn create_port<T: 'static>(
 	direction: PortDirection,
+	type_name: &str,
 	name: &str,
 	default: &str,
 	description: &str,
 ) -> Result<PortDefinition, Error> {
 	if is_allowed_port_name(name) {
-		let type_id = TypeId::of::<T>();
-		Ok(PortDefinition::new(direction, type_id, name, default, description)?)
+		Ok(PortDefinition::new(direction, type_name, name, default, description)?)
 	} else {
 		Err(Error::NameNotAllowed(name.into()))
 	}
@@ -112,6 +110,14 @@ pub fn is_allowed_port_name(name: &str) -> bool {
 // endregion:   --- helper
 
 // region:      --- PortDirection
+static INPUT: &str = "Input";
+static OUTPUT: &str = "Output";
+static INOUT: &str = "InOut";
+
+static INPUT_TYPE: &str = "input_port";
+static OUTPUT_TYPE: &str = "output_port";
+static INOUT_TYPE: &str = "inout_port";
+
 /// Direction of a `Port`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
@@ -126,13 +132,29 @@ pub enum PortDirection {
 
 impl core::fmt::Display for PortDirection {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		let text = match self {
-			Self::In => "Input",
-			Self::Out => "Output",
-			Self::InOut => "InOut",
-		};
+		write!(f, "{}", self.as_str())
+	}
+}
 
-		write!(f, "{text}")
+impl PortDirection {
+	/// Get the [`PortDirection`] as str
+	#[must_use]
+	pub fn as_str(&self) -> &str {
+		match self {
+			Self::In => INPUT,
+			Self::Out => OUTPUT,
+			Self::InOut => INOUT,
+		}
+	}
+
+	/// Get the [`PortDirection`] as `type_port` str
+	#[must_use]
+	pub fn type_str(&self) -> &'static str {
+		match self {
+			Self::In => INPUT_TYPE,
+			Self::Out => OUTPUT_TYPE,
+			Self::InOut => INOUT_TYPE,
+		}
 	}
 }
 // endregion:   --- PortDirection
@@ -141,22 +163,34 @@ impl core::fmt::Display for PortDirection {
 /// macro for creation of an input port definition
 #[macro_export]
 macro_rules! input_port {
-	($tp:ty, $name:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, "", "").expect("snh")
-	};
+	($tp:ty, $name:literal $(,)?) => {{ $crate::port::create_port::<$tp>($crate::port::PortDirection::In, stringify!($tp), $name, "", "").expect("snh") }};
 	($tp:ty, $name:literal, $default:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, "").expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, stringify!($tp), $name, $default, "")
+			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, $default, $desc).expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, stringify!($tp), $name, $default, $desc)
+			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:expr $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, &$default.to_string(), "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::In,
+			stringify!($tp),
+			$name,
+			&$default.to_string(),
+			"",
+		)
+		.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:expr, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::In, $name, &$default.to_string(), $desc)
-			.expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::In,
+			stringify!($tp),
+			$name,
+			&$default.to_string(),
+			$desc,
+		)
+		.expect("snh")
 	};
 }
 
@@ -164,21 +198,42 @@ macro_rules! input_port {
 #[macro_export]
 macro_rules! inout_port {
 	($tp:ty, $name:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, "", "").expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, stringify!($tp), $name, "", "")
+			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, "").expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, stringify!($tp), $name, $default, "")
+			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, $default, $desc).expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::InOut,
+			stringify!($tp),
+			$name,
+			$default,
+			$desc,
+		)
+		.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:expr $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, &$default.to_string(), "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::InOut,
+			stringify!($tp),
+			$name,
+			&$default.to_string(),
+			"",
+		)
+		.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:expr, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::InOut, $name, &$default.to_string(), $desc)
-			.expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::InOut,
+			stringify!($tp),
+			$name,
+			&$default.to_string(),
+			$desc,
+		)
+		.expect("snh")
 	};
 }
 
@@ -186,21 +241,41 @@ macro_rules! inout_port {
 #[macro_export]
 macro_rules! output_port {
 	($tp:ty, $name:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, "", "").expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, stringify!($tp), $name, "", "").expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, "").expect("snh")
+		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, stringify!($tp), $name, $default, "")
+			.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:literal, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, $default, $desc).expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::Out,
+			stringify!($tp),
+			$name,
+			$default,
+			$desc,
+		)
+		.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:expr $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, &$default.to_string(), "")
-			.expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::Out,
+			stringify!($tp),
+			$name,
+			&$default.to_string(),
+			"",
+		)
+		.expect("snh")
 	};
 	($tp:ty, $name:literal, $default:expr, $desc:literal $(,)?) => {
-		$crate::port::create_port::<$tp>($crate::port::PortDirection::Out, $name, &$default.to_string(), $desc)
-			.expect("snh")
+		$crate::port::create_port::<$tp>(
+			$crate::port::PortDirection::Out,
+			stringify!($tp),
+			$name,
+			&$default.to_string(),
+			$desc,
+		)
+		.expect("snh")
 	};
 }
 

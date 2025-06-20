@@ -23,8 +23,8 @@ use dimas_behavior::{
 
 const TREE: &str = r#"
 <root BTCPP_format="4"
-		main_tree_to_execute="MainTree1">
-	<BehaviorTree ID="MainTree1">
+		main_tree_to_execute="MainTree">
+	<BehaviorTree ID="MainTree">
 		<Fallback name="root_fallback">
 			<ParallelAll>
 				<Sequence>

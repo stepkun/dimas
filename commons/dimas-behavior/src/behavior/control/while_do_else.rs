@@ -11,7 +11,7 @@ use crate as dimas_behavior;
 use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
@@ -99,8 +99,8 @@ impl BehaviorInstance for WhileDoElse {
 }
 
 impl BehaviorStatic for WhileDoElse {
-	fn kind() -> BehaviorType {
-		BehaviorType::Control
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Control
 	}
 }
 // endregion:   --- Fallback

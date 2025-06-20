@@ -11,7 +11,7 @@ extern crate alloc;
 mod test_data;
 
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorType},
+	behavior::{BehaviorKind, BehaviorState},
 	factory::BehaviorTreeFactory,
 	input_port, port_list, register_behavior,
 };
@@ -53,7 +53,7 @@ async fn basic_ports() -> anyhow::Result<()> {
 		say_something_simple,
 		"SaySomething2",
 		say_something_ports,
-		BehaviorType::Action
+		BehaviorKind::Action
 	)?;
 
 	let mut tree = factory.create_from_text(XML)?;

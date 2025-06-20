@@ -11,6 +11,7 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{
+	boxed::Box,
 	string::{String, ToString},
 	vec::Vec,
 };
@@ -19,7 +20,8 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		Behavior, BehaviorState, BehaviorStatic, BehaviorType, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
+		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
 		action::{Script, StateAfter},
 		condition::script_condition::ScriptCondition,
 		control::{
@@ -33,10 +35,9 @@ use crate::{
 		},
 	},
 	blackboard::SharedBlackboard,
-	factory::xml_parser::XmlParser,
 	port::PortList,
-	register_behavior,
 	tree::BehaviorTree,
+	xml::parser::XmlParser,
 };
 
 use super::{behavior_registry::BehaviorRegistry, error::Error};
@@ -54,14 +55,22 @@ impl Default for BehaviorTreeFactory {
 			registry: BehaviorRegistry::default(),
 		};
 		// minimum required behaviors for the factory to work
-		register_behavior!(f, Subtree, "SubTree").expect("snh");
+		f.register_groot2_behavior_type::<Subtree>("SubTree")
+			.expect("snh");
 		f
 	}
 }
 
 impl BehaviorTreeFactory {
-	/// Access the registry
-	pub const fn registry(&mut self) -> &mut BehaviorRegistry {
+	/// Access the registry.
+	#[must_use]
+	pub const fn registry(&self) -> &BehaviorRegistry {
+		&self.registry
+	}
+
+	/// Access the registry mutable.
+	#[must_use]
+	pub const fn registry_mut(&mut self) -> &mut BehaviorRegistry {
 		&mut self.registry
 	}
 
@@ -79,34 +88,51 @@ impl BehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// core actions
-		register_behavior!(self, Script, "Script")?;
-		register_behavior!(self, StateAfter, "AlwaysFailure", BehaviorState::Failure, 0)?;
-		register_behavior!(self, StateAfter, "AlwaysRunning", BehaviorState::Running, 0)?;
-		register_behavior!(self, StateAfter, "AlwaysSuccess", BehaviorState::Success, 0)?;
+		self.register_groot2_behavior_type::<Script>("Script")?;
+
+		let bhvr_desc =
+			BehaviorDescription::new("AlwaysFailure", StateAfter::kind(), true, StateAfter::provided_ports());
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Failure, 0)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
+
+		let bhvr_desc =
+			BehaviorDescription::new("AlwaysRunning", StateAfter::kind(), true, StateAfter::provided_ports());
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Running, 0)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
+
+		let bhvr_desc =
+			BehaviorDescription::new("AlwaysSuccess", StateAfter::kind(), true, StateAfter::provided_ports());
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Success, 0)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
 		// core conditions
-		register_behavior!(self, ScriptCondition, "ScriptCondition")?;
+		self.register_groot2_behavior_type::<ScriptCondition>("ScriptCondition")?;
 
 		// core controls
-		register_behavior!(self, Fallback, "Fallback")?;
-		register_behavior!(self, Parallel, "Parallel")?;
-		register_behavior!(self, ParallelAll, "ParallelAll")?;
-		register_behavior!(self, ReactiveFallback, "ReactiveFallback")?;
-		register_behavior!(self, ReactiveSequence, "ReactiveSequence")?;
-		register_behavior!(self, Sequence, "Sequence")?;
-		register_behavior!(self, SequenceWithMemory, "SequenceWithMemory")?;
-		register_behavior!(self, WhileDoElse, "WhileDoElse")?;
+		self.register_groot2_behavior_type::<Fallback>("Fallback")?;
+		self.register_groot2_behavior_type::<Parallel>("Parallel")?;
+		self.register_groot2_behavior_type::<ParallelAll>("ParallelAll")?;
+		self.register_groot2_behavior_type::<ReactiveFallback>("ReactiveFallback")?;
+		self.register_groot2_behavior_type::<ReactiveSequence>("ReactiveSequence")?;
+		self.register_groot2_behavior_type::<Sequence>("Sequence")?;
+		self.register_groot2_behavior_type::<SequenceWithMemory>("SequenceWithMemory")?;
+		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
 
 		// core decorators
-		register_behavior!(self, ForceFailure, "ForceFailure")?;
-		register_behavior!(self, Inverter, "Inverter")?;
-		// @TODO:
-		self.register_behavior_type::<Loop<i32>>("LoopInt")?;
-		self.register_behavior_type::<Loop<bool>>("LoopBool")?;
-		self.register_behavior_type::<Loop<f64>>("LoopDouble")?;
-		self.register_behavior_type::<Loop<String>>("LoopString")?;
-		register_behavior!(self, RetryUntilSuccessful, "RetryUntilSuccessful")?;
-		register_behavior!(self, Precondition, "Precondition")
+		self.register_groot2_behavior_type::<ForceFailure>("ForceFailure")?;
+		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
+		self.register_groot2_behavior_type::<Loop<i32>>("LoopInt")?;
+		self.register_groot2_behavior_type::<Loop<bool>>("LoopBool")?;
+		self.register_groot2_behavior_type::<Loop<f64>>("LoopDouble")?;
+		self.register_groot2_behavior_type::<Loop<String>>("LoopString")?;
+		self.register_groot2_behavior_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
+		self.register_groot2_behavior_type::<Precondition>("Precondition")
 	}
 
 	/// Register an enums key/value pair.
@@ -250,10 +276,23 @@ impl BehaviorTreeFactory {
 	where
 		T: Behavior,
 	{
+		let bhvr_desc = BehaviorDescription::new(name, T::kind(), false, T::provided_ports());
 		let bhvr_creation_fn = T::creation_fn();
-		let bhvr_type = T::kind();
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, bhvr_type)
+			.add_behavior(bhvr_desc, bhvr_creation_fn)
+	}
+
+	/// Register a `Behavior` of type `<T>` which is builtin in Groot2.
+	/// # Errors
+	/// - if a behavior with that `name` is already registered
+	fn register_groot2_behavior_type<T>(&mut self, name: &str) -> Result<(), Error>
+	where
+		T: Behavior,
+	{
+		let bhvr_desc = BehaviorDescription::new(name, T::kind(), true, T::provided_ports());
+		let bhvr_creation_fn = T::creation_fn();
+		self.registry
+			.add_behavior(bhvr_desc, bhvr_creation_fn)
 	}
 
 	/// Register a function either as [`BehaviorType::Action`] or as [`BehaviorType::Condition`].
@@ -263,11 +302,12 @@ impl BehaviorTreeFactory {
 		&mut self,
 		name: &str,
 		tick_fn: SimpleBhvrTickFn,
-		kind: BehaviorType,
+		kind: BehaviorKind,
 	) -> Result<(), Error> {
+		let bhvr_desc = BehaviorDescription::new(name, kind, false, PortList::default());
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, kind)
+			.add_behavior(bhvr_desc, bhvr_creation_fn)
 	}
 
 	/// Register a function as [`BehaviorType::Action`] or [`BehaviorType::Condition`] which is using ports.
@@ -277,12 +317,13 @@ impl BehaviorTreeFactory {
 		&mut self,
 		name: &str,
 		tick_fn: ComplexBhvrTickFn,
-		kind: BehaviorType,
+		kind: BehaviorKind,
 		port_list: PortList,
 	) -> Result<(), Error> {
+		let bhvr_desc = BehaviorDescription::new(name, kind, false, port_list.clone());
 		let bhvr_creation_fn = SimpleBehavior::new_create_with_ports(tick_fn, port_list);
 		self.registry
-			.add_behavior(name, bhvr_creation_fn, kind)
+			.add_behavior(bhvr_desc, bhvr_creation_fn)
 	}
 }
 // endregion:   --- BehaviorTreeFactory

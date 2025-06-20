@@ -16,7 +16,7 @@ use dimas_behavior::behavior::decorator::loop_queue::SharedQueue;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
+		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
 		decorator::loop_queue::Loop,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
@@ -56,8 +56,8 @@ impl BehaviorInstance for GenerateWaypoints {
 }
 
 impl BehaviorStatic for GenerateWaypoints {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -85,8 +85,8 @@ impl BehaviorInstance for PrintNumber {
 }
 
 impl BehaviorStatic for PrintNumber {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -117,8 +117,8 @@ impl BehaviorInstance for UseWaypoint {
 }
 
 impl BehaviorStatic for UseWaypoint {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {

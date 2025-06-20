@@ -62,6 +62,7 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+xml_writer = { workspace = true }
 
 [build-dependencies]
 

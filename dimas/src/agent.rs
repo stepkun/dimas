@@ -4,7 +4,7 @@
 use anyhow::Result;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::SharedBlackboard,
 	factory::{BehaviorTreeFactory, error::Error},
 	register_behavior,
@@ -68,8 +68,8 @@ impl BehaviorInstance for NotInterrupted {
 }
 
 impl BehaviorStatic for NotInterrupted {
-	fn kind() -> BehaviorType {
-		BehaviorType::Condition
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Condition
 	}
 }
 
@@ -93,8 +93,8 @@ impl BehaviorInstance for Shutdown {
 }
 
 impl BehaviorStatic for Shutdown {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 }
 // endregion:   --- behavior

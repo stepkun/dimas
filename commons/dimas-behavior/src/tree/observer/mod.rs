@@ -3,6 +3,7 @@
 //! A [`BehaviorTreeObserver`] library
 //!
 
+pub mod groot2_publisher;
 #[allow(clippy::module_inception)]
 pub mod tree_observer;
 

@@ -10,7 +10,7 @@ extern crate alloc;
 use std::{thread, time::Duration};
 
 use dimas_behavior::{
-	behavior::{BehaviorResult, BehaviorState, BehaviorType},
+	behavior::{BehaviorKind, BehaviorResult, BehaviorState},
 	factory::{BehaviorTreeFactory, error::Error},
 	register_behavior,
 };
@@ -115,19 +115,19 @@ impl CrossDoor {
 			Self::default(),
 			is_door_closed,
 			"IsDoorClosed",
-			BehaviorType::Condition,
+			BehaviorKind::Condition,
 			open_door,
 			"OpenDoor",
-			BehaviorType::Action,
+			BehaviorKind::Action,
 			pass_through_door,
 			"PassThroughDoor",
-			BehaviorType::Action,
+			BehaviorKind::Action,
 			pick_lock,
 			"PickLock",
-			BehaviorType::Action,
+			BehaviorKind::Action,
 			smash_door,
 			"SmashDoor",
-			BehaviorType::Action,
+			BehaviorKind::Condition,
 		)?;
 
 		Ok(())

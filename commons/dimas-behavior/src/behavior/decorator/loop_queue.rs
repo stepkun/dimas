@@ -18,7 +18,7 @@ use crate::port::PortList;
 use crate::{self as dimas_behavior, inout_port, input_port, output_port, port_list};
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
@@ -178,8 +178,8 @@ impl<T> BehaviorStatic for Loop<T>
 where
 	T: Clone + Debug + Default + FromStr + ToString + Send + Sync + 'static,
 {
-	fn kind() -> BehaviorType {
-		BehaviorType::Decorator
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Decorator
 	}
 
 	fn provided_ports() -> PortList {

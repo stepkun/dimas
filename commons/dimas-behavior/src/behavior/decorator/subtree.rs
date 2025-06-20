@@ -11,7 +11,7 @@ use crate as dimas_behavior;
 use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType, error::BehaviorError},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
 	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
@@ -61,8 +61,8 @@ impl BehaviorInstance for Subtree {
 }
 
 impl BehaviorStatic for Subtree {
-	fn kind() -> BehaviorType {
-		BehaviorType::SubTree
+	fn kind() -> BehaviorKind {
+		BehaviorKind::SubTree
 	}
 }
 // endregion:   --- Subtree

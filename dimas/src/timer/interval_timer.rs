@@ -7,7 +7,7 @@ use core::time::Duration;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
+		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
 		error::BehaviorError,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
@@ -38,7 +38,7 @@ impl BehaviorInstance for IntervalTimer {
 	) -> BehaviorResult {
 		// timer already started?
 		if self.handle.is_none() {
-			let input = blackboard.get("interval".into())?;
+			let input = blackboard.get("interval")?;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
 
@@ -100,8 +100,8 @@ impl BehaviorInstance for IntervalTimer {
 }
 
 impl BehaviorStatic for IntervalTimer {
-	fn kind() -> BehaviorType {
-		BehaviorType::Decorator
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Decorator
 	}
 
 	fn provided_ports() -> PortList {

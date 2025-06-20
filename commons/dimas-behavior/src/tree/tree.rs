@@ -14,8 +14,7 @@ extern crate std;
 // region:      --- modules
 #[cfg(feature = "std")]
 use alloc::string::String;
-use alloc::{sync::Arc, vec, vec::Vec};
-use core::marker::PhantomData;
+use alloc::{sync::Arc, vec::Vec};
 use dimas_scripting::SharedRuntime;
 use libloading::Library;
 use parking_lot::Mutex;
@@ -23,7 +22,7 @@ use parking_lot::Mutex;
 use crate::{
 	behavior::{BehaviorError, BehaviorResult, BehaviorState},
 	blackboard::SharedBlackboard,
-	factory::BehaviorRegistry,
+	factory::BehaviorRegistry, tree::tree_iter::{TeeIterMut, TreeIter},
 };
 
 use super::{BehaviorTreeElement, error::Error};
@@ -64,84 +63,6 @@ fn print_recursively(level: i8, node: &BehaviorTreeElement) -> Result<(), Error>
 	Ok(())
 }
 // endregion:	--- helper
-
-// region:		--- TreeIter
-/// Iterator over the [`BehaviorTree`]
-struct TreeIter<'a> {
-	/// stack to do a depth first search
-	stack: Vec<&'a BehaviorTreeElement>,
-	/// Lifetime marker
-	marker: PhantomData<&'a BehaviorTreeElement>,
-}
-
-impl<'a> TreeIter<'a> {
-	/// Create a new tree iterator.
-	#[must_use]
-	pub fn new(root: &'a BehaviorTreeElement) -> Self {
-		Self {
-			stack: vec![root],
-			marker: PhantomData,
-		}
-	}
-}
-
-impl<'a> Iterator for TreeIter<'a> {
-	type Item = &'a BehaviorTreeElement;
-
-	#[allow(clippy::cast_possible_truncation)]
-	#[allow(clippy::cast_sign_loss)]
-	#[allow(clippy::cast_possible_wrap)]
-	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(node) = self.stack.pop() {
-			// Push children in revers order to maintain left-to-right order
-			for child in node.children_iter().rev() {
-				self.stack.push(child);
-			}
-			return Some(node);
-		}
-		None
-	}
-}
-// endregion:	--- TreeIter
-
-// region:		--- TreeIterMut
-/// Mutable Iterator over the [`BehaviorTree`]
-struct TeeIterMut<'a> {
-	/// stack to do a depth first search
-	stack: Vec<*mut BehaviorTreeElement>,
-	/// Lifetime marker
-	marker: PhantomData<&'a mut BehaviorTreeElement>,
-}
-
-impl<'a> TeeIterMut<'a> {
-	/// Create a new mutable tree iterator.
-	#[must_use]
-	pub fn new(root: &'a mut BehaviorTreeElement) -> Self {
-		Self {
-			stack: vec![root],
-			marker: PhantomData,
-		}
-	}
-}
-
-#[allow(unsafe_code)]
-impl<'a> Iterator for TeeIterMut<'a> {
-	type Item = &'a mut BehaviorTreeElement;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(node_ptr) = self.stack.pop() {
-			// we know this pointer is valid since the iterator owns the traversal
-			let node = unsafe { &mut *node_ptr };
-			// Push children in revers order to maintain left-to-right order
-			for child in node.children_iter_mut().rev() {
-				self.stack.push(child);
-			}
-			return Some(&mut *node);
-		}
-		None
-	}
-}
-// endregion:	--- TreeIterMut
 
 // region:		--- BehaviorTree
 /// A Tree of [`BehaviorTreeElement`]s.

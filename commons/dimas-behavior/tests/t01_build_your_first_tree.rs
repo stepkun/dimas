@@ -10,7 +10,7 @@ extern crate alloc;
 mod test_data;
 
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorType},
+	behavior::{BehaviorKind, BehaviorState},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 };
@@ -41,7 +41,7 @@ async fn build_your_first_tree_implicit() -> anyhow::Result<()> {
 	register_behavior!(factory, ApproachObject, "ApproachObject")?;
 
 	// Registering a SimpleAction/SimpleCondition using a function pointer.
-	register_behavior!(factory, check_battery, "CheckBattery", BehaviorType::Condition)?;
+	register_behavior!(factory, check_battery, "CheckBattery", BehaviorKind::Condition)?;
 
 	// You can also create SimpleAction/SimpleCondition using methods of a struct.
 	register_behavior!(
@@ -49,10 +49,10 @@ async fn build_your_first_tree_implicit() -> anyhow::Result<()> {
 		GripperInterface::default(),
 		open,
 		"OpenGripper",
-		BehaviorType::Action,
+		BehaviorKind::Action,
 		close,
 		"CloseGripper",
-		BehaviorType::Action,
+		BehaviorKind::Action,
 	)?;
 
 	// Trees are created at run-time, but only once at the beginning.
@@ -96,7 +96,7 @@ async fn build_your_first_tree_explicit() -> anyhow::Result<()> {
 	register_behavior!(factory, ApproachObject, "ApproachObject")?;
 
 	// Registering a SimpleAction/SimpleCondition using a function pointer.
-	register_behavior!(factory, check_battery, "CheckBattery", BehaviorType::Condition)?;
+	register_behavior!(factory, check_battery, "CheckBattery", BehaviorKind::Condition)?;
 
 	// You can also create SimpleAction/SimpleCondition using methods of a struct.
 	register_behavior!(
@@ -104,10 +104,10 @@ async fn build_your_first_tree_explicit() -> anyhow::Result<()> {
 		GripperInterface::default(),
 		open,
 		"OpenGripper",
-		BehaviorType::Action,
+		BehaviorKind::Action,
 		close,
 		"CloseGripper",
-		BehaviorType::Action,
+		BehaviorKind::Action,
 	)?;
 
 	let mut tree = factory.create_from_text(XML_EXPLICIT)?;

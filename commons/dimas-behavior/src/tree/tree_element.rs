@@ -9,21 +9,35 @@ use dimas_scripting::{Error, SharedRuntime};
 
 use crate::{
 	behavior::{
-		BehaviorData, BehaviorPtr, BehaviorResult, BehaviorState,
-		error::BehaviorError,
-		pre_post_conditions::{Conditions, PostConditions, PreConditions},
+		error::BehaviorError, pre_post_conditions::{Conditions, PostConditions, PreConditions}, BehaviorData, BehaviorDescription, BehaviorPtr, BehaviorResult, BehaviorState
 	},
-	blackboard::SharedBlackboard,
+	blackboard::SharedBlackboard, tree::tree_iter::TreeIter,
 };
 
 use super::BehaviorTreeElementList;
 // endregion:   --- modules
+
+// region:		--- TreeElementKind
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+/// @TODO:
+pub enum TreeElementKind {
+	/// @TODO:
+	Leaf,
+	/// @TODO:
+	Node,
+	/// @TODO:
+	SubTree,
+}
+//endregion:	--- TreeElementKind
 
 // region:		--- BehaviorTreeElement
 /// A tree elements.
 pub struct BehaviorTreeElement {
 	/// Data of the Behavior.
 	data: BehaviorData,
+	/// Description of the Behavior.
+	description: BehaviorDescription,
 	/// Reference to the [`Blackboard`] for the element.
 	blackboard: SharedBlackboard,
 	/// The behavior of that element.
@@ -34,6 +48,8 @@ pub struct BehaviorTreeElement {
 	pre_conditions: PreConditions,
 	/// Post conditions, checked after a tick.
 	post_conditions: PostConditions,
+	/// Kind of the element.
+	kind: TreeElementKind,
 }
 
 impl BehaviorTreeElement {
@@ -42,75 +58,86 @@ impl BehaviorTreeElement {
 	#[allow(clippy::too_many_arguments)]
 	#[inline]
 	fn new(
-		uid: u16,
-		name: &str,
-		path: &str,
+		data: BehaviorData,
+		description: BehaviorDescription,
 		children: BehaviorTreeElementList,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 		conditions: Conditions,
+		kind: TreeElementKind,
 	) -> Self {
-		let mut data = BehaviorData::default();
-		data.uid = uid;
-		data.name = name.into();
-		data.path = path.into();
 		Self {
 			data,
+			description,
 			blackboard,
 			behavior,
 			children,
 			pre_conditions: conditions.pre,
 			post_conditions: conditions.post,
+			kind,
 		}
 	}
 
 	/// Create a tree leaf.
 	#[must_use]
 	pub(crate) fn create_leaf(
-		uid: u16,
-		name: &str,
-		path: &str,
+		data: BehaviorData,
+		description: BehaviorDescription,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 		conditions: Conditions,
 	) -> Self {
 		Self::new(
-			uid,
-			name,
-			path,
+			data,
+			description,
 			BehaviorTreeElementList::default(),
 			blackboard,
 			behavior,
 			conditions,
+			TreeElementKind::Leaf,
 		)
 	}
 
 	/// Create a tree node.
 	#[must_use]
 	pub(crate) fn create_node(
-		uid: u16,
-		name: &str,
-		path: &str,
+		data: BehaviorData,
+		description: BehaviorDescription,
 		children: BehaviorTreeElementList,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 		conditions: Conditions,
 	) -> Self {
-		Self::new(uid, name, path, children, blackboard, behavior, conditions)
+		Self::new(
+			data,
+			description,
+			children,
+			blackboard,
+			behavior,
+			conditions,
+			TreeElementKind::Node,
+		)
 	}
 
 	/// Create a subtree.
 	#[must_use]
 	pub(crate) fn create_subtree(
-		uid: u16,
-		name: &str,
-		path: &str,
+		data: BehaviorData,
+		description: BehaviorDescription,
 		children: BehaviorTreeElementList,
 		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 		conditions: Conditions,
 	) -> Self {
-		Self::new(uid, name, path, children, blackboard, behavior, conditions)
+		Self::new(
+			data,
+			description,
+			children,
+			blackboard,
+			behavior,
+			conditions,
+			TreeElementKind::SubTree,
+		)
 	}
 
 	/// Get the uid.
@@ -121,13 +148,13 @@ impl BehaviorTreeElement {
 
 	/// Get the name.
 	#[must_use]
-	pub fn name(&self) -> &str {
+	pub const fn name(&self) -> &ConstString {
 		&self.data.name
 	}
 
 	/// Get the path.
 	#[must_use]
-	pub fn path(&self) -> &str {
+	pub const fn path(&self) -> &ConstString {
 		&self.data.path
 	}
 
@@ -137,9 +164,15 @@ impl BehaviorTreeElement {
 		&self.data
 	}
 
-	/// Get a reference to the behavior functions.
+	/// Get a reference to the [`BehaviorDescription`].
 	#[must_use]
-	pub fn behavior_fn(&self) -> &BehaviorPtr {
+	pub const fn description(&self) -> &BehaviorDescription {
+		&self.description
+	}
+
+	/// Get a reference to the behavior.
+	#[must_use]
+	pub fn behavior(&self) -> &BehaviorPtr {
 		&self.behavior
 	}
 
@@ -333,6 +366,15 @@ impl BehaviorTreeElement {
 					.execute(chunk, &mut self.blackboard);
 			}
 		}
+	}
+
+	pub(crate) const fn kind(&self) -> TreeElementKind {
+		self.kind
+	}
+
+		/// Get an iterator over the tree element.
+	pub fn iter(&self) -> impl Iterator<Item = &Self> {
+		TreeIter::new(self)
 	}
 }
 // endregion:	--- BehaviorTreeElement

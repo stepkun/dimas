@@ -68,7 +68,7 @@ impl BehaviorInstance for SimpleBehavior {
 
 impl BehaviorRedirection for SimpleBehavior {
 	fn static_provided_ports(&self) -> PortList {
-		PortList(self.provided_ports.clone())
+		self.provided_ports.clone()
 	}
 }
 
@@ -93,7 +93,7 @@ impl SimpleBehavior {
 			Box::new(Self {
 				simple_tick_fn: None,
 				complex_tick_fn: Some(tick_fn.clone()),
-				provided_ports: PortList(port_list.clone()),
+				provided_ports: port_list.clone(),
 			})
 		})
 	}

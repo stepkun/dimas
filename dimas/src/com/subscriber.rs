@@ -5,7 +5,7 @@
 // region:      --- modules
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
@@ -49,8 +49,8 @@ impl BehaviorInstance for Subscriber {
 }
 
 impl BehaviorStatic for Subscriber {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {

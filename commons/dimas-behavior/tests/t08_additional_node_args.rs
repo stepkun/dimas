@@ -10,7 +10,7 @@ extern crate alloc;
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
 	register_behavior,
@@ -53,8 +53,8 @@ impl BehaviorInstance for ActionA {
 }
 
 impl BehaviorStatic for ActionA {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 }
 
@@ -90,8 +90,8 @@ impl BehaviorInstance for ActionB {
 }
 
 impl BehaviorStatic for ActionB {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 }
 
@@ -115,7 +115,7 @@ async fn additional_args() -> anyhow::Result<()> {
 
 	// initialize ActionB with the help of an iterator
 	for node in tree.iter_mut() {
-		if node.name() == ("Action_B") {
+		if node.name().as_ref() == ("Action_B") {
 			let action = node
 				.behavior_mut()
 				.as_any_mut()
@@ -130,10 +130,10 @@ async fn additional_args() -> anyhow::Result<()> {
 
 	// test the iterator
 	let mut iter = tree.iter();
-	assert_eq!(iter.next().expect("snh").name(), "MainTree");
-	assert_eq!(iter.next().expect("snh").name(), "Sequence");
-	assert_eq!(iter.next().expect("snh").name(), "Action_A");
-	assert_eq!(iter.next().expect("snh").name(), "Action_B");
+	assert_eq!(iter.next().expect("snh").name().as_ref(), "MainTree");
+	assert_eq!(iter.next().expect("snh").name().as_ref(), "Sequence");
+	assert_eq!(iter.next().expect("snh").name().as_ref(), "Action_A");
+	assert_eq!(iter.next().expect("snh").name().as_ref(), "Action_B");
 	assert!(iter.next().is_none());
 
 	Ok(())

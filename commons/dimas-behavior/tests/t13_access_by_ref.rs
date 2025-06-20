@@ -16,7 +16,7 @@ use std::{
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port, output_port,
@@ -119,8 +119,8 @@ impl BehaviorInstance for AcquirePointCloud {
 }
 
 impl BehaviorStatic for AcquirePointCloud {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
@@ -153,8 +153,8 @@ impl BehaviorInstance for SegmentObject {
 }
 
 impl BehaviorStatic for SegmentObject {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {

@@ -9,52 +9,11 @@ extern crate proc_macro;
 #[doc(hidden)]
 extern crate alloc;
 
-use proc_macro2::TokenStream;
-use quote::quote;
+mod behavior;
+
+use behavior::derive_behavior_struct;
+use proc_macro::TokenStream;
 use syn::DeriveInput;
-
-/// Implementation of the derive macro [`Behavior`]
-fn derive_behavior_struct(input: &DeriveInput) -> TokenStream {
-	// structure name
-	let ident = &input.ident;
-	let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
-
-	let derived: TokenStream = "#[automatically_derived]"
-		.parse()
-		.expect("derive(Behavior) - derived");
-	let diagnostic: TokenStream = "#[diagnostic::do_not_recommend]"
-		.parse()
-		.expect("derive(Behavior) - diagnostic");
-
-	quote! {
-		#derived
-		#diagnostic
-		impl #impl_generics dimas_behavior::behavior::Behavior for #ident #type_generics #where_clause {}
-
-		#derived
-		#diagnostic
-		impl #impl_generics dimas_behavior::behavior::BehaviorCreation for #ident #type_generics #where_clause {
-			fn creation_fn() -> alloc::boxed::Box<dimas_behavior::behavior::BehaviorCreationFn> {
-				alloc::boxed::Box::new(|| alloc::boxed::Box::new(Self::default()))
-			}
-		}
-
-		#derived
-		#diagnostic
-		impl #impl_generics dimas_behavior::behavior::BehaviorExecution for #ident #type_generics #where_clause {
-			fn as_any(&self) -> &dyn core::any::Any { self }
-			fn as_any_mut(&mut self) -> &mut dyn core::any::Any { self }
-		}
-
-		#derived
-		#diagnostic
-		impl #impl_generics dimas_behavior::behavior::BehaviorRedirection for #ident #type_generics #where_clause {
-			fn static_provided_ports(&self) -> dimas_behavior::port::PortList {
-				Self::provided_ports()
-			}
-		}
-	}
-}
 
 /// Derive macro for [`Behavior`].
 ///
@@ -118,8 +77,8 @@ fn derive_behavior_struct(input: &DeriveInput) -> TokenStream {
 /// # Panics
 /// - if used on enums or unions
 #[proc_macro_derive(Behavior, attributes(dimas))]
-pub fn derive_behavior(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-	// Construct a representation of Rust code as a syntax tree
+pub fn derive_behavior(input: TokenStream) -> TokenStream {
+	// Construct a representation of the Rust code
 	let input: DeriveInput = syn::parse2(input.into()).expect("could not parse input");
 
 	// Check type of input

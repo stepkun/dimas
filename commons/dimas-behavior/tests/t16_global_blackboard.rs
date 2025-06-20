@@ -11,7 +11,7 @@ extern crate alloc;
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::{BlackboardInterface, SharedBlackboard, error::Error},
 	factory::BehaviorTreeFactory,
 	input_port,
@@ -75,8 +75,8 @@ impl BehaviorInstance for PrintNumber {
 }
 
 impl BehaviorStatic for PrintNumber {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {

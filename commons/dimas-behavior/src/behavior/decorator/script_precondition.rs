@@ -13,7 +13,7 @@ use crate::behavior::error::BehaviorError;
 use crate::blackboard::BlackboardInterface;
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
@@ -81,8 +81,8 @@ impl BehaviorInstance for Precondition {
 }
 
 impl BehaviorStatic for Precondition {
-	fn kind() -> BehaviorType {
-		BehaviorType::Decorator
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Decorator
 	}
 
 	fn provided_ports() -> PortList {

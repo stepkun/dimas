@@ -17,7 +17,7 @@ use std::{
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorError, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port, output_port,

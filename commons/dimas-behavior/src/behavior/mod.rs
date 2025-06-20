@@ -126,7 +126,7 @@ pub trait BehaviorRedirection: core::fmt::Debug + Send + Sync {
 pub trait BehaviorStatic: Default {
 	/// Get the [`BehaviorType`] of the behavior that shall become a node in a behavior (sub)tree.
 	#[must_use]
-	fn kind() -> BehaviorType;
+	fn kind() -> BehaviorKind;
 
 	/// Provide the list of defined ports.
 	/// Default implementation returns an empty list.
@@ -161,6 +161,17 @@ pub struct BehaviorData {
 }
 
 impl BehaviorData {
+	/// Constructor
+	#[must_use]
+	pub fn new(uid: u16, name: &str, path: &str) -> Self {
+		Self {
+			uid,
+			name: name.into(),
+			path: path.into(),
+			state: BehaviorState::default(),
+			pre_state_change_hooks: Vec::default(),
+		}
+	}
 	/// Method to get the name.
 	#[must_use]
 	pub fn name(&self) -> &str {
@@ -215,6 +226,108 @@ impl BehaviorData {
 	}
 }
 // endregion:	--- BehaviorData
+
+// region:		--- BehaviorDescription
+/// Description of a Behavior, used in xml parsing and creating.
+#[derive(Clone, Debug)]
+pub struct BehaviorDescription {
+	/// Name of the behavior.
+	name: ConstString,
+	/// Kind of the behavior.
+	kind: BehaviorKind,
+	/// Flag to indicate whether this behavior is builtin by Groot2.
+	groot2: bool,
+	/// The [`PortList`]
+	ports: PortList,
+}
+
+impl BehaviorDescription {
+	/// Create a behavior description.
+	#[must_use]
+	pub fn new(name: &str, kind: BehaviorKind, groot2: bool, ports: PortList) -> Self {
+		Self {
+			name: name.into(),
+			kind,
+			groot2,
+			ports,
+		}
+	}
+
+	/// Get name
+	#[must_use]
+	pub fn name(&self) -> ConstString {
+		self.name.clone()
+	}
+
+	/// Get kind
+	#[must_use]
+	pub const fn kind(&self) -> BehaviorKind {
+		self.kind
+	}
+
+	/// Get kind as str
+	#[must_use]
+	pub const fn kind_str(&self) -> &'static str {
+		self.kind.as_str()
+	}
+
+	/// If is builtin of Groot2
+	#[must_use]
+	pub const fn groot2(&self) -> bool {
+		self.groot2
+	}
+
+	/// Get ports
+	#[must_use]
+	pub const fn ports(&self) -> &PortList {
+		&self.ports
+	}
+}
+// endregion:	--- BehaviorDescription
+
+// region:		--- BehaviorKind
+static ACTION: &str = "Action";
+static CONDITION: &str = "Condition";
+static CONTROL: &str = "Control";
+static DECORATOR: &str = "Decorator";
+static SUBTREE: &str = "SubTree";
+
+/// All types of behaviors usable in a behavior tree.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum BehaviorKind {
+	/// Action
+	Action,
+	/// Condition
+	Condition,
+	/// Control
+	Control,
+	/// Decorator
+	Decorator,
+	/// Subtree
+	SubTree,
+}
+
+impl core::fmt::Display for BehaviorKind {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		write!(f, "{}", self.as_str())
+	}
+}
+
+impl BehaviorKind {
+	/// Provide a static str reference
+	#[must_use]
+	pub const fn as_str(&self) -> &'static str {
+		match self {
+			Self::Action => ACTION,
+			Self::Condition => CONDITION,
+			Self::Control => CONTROL,
+			Self::Decorator => DECORATOR,
+			Self::SubTree => SUBTREE,
+		}
+	}
+}
+// endregion:	--- BehaviorKind
 
 // region:      --- BehaviorState
 /// Behavior state
@@ -279,35 +392,3 @@ impl core::str::FromStr for BehaviorState {
 	}
 }
 // endregion:   --- BehaviorState
-
-// region:		--- BehaviorType
-/// All types of behaviors usable in a behavior tree.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum BehaviorType {
-	/// Action
-	Action,
-	/// Condition
-	Condition,
-	/// Control
-	Control,
-	/// Decorator
-	Decorator,
-	/// Subtree
-	SubTree,
-}
-
-impl core::fmt::Display for BehaviorType {
-	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		let text = match self {
-			Self::Action => "Action",
-			Self::Condition => "Condition",
-			Self::Control => "Control",
-			Self::Decorator => "Decorator",
-			Self::SubTree => "SubTree",
-		};
-
-		write!(f, "{text}")
-	}
-}
-// endregion:	--- BehaviorType

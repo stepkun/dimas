@@ -14,7 +14,7 @@ use crate::blackboard::BlackboardInterface;
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::BehaviorTreeElementList,
@@ -154,8 +154,8 @@ impl BehaviorInstance for Parallel {
 }
 
 impl BehaviorStatic for Parallel {
-	fn kind() -> BehaviorType {
-		BehaviorType::Control
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Control
 	}
 
 	fn provided_ports() -> PortList {

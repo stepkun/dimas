@@ -17,7 +17,7 @@ use std::{
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorData, BehaviorError, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType,
+		BehaviorData, BehaviorError, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
 	},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
@@ -114,8 +114,8 @@ impl BehaviorInstance for BehaviorWithDefaultPoints {
 }
 
 impl BehaviorStatic for BehaviorWithDefaultPoints {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {

@@ -5,8 +5,6 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use core::any::TypeId;
-
 // region:      --- modules
 use dimas_core::ConstString;
 
@@ -19,15 +17,15 @@ use super::{PortDirection, error::Error, is_allowed_port_name};
 #[derive(Clone, Debug)]
 pub struct PortDefinition {
 	/// Direction of the port.
-	_direction: PortDirection,
-	/// Type of the port.
-	_type_id: TypeId,
+	direction: PortDirection,
+	/// Data type of the port.
+	type_name: ConstString,
 	/// Name of the port.
 	name: ConstString,
 	/// Default value for the port.
 	default_value: ConstString,
 	/// Description of the port.
-	_description: ConstString,
+	description: ConstString,
 }
 
 impl PortDefinition {
@@ -36,18 +34,18 @@ impl PortDefinition {
 	/// - if the name violates the conventions.
 	pub fn new(
 		direction: PortDirection,
-		type_id: TypeId,
+		type_name: &str,
 		name: &str,
 		default_value: &str,
 		description: &str,
 	) -> Result<Self, Error> {
 		if is_allowed_port_name(name) {
 			Ok(Self {
-				_direction: direction,
-				_type_id: type_id,
+				direction,
+				type_name: type_name.into(),
 				name: name.into(),
 				default_value: default_value.into(),
-				_description: description.into(),
+				description: description.into(),
 			})
 		} else {
 			Err(Error::NameNotAllowed(name.into()))
@@ -60,6 +58,12 @@ impl PortDefinition {
 		self.name.clone()
 	}
 
+	/// Get the [`PortDefinition`]s direction.
+	#[must_use]
+	pub const fn direction(&self) -> &PortDirection {
+		&self.direction
+	}
+
 	/// Get the default value.
 	#[must_use]
 	pub fn default_value(&self) -> Option<ConstString> {
@@ -68,6 +72,15 @@ impl PortDefinition {
 		} else {
 			Some(self.default_value.clone())
 		}
+	}
+
+	pub(crate) fn type_name(&self) -> & str {
+		&self.type_name
+	}
+
+	#[allow(unused)]
+	pub(crate) fn description(&self) -> &str {
+		&self.description
 	}
 }
 // endregion:   --- PortDefinition

@@ -18,7 +18,7 @@ use super::{PortDefinition, error::Error};
 /// List of ports
 /// The `PortList` is not using a `BTreeMap` but a `Vec` due to
 /// a `BTreeMap` needs more space than a `Vec` and search performance is not an issue
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PortList(pub Vec<PortDefinition>);
 
 impl Deref for PortList {

@@ -13,7 +13,7 @@ use std::time::Duration;
 use test_data::{MoveBaseAction, SaySomething, check_battery};
 
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorType},
+	behavior::{BehaviorKind, BehaviorState},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 };
@@ -39,7 +39,7 @@ const XML: &str = r#"
 async fn std_sequence() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_behavior!(factory, check_battery, "BatteryOK", BehaviorType::Condition)?;
+	register_behavior!(factory, check_battery, "BatteryOK", BehaviorKind::Condition)?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 
@@ -76,7 +76,7 @@ const XML_REACTIVE: &str = r#"
 async fn reactive_sequence() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
-	register_behavior!(factory, check_battery, "BatteryOK", BehaviorType::Condition)?;
+	register_behavior!(factory, check_battery, "BatteryOK", BehaviorKind::Condition)?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 

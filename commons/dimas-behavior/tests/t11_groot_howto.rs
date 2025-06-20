@@ -8,13 +8,12 @@
 
 extern crate alloc;
 mod cross_door;
-
-use std::{fmt::Display, num::ParseFloatError, str::FromStr};
+mod test_data;
 
 use cross_door::CrossDoor;
 use dimas_behavior::{
-	Behavior, SharedRuntime,
-	behavior::{BehaviorData, BehaviorInstance, BehaviorResult, BehaviorState, BehaviorStatic, BehaviorType},
+	Behavior, Groot2Publisher, SharedRuntime, XmlCreator,
+	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	output_port,
@@ -23,7 +22,9 @@ use dimas_behavior::{
 	tree::BehaviorTreeElementList,
 };
 
-const CYCLES: u8 = 20;
+use crate::test_data::Position2D;
+
+const CYCLES: u8 = 0;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -77,44 +78,12 @@ impl BehaviorInstance for UpdatePosition {
 }
 
 impl BehaviorStatic for UpdatePosition {
-	fn kind() -> BehaviorType {
-		BehaviorType::Action
+	fn kind() -> BehaviorKind {
+		BehaviorKind::Action
 	}
 
 	fn provided_ports() -> PortList {
 		port_list![output_port!(Position2D, "pos")]
-	}
-}
-
-/// `Position2D`
-#[derive(Clone, Debug, Default)]
-struct Position2D {
-	x: f64,
-	y: f64,
-}
-
-impl FromStr for Position2D {
-	type Err = ParseFloatError;
-
-	fn from_str(value: &str) -> Result<Self, Self::Err> {
-		println!("Converting string: \"{value}\"");
-		// remove redundant ' and &apos; from string
-		let s = value
-			.replace('\'', "")
-			.trim()
-			.replace("&apos;", "")
-			.trim()
-			.to_string();
-		let v: Vec<&str> = s.split(';').collect();
-		let x = f64::from_str(v[0])?;
-		let y = f64::from_str(v[1])?;
-		Ok(Self { x, y })
-	}
-}
-
-impl Display for Position2D {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "[{}, {}]", self.x, self.y)
 	}
 }
 
@@ -123,14 +92,39 @@ impl Display for Position2D {
 async fn groot_howto() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 
+	// Nodes registration, as usual
 	CrossDoor::register_behaviors(&mut factory)?;
 	register_behavior!(factory, UpdatePosition, "UpdatePosition")?;
 
+	// Groot2 editor requires a model of your registered Nodes.
+	// You don't need to write that by hand, it can be automatically
+	// generated using the following command.
+	let _xml_model = XmlCreator::write_tree_nodes_model(&factory)?;
+	// println!("-------- TreeNodesModel --------\n");
+	// println!("{xml_model}");
+	// println!("--------------------------------\n");
+
 	factory.register_behavior_tree_from_text(XML)?;
+
+	// Add this to allow Groot2 to visualize your custom type
+	// @TODO:
+	//BT::RegisterJsonDefinition<Position2D>();
 
 	let mut tree = factory.create_tree("MainTree")?;
 	drop(factory);
 
+	// Print the full tree with model
+	let xml = XmlCreator::write_tree(&tree)?;
+	println!("----------- XML file  ----------\n");
+	println!("{xml}");
+	println!("--------------------------------\n");
+
+	// Connect the Groot2Publisher. This will allow Groot2 to
+	// get the tree and poll status updates.
+	let port: i16 = 1667;
+	let _publisher = Groot2Publisher::new(&tree, port);
+
+	#[allow(clippy::reversed_empty_ranges)]
 	for _ in 0..CYCLES {
 		tree.reset()?;
 		let result = tree.tick_while_running().await?;

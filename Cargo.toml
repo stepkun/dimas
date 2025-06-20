@@ -92,6 +92,7 @@ tokio = { version = "1.45.1", features = ["rt-multi-thread", "parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
 trybuild = { version = "1.0.105", features = ["diff"] }
+xml_writer = "0.4.0"
 zenoh = "1.4.0"
 
 [profile.release]
