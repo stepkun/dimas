@@ -297,11 +297,11 @@ impl XmlParser {
 				let blackboard = if let Some(external_bb) = external_blackboard {
 					SharedBlackboard::with_parent(name, external_bb)
 				} else {
-					SharedBlackboard::new(name, remappings, values)
+					SharedBlackboard::new(name, remappings.clone(), values.clone())
 				};
-				let children = self.build_children(name, node, registry, &blackboard)?;
-				let bhvr_data = BehaviorData::new(uid, name, name);
-				// path is for root element same as name
+				// for tree root "path" is empty
+				let children = self.build_children("", node, registry, &blackboard)?;
+				let bhvr_data = BehaviorData::new(uid, name, "", remappings, values);
 				let behaviortree =
 					BehaviorTreeElement::create_subtree(bhvr_data, bhvr_desc, children, blackboard, bhvr, conditions);
 				Ok(behaviortree)
@@ -390,7 +390,7 @@ impl XmlParser {
 		let bhvr = bhvr_creation_fn();
 		let (autoremap, remappings, values, conditions) =
 			Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs, registry.runtime_mut())?;
-		let bhvr_data = BehaviorData::new(uid, &node_name, &path);
+		let bhvr_data = BehaviorData::new(uid, &node_name, &path, remappings.clone(), values.clone());
 		let tree_node = match bhvr_desc.kind() {
 			BehaviorKind::Action | BehaviorKind::Condition => {
 				if node.has_children() {

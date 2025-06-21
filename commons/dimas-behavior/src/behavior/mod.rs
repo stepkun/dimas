@@ -22,7 +22,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::any::Any;
 use dimas_scripting::SharedRuntime;
 
-use crate::{blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
+use crate::{blackboard::SharedBlackboard, port::{PortList, PortRemappings}, tree::BehaviorTreeElementList};
 // endregion:   --- modules
 
 // region:		--- types
@@ -145,37 +145,50 @@ pub struct BehaviorData {
 	/// 65536 behaviors in a [`BehaviorTree`](crate::tree::BehaviorTree) should be sufficient.
 	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
 	/// This should end up in a depth first ordering.
-	pub(crate) uid: u16,
+	uid: u16,
 	/// Name of the element.
-	pub(crate) name: ConstString,
+	name: ConstString,
 	/// Path to the element.
 	/// In contrast to BehaviorTree.CPP this path is fully qualified,
 	/// which means that every level is denoted explicitly, including the tree root.
-	pub(crate) path: ConstString,
+	path: ConstString,
 	/// Current state of the behavior.
 	state: BehaviorState,
 	/// List of pre state change callbacks with an identifier.
 	/// These callbacks can be used for observation of the [`BehaviorTreeElement`] and
 	/// for manipulation of the resulting [`BehaviorState`] of a tick.
 	pre_state_change_hooks: Vec<(ConstString, Box<BehaviorTickCallback>)>,
+	/// List of internal [`PortRemappings`].
+	remappings: PortRemappings,
+	/// List of direct assigned values to a `Port`, e.g. default values.
+	values: PortRemappings,
 }
 
 impl BehaviorData {
 	/// Constructor
 	#[must_use]
-	pub fn new(uid: u16, name: &str, path: &str) -> Self {
+	pub fn new(uid: u16, name: &str, path: &str, remappings: PortRemappings, values: PortRemappings) -> Self {
 		Self {
 			uid,
 			name: name.into(),
 			path: path.into(),
 			state: BehaviorState::default(),
 			pre_state_change_hooks: Vec::default(),
+			remappings,
+			values,
 		}
 	}
+
 	/// Method to get the name.
 	#[must_use]
-	pub fn name(&self) -> &str {
+	pub const fn name(&self) -> &ConstString {
 		&self.name
+	}
+
+	/// Method to get the path.
+	#[must_use]
+	pub const fn path(&self) -> &ConstString {
+		&self.path
 	}
 
 	/// Method to get the uid.
@@ -223,6 +236,14 @@ impl BehaviorData {
 		for index in indices {
 			let _ = self.pre_state_change_hooks.remove(index);
 		}
+	}
+	
+	pub(crate) const fn remappings(&self) -> &PortRemappings {
+		&self.remappings
+	}
+	
+	pub(crate) const fn values(&self) -> &PortRemappings {
+		&self.values
 	}
 }
 // endregion:	--- BehaviorData

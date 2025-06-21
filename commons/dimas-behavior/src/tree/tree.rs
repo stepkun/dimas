@@ -22,7 +22,8 @@ use parking_lot::Mutex;
 use crate::{
 	behavior::{BehaviorError, BehaviorResult, BehaviorState},
 	blackboard::SharedBlackboard,
-	factory::BehaviorRegistry, tree::tree_iter::{TeeIterMut, TreeIter},
+	factory::BehaviorRegistry,
+	tree::tree_iter::{TeeIterMut, TreeIter},
 };
 
 use super::{BehaviorTreeElement, error::Error};

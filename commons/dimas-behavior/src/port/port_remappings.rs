@@ -5,6 +5,8 @@
 #[doc(hidden)]
 extern crate alloc;
 
+use core::ops::Deref;
+
 // region:      --- modules
 use alloc::vec::Vec;
 use dimas_core::ConstString;
@@ -21,8 +23,16 @@ type RemappingEntry = (ConstString, ConstString);
 /// Remapping list
 /// The `PortRemappings` is not using a `BTreeMap` but a `Vec` due to
 /// a `BTreeMap` needs more space than a `Vec` and search performance is not an issue
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PortRemappings(Vec<RemappingEntry>);
+
+impl Deref for PortRemappings {
+	type Target = Vec<RemappingEntry>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
 
 impl PortRemappings {
 	/// Add an entry to the [`PortRemappings`].

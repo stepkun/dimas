@@ -3,15 +3,19 @@
 //! A [`BehaviorTreeElement`]
 //!
 
+use alloc::string::ToString;
 // region:      --- modules
 use dimas_core::ConstString;
 use dimas_scripting::{Error, SharedRuntime};
 
 use crate::{
 	behavior::{
-		error::BehaviorError, pre_post_conditions::{Conditions, PostConditions, PreConditions}, BehaviorData, BehaviorDescription, BehaviorPtr, BehaviorResult, BehaviorState
+		BehaviorData, BehaviorDescription, BehaviorPtr, BehaviorResult, BehaviorState,
+		error::BehaviorError,
+		pre_post_conditions::{Conditions, PostConditions, PreConditions},
 	},
-	blackboard::SharedBlackboard, tree::tree_iter::TreeIter,
+	blackboard::SharedBlackboard,
+	tree::tree_iter::TreeIter,
 };
 
 use super::BehaviorTreeElementList;
@@ -50,6 +54,8 @@ pub struct BehaviorTreeElement {
 	post_conditions: PostConditions,
 	/// Kind of the element.
 	kind: TreeElementKind,
+	/// Path for Groot2
+	groot2_path: ConstString,
 }
 
 impl BehaviorTreeElement {
@@ -66,6 +72,18 @@ impl BehaviorTreeElement {
 		conditions: Conditions,
 		kind: TreeElementKind,
 	) -> Self {
+		let groot2_path = match kind {
+			TreeElementKind::Leaf | TreeElementKind::Node => data.path().clone(),
+			TreeElementKind::SubTree => {
+				if data.path().is_empty() {
+					data.path().clone()
+				} else {
+					let uid = data.uid().to_string();
+					(data.name().to_string() + "::" + &uid).into()
+				}
+			}
+		};
+
 		Self {
 			data,
 			description,
@@ -75,6 +93,7 @@ impl BehaviorTreeElement {
 			pre_conditions: conditions.pre,
 			post_conditions: conditions.post,
 			kind,
+			groot2_path,
 		}
 	}
 
@@ -143,19 +162,25 @@ impl BehaviorTreeElement {
 	/// Get the uid.
 	#[must_use]
 	pub const fn uid(&self) -> u16 {
-		self.data.uid
+		self.data.uid()
 	}
 
 	/// Get the name.
 	#[must_use]
 	pub const fn name(&self) -> &ConstString {
-		&self.data.name
+		self.data.name()
 	}
 
 	/// Get the path.
 	#[must_use]
 	pub const fn path(&self) -> &ConstString {
-		&self.data.path
+		self.data.path()
+	}
+
+	/// Get the path for Groot2.
+	#[must_use]
+	pub const fn groot2_path(&self) -> &ConstString {
+		&self.groot2_path
 	}
 
 	/// Get a reference to the [`BehaviorData`].
@@ -372,7 +397,7 @@ impl BehaviorTreeElement {
 		self.kind
 	}
 
-		/// Get an iterator over the tree element.
+	/// Get an iterator over the tree element.
 	pub fn iter(&self) -> impl Iterator<Item = &Self> {
 		TreeIter::new(self)
 	}

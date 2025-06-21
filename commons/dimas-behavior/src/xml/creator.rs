@@ -7,8 +7,9 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{collections::btree_map::BTreeMap, string::String, vec::Vec};
+use alloc::{collections::btree_map::BTreeMap, string::String, sync::Arc, vec::Vec};
 use dimas_core::ConstString;
+use parking_lot::Mutex;
 
 use crate::{
 	behavior::BehaviorDescription,
@@ -30,9 +31,9 @@ pub struct XmlCreator;
 impl XmlCreator {
 	/// Create XML `TreeNodesModel` from factories registered nodes.
 	/// # Errors
-	pub fn write_tree_nodes_model(factory: &BehaviorTreeFactory) -> Result<ConstString, std::io::Error> {
+	pub fn write_tree_nodes_model(factory: &BehaviorTreeFactory, pretty: bool) -> Result<ConstString, std::io::Error> {
 		let mut xml = XmlWriter::new(Vec::new());
-		xml.pretty = true;
+		xml.pretty = pretty;
 		xml.begin_elem("root")?;
 		xml.attr("BTCPP_format", "4")?;
 		xml.begin_elem("TreeNodesModel")?;
@@ -66,104 +67,114 @@ impl XmlCreator {
 
 	/// Create XML from tree including `TreeNodesModel`.
 	/// # Errors
-	pub fn write_tree(tree: &BehaviorTree) -> Result<ConstString, std::io::Error> {
-		/*
-		<root BTCPP_format="4">
-			<BehaviorTree ID="MainTree" _fullpath="">
-				<Sequence name="Sequence">
-					<Script name="Script" code="door_open:=false"/>
-					<UpdatePosition name="UpdatePosition" pos="{pos_2D}"/>
-					<Fallback name="Fallback">
-						<Inverter name="Inverter">
-							<IsDoorClosed name="IsDoorClosed"/>
-						</Inverter>
-						<SubTree ID="DoorClosed" door_open="{door_open}"/>
-					</Fallback>
-					<PassThroughDoor name="PassThroughDoor"/>
-				</Sequence>
-			</BehaviorTree>
-			<BehaviorTree ID="DoorClosed" _fullpath="DoorClosed::7">
-				<Fallback name="tryOpen" _onSuccess="door_open:=true">
-					<OpenDoor name="OpenDoor"/>
-					<RetryUntilSuccessful name="RetryUntilSuccessful" num_attempts="5">
-						<PickLock name="PickLock"/>
-					</RetryUntilSuccessful>
-					<SmashDoor name="SmashDoor"/>
-				</Fallback>
-			</BehaviorTree>
-		</root>
-		 */
-
+	pub fn write_tree(tree: &BehaviorTree, pretty: bool) -> Result<ConstString, std::io::Error> {
 		// storage for (non groot2 builtin) behaviors to mention in TreeNodesModel
 		let mut behaviors: BTreeMap<ConstString, BehaviorDescription> = BTreeMap::new();
 		let mut subtrees: BTreeMap<ConstString, &BehaviorTreeElement> = BTreeMap::new();
 
-		let mut xml: XmlWriter<'_, Vec<u8>> = XmlWriter::new(Vec::new());
-		xml.pretty = true;
-		xml.begin_elem("root")?;
-		xml.attr("BTCPP_format", "4")?;
+		let mut inner: XmlWriter<'_, Vec<u8>> = XmlWriter::new(Vec::new());
+		inner.pretty = pretty;
+		let writer = Arc::new(Mutex::new(inner));
+		{
+			writer.lock().pretty = true;
+			writer.lock().begin_elem("root")?;
+			writer.lock().attr("BTCPP_format", "4")?;
 
-		// scan the tree
-		for item in tree.iter() {
-			#[allow(clippy::match_same_arms)]
-			match item.kind() {
-				TreeElementKind::Leaf => {
-					let desc = item.description();
-					if !desc.groot2() {
-						behaviors.insert(desc.name(), desc.clone());
+			// scan the tree
+			for item in tree.iter() {
+				#[allow(clippy::match_same_arms)]
+				match item.kind() {
+					TreeElementKind::Leaf => {
+						let desc = item.description();
+						if !desc.groot2() {
+							behaviors.insert(desc.name(), desc.clone());
+						}
+					}
+					TreeElementKind::Node => {
+						let desc = item.description();
+						if !desc.groot2() {
+							behaviors.insert(desc.name(), desc.clone());
+						}
+					}
+					TreeElementKind::SubTree => {
+						subtrees.insert(item.path().clone(), item);
 					}
 				}
-				TreeElementKind::Node => {
-					let desc = item.description();
-					if !desc.groot2() {
-						behaviors.insert(desc.name(), desc.clone());
+			}
+
+			// create the BehaviorTree's
+			for (_path, subtree) in subtrees {
+				writer.lock().begin_elem("BehaviorTree")?;
+				writer.lock().attr("ID", subtree.name())?;
+				writer
+					.lock()
+					.attr("_fullpath", subtree.groot2_path())?;
+
+				// recursive dive into children
+				for element in subtree.children().iter() {
+					Self::write_subtree(element, &writer)?;
+				}
+				writer.lock().end_elem()?; // BehaviorTree
+			}
+
+			// create the TreeNodesModel
+			writer.lock().begin_elem("TreeNodesModel")?;
+			// loop over collected behavior entries
+			for (name, item) in &behaviors {
+				if !item.groot2() {
+					writer.lock().begin_elem(item.kind_str())?;
+					writer.lock().attr("ID", name)?;
+					// look for a PortsList
+					for port in &item.ports().0 {
+						writer
+							.lock()
+							.begin_elem(port.direction().type_str())?;
+						writer.lock().attr("name", &port.name())?;
+						writer.lock().attr("type", port.type_name())?;
+						writer.lock().end_elem()?;
 					}
-				}
-				TreeElementKind::SubTree => {
-					subtrees.insert(item.path().clone() ,item);
+					writer.lock().end_elem()?;
 				}
 			}
+
+			writer.lock().end_elem()?; // TreeNodesModel
+			writer.lock().end_elem()?; // root
+			writer.lock().flush()?;
 		}
 
-		// create the BehaviorTree's
-		for (path, _subtree) in subtrees {
-			std::dbg!(path);
-		}
-
-		// create the TreeNodesModel
-		xml.begin_elem("TreeNodesModel")?;
-		// loop over collected behavior entries
-		for (name, item) in &behaviors {
-			if !item.groot2() {
-				xml.begin_elem(item.kind_str())?;
-				xml.attr("ID", name)?;
-				// look for a PortsList
-				for port in &item.ports().0 {
-					xml.begin_elem(port.direction().type_str())?;
-					xml.attr("name", &port.name())?;
-					xml.attr("type", port.type_name())?;
-					xml.end_elem()?;
+		Arc::into_inner(writer).map_or_else(
+			|| todo!(),
+			|inner| {
+				let raw = inner.into_inner().into_inner();
+				let mut output = String::with_capacity(raw.len());
+				for c in raw {
+					output.push(c as char);
 				}
-				xml.end_elem()?;
-			}
-		}
-
-		xml.end_elem()?; // TreeNodesModel
-
-		xml.end_elem()?; // root
-		xml.flush()?;
-
-		let raw = xml.into_inner();
-		let mut output = String::with_capacity(raw.len());
-		for c in raw {
-			output.push(c as char);
-		}
-		Ok(output.into())
+				Ok(output.into())
+			},
+		)
 	}
 
-	// fn write_subtree(iter: &mut , writer: &mut XmlWriter<'_, Vec<u8>>) -> Result<(), std::io::Error> {
+	fn write_subtree<'a>(
+		element: &'a BehaviorTreeElement,
+		writer: &Arc<Mutex<XmlWriter<'a, Vec<u8>>>>,
+	) -> Result<(), std::io::Error> {
+		writer.lock().begin_elem(element.name())?;
+		writer.lock().attr("name", element.name())?;
+		// port mappings/values
+		for remapping in element.data().remappings().iter() {
+			writer.lock().attr(&remapping.0, &remapping.1)?;
+		}
+		for remapping in element.data().values().iter() {
+			writer.lock().attr(&remapping.0, &remapping.1)?;
+		}
+		// recursive dive into children
+		for element in element.children().iter() {
+			Self::write_subtree(element, writer)?;
+		}
 
-	// 	Ok(())
-	// }
+		writer.lock().end_elem()?;
+		Ok(())
+	}
 }
 // endregion:   --- XmlWriter

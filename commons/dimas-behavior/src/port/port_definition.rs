@@ -74,7 +74,7 @@ impl PortDefinition {
 		}
 	}
 
-	pub(crate) fn type_name(&self) -> & str {
+	pub(crate) fn type_name(&self) -> &str {
 		&self.type_name
 	}
 

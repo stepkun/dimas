@@ -99,7 +99,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 	// Groot2 editor requires a model of your registered Nodes.
 	// You don't need to write that by hand, it can be automatically
 	// generated using the following command.
-	let _xml_model = XmlCreator::write_tree_nodes_model(&factory)?;
+	let _xml_model = XmlCreator::write_tree_nodes_model(&factory, true)?;
 	// println!("-------- TreeNodesModel --------\n");
 	// println!("{xml_model}");
 	// println!("--------------------------------\n");
@@ -114,7 +114,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 	drop(factory);
 
 	// Print the full tree with model
-	let xml = XmlCreator::write_tree(&tree)?;
+	let xml = XmlCreator::write_tree(&tree, true)?;
 	println!("----------- XML file  ----------\n");
 	println!("{xml}");
 	println!("--------------------------------\n");
