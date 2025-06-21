@@ -90,22 +90,37 @@ impl BehaviorTreeFactory {
 		// core actions
 		self.register_groot2_behavior_type::<Script>("Script")?;
 
-		let bhvr_desc =
-			BehaviorDescription::new("AlwaysFailure", StateAfter::kind(), true, StateAfter::provided_ports());
+		let bhvr_desc = BehaviorDescription::new(
+			"AlwaysFailure",
+			"AlwaysFailure",
+			StateAfter::kind(),
+			true,
+			StateAfter::provided_ports(),
+		);
 		let bhvr_creation_fn =
 			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Failure, 0)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
-		let bhvr_desc =
-			BehaviorDescription::new("AlwaysRunning", StateAfter::kind(), true, StateAfter::provided_ports());
+		let bhvr_desc = BehaviorDescription::new(
+			"AlwaysRunning",
+			"AlwaysRunning",
+			StateAfter::kind(),
+			true,
+			StateAfter::provided_ports(),
+		);
 		let bhvr_creation_fn =
 			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Running, 0)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
-		let bhvr_desc =
-			BehaviorDescription::new("AlwaysSuccess", StateAfter::kind(), true, StateAfter::provided_ports());
+		let bhvr_desc = BehaviorDescription::new(
+			"AlwaysSuccess",
+			"AlwaysSuccess",
+			StateAfter::kind(),
+			true,
+			StateAfter::provided_ports(),
+		);
 		let bhvr_creation_fn =
 			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Success, 0)) });
 		self.registry_mut()
@@ -276,7 +291,7 @@ impl BehaviorTreeFactory {
 	where
 		T: Behavior,
 	{
-		let bhvr_desc = BehaviorDescription::new(name, T::kind(), false, T::provided_ports());
+		let bhvr_desc = BehaviorDescription::new(name, name, T::kind(), false, T::provided_ports());
 		let bhvr_creation_fn = T::creation_fn();
 		self.registry
 			.add_behavior(bhvr_desc, bhvr_creation_fn)
@@ -289,7 +304,7 @@ impl BehaviorTreeFactory {
 	where
 		T: Behavior,
 	{
-		let bhvr_desc = BehaviorDescription::new(name, T::kind(), true, T::provided_ports());
+		let bhvr_desc = BehaviorDescription::new(name, name, T::kind(), true, T::provided_ports());
 		let bhvr_creation_fn = T::creation_fn();
 		self.registry
 			.add_behavior(bhvr_desc, bhvr_creation_fn)
@@ -304,7 +319,7 @@ impl BehaviorTreeFactory {
 		tick_fn: SimpleBhvrTickFn,
 		kind: BehaviorKind,
 	) -> Result<(), Error> {
-		let bhvr_desc = BehaviorDescription::new(name, kind, false, PortList::default());
+		let bhvr_desc = BehaviorDescription::new(name, name, kind, false, PortList::default());
 		let bhvr_creation_fn = SimpleBehavior::create(tick_fn);
 		self.registry
 			.add_behavior(bhvr_desc, bhvr_creation_fn)
@@ -320,7 +335,7 @@ impl BehaviorTreeFactory {
 		kind: BehaviorKind,
 		port_list: PortList,
 	) -> Result<(), Error> {
-		let bhvr_desc = BehaviorDescription::new(name, kind, false, port_list.clone());
+		let bhvr_desc = BehaviorDescription::new(name, name, kind, false, port_list.clone());
 		let bhvr_creation_fn = SimpleBehavior::new_create_with_ports(tick_fn, port_list);
 		self.registry
 			.add_behavior(bhvr_desc, bhvr_creation_fn)

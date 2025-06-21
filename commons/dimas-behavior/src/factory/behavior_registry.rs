@@ -49,12 +49,14 @@ impl BehaviorRegistry {
 	{
 		if self
 			.behaviors
-			.contains_key(&bhvr_description.name())
+			.contains_key(bhvr_description.name())
 		{
-			return Err(Error::BehaviorAlreadyRegistered(bhvr_description.name()));
+			return Err(Error::BehaviorAlreadyRegistered(bhvr_description.name().clone()));
 		}
-		self.behaviors
-			.insert(bhvr_description.name(), (bhvr_description, Arc::from(bhvr_creation_fn)));
+		self.behaviors.insert(
+			bhvr_description.name().clone(),
+			(bhvr_description, Arc::from(bhvr_creation_fn)),
+		);
 		Ok(())
 	}
 

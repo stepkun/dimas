@@ -92,7 +92,7 @@ macro_rules! register_behavior {
 	}};
 	// a behavior struct with arguments for construction
 	($factory:expr, $tp:ty, $name:literal, $($arg:expr),* $(,)?) => {{
-		let bhvr_desc = $crate::behavior::BehaviorDescription::new($name, <$tp>::kind(), false, <$tp>::provided_ports());
+		let bhvr_desc = $crate::behavior::BehaviorDescription::new($name, stringify!($tp), <$tp>::kind(), false, <$tp>::provided_ports());
 		let bhvr_creation_fn = alloc::boxed::Box::new(move || -> alloc::boxed::Box<dyn $crate::behavior::BehaviorExecution> {
 			alloc::boxed::Box::new(<$tp>::new($($arg),*))
 		});

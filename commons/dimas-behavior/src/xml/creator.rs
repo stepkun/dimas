@@ -20,9 +20,6 @@ use xml_writer::XmlWriter;
 
 // endregion:   --- modules
 
-// region:		--- helper
-// endregion:	--- helper
-
 // region:      --- XmlWriter
 /// Write different kinds of XML from various sources.
 #[derive(Default)]
@@ -32,32 +29,38 @@ impl XmlCreator {
 	/// Create XML `TreeNodesModel` from factories registered nodes.
 	/// # Errors
 	pub fn write_tree_nodes_model(factory: &BehaviorTreeFactory, pretty: bool) -> Result<ConstString, std::io::Error> {
-		let mut xml = XmlWriter::new(Vec::new());
-		xml.pretty = pretty;
-		xml.begin_elem("root")?;
-		xml.attr("BTCPP_format", "4")?;
-		xml.begin_elem("TreeNodesModel")?;
+		let mut writer = if pretty {
+			XmlWriter::pretty(Vec::new())
+		} else {
+			let mut writer = XmlWriter::new(Vec::new());
+			writer.pretty = false;
+			writer
+		};
+
+		writer.begin_elem("root")?;
+		writer.attr("BTCPP_format", "4")?;
+		writer.begin_elem("TreeNodesModel")?;
 
 		// loop over factories behavior entries in registry
 		for item in factory.registry().behaviors() {
 			if !item.1.0.groot2() {
-				xml.begin_elem(item.1.0.kind_str())?;
-				xml.attr("ID", item.0)?;
+				writer.begin_elem(item.1.0.kind_str())?;
+				writer.attr("ID", item.0)?;
 				// look for a PortsList
 				for port in &item.1.0.ports().0 {
-					xml.begin_elem(port.direction().type_str())?;
-					xml.attr("name", &port.name())?;
-					xml.attr("type", port.type_name())?;
-					xml.end_elem()?;
+					writer.begin_elem(port.direction().type_str())?;
+					writer.attr("name", port.name())?;
+					writer.attr("type", port.type_name())?;
+					writer.end_elem()?;
 				}
-				xml.end_elem()?;
+				writer.end_elem()?;
 			}
 		}
 
-		xml.end_elem()?; // TreeNodesModel
-		xml.end_elem()?; // root
-		xml.flush()?;
-		let raw = xml.into_inner();
+		writer.end_elem()?; // TreeNodesModel
+		writer.end_elem()?; // root
+		writer.flush()?;
+		let raw = writer.into_inner();
 		let mut output = String::with_capacity(raw.len());
 		for c in raw {
 			output.push(c as char);
@@ -72,8 +75,13 @@ impl XmlCreator {
 		let mut behaviors: BTreeMap<ConstString, BehaviorDescription> = BTreeMap::new();
 		let mut subtrees: BTreeMap<ConstString, &BehaviorTreeElement> = BTreeMap::new();
 
-		let mut inner: XmlWriter<'_, Vec<u8>> = XmlWriter::new(Vec::new());
-		inner.pretty = pretty;
+		let inner = if pretty {
+			XmlWriter::pretty(Vec::new())
+		} else {
+			let mut writer = XmlWriter::new(Vec::new());
+			writer.pretty = false;
+			writer
+		};
 		let writer = Arc::new(Mutex::new(inner));
 		{
 			writer.lock().pretty = true;
@@ -87,13 +95,13 @@ impl XmlCreator {
 					TreeElementKind::Leaf => {
 						let desc = item.description();
 						if !desc.groot2() {
-							behaviors.insert(desc.name(), desc.clone());
+							behaviors.insert(desc.name().clone(), desc.clone());
 						}
 					}
 					TreeElementKind::Node => {
 						let desc = item.description();
 						if !desc.groot2() {
-							behaviors.insert(desc.name(), desc.clone());
+							behaviors.insert(desc.name().clone(), desc.clone());
 						}
 					}
 					TreeElementKind::SubTree => {
@@ -129,7 +137,7 @@ impl XmlCreator {
 						writer
 							.lock()
 							.begin_elem(port.direction().type_str())?;
-						writer.lock().attr("name", &port.name())?;
+						writer.lock().attr("name", port.name())?;
 						writer.lock().attr("type", port.type_name())?;
 						writer.lock().end_elem()?;
 					}
@@ -159,8 +167,21 @@ impl XmlCreator {
 		element: &'a BehaviorTreeElement,
 		writer: &Arc<Mutex<XmlWriter<'a, Vec<u8>>>>,
 	) -> Result<(), std::io::Error> {
-		writer.lock().begin_elem(element.name())?;
-		writer.lock().attr("name", element.name())?;
+		let no_subtree = match element.kind() {
+			TreeElementKind::Leaf | TreeElementKind::Node => {
+				writer
+					.lock()
+					.begin_elem(element.description().id())?;
+				writer.lock().attr("name", element.name())?;
+				true
+			}
+			TreeElementKind::SubTree => {
+				writer.lock().begin_elem("SubTree")?;
+				writer.lock().attr("ID", element.name())?;
+				false
+			}
+		};
+
 		// port mappings/values
 		for remapping in element.data().remappings().iter() {
 			writer.lock().attr(&remapping.0, &remapping.1)?;
@@ -168,12 +189,15 @@ impl XmlCreator {
 		for remapping in element.data().values().iter() {
 			writer.lock().attr(&remapping.0, &remapping.1)?;
 		}
-		// recursive dive into children
-		for element in element.children().iter() {
-			Self::write_subtree(element, writer)?;
+		// recursive dive into children, ignoring subtrees
+		if no_subtree {
+			for element in element.children().iter() {
+				Self::write_subtree(element, writer)?;
+			}
 		}
 
 		writer.lock().end_elem()?;
+
 		Ok(())
 	}
 }

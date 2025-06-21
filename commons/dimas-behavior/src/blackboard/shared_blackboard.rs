@@ -28,6 +28,19 @@ use super::{BlackboardInterface, blackboard::Blackboard, blackboard_data::Entry,
 use crate::port::PortRemappings;
 // endregion:   --- modules
 
+fn strip_key(key: &str) -> &str {
+	if key.starts_with('{') && key.ends_with('}') {
+		let stripped = key
+			.strip_prefix('{')
+			.unwrap_or_else(|| todo!())
+			.strip_suffix('}')
+			.unwrap_or_else(|| todo!());
+		stripped
+	} else {
+		key
+	}
+}
+
 // region:      --- SharedBlackboard
 /// Thread safe reference to a [`Blackboard`].
 #[derive(Clone, Debug, Default)]
@@ -119,7 +132,7 @@ impl BlackboardInterface for SharedBlackboard {
 		}
 
 		// Check for coded value. These are always "remappings" in the current blackboard.
-		let value_option = self.read().values.find(key);
+		let value_option = self.read().values.find(&key.into());
 		if let Some(value) = value_option {
 			return <T as FromStr>::from_str(&value).map_or_else(
 				|_| {
@@ -381,10 +394,10 @@ impl SharedBlackboard {
 		let guard = self.read();
 		let remapped_key = guard
 			.remappings
-			.find(key)
+			.find(&key.into())
 			.map_or_else(|| key.into(), |remapped| remapped);
 		drop(guard);
-		remapped_key
+		strip_key(&remapped_key).into()
 	}
 
 	/// Read needed remapping information to parent.
@@ -394,9 +407,9 @@ impl SharedBlackboard {
 			|| (key.clone(), false),
 			|remappings| {
 				let (remapped_key, has_remapping) = remappings
-					.find(key.as_ref())
+					.find(key)
 					.map_or_else(|| (key.clone(), false), |remapped| (remapped, true));
-				(remapped_key, has_remapping)
+				(strip_key(&remapped_key).into(), has_remapping)
 			},
 		);
 		let autoremap = guard.autoremap_to_parent;

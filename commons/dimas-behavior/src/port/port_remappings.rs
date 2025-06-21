@@ -38,27 +38,27 @@ impl PortRemappings {
 	/// Add an entry to the [`PortRemappings`].
 	/// # Errors
 	/// - if entry already exists
-	pub fn add(&mut self, name: &str, remapped_name: &str) -> Result<(), Error> {
+	pub fn add(&mut self, name: &ConstString, remapped_name: &ConstString) -> Result<(), Error> {
 		for (original, _) in &self.0 {
-			if original.as_ref() == name {
-				return Err(Error::AlreadyInRemappings(name.into()));
+			if original == name {
+				return Err(Error::AlreadyInRemappings(name.clone()));
 			}
 		}
-		self.0.push((name.into(), remapped_name.into()));
+		self.0.push((name.clone(), remapped_name.clone()));
 		Ok(())
 	}
 
 	/// Add an entry to the [`PortRemappings`].
 	/// Already existing values will be overwritten
-	pub fn overwrite(&mut self, key: &str, value: &str) {
-		self.0.push((key.into(), value.into()));
+	pub fn overwrite(&mut self, key: &ConstString, value: &ConstString) {
+		self.0.push((key.clone(), value.clone()));
 	}
 
 	/// Lookup the remapped name.
 	#[must_use]
-	pub fn find(&self, name: &str) -> Option<ConstString> {
+	pub fn find(&self, name: &ConstString) -> Option<ConstString> {
 		for (original, remapped) in &self.0 {
-			if original.as_ref() == name {
+			if original == name {
 				return Some(remapped.clone());
 			}
 		}

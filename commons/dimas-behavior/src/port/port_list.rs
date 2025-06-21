@@ -42,7 +42,7 @@ impl PortList {
 	pub fn add(&mut self, port_definition: PortDefinition) -> Result<(), Error> {
 		for entry in &self.0 {
 			if entry.name() == port_definition.name() {
-				return Err(Error::AlreadyInPortList(entry.name()));
+				return Err(Error::AlreadyInPortList(entry.name().clone()));
 			}
 		}
 		self.0.push(port_definition);
@@ -58,7 +58,7 @@ impl PortList {
 			if comma {
 				result += ", ";
 			}
-			result += &entry.name();
+			result += entry.name();
 		}
 		result.into()
 	}
@@ -67,7 +67,7 @@ impl PortList {
 	#[must_use]
 	pub fn find(&self, name: &str) -> Option<PortDefinition> {
 		for entry in &self.0 {
-			if &*entry.name() == name {
+			if entry.name().as_ref() == name {
 				return Some(entry.clone());
 			}
 		}

@@ -22,7 +22,11 @@ use alloc::{boxed::Box, vec::Vec};
 use core::any::Any;
 use dimas_scripting::SharedRuntime;
 
-use crate::{blackboard::SharedBlackboard, port::{PortList, PortRemappings}, tree::BehaviorTreeElementList};
+use crate::{
+	blackboard::SharedBlackboard,
+	port::{PortList, PortRemappings},
+	tree::BehaviorTreeElementList,
+};
 // endregion:   --- modules
 
 // region:		--- types
@@ -237,11 +241,11 @@ impl BehaviorData {
 			let _ = self.pre_state_change_hooks.remove(index);
 		}
 	}
-	
+
 	pub(crate) const fn remappings(&self) -> &PortRemappings {
 		&self.remappings
 	}
-	
+
 	pub(crate) const fn values(&self) -> &PortRemappings {
 		&self.values
 	}
@@ -254,6 +258,8 @@ impl BehaviorData {
 pub struct BehaviorDescription {
 	/// Name of the behavior.
 	name: ConstString,
+	/// id of the behavior.
+	id: ConstString,
 	/// Kind of the behavior.
 	kind: BehaviorKind,
 	/// Flag to indicate whether this behavior is builtin by Groot2.
@@ -265,9 +271,10 @@ pub struct BehaviorDescription {
 impl BehaviorDescription {
 	/// Create a behavior description.
 	#[must_use]
-	pub fn new(name: &str, kind: BehaviorKind, groot2: bool, ports: PortList) -> Self {
+	pub fn new(name: &str, id: &str, kind: BehaviorKind, groot2: bool, ports: PortList) -> Self {
 		Self {
 			name: name.into(),
+			id: id.into(),
 			kind,
 			groot2,
 			ports,
@@ -276,8 +283,14 @@ impl BehaviorDescription {
 
 	/// Get name
 	#[must_use]
-	pub fn name(&self) -> ConstString {
-		self.name.clone()
+	pub const fn name(&self) -> &ConstString {
+		&self.name
+	}
+
+	/// Get id
+	#[must_use]
+	pub const fn id(&self) -> &ConstString {
+		&self.id
 	}
 
 	/// Get kind

@@ -177,25 +177,26 @@ impl XmlParser {
 					if stripped == "=" {
 						// remapping to itself not necessary
 					} else if is_allowed_port_name(stripped) {
-						remappings.add(&port_definition.name(), stripped)?;
+						remappings.add(port_definition.name(), &default_value)?;
 					} else {
-						return Err(crate::factory::error::Error::NameNotAllowed(port_definition.name()));
+						return Err(crate::factory::error::Error::NameNotAllowed(
+							port_definition.name().clone(),
+						));
 					}
 				} else {
-					values.add(&port_definition.name(), &default_value)?;
+					values.add(port_definition.name(), &default_value)?;
 				}
 			}
 		}
 		// handle attributes
 		for (key, value) in attrs {
-			let key = key.as_ref();
-			if key == "name" {
+			if key.as_ref() == "name" {
 				// port "name" is always available
-			} else if key == "ID" {
+			} else if key.as_ref() == "ID" {
 				// ignore as it is not a Port
 			} else if key.starts_with('_') {
 				// these are special attributes
-				match key {
+				match key.as_ref() {
 					"_autoremap" => {
 						autoremap = match value.parse::<bool>() {
 							Ok(val) => val,
@@ -212,7 +213,7 @@ impl XmlParser {
 						let chunk = runtime.parse(value)?;
 						postconditions.set(key, chunk)?;
 					}
-					_ => return Err(Error::UnknownSpecialAttribute(key.into())),
+					_ => return Err(Error::UnknownSpecialAttribute(key.clone())),
 				}
 			} else {
 				// for a subtree we cannot check the ports
@@ -227,7 +228,7 @@ impl XmlParser {
 
 						// check value for allowed names
 						if is_allowed_port_name(stripped) {
-							remappings.add(key, stripped)?;
+							remappings.add(key, value)?;
 						} else {
 							return Err(crate::factory::error::Error::NameNotAllowed(stripped.into()));
 						}
@@ -249,7 +250,7 @@ impl XmlParser {
 
 								// check value for allowed names
 								if is_allowed_port_name(stripped) {
-									remappings.add(key, stripped)?;
+									remappings.add(key, value)?;
 								} else {
 									return Err(crate::factory::error::Error::NameNotAllowed(stripped.into()));
 								}
@@ -259,7 +260,7 @@ impl XmlParser {
 							}
 						}
 						None => {
-							return Err(Error::PortInvalid(key.into(), name.into(), port_list.entries()));
+							return Err(Error::PortInvalid(key.clone(), name.into(), port_list.entries()));
 						}
 					}
 				}

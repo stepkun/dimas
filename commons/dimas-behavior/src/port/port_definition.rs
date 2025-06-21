@@ -54,8 +54,8 @@ impl PortDefinition {
 
 	/// Get the [`PortDefinition`]s name.
 	#[must_use]
-	pub fn name(&self) -> ConstString {
-		self.name.clone()
+	pub const fn name(&self) -> &ConstString {
+		&self.name
 	}
 
 	/// Get the [`PortDefinition`]s direction.
