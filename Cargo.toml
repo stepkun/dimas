@@ -93,7 +93,8 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
 trybuild = { version = "1.0.105", features = ["diff"] }
 #xml_writer = "0.4.0"
-xml_writer = { path = "../xml_writer" }
+#xml_writer = { path = "../xml_writer" }
+xml_writer =  { git = "https://github.com/stepkun/xml_writer.git" }
 zenoh = "1.4.0"
 
 [profile.release]

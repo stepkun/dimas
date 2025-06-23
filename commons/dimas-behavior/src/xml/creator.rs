@@ -30,11 +30,9 @@ impl XmlCreator {
 	/// # Errors
 	pub fn write_tree_nodes_model(factory: &BehaviorTreeFactory, pretty: bool) -> Result<ConstString, std::io::Error> {
 		let mut writer = if pretty {
-			XmlWriter::pretty(Vec::new())
+			XmlWriter::very_pretty_mode(Vec::new())
 		} else {
-			let mut writer = XmlWriter::new(Vec::new());
-			writer.pretty = false;
-			writer
+			XmlWriter::compact_mode(Vec::new())
 		};
 
 		writer.begin_elem("root")?;
@@ -76,15 +74,12 @@ impl XmlCreator {
 		let mut subtrees: BTreeMap<ConstString, &BehaviorTreeElement> = BTreeMap::new();
 
 		let inner = if pretty {
-			XmlWriter::pretty(Vec::new())
+			XmlWriter::very_pretty_mode(Vec::new())
 		} else {
-			let mut writer = XmlWriter::new(Vec::new());
-			writer.pretty = false;
-			writer
+			XmlWriter::compact_mode(Vec::new())
 		};
 		let writer = Arc::new(Mutex::new(inner));
 		{
-			writer.lock().pretty = true;
 			writer.lock().begin_elem("root")?;
 			writer.lock().attr("BTCPP_format", "4")?;
 

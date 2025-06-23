@@ -28,30 +28,29 @@ const CYCLES: u8 = 0;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
-  	<BehaviorTree ID="MainTree">
-    	<Sequence>
-      		<Script code="door_open:=false" />
-      		<UpdatePosition pos="{pos_2D}" />
-      		<Fallback>
-        		<Inverter>
-          			<IsDoorClosed/>
-        		</Inverter>
-        		<SubTree ID="DoorClosed" _autoremap="true" door_open="{door_open}"/>
-      		</Fallback>
-      		<PassThroughDoor/>
-    	</Sequence>
-  	</BehaviorTree>
+	<BehaviorTree ID="MainTree">
+		<Sequence>
+			<Script code="door_open:=false" />
+			<UpdatePosition pos="{pos_2D}" />
+			<Fallback>
+				<Inverter>
+					<IsDoorClosed/>
+				</Inverter>
+				<SubTree ID="DoorClosed" _autoremap="true" door_open="{door_open}"/>
+			</Fallback>
+			<PassThroughDoor/>
+		</Sequence>
+	</BehaviorTree>
 
-  	<BehaviorTree ID="DoorClosed">
-    	<Fallback name="tryOpen" _onSuccess="door_open:=true">
-      		<OpenDoor/>
-        	<RetryUntilSuccessful num_attempts="5">
-          		<PickLock/>
-        	</RetryUntilSuccessful>
-      		<SmashDoor/>
-    	</Fallback>
-  	</BehaviorTree>
-
+	<BehaviorTree ID="DoorClosed">
+		<Fallback name="tryOpen" _onSuccess="door_open:=true">
+			<OpenDoor/>
+			<RetryUntilSuccessful num_attempts="5">
+				<PickLock/>
+			</RetryUntilSuccessful>
+			<SmashDoor/>
+		</Fallback>
+	</BehaviorTree>
 </root>
 "#;
 
@@ -99,10 +98,10 @@ async fn groot_howto() -> anyhow::Result<()> {
 	// Groot2 editor requires a model of your registered Nodes.
 	// You don't need to write that by hand, it can be automatically
 	// generated using the following command.
-	let _xml_model = XmlCreator::write_tree_nodes_model(&factory, true)?;
-	// println!("-------- TreeNodesModel --------\n");
-	// println!("{xml_model}");
-	// println!("--------------------------------\n");
+	let xml_model = XmlCreator::write_tree_nodes_model(&factory, true)?;
+	println!("-------- TreeNodesModel --------");
+	println!("{xml_model}");
+	println!("--------------------------------");
 
 	factory.register_behavior_tree_from_text(XML)?;
 
@@ -115,9 +114,9 @@ async fn groot_howto() -> anyhow::Result<()> {
 
 	// Print the full tree with model
 	let xml = XmlCreator::write_tree(&tree, true)?;
-	println!("----------- XML file  ----------\n");
+	println!("----------- XML file  ----------");
 	println!("{xml}");
-	println!("--------------------------------\n");
+	println!("--------------------------------");
 
 	// Connect the Groot2Publisher. This will allow Groot2 to
 	// get the tree and poll status updates.
