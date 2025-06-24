@@ -11,7 +11,7 @@ use thiserror::Error;
 // endregion:	--- modules
 
 // region:		--- Error
-/// `dimas-blackboard` error type
+/// `blackboard` error type
 #[derive(Error, Debug)]
 pub enum Error {
 	/// Entry is not in `Blackboard`.

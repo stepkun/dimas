@@ -48,9 +48,9 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);
-	println!("\n------ Root BB ------");
+	println!("------ Root BB ------");
 	// @TODO: tree.subtree(0)?.blackboard().debug_message();
-	println!("\n----- Second BB -----");
+	println!("----- Second BB -----");
 	// @TODO: tree.subtree(1)?.blackboard().debug_message();
 	Ok(())
 }
@@ -69,9 +69,9 @@ async fn subtree_blackboard_access_reminder() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);
-	println!("\n------ Root BB ------");
+	println!("------ Root BB ------");
 	// tree.subtree(0)?.blackboard().debug_message();
-	println!("\n----- Second BB -----");
+	println!("----- Second BB -----");
 	// tree.subtree(1)?.blackboard().debug_message();
 	Ok(())
 }

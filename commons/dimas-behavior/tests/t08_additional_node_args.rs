@@ -11,7 +11,6 @@ extern crate alloc;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::SharedBlackboard,
 	factory::BehaviorTreeFactory,
 	register_behavior,
 	tree::BehaviorTreeElementList,
@@ -40,14 +39,13 @@ impl BehaviorInstance for ActionA {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 42);
 
 		assert_eq!(self.arg2, String::from("hello world"));
-		println!("{}: {}, {}", behavior.name(), &self.arg1, &self.arg2);
+		println!("{}: {}, {}", behavior.description().name(), &self.arg1, &self.arg2);
 		Ok(BehaviorState::Success)
 	}
 }
@@ -78,13 +76,12 @@ impl BehaviorInstance for ActionB {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		assert_eq!(self.arg1, 69);
 		assert_eq!(self.arg2, String::from("interesting value"));
-		println!("{}: {}, {}", behavior.name(), &self.arg1, &self.arg2);
+		println!("{}: {}, {}", behavior.description().name(), &self.arg1, &self.arg2);
 		Ok(BehaviorState::Success)
 	}
 }
@@ -115,7 +112,7 @@ async fn additional_args() -> anyhow::Result<()> {
 
 	// initialize ActionB with the help of an iterator
 	for node in tree.iter_mut() {
-		if node.name().as_ref() == ("Action_B") {
+		if node.data().description().name().as_ref() == ("Action_B") {
 			let action = node
 				.behavior_mut()
 				.as_any_mut()
@@ -130,10 +127,42 @@ async fn additional_args() -> anyhow::Result<()> {
 
 	// test the iterator
 	let mut iter = tree.iter();
-	assert_eq!(iter.next().expect("snh").name().as_ref(), "MainTree");
-	assert_eq!(iter.next().expect("snh").name().as_ref(), "Sequence");
-	assert_eq!(iter.next().expect("snh").name().as_ref(), "Action_A");
-	assert_eq!(iter.next().expect("snh").name().as_ref(), "Action_B");
+	assert_eq!(
+		iter.next()
+			.expect("snh")
+			.data()
+			.description()
+			.name()
+			.as_ref(),
+		"MainTree"
+	);
+	assert_eq!(
+		iter.next()
+			.expect("snh")
+			.data()
+			.description()
+			.name()
+			.as_ref(),
+		"Sequence"
+	);
+	assert_eq!(
+		iter.next()
+			.expect("snh")
+			.data()
+			.description()
+			.name()
+			.as_ref(),
+		"Action_A"
+	);
+	assert_eq!(
+		iter.next()
+			.expect("snh")
+			.data()
+			.description()
+			.name()
+			.as_ref(),
+		"Action_B"
+	);
 	assert!(iter.next().is_none());
 
 	Ok(())

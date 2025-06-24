@@ -10,11 +10,9 @@ use dimas_scripting::SharedRuntime;
 use crate as dimas_behavior;
 use crate::behavior::BehaviorData;
 use crate::behavior::error::BehaviorError;
-use crate::blackboard::BlackboardInterface;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
 	port_list,
@@ -32,14 +30,14 @@ pub struct Precondition;
 impl BehaviorInstance for Precondition {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let if_branch = blackboard.get::<String>("if")?;
-		let mut env = blackboard.clone();
-		let value = runtime.lock().run(&if_branch, &mut env)?;
+		let if_branch = behavior.get::<String>("if")?;
+		let value = runtime
+			.lock()
+			.run(&if_branch, behavior.blackboard_mut())?;
 
 		let new_state = if value.is_bool() {
 			let val = value.as_bool()?;
@@ -50,7 +48,7 @@ impl BehaviorInstance for Precondition {
 			} else {
 				// halt eventually running child
 				child.execute_halt(runtime).await?;
-				let else_branch = blackboard.get::<String>("else")?;
+				let else_branch = behavior.get::<String>("else")?;
 				match else_branch.as_ref() {
 					"Failure" => BehaviorState::Failure,
 					"Idle" => BehaviorState::Idle,
@@ -58,7 +56,9 @@ impl BehaviorInstance for Precondition {
 					"Skipped" => BehaviorState::Skipped,
 					"Success" => BehaviorState::Success,
 					_ => {
-						let value = runtime.lock().run(&else_branch, &mut env)?;
+						let value = runtime
+							.lock()
+							.run(&else_branch, behavior.blackboard_mut())?;
 						if value.is_bool() {
 							let val = value.as_bool()?;
 							if val {

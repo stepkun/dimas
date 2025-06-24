@@ -88,19 +88,19 @@ impl XmlCreator {
 				#[allow(clippy::match_same_arms)]
 				match item.kind() {
 					TreeElementKind::Leaf => {
-						let desc = item.description();
+						let desc = item.data().description();
 						if !desc.groot2() {
 							behaviors.insert(desc.name().clone(), desc.clone());
 						}
 					}
 					TreeElementKind::Node => {
-						let desc = item.description();
+						let desc = item.data().description();
 						if !desc.groot2() {
 							behaviors.insert(desc.name().clone(), desc.clone());
 						}
 					}
 					TreeElementKind::SubTree => {
-						subtrees.insert(item.path().clone(), item);
+						subtrees.insert(item.data().description().path().clone(), item);
 					}
 				}
 			}
@@ -108,10 +108,12 @@ impl XmlCreator {
 			// create the BehaviorTree's
 			for (_path, subtree) in subtrees {
 				writer.lock().begin_elem("BehaviorTree")?;
-				writer.lock().attr("ID", subtree.name())?;
 				writer
 					.lock()
-					.attr("_fullpath", subtree.groot2_path())?;
+					.attr("ID", subtree.data().description().name())?;
+				writer
+					.lock()
+					.attr("_fullpath", subtree.data().description().groot2_path())?;
 
 				// recursive dive into children
 				for element in subtree.children().iter() {
@@ -162,30 +164,46 @@ impl XmlCreator {
 		element: &'a BehaviorTreeElement,
 		writer: &Arc<Mutex<XmlWriter<'a, Vec<u8>>>>,
 	) -> Result<(), std::io::Error> {
-		let no_subtree = match element.kind() {
+		let is_subtree = match element.kind() {
 			TreeElementKind::Leaf | TreeElementKind::Node => {
 				writer
 					.lock()
-					.begin_elem(element.description().id())?;
-				writer.lock().attr("name", element.name())?;
-				true
+					.begin_elem(element.data().description().id())?;
+				writer
+					.lock()
+					.attr("name", element.data().description().name())?;
+				false
 			}
 			TreeElementKind::SubTree => {
 				writer.lock().begin_elem("SubTree")?;
-				writer.lock().attr("ID", element.name())?;
-				false
+				writer
+					.lock()
+					.attr("ID", element.data().description().name())?;
+				true
 			}
 		};
 
-		// port mappings/values
-		for remapping in element.data().remappings().iter() {
-			writer.lock().attr(&remapping.0, &remapping.1)?;
+		if is_subtree {
+			// subtree port mappings/values are in blackboard
+			if let Some(remappings) = element.data().blackboard().remappings() {
+				for remapping in remappings.iter() {
+					writer.lock().attr(&remapping.0, &remapping.1)?;
+				}
+			}
+		} else {
+			// behavior port mappings/values
+			for remapping in element.data().remappings().iter() {
+				writer.lock().attr(&remapping.0, &remapping.1)?;
+			}
 		}
-		for remapping in element.data().values().iter() {
-			writer.lock().attr(&remapping.0, &remapping.1)?;
-		}
-		// recursive dive into children, ignoring subtrees
-		if no_subtree {
+		
+		// Pre-conditions
+		//todo!();
+		// Post-conditions
+		//todo!();
+
+		if !is_subtree {
+			// recursive dive into children, ignoring subtrees
 			for element in element.children().iter() {
 				Self::write_subtree(element, writer)?;
 			}

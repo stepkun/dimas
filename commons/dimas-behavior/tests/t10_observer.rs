@@ -59,7 +59,7 @@ async fn observer() -> anyhow::Result<()> {
 	// Print the unique ID and the corresponding human readable path
 	// Path is also expected to be unique.
 	for node in tree.iter() {
-		println!("{} <-> {}", node.uid(), node.path());
+		println!("{} <-> {}", node.uid(), node.data().description().path());
 	}
 	println!();
 
@@ -73,7 +73,7 @@ async fn observer() -> anyhow::Result<()> {
 			.expect("should be there");
 		println!(
 			"[{}]  T/S/F: {}/{}/{}",
-			item.path(),
+			item.data().description().path(),
 			stats.transitions_count,
 			stats.success_count,
 			stats.failure_count

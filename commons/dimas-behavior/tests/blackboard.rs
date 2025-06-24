@@ -46,9 +46,7 @@ fn blackboard() {
 
 #[test]
 fn blackboard_node_default() {
-	let remappings0 = PortRemappings::default();
-	let values0 = PortRemappings::default();
-	let mut level0 = SharedBlackboard::new("level0", remappings0, values0);
+	let mut level0 = SharedBlackboard::new("level0");
 
 	let value = level0.get::<i32>("test");
 	assert!(value.is_err());
@@ -76,9 +74,7 @@ fn blackboard_node_default() {
 
 #[test]
 fn blackboard_node_with_parent() {
-	let remappings0 = PortRemappings::default();
-	let values0 = PortRemappings::default();
-	let mut level0 = SharedBlackboard::new("level0", remappings0, values0);
+	let mut level0 = SharedBlackboard::new("level0");
 
 	let old = level0
 		.set("test1", String::from("test1"))
@@ -90,9 +86,8 @@ fn blackboard_node_with_parent() {
 	assert_eq!(old, None);
 
 	let mut remappings = PortRemappings::default();
-	let values = PortRemappings::default();
 	remappings.add(&"test".into(), &"test1".into());
-	let mut node = SharedBlackboard::with("level0", level0, remappings, values, true);
+	let mut node = SharedBlackboard::with_parent("level0", level0, remappings, true);
 
 	let old = node
 		.set("@other", String::from("other"))
@@ -116,26 +111,19 @@ fn blackboard_node_with_parent() {
 
 #[test]
 fn blackboard_node_hierarchy() {
-	let remappings0 = PortRemappings::default();
-	let values0 = PortRemappings::default();
-	let mut level0 = SharedBlackboard::new("level0", remappings0, values0);
+	let mut level0 = SharedBlackboard::new("level0");
 
 	let mut remappings1 = PortRemappings::default();
-	let values1 = PortRemappings::default();
-
 	remappings1.add(&"levelB".into(), &"levelA".into());
-	let mut level1 = SharedBlackboard::with("level1", level0.clone(), remappings1, values1, true);
+	let mut level1 = SharedBlackboard::with_parent("level1", level0.clone(), remappings1, true);
 
 	let mut remappings2 = PortRemappings::default();
-	let values2 = PortRemappings::default();
-
 	remappings2.add(&"levelC".into(), &"levelB".into());
-	let mut level2 = SharedBlackboard::with("level2", level1.clone(), remappings2, values2, true);
+	let mut level2 = SharedBlackboard::with_parent("level2", level1.clone(), remappings2, true);
 
 	let mut remappings3 = PortRemappings::default();
-	let values3 = PortRemappings::default();
 	remappings3.add(&"levelD".into(), &"levelC".into());
-	let mut level3 = SharedBlackboard::with("level3", level2.clone(), remappings3, values3, true);
+	let mut level3 = SharedBlackboard::with_parent("level3", level2.clone(), remappings3, true);
 
 	let old = level0
 		.set("levelA", String::from("testA"))

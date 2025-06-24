@@ -19,7 +19,7 @@ use dimas_behavior::{
 	behavior::{
 		BehaviorData, BehaviorError, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
 	},
-	blackboard::{BlackboardInterface, SharedBlackboard},
+	blackboard::BlackboardInterface,
 	factory::BehaviorTreeFactory,
 	input_port,
 	port::PortList,
@@ -74,38 +74,37 @@ struct BehaviorWithDefaultPoints {}
 impl BehaviorInstance for BehaviorWithDefaultPoints {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let msg: String = blackboard.get("input")?;
+		let msg: String = behavior.get("input")?;
 		let point = Point2D::from_str(&msg).map_err(|_| BehaviorError::ParsePortValue("input".into(), msg.into()))?;
 		assert_eq!(point, Point2D { x: -1, y: -2 });
 		println!("input:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = blackboard.get("pointA")?;
+		let point: Point2D = behavior.get("pointA")?;
 		assert_eq!(point, Point2D { x: 1, y: 2 });
 		println!("pointA:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = blackboard.get("pointB")?;
+		let point: Point2D = behavior.get("pointB")?;
 		assert_eq!(point, Point2D { x: 3, y: 4 });
 		println!("pointB:  [{},{}]", point.x, point.y);
 
-		let msg: String = blackboard.get("pointC")?;
+		let msg: String = behavior.get("pointC")?;
 		let point = Point2D::from_str(&msg).map_err(|_| BehaviorError::ParsePortValue("pointC".into(), msg.into()))?;
 		assert_eq!(point, Point2D { x: 5, y: 6 });
 		println!("pointC:  [{},{}]", point.x, point.y);
 
-		let point: Point2D = blackboard.get("pointD")?;
+		let point: Point2D = behavior.get("pointD")?;
 		assert_eq!(point, Point2D { x: 7, y: 8 });
 		println!("pointD:  [{},{}]", point.x, point.y);
 
 		// @TODO: parsing json
-		// let msg: String = blackboard.get("pointE")?;
+		// let msg: String = behavior.get("pointE")?;
 		// dbg!(&msg);
 		// let point = Point2D::from_str(&msg).map_err(|_| BehaviorError::ParsePortValue("pointE".into(), msg.into()))?;
-		// // let point: Point2D = blackboard.get("pointE")?;
+		// // let point: Point2D = behavior.get("pointE")?;
 		// assert_eq!(point, Point2D{x:9, y:10});
 		// println!("pointE:  [{},{}]", point.x, point.y);
 
@@ -142,9 +141,9 @@ async fn default_ports() -> anyhow::Result<()> {
 	drop(factory);
 
 	// initialize blackboard values
-	tree.blackboard()
+	tree.blackboard_mut()
 		.set("point", Point2D { x: 3, y: 4 })?;
-	tree.blackboard()
+	tree.blackboard_mut()
 		.set("pointD", Point2D { x: 7, y: 8 })?;
 
 	// run the BT

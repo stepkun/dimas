@@ -11,7 +11,6 @@ use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,
 	port_list,
@@ -27,14 +26,14 @@ pub struct Script;
 impl BehaviorInstance for Script {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let code = blackboard.get::<String>("code")?;
-		let mut env = blackboard.clone();
-		let value = runtime.lock().run(&code, &mut env)?;
+		let code = behavior.get::<String>("code")?;
+		let value = runtime
+			.lock()
+			.run(&code, behavior.blackboard_mut())?;
 
 		let state = if value.is_bool() {
 			let val = value.as_bool()?;

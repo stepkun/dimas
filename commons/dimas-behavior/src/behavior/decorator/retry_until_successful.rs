@@ -12,7 +12,6 @@ use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,
 	port_list,
@@ -63,12 +62,11 @@ impl BehaviorInstance for RetryUntilSuccessful {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// Load num_cycles from the port value
-		self.max_attempts = blackboard.get::<i32>("num_attempts")?;
+		self.max_attempts = behavior.get::<i32>("num_attempts")?;
 
 		let mut do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
 

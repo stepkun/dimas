@@ -12,7 +12,6 @@ use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
-	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -38,7 +37,6 @@ impl BehaviorInstance for Subtree {
 	async fn start(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
@@ -52,7 +50,6 @@ impl BehaviorInstance for Subtree {
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {

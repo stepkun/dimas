@@ -19,7 +19,6 @@ use dimas_behavior::{
 		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
 		decorator::loop_queue::Loop,
 	},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port, output_port,
 	port::PortList,
@@ -35,8 +34,7 @@ struct GenerateWaypoints;
 impl BehaviorInstance for GenerateWaypoints {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
@@ -49,7 +47,7 @@ impl BehaviorInstance for GenerateWaypoints {
 			});
 		}
 
-		blackboard.set("waypoints", shared_queue)?;
+		behavior.set("waypoints", shared_queue)?;
 
 		Ok(BehaviorState::Success)
 	}
@@ -72,12 +70,11 @@ struct PrintNumber;
 impl BehaviorInstance for PrintNumber {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let value: f64 = blackboard.get("value")?;
+		let value: f64 = behavior.get("value")?;
 		println!("PrintNumber: {}", value);
 
 		Ok(BehaviorState::Success)
@@ -101,12 +98,11 @@ struct UseWaypoint;
 impl BehaviorInstance for UseWaypoint {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if let Ok(wp) = blackboard.get::<Pose2D>("waypoint") {
+		if let Ok(wp) = behavior.get::<Pose2D>("waypoint") {
 			tokio::time::sleep(Duration::from_millis(100)).await;
 			println!("Using waypoint: {}/{}", wp.x, wp.y);
 			Ok(BehaviorState::Success)

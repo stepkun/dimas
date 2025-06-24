@@ -19,6 +19,9 @@ pub enum BehaviorError {
 	/// Pass through blackboard error
 	#[error("{0}")]
 	Blackboard(#[from] crate::blackboard::error::Error),
+	/// Pass through port error
+	#[error("{0}")]
+	Port(#[from] crate::port::error::Error),
 	/// Error in structural composition of a behaviors children
 	#[error("{0}")]
 	Composition(ConstString),

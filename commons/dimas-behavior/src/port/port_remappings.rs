@@ -5,7 +5,7 @@
 #[doc(hidden)]
 extern crate alloc;
 
-use core::ops::Deref;
+use core::ops::{Deref, DerefMut};
 
 // region:      --- modules
 use alloc::vec::Vec;
@@ -31,6 +31,12 @@ impl Deref for PortRemappings {
 
 	fn deref(&self) -> &Self::Target {
 		&self.0
+	}
+}
+
+impl DerefMut for PortRemappings {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
 	}
 }
 

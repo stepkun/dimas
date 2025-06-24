@@ -18,13 +18,13 @@ pub use error::BehaviorError;
 pub use simple_behavior::{ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn};
 
 // region:      --- modules
-use alloc::{boxed::Box, vec::Vec};
-use core::any::Any;
+use alloc::{boxed::Box, string::ToString, vec::Vec};
+use core::{any::Any, str::FromStr};
 use dimas_scripting::SharedRuntime;
 
 use crate::{
-	blackboard::SharedBlackboard,
-	port::{PortList, PortRemappings},
+	blackboard::{BlackboardInterface, SharedBlackboard},
+	port::{PortList, PortRemappings, error::Error, is_bb_pointer, strip_bb_pointer},
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -95,12 +95,10 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		self.tick(behavior, blackboard, children, runtime)
-			.await
+		self.tick(behavior, children, runtime).await
 	}
 
 	/// Method called to tick a behavior.
@@ -108,7 +106,6 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult;
@@ -150,49 +147,109 @@ pub struct BehaviorData {
 	/// The ordering of the uid is following the creation order by the [`XmlParser`](crate::factory::xml_parser::XmlParser).
 	/// This should end up in a depth first ordering.
 	uid: u16,
-	/// Name of the element.
-	name: ConstString,
-	/// Path to the element.
-	/// In contrast to BehaviorTree.CPP this path is fully qualified,
-	/// which means that every level is denoted explicitly, including the tree root.
-	path: ConstString,
 	/// Current state of the behavior.
 	state: BehaviorState,
+	/// List of internal [`PortRemappings`] including
+	/// direct assigned values to a `Port`, e.g. default values.
+	remappings: PortRemappings,
+	/// Reference to the [`Blackboard`] for the element.
+	blackboard: SharedBlackboard,
 	/// List of pre state change callbacks with an identifier.
 	/// These callbacks can be used for observation of the [`BehaviorTreeElement`] and
 	/// for manipulation of the resulting [`BehaviorState`] of a tick.
 	pre_state_change_hooks: Vec<(ConstString, Box<BehaviorTickCallback>)>,
-	/// List of internal [`PortRemappings`].
-	remappings: PortRemappings,
-	/// List of direct assigned values to a `Port`, e.g. default values.
-	values: PortRemappings,
+	/// Description of the Behavior.
+	description: BehaviorDescription,
 }
 
 impl BehaviorData {
 	/// Constructor
 	#[must_use]
-	pub fn new(uid: u16, name: &str, path: &str, remappings: PortRemappings, values: PortRemappings) -> Self {
+	pub fn new(
+		uid: u16,
+		name: &str,
+		path: &str,
+		remappings: PortRemappings,
+		blackboard: SharedBlackboard,
+		mut description: BehaviorDescription,
+	) -> Self {
+		description.set_name(name);
+		description.set_path(path);
 		Self {
 			uid,
-			name: name.into(),
-			path: path.into(),
 			state: BehaviorState::default(),
-			pre_state_change_hooks: Vec::default(),
 			remappings,
-			values,
+			blackboard,
+			pre_state_change_hooks: Vec::default(),
+			description,
 		}
 	}
 
-	/// Method to get the name.
-	#[must_use]
-	pub const fn name(&self) -> &ConstString {
-		&self.name
+	/// Get a value of type `T` from Blackboard.
+	/// # Errors
+	/// - if value is not found
+	/// # Panics
+	pub fn get<T>(&self, key: &str) -> Result<T, Error>
+	where
+		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync + 'static,
+	{
+		if let Some(remapped) = self.remappings.find(&key.into()) {
+			if is_bb_pointer(&remapped) {
+				let key = strip_bb_pointer(&remapped).expect("snh");
+				Ok(self.blackboard.get::<T>(&key)?)
+			} else {
+				match T::from_str(&remapped) {
+					Ok(res) => Ok(res),
+					Err(_err) => Err(Error::CouldNotConvert(remapped)),
+				}
+			}
+		} else {
+			Ok(self.blackboard.get::<T>(key)?)
+		}
 	}
 
-	/// Method to get the path.
+	/// Set a value of type `T` into Blackboard.
+	/// Returns old value if any.
+	/// # Errors
+	/// - if value can not be set
+	/// # Panics
+	pub fn set<T>(&mut self, key: &str, value: T) -> Result<Option<T>, Error>
+	where
+		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync + 'static,
+	{
+		if let Some(remapped) = self.remappings.find(&key.into()) {
+			if let Some(stripped) = strip_bb_pointer(&remapped) {
+				Ok(self.blackboard.set::<T>(&stripped, value)?)
+			} else {
+				todo!()
+			}
+		} else {
+			Ok(self.blackboard.set::<T>(key, value)?)
+		}
+	}
+
+	/// Method to access the blackboard.
 	#[must_use]
-	pub const fn path(&self) -> &ConstString {
-		&self.path
+	pub const fn blackboard(&self) -> &SharedBlackboard {
+		&self.blackboard
+	}
+
+	/// Method to access the blackboard mutable.
+	#[must_use]
+	pub const fn blackboard_mut(&mut self) -> &mut SharedBlackboard {
+		&mut self.blackboard
+	}
+
+	/// Method to get the desription.
+	#[must_use]
+	pub const fn description(&self) -> &BehaviorDescription {
+		&self.description
+	}
+
+	/// Method to get the desription mutable.
+	#[must_use]
+	pub const fn description_mut(&mut self) -> &mut BehaviorDescription {
+		&mut self.description
 	}
 
 	/// Method to get the uid.
@@ -245,27 +302,29 @@ impl BehaviorData {
 	pub(crate) const fn remappings(&self) -> &PortRemappings {
 		&self.remappings
 	}
-
-	pub(crate) const fn values(&self) -> &PortRemappings {
-		&self.values
-	}
 }
 // endregion:	--- BehaviorData
 
 // region:		--- BehaviorDescription
 /// Description of a Behavior, used in xml parsing and creating.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct BehaviorDescription {
 	/// Name of the behavior.
 	name: ConstString,
 	/// id of the behavior.
 	id: ConstString,
+	/// Path to the element.
+	/// In contrast to BehaviorTree.CPP this path is fully qualified,
+	/// which means that every level is denoted explicitly, including the tree root.
+	path: ConstString,
 	/// Kind of the behavior.
 	kind: BehaviorKind,
-	/// Flag to indicate whether this behavior is builtin by Groot2.
-	groot2: bool,
 	/// The [`PortList`]
 	ports: PortList,
+	/// Flag to indicate whether this behavior is builtin by Groot2.
+	groot2: bool,
+	/// Path for Groot2
+	groot2_path: ConstString,
 }
 
 impl BehaviorDescription {
@@ -275,9 +334,11 @@ impl BehaviorDescription {
 		Self {
 			name: name.into(),
 			id: id.into(),
+			path: "".into(),
 			kind,
-			groot2,
 			ports,
+			groot2,
+			groot2_path: "".into(),
 		}
 	}
 
@@ -287,10 +348,26 @@ impl BehaviorDescription {
 		&self.name
 	}
 
+	/// Method to set the name.
+	pub fn set_name(&mut self, name: &str) {
+		self.name = name.into();
+	}
+
 	/// Get id
 	#[must_use]
 	pub const fn id(&self) -> &ConstString {
 		&self.id
+	}
+
+	/// Method to get the path.
+	#[must_use]
+	pub const fn path(&self) -> &ConstString {
+		&self.path
+	}
+
+	/// Method to set the path.
+	pub fn set_path(&mut self, path: &str) {
+		self.path = path.into();
 	}
 
 	/// Get kind
@@ -305,16 +382,27 @@ impl BehaviorDescription {
 		self.kind.as_str()
 	}
 
+	/// Get ports
+	#[must_use]
+	pub const fn ports(&self) -> &PortList {
+		&self.ports
+	}
+
 	/// If is builtin of Groot2
 	#[must_use]
 	pub const fn groot2(&self) -> bool {
 		self.groot2
 	}
 
-	/// Get ports
+	/// Get the path for Groot2.
 	#[must_use]
-	pub const fn ports(&self) -> &PortList {
-		&self.ports
+	pub const fn groot2_path(&self) -> &ConstString {
+		&self.groot2_path
+	}
+
+	/// Set the path for Groot2.
+	pub fn set_groot2_path(&mut self, groot2_path: ConstString) {
+		self.groot2_path = groot2_path;
 	}
 }
 // endregion:	--- BehaviorDescription
@@ -327,10 +415,11 @@ static DECORATOR: &str = "Decorator";
 static SUBTREE: &str = "SubTree";
 
 /// All types of behaviors usable in a behavior tree.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(u8)]
 pub enum BehaviorKind {
 	/// Action
+	#[default]
 	Action,
 	/// Condition
 	Condition,

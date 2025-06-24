@@ -35,7 +35,6 @@ impl BehaviorInstance for ApproachObject {
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
@@ -91,12 +90,11 @@ pub struct SaySomething {}
 impl BehaviorInstance for SaySomething {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let msg = blackboard.get::<String>("message")?;
+		let msg = behavior.get::<String>("message")?;
 		println!("Robot says: {msg}");
 		Ok(BehaviorState::Success)
 	}
@@ -108,7 +106,7 @@ impl BehaviorStatic for SaySomething {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list! {input_port!(String, "message", "hello")}
+		port_list! {input_port!(String, "message")}
 	}
 }
 
@@ -120,12 +118,11 @@ pub struct ThinkWhatToSay {}
 impl BehaviorInstance for ThinkWhatToSay {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		blackboard.set("text", String::from("The answer is 42"))?;
+		behavior.set("text", String::from("The answer is 42"))?;
 		Ok(BehaviorState::Success)
 	}
 }
@@ -143,8 +140,8 @@ impl BehaviorStatic for ThinkWhatToSay {
 /// Same as struct `SaySomething`, but to be registered with `SimpleBehavior`
 /// # Errors
 #[allow(clippy::needless_pass_by_ref_mut)]
-pub fn say_something_simple(blackboard: &mut SharedBlackboard) -> BehaviorResult {
-	let msg = blackboard.get::<String>("message")?;
+pub fn say_something_simple(behavior: &mut BehaviorData) -> BehaviorResult {
+	let msg = behavior.get::<String>("message")?;
 	println!("Robot2 says: {msg}");
 	Ok(BehaviorState::Success)
 }
@@ -189,13 +186,12 @@ pub struct CalculateGoal {}
 impl BehaviorInstance for CalculateGoal {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mygoal = Position2D { x: 1.1, y: 2.3 };
-		blackboard.set("goal", mygoal)?;
+		behavior.set("goal", mygoal)?;
 		Ok(BehaviorState::Success)
 	}
 }
@@ -218,12 +214,11 @@ pub struct PrintTarget {}
 impl BehaviorInstance for PrintTarget {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let pos = blackboard.get::<Position2D>("target")?;
+		let pos = behavior.get::<Position2D>("target")?;
 		println!("Target positions: [ {}, {} ]", pos.x, pos.y);
 		Ok(BehaviorState::Success)
 	}
@@ -295,12 +290,11 @@ impl Default for MoveBaseAction {
 impl BehaviorInstance for MoveBaseAction {
 	async fn start(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let pose = blackboard.get::<Pose2D>("goal")?;
+		let pose = behavior.get::<Pose2D>("goal")?;
 		println!(
 			"[ MoveBase: SEND REQUEST ]. goal: x={} y={} theta={}",
 			pose.x, pose.y, pose.theta
@@ -313,7 +307,6 @@ impl BehaviorInstance for MoveBaseAction {
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {

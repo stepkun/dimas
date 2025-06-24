@@ -14,7 +14,6 @@ use cross_door::CrossDoor;
 use dimas_behavior::{
 	Behavior, Groot2Publisher, SharedRuntime, XmlCreator,
 	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	output_port,
 	port::PortList,
@@ -64,14 +63,13 @@ pub struct UpdatePosition {
 impl BehaviorInstance for UpdatePosition {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		self.pos.x += 0.2;
 		self.pos.y += 0.1;
-		blackboard.set("pos", self.pos.clone())?;
+		behavior.set("pos", self.pos.clone())?;
 		Ok(BehaviorState::Success)
 	}
 }
@@ -115,7 +113,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 	// Print the full tree with model
 	let xml = XmlCreator::write_tree(&tree, true)?;
 	println!("----------- XML file  ----------");
-	println!("{xml}");
+	println!("{}", &xml);
 	println!("--------------------------------");
 
 	// Connect the Groot2Publisher. This will allow Groot2 to
@@ -130,5 +128,41 @@ async fn groot_howto() -> anyhow::Result<()> {
 		assert_eq!(result, BehaviorState::Success);
 	}
 
+	assert_eq!(RESULT, xml.as_ref());
 	Ok(())
 }
+
+const RESULT: &str = r#"<root BTCPP_format="4">
+	<BehaviorTree ID="MainTree" _fullpath="">
+		<Sequence name="Sequence">
+			<Script name="Script" code="door_open:=false"/>
+			<UpdatePosition name="UpdatePosition" pos="{pos_2D}"/>
+			<Fallback name="Fallback">
+				<Inverter name="Inverter">
+					<IsDoorClosed name="IsDoorClosed"/>
+				</Inverter>
+				<SubTree ID="DoorClosed" door_open="{door_open}"/>
+			</Fallback>
+			<PassThroughDoor name="PassThroughDoor"/>
+		</Sequence>
+	</BehaviorTree>
+	<BehaviorTree ID="DoorClosed" _fullpath="DoorClosed::7">
+		<Fallback name="tryOpen" _onSuccess="door_open:=true">
+			<OpenDoor name="OpenDoor"/>
+			<RetryUntilSuccessful name="RetryUntilSuccessful" num_attempts="5">
+				<PickLock name="PickLock"/>
+			</RetryUntilSuccessful>
+			<SmashDoor name="SmashDoor"/>
+		</Fallback>
+	</BehaviorTree>
+	<TreeNodesModel>
+		<Condition ID="IsDoorClosed"/>
+		<Action ID="OpenDoor"/>
+		<Action ID="PassThroughDoor"/>
+		<Action ID="PickLock"/>
+		<Condition ID="SmashDoor"/>
+		<Action ID="UpdatePosition">
+			<output_port name="pos" type="Position2D"/>
+		</Action>
+	</TreeNodesModel>
+</root>"#;

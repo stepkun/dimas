@@ -17,7 +17,6 @@ use std::{
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port, output_port,
 	port::PortList,
@@ -96,8 +95,7 @@ struct AcquirePointCloud {}
 impl BehaviorInstance for AcquirePointCloud {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
@@ -112,7 +110,7 @@ impl BehaviorInstance for AcquirePointCloud {
 			],
 		};
 
-		blackboard.set("cloud", p_cloud)?;
+		behavior.set("cloud", p_cloud)?;
 
 		Ok(BehaviorState::Success)
 	}
@@ -137,7 +135,6 @@ impl BehaviorInstance for SegmentObject {
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {

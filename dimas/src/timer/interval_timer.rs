@@ -10,7 +10,6 @@ use dimas_behavior::{
 		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
 		error::BehaviorError,
 	},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	input_port,
 	port::PortList,
 	port_list,
@@ -31,14 +30,13 @@ pub struct IntervalTimer {
 impl BehaviorInstance for IntervalTimer {
 	async fn start(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// timer already started?
 		if self.handle.is_none() {
-			let input = blackboard.get("interval")?;
+			let input = behavior.get("interval")?;
 			let interval = Duration::from_millis(input);
 			let _children_count = children.len();
 
@@ -71,7 +69,6 @@ impl BehaviorInstance for IntervalTimer {
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {

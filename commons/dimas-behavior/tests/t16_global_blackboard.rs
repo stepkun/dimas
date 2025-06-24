@@ -15,7 +15,7 @@ use dimas_behavior::{
 	blackboard::{BlackboardInterface, SharedBlackboard, error::Error},
 	factory::BehaviorTreeFactory,
 	input_port,
-	port::PortList,
+	port::{PortList, PortRemappings},
 	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
@@ -63,12 +63,11 @@ impl BehaviorInstance for PrintNumber {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		let value: i64 = blackboard.get("val")?;
-		println!("PrintNumber [{}] has val: {value}", behavior.name());
+		let value: i64 = behavior.get("val")?;
+		println!("PrintNumber [{}] has val: {value}", behavior.description().name());
 
 		Ok(BehaviorState::Success)
 	}
@@ -89,7 +88,8 @@ async fn global_blackboard() -> anyhow::Result<()> {
 	// create an external blackboard which will survive the tree
 	let mut global_blackboard = SharedBlackboard::default();
 	// BT-Trees blackboard has global blackboard as parent
-	let root_blackboard = SharedBlackboard::with_parent("global", global_blackboard.clone());
+	let root_blackboard =
+		SharedBlackboard::with_parent("global", global_blackboard.clone(), PortRemappings::default(), false);
 
 	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
 

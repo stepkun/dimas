@@ -5,7 +5,7 @@
 
 // region		--- modules
 use core::ops::{Deref, DerefMut};
-use dimas_scripting::execution::Chunk;
+use dimas_core::ConstString;
 
 use super::error::BehaviorError;
 // endregion:	--- modules
@@ -24,10 +24,10 @@ pub const PRE_CONDITIONS: [&str; 4] = ["_failureif", "_successif", "_skipif", "_
 
 /// Array holding the pre conditions.
 #[derive(Default)]
-pub struct PreConditions(pub(crate) Option<[Option<Chunk>; PRE_CONDITIONS.len()]>);
+pub struct PreConditions(pub(crate) Option<[Option<ConstString>; PRE_CONDITIONS.len()]>);
 
 impl Deref for PreConditions {
-	type Target = Option<[Option<Chunk>; PRE_CONDITIONS.len()]>;
+	type Target = Option<[Option<ConstString>; PRE_CONDITIONS.len()]>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.0
@@ -42,7 +42,7 @@ impl DerefMut for PreConditions {
 
 impl PreConditions {
 	/// Get a pre condition.
-	pub fn get_chunk(&mut self, name: &str) -> Option<&mut Chunk> {
+	pub fn get(&mut self, name: &str) -> Option<&ConstString> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
 		}
@@ -50,8 +50,8 @@ impl PreConditions {
 		let op = (0..PRE_CONDITIONS.len()).find(|&i| PRE_CONDITIONS[i] == name);
 		if let Some(index) = op {
 			self.0
-				.as_mut()
-				.map_or_else(|| None, |array| array[index].as_mut())
+				.as_ref()
+				.map_or_else(|| None, |array| array[index].as_ref())
 		} else {
 			None
 		}
@@ -60,7 +60,7 @@ impl PreConditions {
 	/// Set a pre condition.
 	/// # Errors
 	/// - if name is not a pre condition
-	pub fn set(&mut self, name: &str, chunk: Chunk) -> Result<(), BehaviorError> {
+	pub fn set(&mut self, name: &str, script: &str) -> Result<(), BehaviorError> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
 		}
@@ -70,7 +70,7 @@ impl PreConditions {
 			self.0.as_mut().map_or_else(
 				|| Err(BehaviorError::UnableToSetPreCondition(name.into())),
 				|array| {
-					array[index] = Some(chunk);
+					array[index] = Some(script.into());
 					Ok(())
 				},
 			)
@@ -87,10 +87,10 @@ pub const POST_CONDITIONS: [&str; 4] = ["_onHalted", "_onFailure", "_onSuccess",
 
 /// Array holding the post conditions.
 #[derive(Default)]
-pub struct PostConditions(pub(crate) Option<[Option<Chunk>; POST_CONDITIONS.len()]>);
+pub struct PostConditions(pub(crate) Option<[Option<ConstString>; POST_CONDITIONS.len()]>);
 
 impl Deref for PostConditions {
-	type Target = Option<[Option<Chunk>; POST_CONDITIONS.len()]>;
+	type Target = Option<[Option<ConstString>; POST_CONDITIONS.len()]>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.0
@@ -105,7 +105,7 @@ impl DerefMut for PostConditions {
 
 impl PostConditions {
 	/// Get a post condition.
-	pub fn get_chunk(&mut self, name: &str) -> Option<&mut Chunk> {
+	pub fn get(&mut self, name: &str) -> Option<&ConstString> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
 		}
@@ -113,8 +113,8 @@ impl PostConditions {
 		let op = (0..POST_CONDITIONS.len()).find(|&i| POST_CONDITIONS[i] == name);
 		if let Some(index) = op {
 			self.0
-				.as_mut()
-				.map_or_else(|| None, |array| array[index].as_mut())
+				.as_ref()
+				.map_or_else(|| None, |array| array[index].as_ref())
 		} else {
 			None
 		}
@@ -123,7 +123,7 @@ impl PostConditions {
 	/// Set a post condition.
 	/// # Errors
 	/// - if name is not a post condition
-	pub fn set(&mut self, name: &str, chunk: Chunk) -> Result<(), BehaviorError> {
+	pub fn set(&mut self, name: &str, script: &str) -> Result<(), BehaviorError> {
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
 		}
@@ -133,7 +133,7 @@ impl PostConditions {
 			self.0.as_mut().map_or_else(
 				|| Err(BehaviorError::UnableToSetPostCondition(name.into())),
 				|array| {
-					array[index] = Some(chunk);
+					array[index] = Some(script.into());
 					Ok(())
 				},
 			)

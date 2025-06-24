@@ -12,7 +12,6 @@ mod test_data;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::{BlackboardInterface, SharedBlackboard},
 	factory::BehaviorTreeFactory,
 	input_port,
 	port::PortList,
@@ -84,12 +83,11 @@ mod move_robot {
 	impl BehaviorInstance for MoveBase {
 		async fn start(
 			&mut self,
-			_behavior: &mut BehaviorData,
-			blackboard: &mut SharedBlackboard,
+			behavior: &mut BehaviorData,
 			_children: &mut BehaviorTreeElementList,
 			_runtime: &SharedRuntime,
 		) -> BehaviorResult {
-			let pos = blackboard.get::<Pose2D>("goal")?;
+			let pos = behavior.get::<Pose2D>("goal")?;
 
 			println!(
 				"[ MoveBase: SEND REQUEST ]. goal: x={:2.1} y={:2.1} theta={:2.1}",
@@ -102,7 +100,6 @@ mod move_robot {
 		async fn tick(
 			&mut self,
 			_behavior: &mut BehaviorData,
-			_blackboard: &mut SharedBlackboard,
 			_children: &mut BehaviorTreeElementList,
 			_runtime: &SharedRuntime,
 		) -> BehaviorResult {

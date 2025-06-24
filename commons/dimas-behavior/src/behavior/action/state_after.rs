@@ -12,7 +12,6 @@ use crate::behavior::{BehaviorData, BehaviorError};
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
 //endregion:    --- modules
@@ -43,19 +42,16 @@ impl BehaviorInstance for StateAfter {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		self.remaining = self.count;
-		self.tick(behavior, blackboard, children, runtime)
-			.await
+		self.tick(behavior, children, runtime).await
 	}
 
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {

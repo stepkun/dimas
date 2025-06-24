@@ -12,7 +12,6 @@ use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
-	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -39,7 +38,6 @@ impl BehaviorInstance for SequenceWithMemory {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {

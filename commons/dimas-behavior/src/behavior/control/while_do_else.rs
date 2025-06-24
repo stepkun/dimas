@@ -12,7 +12,6 @@ use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
-	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -31,7 +30,6 @@ impl BehaviorInstance for WhileDoElse {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
@@ -42,14 +40,12 @@ impl BehaviorInstance for WhileDoElse {
 			));
 		}
 
-		self.tick(behavior, blackboard, children, runtime)
-			.await
+		self.tick(behavior, children, runtime).await
 	}
 
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {

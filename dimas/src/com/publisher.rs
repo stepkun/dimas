@@ -6,7 +6,6 @@
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::SharedBlackboard,
 	input_port,
 	port::PortList,
 	port_list,
@@ -25,21 +24,18 @@ impl BehaviorInstance for Publisher {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		println!("starting Publisher");
 
-		self.tick(behavior, blackboard, children, runtime)
-			.await
+		self.tick(behavior, children, runtime).await
 	}
 
 	/// @TODO:
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {

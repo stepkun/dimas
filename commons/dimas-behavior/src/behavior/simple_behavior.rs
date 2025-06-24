@@ -7,7 +7,7 @@ use alloc::{boxed::Box, sync::Arc};
 use core::any::Any;
 use dimas_scripting::SharedRuntime;
 
-use crate::{behavior::BehaviorData, blackboard::SharedBlackboard, port::PortList, tree::BehaviorTreeElementList};
+use crate::{behavior::BehaviorData, port::PortList, tree::BehaviorTreeElementList};
 
 use super::{BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRedirection, BehaviorResult};
 // endregion:   --- modules
@@ -17,7 +17,7 @@ use super::{BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRed
 pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
 
 /// Signature of a registered behavior function called by `SimpleBehavior`'s tick
-pub type ComplexBhvrTickFn = Arc<dyn Fn(&mut SharedBlackboard) -> BehaviorResult + Send + Sync + 'static>;
+pub type ComplexBhvrTickFn = Arc<dyn Fn(&mut BehaviorData) -> BehaviorResult + Send + Sync + 'static>;
 // endregion:   --- types
 
 // region:      --- BehaviorFunction
@@ -53,13 +53,12 @@ impl BehaviorExecution for SimpleBehavior {
 impl BehaviorInstance for SimpleBehavior {
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		if self.complex_tick_fn.is_some() {
-			self.complex_tick_fn.as_ref().expect("snh")(blackboard)
+			self.complex_tick_fn.as_ref().expect("snh")(behavior)
 		} else {
 			(self.simple_tick_fn.as_ref().expect("snh"))()
 		}

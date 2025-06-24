@@ -13,13 +13,11 @@ use dimas_scripting::SharedRuntime;
 use parking_lot::Mutex;
 
 use crate::behavior::BehaviorData;
-use crate::blackboard::BlackboardInterface;
 use crate::port::PortList;
 use crate::{self as dimas_behavior, inout_port, input_port, output_port, port_list};
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
-	blackboard::SharedBlackboard,
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -125,7 +123,6 @@ where
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
@@ -136,24 +133,22 @@ where
 				return Err(BehaviorError::Composition("Loop must have a single child!".into()));
 			}
 			// fetch if_empty value
-			self.state = blackboard.get::<BehaviorState>("if_empty")?;
+			self.state = behavior.get::<BehaviorState>("if_empty")?;
 			// fetch the shared queue
-			self.queue = Some(blackboard.get::<SharedQueue<T>>("queue")?);
+			self.queue = Some(behavior.get::<SharedQueue<T>>("queue")?);
 		}
-		self.tick(behavior, blackboard, children, runtime)
-			.await
+		self.tick(behavior, children, runtime).await
 	}
 
 	async fn tick(
 		&mut self,
-		_behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
+		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		if let Some(queue) = &self.queue {
 			if let Some(value) = queue.pop_front() {
-				blackboard.set::<T>("value", value)?;
+				behavior.set::<T>("value", value)?;
 				let child_state = children[0].execute_tick(runtime).await?;
 				if child_state.is_completed() {
 					children[0].reset(runtime)?;

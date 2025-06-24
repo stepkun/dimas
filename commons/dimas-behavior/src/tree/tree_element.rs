@@ -10,11 +10,10 @@ use dimas_scripting::{Error, SharedRuntime};
 
 use crate::{
 	behavior::{
-		BehaviorData, BehaviorDescription, BehaviorPtr, BehaviorResult, BehaviorState,
+		BehaviorData, BehaviorPtr, BehaviorResult, BehaviorState,
 		error::BehaviorError,
 		pre_post_conditions::{Conditions, PostConditions, PreConditions},
 	},
-	blackboard::SharedBlackboard,
 	tree::tree_iter::TreeIter,
 };
 
@@ -26,11 +25,11 @@ use super::BehaviorTreeElementList;
 #[derive(Clone, Copy, Debug)]
 /// @TODO:
 pub enum TreeElementKind {
-	/// @TODO:
+	/// A behavior tree leaf.
 	Leaf,
-	/// @TODO:
+	/// A behavior tree node.
 	Node,
-	/// @TODO:
+	/// A behavior subtree.
 	SubTree,
 }
 //endregion:	--- TreeElementKind
@@ -38,24 +37,18 @@ pub enum TreeElementKind {
 // region:		--- BehaviorTreeElement
 /// A tree elements.
 pub struct BehaviorTreeElement {
-	/// Data of the Behavior.
-	data: BehaviorData,
-	/// Description of the Behavior.
-	description: BehaviorDescription,
-	/// Reference to the [`Blackboard`] for the element.
-	blackboard: SharedBlackboard,
+	/// Kind of the element.
+	kind: TreeElementKind,
 	/// The behavior of that element.
 	behavior: BehaviorPtr,
+	/// Data of the Behavior.
+	data: BehaviorData,
 	/// Children of the element.
 	children: BehaviorTreeElementList,
 	/// Pre conditions, checked before a tick.
 	pre_conditions: PreConditions,
 	/// Post conditions, checked after a tick.
 	post_conditions: PostConditions,
-	/// Kind of the element.
-	kind: TreeElementKind,
-	/// Path for Groot2
-	groot2_path: ConstString,
 }
 
 impl BehaviorTreeElement {
@@ -64,56 +57,44 @@ impl BehaviorTreeElement {
 	#[allow(clippy::too_many_arguments)]
 	#[inline]
 	fn new(
-		data: BehaviorData,
-		description: BehaviorDescription,
-		children: BehaviorTreeElementList,
-		blackboard: SharedBlackboard,
-		behavior: BehaviorPtr,
-		conditions: Conditions,
 		kind: TreeElementKind,
+		behavior: BehaviorPtr,
+		mut data: BehaviorData,
+		children: BehaviorTreeElementList,
+		conditions: Conditions,
 	) -> Self {
 		let groot2_path = match kind {
-			TreeElementKind::Leaf | TreeElementKind::Node => data.path().clone(),
+			TreeElementKind::Leaf | TreeElementKind::Node => data.description().path().clone(),
 			TreeElementKind::SubTree => {
-				if data.path().is_empty() {
-					data.path().clone()
+				if data.description().path().is_empty() {
+					data.description().path().clone()
 				} else {
 					let uid = data.uid().to_string();
-					(data.name().to_string() + "::" + &uid).into()
+					(data.description().name().to_string() + "::" + &uid).into()
 				}
 			}
 		};
-
+		data.description_mut()
+			.set_groot2_path(groot2_path);
 		Self {
-			data,
-			description,
-			blackboard,
+			kind,
 			behavior,
+			data,
 			children,
 			pre_conditions: conditions.pre,
 			post_conditions: conditions.post,
-			kind,
-			groot2_path,
 		}
 	}
 
 	/// Create a tree leaf.
 	#[must_use]
-	pub(crate) fn create_leaf(
-		data: BehaviorData,
-		description: BehaviorDescription,
-		blackboard: SharedBlackboard,
-		behavior: BehaviorPtr,
-		conditions: Conditions,
-	) -> Self {
+	pub(crate) fn create_leaf(data: BehaviorData, behavior: BehaviorPtr, conditions: Conditions) -> Self {
 		Self::new(
-			data,
-			description,
-			BehaviorTreeElementList::default(),
-			blackboard,
-			behavior,
-			conditions,
 			TreeElementKind::Leaf,
+			behavior,
+			data,
+			BehaviorTreeElementList::default(),
+			conditions,
 		)
 	}
 
@@ -121,42 +102,22 @@ impl BehaviorTreeElement {
 	#[must_use]
 	pub(crate) fn create_node(
 		data: BehaviorData,
-		description: BehaviorDescription,
 		children: BehaviorTreeElementList,
-		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 		conditions: Conditions,
 	) -> Self {
-		Self::new(
-			data,
-			description,
-			children,
-			blackboard,
-			behavior,
-			conditions,
-			TreeElementKind::Node,
-		)
+		Self::new(TreeElementKind::Node, behavior, data, children, conditions)
 	}
 
 	/// Create a subtree.
 	#[must_use]
 	pub(crate) fn create_subtree(
 		data: BehaviorData,
-		description: BehaviorDescription,
 		children: BehaviorTreeElementList,
-		blackboard: SharedBlackboard,
 		behavior: BehaviorPtr,
 		conditions: Conditions,
 	) -> Self {
-		Self::new(
-			data,
-			description,
-			children,
-			blackboard,
-			behavior,
-			conditions,
-			TreeElementKind::SubTree,
-		)
+		Self::new(TreeElementKind::SubTree, behavior, data, children, conditions)
 	}
 
 	/// Get the uid.
@@ -165,34 +126,16 @@ impl BehaviorTreeElement {
 		self.data.uid()
 	}
 
-	/// Get the name.
-	#[must_use]
-	pub const fn name(&self) -> &ConstString {
-		self.data.name()
-	}
-
-	/// Get the path.
-	#[must_use]
-	pub const fn path(&self) -> &ConstString {
-		self.data.path()
-	}
-
-	/// Get the path for Groot2.
-	#[must_use]
-	pub const fn groot2_path(&self) -> &ConstString {
-		&self.groot2_path
-	}
-
 	/// Get a reference to the [`BehaviorData`].
 	#[must_use]
 	pub const fn data(&self) -> &BehaviorData {
 		&self.data
 	}
 
-	/// Get a reference to the [`BehaviorDescription`].
+	/// Get a mutable reference to the [`BehaviorData`].
 	#[must_use]
-	pub const fn description(&self) -> &BehaviorDescription {
-		&self.description
+	pub const fn data_mut(&mut self) -> &mut BehaviorData {
+		&mut self.data
 	}
 
 	/// Get a reference to the behavior.
@@ -206,12 +149,6 @@ impl BehaviorTreeElement {
 		&mut self.behavior
 	}
 
-	/// Get the blackboard.
-	#[must_use]
-	pub fn blackboard(&self) -> SharedBlackboard {
-		self.blackboard.clone()
-	}
-
 	/// Get the children.
 	#[must_use]
 	pub const fn children(&self) -> &BehaviorTreeElementList {
@@ -223,15 +160,27 @@ impl BehaviorTreeElement {
 		&mut self.children
 	}
 
+	/// Get the pre conditions.
+	#[must_use]
+	pub const fn pre_conditions(&self) -> &PreConditions {
+		&self.pre_conditions
+	}
+
+	/// Get the post conditions.
+	#[must_use]
+	pub const fn post_conditions(&self) -> &PostConditions {
+		&self.post_conditions
+	}
+
 	/// Halt the element and all its children.
 	/// # Errors
 	#[allow(clippy::unused_async)]
 	pub async fn execute_halt(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
 		self.halt(0, runtime)?;
-		if let Some(chunk) = self.post_conditions.get_chunk("_onHalted") {
+		if let Some(script) = self.post_conditions.get("_onHalted") {
 			let _ = runtime
 				.lock()
-				.execute(chunk, &mut self.blackboard)?;
+				.run(script, self.data.blackboard_mut())?;
 		}
 		self.data.set_state(BehaviorState::Idle);
 		Ok(())
@@ -245,11 +194,11 @@ impl BehaviorTreeElement {
 			result
 		} else if self.data.state() == BehaviorState::Idle {
 			self.behavior
-				.start(&mut self.data, &mut self.blackboard, &mut self.children, runtime)
+				.start(&mut self.data, &mut self.children, runtime)
 				.await?
 		} else {
 			self.behavior
-				.tick(&mut self.data, &mut self.blackboard, &mut self.children, runtime)
+				.tick(&mut self.data, &mut self.children, runtime)
 				.await?
 		};
 
@@ -315,34 +264,34 @@ impl BehaviorTreeElement {
 		if self.pre_conditions.is_some() {
 			// Preconditions only applied when the node state is `Idle` or `Skipped`
 			if self.data.state() == BehaviorState::Idle || self.data.state() == BehaviorState::Skipped {
-				if let Some(chunk) = self.pre_conditions.get_chunk("_failureif") {
+				if let Some(script) = self.pre_conditions.get("_failureif") {
 					let res = runtime
 						.lock()
-						.execute(chunk, &mut self.blackboard)?;
+						.run(script, self.data.blackboard_mut())?;
 					if res.is_bool() && res.as_bool()? {
 						return Ok(Some(BehaviorState::Failure));
 					}
 				}
-				if let Some(chunk) = self.pre_conditions.get_chunk("_successif") {
+				if let Some(script) = self.pre_conditions.get("_successif") {
 					let res = runtime
 						.lock()
-						.execute(chunk, &mut self.blackboard)?;
+						.run(script, self.data.blackboard_mut())?;
 					if res.is_bool() && res.as_bool()? {
 						return Ok(Some(BehaviorState::Success));
 					}
 				}
-				if let Some(chunk) = self.pre_conditions.get_chunk("_skipif") {
+				if let Some(script) = self.pre_conditions.get("_skipif") {
 					let res = runtime
 						.lock()
-						.execute(chunk, &mut self.blackboard)?;
+						.run(script, self.data.blackboard_mut())?;
 					if res.is_bool() && res.as_bool()? {
 						return Ok(Some(BehaviorState::Skipped));
 					}
 				}
-				if let Some(chunk) = self.pre_conditions.get_chunk("_while") {
+				if let Some(script) = self.pre_conditions.get("_while") {
 					let res = runtime
 						.lock()
-						.execute(chunk, &mut self.blackboard)?;
+						.run(script, self.data.blackboard_mut())?;
 					if res.is_bool() && res.as_bool()? {
 						return Ok(Some(BehaviorState::Skipped));
 					}
@@ -350,10 +299,10 @@ impl BehaviorTreeElement {
 			} else
 			// Preconditions only applied when the node state is `Running`
 			if self.data.state() == BehaviorState::Running {
-				if let Some(chunk) = self.pre_conditions.get_chunk("_while") {
+				if let Some(script) = self.pre_conditions.get("_while") {
 					let res = runtime
 						.lock()
-						.execute(chunk, &mut self.blackboard)?;
+						.run(script, self.data.blackboard_mut())?;
 					// if not true halt element and return `Skipped`
 					if res.is_bool() && !res.as_bool()? {
 						let _res = self.execute_halt(runtime).await;
@@ -369,26 +318,26 @@ impl BehaviorTreeElement {
 		if self.post_conditions.is_some() {
 			match state {
 				BehaviorState::Failure => {
-					if let Some(chunk) = self.post_conditions.get_chunk("_onFailure") {
+					if let Some(script) = self.post_conditions.get("_onFailure") {
 						let _: Result<dimas_scripting::execution::ScriptingValue, dimas_scripting::Error> = runtime
 							.lock()
-							.execute(chunk, &mut self.blackboard);
+							.run(script, self.data.blackboard_mut());
 					}
 				}
 				BehaviorState::Success => {
-					if let Some(chunk) = self.post_conditions.get_chunk("_onSuccess") {
+					if let Some(script) = self.post_conditions.get("_onSuccess") {
 						let _ = runtime
 							.lock()
-							.execute(chunk, &mut self.blackboard);
+							.run(script, self.data.blackboard_mut());
 					}
 				}
 				// rest is ignored
 				_ => {}
 			}
-			if let Some(chunk) = self.post_conditions.get_chunk("_post") {
+			if let Some(script) = self.post_conditions.get("_post") {
 				let _ = runtime
 					.lock()
-					.execute(chunk, &mut self.blackboard);
+					.run(script, self.data.blackboard_mut());
 			}
 		}
 	}

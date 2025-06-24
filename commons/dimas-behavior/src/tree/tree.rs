@@ -57,7 +57,7 @@ fn print_recursively(level: i8, node: &BehaviorTreeElement) -> Result<(), Error>
 		indentation.push_str("  ");
 	}
 
-	std::println!("{indentation}{}", node.name());
+	std::println!("{indentation}{}", node.data().description().name());
 	for child in &**node.children() {
 		print_recursively(next_level, child)?;
 	}
@@ -98,8 +98,14 @@ impl BehaviorTree {
 
 	/// Access the root blackboard of the tree.
 	#[must_use]
-	pub fn blackboard(&self) -> SharedBlackboard {
-		self.root.blackboard()
+	pub const fn blackboard(&self) -> &SharedBlackboard {
+		self.root.data().blackboard()
+	}
+
+	/// Access the root blackboard of the tree.
+	#[must_use]
+	pub const fn blackboard_mut(&mut self) -> &mut SharedBlackboard {
+		self.root.data_mut().blackboard_mut()
 	}
 
 	/// Pretty print the tree.

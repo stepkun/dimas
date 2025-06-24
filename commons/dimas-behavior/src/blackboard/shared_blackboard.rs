@@ -9,12 +9,11 @@ extern crate std;
 
 // region:      --- modules
 use alloc::{
-	format,
 	string::{String, ToString},
 	sync::Arc,
 };
 use core::{
-	any::{Any, TypeId},
+	any::Any,
 	fmt::Debug,
 	ops::{Deref, DerefMut},
 	str::FromStr,
@@ -30,12 +29,10 @@ use crate::port::PortRemappings;
 
 fn strip_key(key: &str) -> &str {
 	if key.starts_with('{') && key.ends_with('}') {
-		let stripped = key
-			.strip_prefix('{')
+		key.strip_prefix('{')
 			.unwrap_or_else(|| todo!())
 			.strip_suffix('}')
-			.unwrap_or_else(|| todo!());
-		stripped
+			.unwrap_or_else(|| todo!())
 	} else {
 		key
 	}
@@ -45,23 +42,25 @@ fn strip_key(key: &str) -> &str {
 /// Thread safe reference to a [`Blackboard`].
 #[derive(Clone, Debug, Default)]
 pub struct SharedBlackboard {
+	/// Creator of the Blackboard.
+	creator: ConstString,
 	/// Hierarchy of this shared reference.
 	path: ConstString,
 	/// Shared reference to the [`Blackboard`]
-	node: Arc<RwLock<Blackboard>>,
+	blackboard: Arc<RwLock<Blackboard>>,
 }
 
 impl Deref for SharedBlackboard {
 	type Target = Arc<RwLock<Blackboard>>;
 
 	fn deref(&self) -> &Self::Target {
-		&self.node
+		&self.blackboard
 	}
 }
 
 impl DerefMut for SharedBlackboard {
 	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.node
+		&mut self.blackboard
 	}
 }
 
@@ -72,15 +71,13 @@ impl BlackboardInterface for SharedBlackboard {
 			return self.root().contains(key_stripped);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
 		// Try in current Blackboard
-		if self.read().content.read().contains(&final_key) {
+		if self.read().content.read().contains(key) {
 			return true;
 		}
 
-		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		// Try to find in parent hierarchy. We need to read the remapping info beforehand to avoid deadlocks.
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &self.read().parent {
 				return parent.contains(&parent_key);
@@ -99,20 +96,14 @@ impl BlackboardInterface for SharedBlackboard {
 			return self.root().delete(key_stripped);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
 		// Try to delete key in current Blackboard
-		let a = self
-			.write()
-			.content
-			.write()
-			.delete::<T>(&final_key);
+		let a = self.write().content.write().delete::<T>(key);
 		if a.is_ok() {
 			return a;
 		}
 
-		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		// Try to find in parent hierarchy. We need to read the remapping info beforehand to avoid deadlocks.
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &mut self.write().parent {
 				return parent.delete(&parent_key);
@@ -131,34 +122,14 @@ impl BlackboardInterface for SharedBlackboard {
 			return self.root().get(key_stripped);
 		}
 
-		// Check for coded value. These are always "remappings" in the current blackboard.
-		let value_option = self.read().values.find(&key.into());
-		if let Some(value) = value_option {
-			return <T as FromStr>::from_str(&value).map_or_else(
-				|_| {
-					Err(Error::ParsePortValue(
-						key.into(),
-						format!("{:?}", TypeId::of::<T>()).into(),
-					))
-				},
-				|val| Ok(val),
-			);
-		}
-
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
-		// if it is a key starting with an '@' redirect to root bb
-		if let Some(key_stripped) = final_key.strip_prefix('@') {
-			return self.root().get(key_stripped);
-		}
 		// Try to find in current Blackboard
-		let a = self.read().content.read().get::<T>(&final_key);
+		let a = self.read().content.read().get::<T>(key);
 		if a.is_ok() {
 			return a;
 		}
 
-		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		// Try to find in parent hierarchy. We need to read the remapping info beforehand to avoid deadlocks.
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &self.read().parent {
 				return parent.get(&parent_key);
@@ -174,20 +145,14 @@ impl BlackboardInterface for SharedBlackboard {
 			return self.root().get_entry(key_stripped);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
-		// if it is a key starting with an '@' redirect to root bb
-		if let Some(key_stripped) = final_key.strip_prefix('@') {
-			return self.root().get_entry(key_stripped);
-		}
 		// try to find key in current Blackboard
-		let a = self.read().content.read().get_entry(&final_key);
+		let a = self.read().content.read().get_entry(key);
 		if a.is_some() {
 			return a;
 		}
 
-		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		// Try to find in parent hierarchy. We need to read the remapping info beforehand to avoid deadlocks.
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &self.read().parent {
 				return parent.get_entry(&parent_key);
@@ -206,20 +171,14 @@ impl BlackboardInterface for SharedBlackboard {
 			return self.root().set(key_stripped, value);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
-		// if it is a key starting with an '@' redirect to root bb
-		if let Some(key_stripped) = final_key.strip_prefix('@') {
-			return self.root().set(key_stripped, value);
-		}
 		// Try to find key in current Blackboard
-		let a = self.read().content.read().get::<T>(&final_key);
+		let a = self.read().content.read().get::<T>(key);
 		if a.is_ok() {
-			return self.read().content.write().set(&final_key, value);
+			return self.read().content.write().set(key, value);
 		}
 
-		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		// Try to find in parent hierarchy. We need to read the remapping info beforehand to avoid deadlocks.
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &mut self.write().parent {
 				return parent.set(&parent_key, value);
@@ -227,7 +186,7 @@ impl BlackboardInterface for SharedBlackboard {
 		}
 
 		// If it is not remapped to parent, set it in current `Blackboard`
-		self.read().content.write().set(&final_key, value)
+		self.read().content.write().set(key, value)
 	}
 }
 
@@ -238,24 +197,18 @@ impl Environment for SharedBlackboard {
 			return self.root().define_env(key_stripped, value);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
 		// Try to find key in current Blackboard
 		let a = self
 			.read()
 			.content
 			.read()
-			.get::<ScriptingValue>(&final_key);
+			.get::<ScriptingValue>(key);
 		if a.is_ok() {
-			return self
-				.read()
-				.content
-				.write()
-				.define_env(&final_key, value);
+			return self.read().content.write().define_env(key, value);
 		}
 
 		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &mut self.write().parent {
 				return parent.define_env(&parent_key, value);
@@ -263,10 +216,7 @@ impl Environment for SharedBlackboard {
 		}
 
 		// if it is not remapped to parent, set it in current `Blackboard`
-		self.read()
-			.content
-			.write()
-			.define_env(&final_key, value)
+		self.read().content.write().define_env(key, value)
 	}
 
 	fn get_env(&self, key: &str) -> Result<ScriptingValue, ScriptingError> {
@@ -275,23 +225,21 @@ impl Environment for SharedBlackboard {
 			return self.root().get_env(key_stripped);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
 		// Try to find key in current Blackboard
-		let a = self.read().content.read().get_env(&final_key);
+		let a = self.read().content.read().get_env(key);
 		if let Ok(val) = a {
 			return Ok(val);
 		}
 
 		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &self.read().parent {
 				return parent.get_env(&parent_key);
 			}
 		}
 
-		Err(ScriptingError::GlobalNotDefined(final_key))
+		Err(ScriptingError::GlobalNotDefined(key.into()))
 	}
 
 	fn set_env(&mut self, key: &str, value: ScriptingValue) -> Result<(), ScriptingError> {
@@ -300,87 +248,65 @@ impl Environment for SharedBlackboard {
 			return self.root().set_env(key_stripped, value);
 		}
 
-		// Read needed remapping values beforehand to avoid a deadlock.
-		let final_key = self.get_remapping_info(key);
 		// Try to find key in current Blackboard
 		let a = self
 			.read()
 			.content
 			.read()
-			.get::<ScriptingValue>(&final_key);
+			.get::<ScriptingValue>(key);
 		if a.is_ok() {
-			return self
-				.read()
-				.content
-				.write()
-				.set_env(&final_key, value);
+			return self.read().content.write().set_env(key, value);
 		}
 
 		// Try to find in parent hierarchy. Again we need to read the remapping info beforehand to avoid deadlocks.
-		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(&final_key);
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
 		if has_remapping || autoremap {
 			if let Some(parent) = &mut self.write().parent {
 				return parent.set_env(&parent_key, value);
 			}
 		}
 
-		Err(ScriptingError::GlobalNotDefined(final_key))
+		Err(ScriptingError::GlobalNotDefined(key.into()))
 	}
 }
 
 impl SharedBlackboard {
 	/// Create a `SharedBlackboard` with remappings and an initial path.
 	#[must_use]
-	pub fn new(creator: &str, remappings: PortRemappings, values: PortRemappings) -> Self {
-		let node = Blackboard::new(creator, remappings, values);
+	pub fn new(creator: &str) -> Self {
+		let node = Blackboard::new();
 		Self {
+			creator: creator.into(),
 			path: creator.into(),
-			node: Arc::new(RwLock::new(node)),
+			blackboard: Arc::new(RwLock::new(node)),
 		}
 	}
 
-	/// Create a `SharedBlackboard` with parent and remappings.
+	/// Create a `SharedBlackboard` remappings.
 	#[must_use]
-	pub fn with(
-		creator: &str,
-		parent: Self,
-		remappings: PortRemappings,
-		values: PortRemappings,
-		autoremap: bool,
-	) -> Self {
+	pub fn with(creator: &str, remappings: PortRemappings) -> Self {
+		Self {
+			creator: creator.into(),
+			path: creator.into(),
+			blackboard: Arc::new(RwLock::new(Blackboard::with(remappings))),
+		}
+	}
+
+	/// Create a `SharedBlackboard` with parent.
+	#[must_use]
+	pub fn with_parent(creator: &str, parent: Self, remappings: PortRemappings, autoremap: bool) -> Self {
 		let path = String::from(&*parent.path) + "/" + creator;
 		Self {
+			creator: creator.into(),
 			path: path.into(),
-			node: Arc::new(RwLock::new(Blackboard::with(
-				creator, parent, remappings, values, autoremap,
-			))),
+			blackboard: Arc::new(RwLock::new(Blackboard::with_parent(parent, remappings, autoremap))),
 		}
 	}
 
-	/// Create a `SharedBlackboard` with parent and a path extension.
+	/// Get the creator
 	#[must_use]
-	pub fn with_parent(creator: &str, parent: Self) -> Self {
-		let path = String::from(&*parent.path) + "/" + creator;
-		Self {
-			path: path.into(),
-			node: Arc::new(RwLock::new(Blackboard::with(
-				creator,
-				parent,
-				PortRemappings::default(),
-				PortRemappings::default(),
-				false,
-			))),
-		}
-	}
-
-	/// Create a cloned `SharedBlackboard`.
-	#[must_use]
-	pub fn cloned(&self, remappings: PortRemappings, values: PortRemappings) -> Self {
-		let clone = self.node.read().cloned(remappings, values);
-		Self {
-			path: self.path.clone(),
-			node: Arc::new(RwLock::new(clone)),
-		}
+	pub const fn creator(&self) -> &ConstString {
+		&self.creator
 	}
 
 	/// Print the content of the `SharedBlackboard` for debugging purpose.
@@ -389,26 +315,15 @@ impl SharedBlackboard {
 		std::println!("{self:?}");
 	}
 
-	/// Read needed remapping information.
-	fn get_remapping_info(&self, key: &str) -> ConstString {
-		let guard = self.read();
-		let remapped_key = guard
-			.remappings
-			.find(&key.into())
-			.map_or_else(|| key.into(), |remapped| remapped);
-		drop(guard);
-		strip_key(&remapped_key).into()
-	}
-
 	/// Read needed remapping information to parent.
-	fn get_parent_remapping_info(&self, key: &ConstString) -> (ConstString, bool, bool) {
+	fn get_parent_remapping_info(&self, key: &str) -> (ConstString, bool, bool) {
 		let guard = self.read();
 		let (remapped_key, has_remapping) = guard.remappings_to_parent.as_ref().map_or_else(
-			|| (key.clone(), false),
+			|| (key.into(), false),
 			|remappings| {
 				let (remapped_key, has_remapping) = remappings
-					.find(key)
-					.map_or_else(|| (key.clone(), false), |remapped| (remapped, true));
+					.find(&key.into())
+					.map_or_else(|| (key.into(), false), |remapped| (remapped, true));
 				(strip_key(&remapped_key).into(), has_remapping)
 			},
 		);
@@ -420,7 +335,7 @@ impl SharedBlackboard {
 	/// function to get access to the root [`BlackboardNode`]
 	/// of a [`Blackboard`] tree in a recursive way.
 	fn root(&self) -> Self {
-		self.node
+		self.blackboard
 			.read()
 			.parent
 			.as_ref()
@@ -430,6 +345,13 @@ impl SharedBlackboard {
 	/// Add or change the parent of a [`SharedBlackboard`].
 	pub fn set_parent(&self, parent: Self) {
 		self.write().parent = Some(parent);
+	}
+
+	pub(crate) fn remappings(&self) -> Option<PortRemappings> {
+		self.blackboard
+			.read()
+			.remappings_to_parent
+			.clone()
 	}
 }
 // endregion:   --- SharedBlackboard

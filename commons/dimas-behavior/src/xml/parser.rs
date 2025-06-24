@@ -12,7 +12,6 @@ use alloc::{
 	string::{String, ToString},
 };
 use dimas_core::ConstString;
-use dimas_scripting::Runtime;
 use roxmltree::{Attributes, Document, Node, NodeType};
 #[cfg(feature = "std")]
 use std::path::PathBuf;
@@ -142,19 +141,16 @@ impl XmlParser {
 		is_subtree: bool,
 		bhvr: &BehaviorPtr,
 		attrs: &BTreeMap<ConstString, ConstString>,
-		runtime: &mut Runtime,
 	) -> Result<
 		(
 			/*autoremap:*/ bool,
 			/*remappings:*/ PortRemappings,
-			/*default values:*/ PortRemappings,
 			/*pre&post conditions:*/ Conditions,
 		),
 		Error,
 	> {
 		let mut autoremap = false;
 		let mut remappings = PortRemappings::default();
-		let mut values = PortRemappings::default();
 		let mut preconditions = PreConditions::default();
 		let mut postconditions = PostConditions::default();
 
@@ -184,7 +180,7 @@ impl XmlParser {
 						));
 					}
 				} else {
-					values.add(port_definition.name(), &default_value)?;
+					remappings.add(port_definition.name(), &default_value)?;
 				}
 			}
 		}
@@ -205,13 +201,11 @@ impl XmlParser {
 					}
 					// preconditions
 					"_skipif" | "_failureif" | "_successif" | "_while" => {
-						let chunk = runtime.parse(value)?;
-						preconditions.set(key, chunk)?;
+						preconditions.set(key, value)?;
 					}
 					// postconditions
 					"_onSuccess" | "_onFailure" | "_post" | "_onHalted" => {
-						let chunk = runtime.parse(value)?;
-						postconditions.set(key, chunk)?;
+						postconditions.set(key, value)?;
 					}
 					_ => return Err(Error::UnknownSpecialAttribute(key.clone())),
 				}
@@ -228,13 +222,13 @@ impl XmlParser {
 
 						// check value for allowed names
 						if is_allowed_port_name(stripped) {
-							remappings.add(key, value)?;
+							remappings.overwrite(key, value);
 						} else {
 							return Err(crate::factory::error::Error::NameNotAllowed(stripped.into()));
 						}
 					} else {
 						// this is a normal string, representing a port value
-						values.add(key, value)?;
+						remappings.overwrite(key, value);
 					}
 				} else {
 					// check found port name against list of provided ports
@@ -250,13 +244,13 @@ impl XmlParser {
 
 								// check value for allowed names
 								if is_allowed_port_name(stripped) {
-									remappings.add(key, value)?;
+									remappings.overwrite(key, value);
 								} else {
 									return Err(crate::factory::error::Error::NameNotAllowed(stripped.into()));
 								}
 							} else {
 								// this is a normal string, representing a port value
-								values.overwrite(key, value);
+								remappings.overwrite(key, value);
 							}
 						}
 						None => {
@@ -270,7 +264,7 @@ impl XmlParser {
 			pre: preconditions,
 			post: postconditions,
 		};
-		Ok((autoremap, remappings, values, conditions))
+		Ok((autoremap, remappings, conditions))
 	}
 
 	#[allow(clippy::option_if_let_else)]
@@ -293,18 +287,20 @@ impl XmlParser {
 				let uid = self.next_uid();
 				// handle the nodes attributes
 				let attrs = attrs_to_map(node.attributes());
-				let (_autoremap, remappings, values, conditions) =
-					Self::handle_attributes(name, true, &bhvr, &attrs, registry.runtime_mut())?;
+				let (autoremap, mut remappings, conditions) =
+					Self::handle_attributes(name, true, &bhvr, &attrs)?;
 				let blackboard = if let Some(external_bb) = external_blackboard {
-					SharedBlackboard::with_parent(name, external_bb)
+					// in this case, the remappings are against parent BlackBoard
+					let bb = SharedBlackboard::with_parent(name, external_bb, remappings, autoremap);
+					remappings = PortRemappings::default();
+					bb
 				} else {
-					SharedBlackboard::new(name, remappings.clone(), values.clone())
+					SharedBlackboard::new(name)
 				};
 				// for tree root "path" is empty
 				let children = self.build_children("", node, registry, &blackboard)?;
-				let bhvr_data = BehaviorData::new(uid, name, "", remappings, values);
-				let behaviortree =
-					BehaviorTreeElement::create_subtree(bhvr_data, bhvr_desc, children, blackboard, bhvr, conditions);
+				let bhvr_data = BehaviorData::new(uid, name, "", remappings, blackboard, bhvr_desc);
+				let behaviortree = BehaviorTreeElement::create_subtree(bhvr_data, children, bhvr, conditions);
 				Ok(behaviortree)
 			},
 		)
@@ -389,27 +385,27 @@ impl XmlParser {
 			registry.fetch(tag_name)?
 		};
 		let bhvr = bhvr_creation_fn();
-		let (autoremap, remappings, values, conditions) =
-			Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs, registry.runtime_mut())?;
-		let bhvr_data = BehaviorData::new(uid, &node_name, &path, remappings.clone(), values.clone());
-		let tree_node = match bhvr_desc.kind() {
+		let (autoremap, remappings, conditions) =
+			Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs)?;
+		let kind = bhvr_desc.kind();
+		let tree_node = match kind {
 			BehaviorKind::Action | BehaviorKind::Condition => {
 				if node.has_children() {
 					return Err(Error::ChildrenNotAllowed(node_name.into()));
 				}
-				// A leaf gets a cloned Blackboard with own remappings
-				let blackboard = blackboard.cloned(remappings, values);
-				BehaviorTreeElement::create_leaf(bhvr_data, bhvr_desc, blackboard, bhvr, conditions)
+				// A leaf uses a cloned Blackboard
+				let bhvr_data = BehaviorData::new(uid, &node_name, &path, remappings, blackboard, bhvr_desc);
+				BehaviorTreeElement::create_leaf(bhvr_data, bhvr, conditions)
 			}
 			BehaviorKind::Control | BehaviorKind::Decorator => {
-				// A node gets a cloned Blackboard with own remappings
-				let blackboard = blackboard.cloned(remappings, values);
+				// A node uses a cloned Blackboard
 				let children = self.build_children(&path, node, registry, &blackboard)?;
 
-				if bhvr_desc.kind() == BehaviorKind::Decorator && children.len() > 1 {
+				if kind == BehaviorKind::Decorator && children.len() > 1 {
 					return Err(Error::DecoratorOnlyOneChild(node.tag_name().name().into()));
 				}
-				BehaviorTreeElement::create_node(bhvr_data, bhvr_desc, children, blackboard, bhvr, conditions)
+				let bhvr_data = BehaviorData::new(uid, &node_name, &path, remappings, blackboard, bhvr_desc);
+				BehaviorTreeElement::create_node(bhvr_data, children, bhvr, conditions)
 			}
 			BehaviorKind::SubTree => {
 				if let Some(id) = attrs.get("ID") {
@@ -420,16 +416,18 @@ impl XmlParser {
 							let node = doc.root_element();
 							// A SubTree gets a new Blackboard with parent and remappings.
 							let blackboard1 =
-								SharedBlackboard::with(&node_name, blackboard, remappings, values, autoremap);
+								SharedBlackboard::with_parent(&node_name, blackboard, remappings, autoremap);
 							let children = self.build_children(&path, node, registry, &blackboard1)?;
-							BehaviorTreeElement::create_subtree(
-								bhvr_data,
-								bhvr_desc,
-								children,
+							// the PortRemappings have been used against parent BlackBoard
+							let bhvr_data = BehaviorData::new(
+								uid,
+								&node_name,
+								&path,
+								PortRemappings::default(),
 								blackboard1,
-								bhvr,
-								conditions,
-							)
+								bhvr_desc,
+							);
+							BehaviorTreeElement::create_subtree(bhvr_data, children, bhvr, conditions)
 						}
 						None => {
 							return Err(Error::SubtreeNotFound(node_name.into()));

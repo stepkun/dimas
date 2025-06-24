@@ -10,12 +10,10 @@ use dimas_scripting::SharedRuntime;
 
 use crate::behavior::BehaviorData;
 use crate::behavior::error::BehaviorError;
-use crate::blackboard::BlackboardInterface;
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
-	blackboard::SharedBlackboard,
 	port::PortList,
 	tree::BehaviorTreeElementList,
 };
@@ -60,13 +58,12 @@ impl BehaviorInstance for Parallel {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
-		blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// check composition only once at start
-		self.success_threshold = blackboard.get("success_count").unwrap_or(-1);
-		self.failure_threshold = blackboard.get("failure_count").unwrap_or(-1);
+		self.success_threshold = behavior.get("success_count").unwrap_or(-1);
+		self.failure_threshold = behavior.get("failure_count").unwrap_or(-1);
 
 		let children_count = children.len();
 
@@ -82,8 +79,7 @@ impl BehaviorInstance for Parallel {
 			));
 		}
 
-		self.tick(behavior, blackboard, children, runtime)
-			.await
+		self.tick(behavior, children, runtime).await
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
@@ -92,7 +88,6 @@ impl BehaviorInstance for Parallel {
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
-		_blackboard: &mut SharedBlackboard,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
