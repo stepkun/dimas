@@ -43,15 +43,15 @@ impl DerefMut for PreConditions {
 impl PreConditions {
 	/// Get a pre condition.
 	pub fn get(&mut self, name: &str) -> Option<&ConstString> {
-		if self.0.is_none() {
-			self.0 = Some([None, None, None, None]);
-		}
-
-		let op = (0..PRE_CONDITIONS.len()).find(|&i| PRE_CONDITIONS[i] == name);
-		if let Some(index) = op {
-			self.0
-				.as_ref()
-				.map_or_else(|| None, |array| array[index].as_ref())
+		if self.0.is_some() {
+			let op = (0..PRE_CONDITIONS.len()).find(|&i| PRE_CONDITIONS[i] == name);
+			if let Some(index) = op {
+				self.0
+					.as_ref()
+					.map_or_else(|| None, |array| array[index].as_ref())
+			} else {
+				None
+			}
 		} else {
 			None
 		}
@@ -61,6 +61,7 @@ impl PreConditions {
 	/// # Errors
 	/// - if name is not a pre condition
 	pub fn set(&mut self, name: &str, script: &str) -> Result<(), BehaviorError> {
+		// lazy init
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
 		}
@@ -106,15 +107,15 @@ impl DerefMut for PostConditions {
 impl PostConditions {
 	/// Get a post condition.
 	pub fn get(&mut self, name: &str) -> Option<&ConstString> {
-		if self.0.is_none() {
-			self.0 = Some([None, None, None, None]);
-		}
-
-		let op = (0..POST_CONDITIONS.len()).find(|&i| POST_CONDITIONS[i] == name);
-		if let Some(index) = op {
-			self.0
-				.as_ref()
-				.map_or_else(|| None, |array| array[index].as_ref())
+		if self.0.is_some() {
+			let op = (0..POST_CONDITIONS.len()).find(|&i| POST_CONDITIONS[i] == name);
+			if let Some(index) = op {
+				self.0
+					.as_ref()
+					.map_or_else(|| None, |array| array[index].as_ref())
+			} else {
+				None
+			}
 		} else {
 			None
 		}
@@ -124,6 +125,7 @@ impl PostConditions {
 	/// # Errors
 	/// - if name is not a post condition
 	pub fn set(&mut self, name: &str, script: &str) -> Result<(), BehaviorError> {
+		// lazy init
 		if self.0.is_none() {
 			self.0 = Some([None, None, None, None]);
 		}

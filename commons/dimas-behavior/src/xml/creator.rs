@@ -12,7 +12,7 @@ use dimas_core::ConstString;
 use parking_lot::Mutex;
 
 use crate::{
-	behavior::BehaviorDescription,
+	behavior::{pre_post_conditions::{POST_CONDITIONS, PRE_CONDITIONS}, BehaviorDescription},
 	factory::BehaviorTreeFactory,
 	tree::{BehaviorTree, BehaviorTreeElement, TreeElementKind},
 };
@@ -198,9 +198,22 @@ impl XmlCreator {
 		}
 		
 		// Pre-conditions
-		//todo!();
+		if let Some(conditions) = &element.pre_conditions().0 {
+			for i in 0..PRE_CONDITIONS.len() {
+				if let Some(cond) = &conditions[i] {
+					writer.lock().attr(PRE_CONDITIONS[i], cond)?;
+				}
+			}
+		};
+
 		// Post-conditions
-		//todo!();
+		if let Some(conditions) = &element.post_conditions().0 {
+			for i in 0..POST_CONDITIONS.len() {
+				if let Some(cond) = &conditions[i] {
+					writer.lock().attr(POST_CONDITIONS[i], cond)?;
+				}
+			}
+		};
 
 		if !is_subtree {
 			// recursive dive into children, ignoring subtrees
