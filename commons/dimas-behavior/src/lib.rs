@@ -16,7 +16,7 @@ pub mod xml;
 
 // flatten:
 pub use behavior::Behavior;
-pub use tree::observer::groot2_publisher::Groot2Publisher;
+pub use tree::observer::groot2_connector::Groot2Connector;
 pub use tree::observer::tree_observer::BehaviorTreeObserver;
 pub use xml::creator::XmlCreator;
 

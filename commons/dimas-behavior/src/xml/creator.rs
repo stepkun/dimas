@@ -7,7 +7,7 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{collections::btree_map::BTreeMap, string::String, sync::Arc, vec::Vec};
+use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}, sync::Arc, vec::Vec};
 use dimas_core::ConstString;
 use parking_lot::Mutex;
 
@@ -68,7 +68,7 @@ impl XmlCreator {
 
 	/// Create XML from tree including `TreeNodesModel`.
 	/// # Errors
-	pub fn write_tree(tree: &BehaviorTree, pretty: bool) -> Result<ConstString, std::io::Error> {
+	pub fn write_tree(tree: &BehaviorTree, metadata: bool, builtin_models: bool, pretty: bool) -> Result<ConstString, std::io::Error> {
 		// storage for (non groot2 builtin) behaviors to mention in TreeNodesModel
 		let mut behaviors: BTreeMap<ConstString, BehaviorDescription> = BTreeMap::new();
 		let mut subtrees: BTreeMap<ConstString, &BehaviorTreeElement> = BTreeMap::new();
@@ -89,13 +89,13 @@ impl XmlCreator {
 				match item.kind() {
 					TreeElementKind::Leaf => {
 						let desc = item.data().description();
-						if !desc.groot2() {
+						if builtin_models || !desc.groot2() {
 							behaviors.insert(desc.name().clone(), desc.clone());
 						}
 					}
 					TreeElementKind::Node => {
 						let desc = item.data().description();
-						if !desc.groot2() {
+						if builtin_models || !desc.groot2() {
 							behaviors.insert(desc.name().clone(), desc.clone());
 						}
 					}
@@ -117,7 +117,7 @@ impl XmlCreator {
 
 				// recursive dive into children
 				for element in subtree.children().iter() {
-					Self::write_subtree(element, &writer)?;
+					Self::write_subtree(element, &writer, metadata)?;
 				}
 				writer.lock().end_elem()?; // BehaviorTree
 			}
@@ -126,7 +126,7 @@ impl XmlCreator {
 			writer.lock().begin_elem("TreeNodesModel")?;
 			// loop over collected behavior entries
 			for (name, item) in &behaviors {
-				if !item.groot2() {
+				if builtin_models || !item.groot2() {
 					writer.lock().begin_elem(item.kind_str())?;
 					writer.lock().attr("ID", name)?;
 					// look for a PortsList
@@ -163,6 +163,7 @@ impl XmlCreator {
 	fn write_subtree<'a>(
 		element: &'a BehaviorTreeElement,
 		writer: &Arc<Mutex<XmlWriter<'a, Vec<u8>>>>,
+		metadata: bool,
 	) -> Result<(), std::io::Error> {
 		let is_subtree = match element.kind() {
 			TreeElementKind::Leaf | TreeElementKind::Node => {
@@ -179,9 +180,19 @@ impl XmlCreator {
 				writer
 					.lock()
 					.attr("ID", element.data().description().name())?;
+				if metadata {
+					writer
+						.lock()
+						.attr("_fullpath", element.data().description().groot2_path())?;
+				}
 				true
 			}
 		};
+		if metadata {
+			writer
+				.lock()
+				.attr("_uid", &element.data().uid().to_string())?;
+		}
 
 		if is_subtree {
 			// subtree port mappings/values are in blackboard
@@ -218,7 +229,7 @@ impl XmlCreator {
 		if !is_subtree {
 			// recursive dive into children, ignoring subtrees
 			for element in element.children().iter() {
-				Self::write_subtree(element, writer)?;
+				Self::write_subtree(element, writer, metadata)?;
 			}
 		}
 
