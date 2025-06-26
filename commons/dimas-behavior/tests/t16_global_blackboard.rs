@@ -91,7 +91,7 @@ async fn global_blackboard() -> anyhow::Result<()> {
 	let root_blackboard =
 		SharedBlackboard::with_parent("global", global_blackboard.clone(), PortRemappings::default(), false);
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, PrintNumber, "PrintNumber")?;
 

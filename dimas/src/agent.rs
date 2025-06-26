@@ -113,7 +113,7 @@ impl Agent {
 	/// - if detection of program directory fails
 	pub fn create() -> Result<Self> {
 		// install core behavior
-		let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+		let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 		// register core nodes
 		register_behavior!(factory, NotInterrupted, "NotInterrupted")?;

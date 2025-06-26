@@ -38,7 +38,7 @@ const XML: &str = r#"
 #[tokio::test]
 #[ignore = "not yet available"]
 async fn blackboard_backup() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// register_behavior!(factory, SaySomething, "SaySomething")?;
 

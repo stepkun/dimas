@@ -42,7 +42,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn observer() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	factory.register_behavior_tree_from_text(XML)?;
 

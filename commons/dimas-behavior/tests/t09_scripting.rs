@@ -45,7 +45,7 @@ enum Color {
 
 #[tokio::test]
 async fn scripting() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_scripting_enum!(factory, Color);
 	register_scripting_enum!(factory, "THE_ANSWER", 42, "OTHER", 43);

@@ -48,7 +48,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn subtree_model() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 	// register subtrees nodes

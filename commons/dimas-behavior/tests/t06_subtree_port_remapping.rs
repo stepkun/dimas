@@ -37,7 +37,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn subtree_port_remapping() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
@@ -58,7 +58,7 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 #[tokio::test]
 #[ignore]
 async fn subtree_blackboard_access_reminder() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;

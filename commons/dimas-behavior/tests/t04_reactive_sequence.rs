@@ -37,7 +37,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn std_sequence() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, check_battery, "BatteryOK", BehaviorKind::Condition)?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
@@ -74,7 +74,7 @@ const XML_REACTIVE: &str = r#"
 
 #[tokio::test]
 async fn reactive_sequence() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, check_battery, "BatteryOK", BehaviorKind::Condition)?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;

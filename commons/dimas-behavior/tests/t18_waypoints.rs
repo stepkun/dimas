@@ -141,7 +141,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn waypoints() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// @TODO:
 	factory.register_behavior_type::<Loop<Pose2D>>("LoopPose")?;

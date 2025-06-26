@@ -34,7 +34,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn basic_ports() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.
 	// In this case, it requires an input called "message"

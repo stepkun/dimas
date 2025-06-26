@@ -33,7 +33,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn build_your_first_tree_implicit() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities
@@ -88,7 +88,7 @@ const XML_EXPLICIT: &str = r#"
 
 #[tokio::test]
 async fn build_your_first_tree_explicit() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// The recommended way to create a Behavior is through inheritance/composition.
 	// Even if it requires more boilerplate, it allows you to use more functionalities

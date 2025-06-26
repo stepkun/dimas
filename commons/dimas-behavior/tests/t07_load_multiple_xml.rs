@@ -41,7 +41,7 @@ const XML_SUB_B: &str = r#"
 
 #[tokio::test]
 async fn load_multiple_xml() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 
@@ -95,7 +95,7 @@ async fn load_external_xml() -> anyhow::Result<()> {
 	dir.push("tests");
 	std::env::set_current_dir(dir)?;
 
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 

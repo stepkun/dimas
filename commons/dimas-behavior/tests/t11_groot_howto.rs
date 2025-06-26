@@ -87,7 +87,7 @@ impl BehaviorStatic for UpdatePosition {
 #[tokio::test]
 #[ignore = "groot publishing missing"]
 async fn groot_howto() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// Nodes registration, as usual
 	CrossDoor::register_behaviors(&mut factory)?;

@@ -102,7 +102,7 @@ impl ActionB {
 
 #[tokio::test]
 async fn additional_args() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, ActionA, "Action_A", 42, "hello world".into())?;
 	register_behavior!(factory, ActionB, "Action_B")?;

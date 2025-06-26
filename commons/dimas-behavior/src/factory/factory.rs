@@ -74,12 +74,30 @@ impl BehaviorTreeFactory {
 		&mut self.registry
 	}
 
-	/// Create a factory with registered core behaviors
+	/// Create a factory with core set of behaviors
 	/// # Errors
-	/// - if core behaviors cannot be registered
+	/// - if behaviors cannot be registered
 	pub fn with_core_behaviors() -> Result<Self, Error> {
 		let mut factory = Self::default();
 		factory.core_behaviors()?;
+		Ok(factory)
+	}
+
+	/// Create a factory with extended set of behaviors
+	/// # Errors
+	/// - if behaviors cannot be registered
+	pub fn with_extended_behaviors() -> Result<Self, Error> {
+		let mut factory = Self::with_core_behaviors()?;
+		factory.extended_behaviors()?;
+		Ok(factory)
+	}
+
+	/// Create a factory with groot2 builtin behaviors
+	/// # Errors
+	/// - if behaviors cannot be registered
+	pub fn with_groot2_behaviors() -> Result<Self, Error> {
+		let mut factory = Self::with_extended_behaviors()?;
+		factory.groot2_behaviors()?;
 		Ok(factory)
 	}
 
@@ -87,9 +105,31 @@ impl BehaviorTreeFactory {
 	/// # Errors
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
-		// core actions
-		self.register_groot2_behavior_type::<Script>("Script")?;
+		// actions
 
+		// conditions
+
+		// controls
+		self.register_groot2_behavior_type::<Fallback>("Fallback")?;
+		self.register_groot2_behavior_type::<Parallel>("Parallel")?;
+		self.register_groot2_behavior_type::<ParallelAll>("ParallelAll")?;
+		self.register_groot2_behavior_type::<ReactiveFallback>("ReactiveFallback")?;
+		self.register_groot2_behavior_type::<ReactiveSequence>("ReactiveSequence")?;
+		self.register_groot2_behavior_type::<Sequence>("Sequence")?;
+		self.register_groot2_behavior_type::<SequenceWithMemory>("SequenceWithMemory")?;
+		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
+
+		// decorators
+		self.register_groot2_behavior_type::<ForceFailure>("ForceFailure")?;
+		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
+		self.register_groot2_behavior_type::<RetryUntilSuccessful>("RetryUntilSuccessful")
+	}
+
+	/// register all behaviors
+	/// # Errors
+	/// - if any registration fails
+	pub fn extended_behaviors(&mut self) -> Result<(), Error> {
+		// actions
 		let bhvr_desc = BehaviorDescription::new(
 			"AlwaysFailure",
 			"AlwaysFailure",
@@ -126,27 +166,32 @@ impl BehaviorTreeFactory {
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
-		// core conditions
-		self.register_groot2_behavior_type::<ScriptCondition>("ScriptCondition")?;
+		self.register_groot2_behavior_type::<Script>("Script")?;
 
-		// core controls
-		self.register_groot2_behavior_type::<Fallback>("Fallback")?;
-		self.register_groot2_behavior_type::<Parallel>("Parallel")?;
-		self.register_groot2_behavior_type::<ParallelAll>("ParallelAll")?;
-		self.register_groot2_behavior_type::<ReactiveFallback>("ReactiveFallback")?;
-		self.register_groot2_behavior_type::<ReactiveSequence>("ReactiveSequence")?;
-		self.register_groot2_behavior_type::<Sequence>("Sequence")?;
-		self.register_groot2_behavior_type::<SequenceWithMemory>("SequenceWithMemory")?;
-		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
+		// conditions
+		self.register_groot2_behavior_type::<ScriptCondition>("ScriptCondition")
 
-		// core decorators
-		self.register_groot2_behavior_type::<ForceFailure>("ForceFailure")?;
-		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
+		// controls
+
+		// decorators
+
+	}
+
+	/// register groot2 builtin behaviors
+	/// # Errors
+	/// - if any registration fails
+	pub fn groot2_behaviors(&mut self) -> Result<(), Error> {
+		// actions
+
+		// conditions
+
+		// controls
+
+		// decorators
 		self.register_groot2_behavior_type::<Loop<i32>>("LoopInt")?;
 		self.register_groot2_behavior_type::<Loop<bool>>("LoopBool")?;
 		self.register_groot2_behavior_type::<Loop<f64>>("LoopDouble")?;
 		self.register_groot2_behavior_type::<Loop<String>>("LoopString")?;
-		self.register_groot2_behavior_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
 		self.register_groot2_behavior_type::<Precondition>("Precondition")
 	}
 

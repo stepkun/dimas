@@ -31,7 +31,7 @@ const XML: &str = r#"
 
 #[tokio::test]
 async fn generic_ports() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_core_behaviors()?;
+	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, CalculateGoal, "CalculateGoal")?;
 	register_behavior!(factory, PrintTarget, "PrintTarget")?;
