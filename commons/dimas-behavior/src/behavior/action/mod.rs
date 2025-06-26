@@ -4,17 +4,12 @@
 //!
 
 mod script;
+mod set_blackboard;
+mod sleep;
 mod state_after;
 
 // flatten
 pub use script::Script;
+pub use set_blackboard::SetBlackboard;
+pub use sleep::Sleep;
 pub use state_after::StateAfter;
-
-// region:      --- modules
-use crate::behavior::BehaviorInstance;
-// endregion:   --- modules
-
-// region:      --- ActionBehavior
-/// Common methods for control behaviors.
-pub trait ActionBehavior: BehaviorInstance {}
-// endregion:   --- ActionBehavior

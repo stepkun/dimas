@@ -22,16 +22,15 @@ use crate::{
 	behavior::{
 		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
 		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::{Script, StateAfter},
-		condition::script_condition::ScriptCondition,
+		action::{Script, SetBlackboard, Sleep, StateAfter},
+		condition::ScriptCondition,
 		control::{
-			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
-			reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory,
-			while_do_else::WhileDoElse,
+			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
+			SequenceWithMemory, WhileDoElse,
 		},
 		decorator::{
-			force_failure::ForceFailure, inverter::Inverter, loop_queue::Loop,
-			retry_until_successful::RetryUntilSuccessful, script_precondition::Precondition, subtree::Subtree,
+			Delay, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful,
+			RunOnce, Subtree, Timeout,
 		},
 	},
 	blackboard::SharedBlackboard,
@@ -106,8 +105,10 @@ impl BehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn core_behaviors(&mut self) -> Result<(), Error> {
 		// actions
+		self.register_groot2_behavior_type::<Script>("Script")?;
 
 		// conditions
+		self.register_groot2_behavior_type::<ScriptCondition>("ScriptCondition")?;
 
 		// controls
 		self.register_groot2_behavior_type::<Fallback>("Fallback")?;
@@ -117,12 +118,11 @@ impl BehaviorTreeFactory {
 		self.register_groot2_behavior_type::<ReactiveSequence>("ReactiveSequence")?;
 		self.register_groot2_behavior_type::<Sequence>("Sequence")?;
 		self.register_groot2_behavior_type::<SequenceWithMemory>("SequenceWithMemory")?;
-		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
 
 		// decorators
-		self.register_groot2_behavior_type::<ForceFailure>("ForceFailure")?;
 		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
-		self.register_groot2_behavior_type::<RetryUntilSuccessful>("RetryUntilSuccessful")
+
+		Ok(())
 	}
 
 	/// register all behaviors
@@ -146,7 +146,7 @@ impl BehaviorTreeFactory {
 			"AlwaysRunning",
 			"AlwaysRunning",
 			StateAfter::kind(),
-			true,
+			false,
 			StateAfter::provided_ports(),
 		);
 		let bhvr_creation_fn =
@@ -166,15 +166,48 @@ impl BehaviorTreeFactory {
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
-		self.register_groot2_behavior_type::<Script>("Script")?;
+		self.register_groot2_behavior_type::<Sleep>("Sleep")?;
 
 		// conditions
-		self.register_groot2_behavior_type::<ScriptCondition>("ScriptCondition")
 
 		// controls
+		self.register_groot2_behavior_type::<IfThenElse>("IfThenElse")?;
+		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
 
 		// decorators
+		self.register_groot2_behavior_type::<Delay>("Delay")?;
 
+		let bhvr_desc = BehaviorDescription::new(
+			"ForceFailure",
+			"ForceFailure",
+			ForceState::kind(),
+			true,
+			ForceState::provided_ports(),
+		);
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ForceState::new(BehaviorState::Failure)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
+
+		let bhvr_desc = BehaviorDescription::new(
+			"ForceSuccess",
+			"ForceSuccess",
+			ForceState::kind(),
+			true,
+			ForceState::provided_ports(),
+		);
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ForceState::new(BehaviorState::Success)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
+
+		self.register_groot2_behavior_type::<KeepRunningUntilFailure>("KeepRunningUntilFailure")?;
+		self.register_groot2_behavior_type::<Repeat>("Repeat")?;
+		self.register_groot2_behavior_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;
+		self.register_groot2_behavior_type::<RunOnce>("RunOnce")?;
+		self.register_groot2_behavior_type::<Timeout>("Timeout")?;
+
+		Ok(())
 	}
 
 	/// register groot2 builtin behaviors
@@ -182,17 +215,22 @@ impl BehaviorTreeFactory {
 	/// - if any registration fails
 	pub fn groot2_behaviors(&mut self) -> Result<(), Error> {
 		// actions
+		self.register_groot2_behavior_type::<SetBlackboard<String>>("SetBlackboard")?;
 
 		// conditions
 
 		// controls
+		self.register_groot2_behavior_type::<Fallback>("AsyncFallback")?;
+		self.register_groot2_behavior_type::<Sequence>("AsyncSequence")?;
 
 		// decorators
 		self.register_groot2_behavior_type::<Loop<i32>>("LoopInt")?;
 		self.register_groot2_behavior_type::<Loop<bool>>("LoopBool")?;
 		self.register_groot2_behavior_type::<Loop<f64>>("LoopDouble")?;
 		self.register_groot2_behavior_type::<Loop<String>>("LoopString")?;
-		self.register_groot2_behavior_type::<Precondition>("Precondition")
+		self.register_groot2_behavior_type::<Precondition>("Precondition")?;
+
+		Ok(())
 	}
 
 	/// Register an enums key/value pair.

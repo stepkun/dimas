@@ -12,12 +12,11 @@ mod test_data;
 
 use std::time::Duration;
 
-use dimas_behavior::behavior::decorator::loop_queue::SharedQueue;
+use dimas_behavior::behavior::decorator::SharedQueue;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
-		decorator::loop_queue::Loop,
+		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, decorator::Loop,
 	},
 	factory::BehaviorTreeFactory,
 	input_port, output_port,

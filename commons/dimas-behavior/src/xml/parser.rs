@@ -287,8 +287,7 @@ impl XmlParser {
 				let uid = self.next_uid();
 				// handle the nodes attributes
 				let attrs = attrs_to_map(node.attributes());
-				let (autoremap, mut remappings, conditions) =
-					Self::handle_attributes(name, true, &bhvr, &attrs)?;
+				let (autoremap, mut remappings, conditions) = Self::handle_attributes(name, true, &bhvr, &attrs)?;
 				let blackboard = if let Some(external_bb) = external_blackboard {
 					// in this case, the remappings are against parent BlackBoard
 					let bb = SharedBlackboard::with_parent(name, external_bb, remappings, autoremap);
@@ -385,8 +384,7 @@ impl XmlParser {
 			registry.fetch(tag_name)?
 		};
 		let bhvr = bhvr_creation_fn();
-		let (autoremap, remappings, conditions) =
-			Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs)?;
+		let (autoremap, remappings, conditions) = Self::handle_attributes(&node_name, is_subtree, &bhvr, &attrs)?;
 		let kind = bhvr_desc.kind();
 		let tree_node = match kind {
 			BehaviorKind::Action | BehaviorKind::Condition => {

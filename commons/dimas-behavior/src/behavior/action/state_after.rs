@@ -1,6 +1,6 @@
 // Copyright © 2025 Stephan Kunz
 
-//! Built in Always behavior of `DiMAS`
+//! Built in `AlwaysXxx` behavior of `DiMAS`
 //!
 
 // region:      --- modules
@@ -16,8 +16,10 @@ use crate::{
 };
 //endregion:    --- modules
 
-/// The `AlwaysAfter` behavior returns Failure, Running or Success afer a certain amount of ticks,
+// region:		--- StateAfter
+/// The `StateAfter` behavior returns the stored [`BehaviorState`] after a certain amount of ticks,
 /// depending on the stored state and count value.
+/// Until then Running is returned.
 #[derive(Behavior, Debug, Default)]
 pub struct StateAfter {
 	/// The [`BehaviorState`] to return finally.
@@ -82,6 +84,7 @@ impl StateAfter {
 			remaining: count,
 		}
 	}
+
 	/// Initialization function.
 	pub const fn initialize(&mut self, state: BehaviorState, count: u8) {
 		self.state = state;
@@ -89,3 +92,4 @@ impl StateAfter {
 		self.remaining = count;
 	}
 }
+// endregion:	--- StateAfter

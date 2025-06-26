@@ -16,12 +16,8 @@ use crate::{
 };
 // endregion:   --- modules
 
-// region:      --- Fallback
-/// The `Fallback` behavior is used to try different strategies until one succeeds.
-/// If any child returns RUNNING, previous children will NOT be ticked again.
-/// - If all the children return FAILURE, this node returns FAILURE.
-/// - If a child returns RUNNING, this node returns RUNNING.
-/// - If a child returns SUCCESS, stop the loop and return SUCCESS.
+// region:      --- WhileDoElse
+/// The `WhileDoElse` behavior .
 #[derive(Behavior, Debug, Default)]
 pub struct WhileDoElse;
 
@@ -51,8 +47,6 @@ impl BehaviorInstance for WhileDoElse {
 	) -> BehaviorResult {
 		behavior.set_state(BehaviorState::Running);
 
-		// extern crate std;
-		// std::println!("ticking WhileDoElse");
 		let children_count = children.len();
 
 		let condition_status = children[0].execute_tick(runtime).await?;
@@ -99,4 +93,4 @@ impl BehaviorStatic for WhileDoElse {
 		BehaviorKind::Control
 	}
 }
-// endregion:   --- Fallback
+// endregion:   --- WhileDoElse

@@ -5,7 +5,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::fallback::Fallback},
+	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::Fallback},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 	tree::observer::tree_observer::BehaviorTreeObserver,

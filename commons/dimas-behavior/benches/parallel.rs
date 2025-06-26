@@ -11,7 +11,7 @@ use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
 		action::StateAfter,
-		control::{parallel::Parallel, parallel_all::ParallelAll},
+		control::{Parallel, ParallelAll},
 	},
 	factory::BehaviorTreeFactory,
 	register_behavior,

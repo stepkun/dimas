@@ -11,10 +11,7 @@ use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
 		action::StateAfter,
-		control::{
-			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
-			reactive_sequence::ReactiveSequence, sequence::Sequence,
-		},
+		control::{Fallback, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence},
 	},
 	factory::BehaviorTreeFactory,
 	register_behavior,

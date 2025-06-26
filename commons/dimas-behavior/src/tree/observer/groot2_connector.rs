@@ -24,10 +24,7 @@ impl<'a> Groot2Connector<'a> {
 	/// Construct a new [`Groot2Connector`].
 	#[must_use]
 	pub const fn new(root: &'a BehaviorTree, port: u16) -> Self {
-		Self {
-			root,
-			port,
-		}
+		Self { root, port }
 	}
 }
 // endregion:   --- Groot2Publisher

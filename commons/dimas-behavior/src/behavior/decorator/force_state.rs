@@ -16,17 +16,17 @@ use crate::{
 };
 // endregion:   --- modules
 
-// region:      --- Inverter
-/// The `Inverter` behavior is used to try different strategies until one succeeds.
-/// If any child returns RUNNING, previous children will NOT be ticked again.
-/// - If all the children return FAILURE, this node returns FAILURE.
-/// - If a child returns RUNNING, this node returns RUNNING.
-/// - If a child returns SUCCESS, stop the loop and return SUCCESS.
+// region:      --- ForceState
+/// The `ForceState` behavior is used to return a certain state, independant of what the child returned.
+/// - If child returns Failure or Success, this behavior returns the stored [`BehaviorState`].
+/// - If child returns any other state, that state will be returned.
 #[derive(Behavior, Debug, Default)]
-pub struct ForceFailure {}
+pub struct ForceState {
+	state: BehaviorState,
+}
 
 #[async_trait::async_trait]
-impl BehaviorInstance for ForceFailure {
+impl BehaviorInstance for ForceState {
 	async fn tick(
 		&mut self,
 		_behavior: &mut BehaviorData,
@@ -39,21 +39,34 @@ impl BehaviorInstance for ForceFailure {
 		match new_state {
 			BehaviorState::Failure => {
 				children.reset(runtime)?;
-				Ok(BehaviorState::Failure)
+				Ok(self.state)
 			}
 			BehaviorState::Idle => Err(BehaviorError::State("ForceFailure".into(), "Idle".into())),
 			state @ (BehaviorState::Running | BehaviorState::Skipped) => Ok(state),
 			BehaviorState::Success => {
 				children.reset(runtime)?;
-				Ok(BehaviorState::Failure)
+				Ok(self.state)
 			}
 		}
 	}
 }
 
-impl BehaviorStatic for ForceFailure {
+impl BehaviorStatic for ForceState {
 	fn kind() -> BehaviorKind {
 		BehaviorKind::Decorator
 	}
 }
-// endregion:   --- Inverter
+
+impl ForceState {
+	/// Constructor with arguments.
+	#[must_use]
+	pub const fn new(state: BehaviorState) -> Self {
+		Self { state }
+	}
+
+	/// Initialization function.
+	pub const fn initialize(&mut self, state: BehaviorState) {
+		self.state = state;
+	}
+}
+// endregion:   --- ForceState

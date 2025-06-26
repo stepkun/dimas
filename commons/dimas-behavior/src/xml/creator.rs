@@ -7,12 +7,20 @@
 extern crate std;
 
 // region:      --- modules
-use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}, sync::Arc, vec::Vec};
+use alloc::{
+	collections::btree_map::BTreeMap,
+	string::{String, ToString},
+	sync::Arc,
+	vec::Vec,
+};
 use dimas_core::ConstString;
 use parking_lot::Mutex;
 
 use crate::{
-	behavior::{pre_post_conditions::{POST_CONDITIONS, PRE_CONDITIONS}, BehaviorDescription},
+	behavior::{
+		BehaviorDescription,
+		pre_post_conditions::{POST_CONDITIONS, PRE_CONDITIONS},
+	},
 	factory::BehaviorTreeFactory,
 	tree::{BehaviorTree, BehaviorTreeElement, TreeElementKind},
 };
@@ -68,7 +76,12 @@ impl XmlCreator {
 
 	/// Create XML from tree including `TreeNodesModel`.
 	/// # Errors
-	pub fn write_tree(tree: &BehaviorTree, metadata: bool, builtin_models: bool, pretty: bool) -> Result<ConstString, std::io::Error> {
+	pub fn write_tree(
+		tree: &BehaviorTree,
+		metadata: bool,
+		builtin_models: bool,
+		pretty: bool,
+	) -> Result<ConstString, std::io::Error> {
 		// storage for (non groot2 builtin) behaviors to mention in TreeNodesModel
 		let mut behaviors: BTreeMap<ConstString, BehaviorDescription> = BTreeMap::new();
 		let mut subtrees: BTreeMap<ConstString, &BehaviorTreeElement> = BTreeMap::new();
@@ -207,7 +220,7 @@ impl XmlCreator {
 				writer.lock().attr(&remapping.0, &remapping.1)?;
 			}
 		}
-		
+
 		// Pre-conditions
 		if let Some(conditions) = &element.pre_conditions().0 {
 			for i in 0..PRE_CONDITIONS.len() {

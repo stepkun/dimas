@@ -3,13 +3,7 @@
 //! Condition behavior library
 //!
 
-pub mod script_condition;
+mod script_condition;
 
-// region:      --- modules
-use crate::behavior::BehaviorInstance;
-// endregion:   --- modules
-
-// region:      --- ConditionBehavior
-/// Common methods for control behaviors.
-pub trait ConditionBehavior: BehaviorInstance {}
-// endregion:   --- ConditionBehavior
+// flatten
+pub use script_condition::ScriptCondition;

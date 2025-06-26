@@ -11,7 +11,7 @@ use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
 		action::StateAfter,
-		control::{reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory},
+		control::{ReactiveSequence, Sequence, SequenceWithMemory},
 	},
 	factory::BehaviorTreeFactory,
 	register_behavior,

@@ -74,6 +74,7 @@ impl BehaviorInstance for RetryUntilSuccessful {
 			self.all_skipped = true;
 		}
 
+		behavior.set_state(BehaviorState::Running);
 		while do_loop {
 			// A `Decorator` has only 1 child
 			let child = &mut children[0];

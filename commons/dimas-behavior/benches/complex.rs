@@ -12,9 +12,8 @@ use dimas_behavior::{
 		BehaviorState, BehaviorStatic,
 		action::StateAfter,
 		control::{
-			fallback::Fallback, parallel::Parallel, parallel_all::ParallelAll, reactive_fallback::ReactiveFallback,
-			reactive_sequence::ReactiveSequence, sequence::Sequence, sequence_with_memory::SequenceWithMemory,
-			while_do_else::WhileDoElse,
+			Fallback, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence, SequenceWithMemory,
+			WhileDoElse,
 		},
 	},
 	factory::BehaviorTreeFactory,
