@@ -123,7 +123,30 @@ impl BehaviorTreeFactory {
 
 		// decorators
 		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
-		self.register_groot2_behavior_type::<Updated>("Updated")?;
+
+		let bhvr_desc = BehaviorDescription::new(
+			"SkipUnlessUpdated",
+			"SkipUnlessUpdated",
+			Updated::kind(),
+			true,
+			Updated::provided_ports(),
+		);
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(Updated::new(BehaviorState::Skipped)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
+
+		let bhvr_desc = BehaviorDescription::new(
+			"WaitValueUpdated",
+			"WaitValueUpdated",
+			Updated::kind(),
+			true,
+			Updated::provided_ports(),
+		);
+		let bhvr_creation_fn =
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(Updated::new(BehaviorState::Running)) });
+		self.registry_mut()
+			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
 		Ok(())
 	}

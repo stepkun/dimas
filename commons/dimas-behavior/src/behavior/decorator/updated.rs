@@ -5,10 +5,13 @@
 
 // region:      --- modules
 use alloc::boxed::Box;
+use alloc::string::String;
+use alloc::sync::Arc;
 use dimas_core::ConstString;
 use dimas_scripting::SharedRuntime;
 
-use crate as dimas_behavior;
+use crate::port::PortList;
+use crate::{self as dimas_behavior, input_port, port_list};
 use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
@@ -31,6 +34,17 @@ pub struct Updated {
 	entry_key: ConstString,
 }
 
+impl Updated {
+	pub(crate) fn new(state: BehaviorState) -> Self {
+		Self { 
+			sequence_id: 0, 
+			is_running: false, 
+			state_if_not: state, 
+			entry_key: Arc::default()
+		}
+	}
+}
+
 #[async_trait::async_trait]
 impl BehaviorInstance for Updated {
 	async fn start(
@@ -40,6 +54,7 @@ impl BehaviorInstance for Updated {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		self.sequence_id = 0;
+		self.entry_key = behavior.get::<String>("entry")?.into();
 		self.tick(behavior, children, runtime).await
 	}
 
@@ -55,12 +70,17 @@ impl BehaviorInstance for Updated {
 			return Ok(state);
 		}
 
-		let sequence_id = behavior.get_sequence_id(&self.entry_key)?;
-		if sequence_id == self.sequence_id {
-			Ok(self.state_if_not)
+		if let Ok(sequence_id) = behavior.get_sequence_id(&self.entry_key) {
+			if sequence_id == self.sequence_id {
+				Ok(self.state_if_not)
+			} else {
+				self.sequence_id = sequence_id;
+				let state = children[0].execute_tick(runtime).await?;
+				self.is_running = state == BehaviorState::Running;
+				return Ok(state);
+			}
 		} else {
-			self.sequence_id = sequence_id;
-			Ok(children[0].execute_tick(runtime).await?)
+			Ok(self.state_if_not)
 		}
 	}
 }
@@ -68,6 +88,15 @@ impl BehaviorInstance for Updated {
 impl BehaviorStatic for Updated {
 	fn kind() -> BehaviorKind {
 		BehaviorKind::Decorator
+	}
+
+	fn provided_ports() -> PortList {
+		port_list![input_port!(
+			String,
+			"entry",
+			"",
+			"The blackboard entry to monitor."
+		)]
 	}
 }
 // endregion:   --- Updated
