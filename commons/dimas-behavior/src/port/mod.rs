@@ -192,6 +192,7 @@ macro_rules! input_port {
 		)
 		.expect("snh")
 	};
+	($tp:ty, $name:expr $(,)?) => {{ $crate::port::create_port::<$tp>($crate::port::PortDirection::In, stringify!($tp), $name, "", "").expect("snh") }};
 }
 
 /// macro for creation of an in/out port definition

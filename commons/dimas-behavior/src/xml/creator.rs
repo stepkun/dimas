@@ -228,7 +228,7 @@ impl XmlCreator {
 					writer.lock().attr(PRE_CONDITIONS[i], cond)?;
 				}
 			}
-		};
+		}
 
 		// Post-conditions
 		if let Some(conditions) = &element.post_conditions().0 {
@@ -237,7 +237,7 @@ impl XmlCreator {
 					writer.lock().attr(POST_CONDITIONS[i], cond)?;
 				}
 			}
-		};
+		}
 
 		if !is_subtree {
 			// recursive dive into children, ignoring subtrees

@@ -23,4 +23,5 @@ pub use reactive_fallback::ReactiveFallback;
 pub use reactive_sequence::ReactiveSequence;
 pub use sequence::Sequence;
 pub use sequence_with_memory::SequenceWithMemory;
+pub use switch::Switch;
 pub use while_do_else::WhileDoElse;

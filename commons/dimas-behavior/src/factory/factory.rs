@@ -26,7 +26,7 @@ use crate::{
 		condition::ScriptCondition,
 		control::{
 			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
-			SequenceWithMemory, WhileDoElse,
+			SequenceWithMemory, Switch, WhileDoElse,
 		},
 		decorator::{
 			Delay, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful,
@@ -240,6 +240,11 @@ impl BehaviorTreeFactory {
 		// controls
 		self.register_groot2_behavior_type::<Fallback>("AsyncFallback")?;
 		self.register_groot2_behavior_type::<Sequence>("AsyncSequence")?;
+		self.register_groot2_behavior_type::<Switch<2>>("Switch2")?;
+		self.register_groot2_behavior_type::<Switch<3>>("Switch3")?;
+		self.register_groot2_behavior_type::<Switch<4>>("Switch4")?;
+		self.register_groot2_behavior_type::<Switch<5>>("Switch5")?;
+		self.register_groot2_behavior_type::<Switch<6>>("Switch6")?;
 
 		// decorators
 		self.register_groot2_behavior_type::<Loop<i32>>("LoopInt")?;
