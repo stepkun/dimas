@@ -139,6 +139,30 @@ impl BlackboardInterface for SharedBlackboard {
 		Err(Error::NotFoundIn(parent_key, (&*self.path).into()))
 	}
 
+	fn get_sequence_id(&self, key: &str) -> Result<usize, Error> {
+		// if it is a key starting with an '@' redirect to root bb
+		if let Some(key_stripped) = key.strip_prefix('@') {
+			return self.root().get_sequence_id(key_stripped);
+		}
+
+		// try to find key in current Blackboard
+		if self.read().content.read().contains(key) {
+			return self.read().content.read().get_sequence_id(key);
+		}
+
+		// Try to find in parent hierarchy. We need to read the remapping info beforehand to avoid deadlocks.
+		let (parent_key, has_remapping, autoremap) = self.get_parent_remapping_info(key);
+		if (has_remapping || autoremap) && self.read().content.read().contains(&parent_key) {
+			return self
+				.read()
+				.content
+				.read()
+				.get_sequence_id(&parent_key);
+		}
+
+		Err(Error::NotFoundIn(parent_key, (&*self.path).into()))
+	}
+
 	fn get_entry(&self, key: &str) -> Option<Entry> {
 		// if it is a key starting with an '@' redirect to root bb
 		if let Some(key_stripped) = key.strip_prefix('@') {

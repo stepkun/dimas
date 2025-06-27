@@ -23,7 +23,7 @@ use crate::{
 /// - If a child returns RUNNING, this node returns RUNNING.
 /// - If a child returns SUCCESS, stop the loop and return SUCCESS.
 #[derive(Behavior, Debug, Default)]
-pub struct Inverter {}
+pub struct Inverter;
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Inverter {

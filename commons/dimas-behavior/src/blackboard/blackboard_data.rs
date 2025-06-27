@@ -49,7 +49,7 @@ impl BlackboardInterface for BlackboardData {
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static,
 	{
 		if let Some(old_entry) = self.storage.get(key) {
-			let e = &*old_entry.0;
+			let e = &*old_entry.0.0;
 			let e = e as &dyn Any;
 			let e = e.downcast_ref::<T>().cloned();
 			if let Some(old) = e {
@@ -70,7 +70,7 @@ impl BlackboardInterface for BlackboardData {
 		self.storage.get(key).map_or_else(
 			|| Err(Error::NotFound(key.into())),
 			|entry| {
-				let en = &*entry.0;
+				let en = &*entry.0.0;
 				en.downcast_ref::<T>().map_or_else(
 					|| {
 						en.downcast_ref::<String>().map_or_else(
@@ -117,6 +117,12 @@ impl BlackboardInterface for BlackboardData {
 		)
 	}
 
+	fn get_sequence_id(&self, key: &str) -> Result<usize, Error> {
+		self.storage
+			.get(key)
+			.map_or_else(|| Err(Error::NotFound(key.into())), |entry| Ok(entry.0.1))
+	}
+
 	fn get_entry(&self, key: &str) -> Option<Entry> {
 		self.storage.get(key).map_or_else(
 			|| None,
@@ -132,18 +138,23 @@ impl BlackboardInterface for BlackboardData {
 		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static,
 	{
 		if let Some(old_entry) = self.storage.get(key) {
-			let e = &*old_entry.0;
+			let new_id = if old_entry.0.1 < usize::MAX {
+				old_entry.0.1 + 1
+			} else {
+				usize::MIN
+			};
+			let e = &*old_entry.0.0;
 			let e = e as &dyn Any;
 			let e = e.downcast_ref::<T>().cloned();
 			if e.is_some() {
-				let entry = Entry(Arc::new(value));
+				let entry = Entry((Arc::new(value), new_id));
 				self.storage.insert(key.into(), entry);
 				Ok(e)
 			} else {
 				Err(Error::WrongType(key.into()))
 			}
 		} else {
-			let entry = Entry(Arc::new(value));
+			let entry = Entry((Arc::new(value), usize::MIN));
 			self.storage.insert(key.into(), entry);
 			Ok(None)
 		}
@@ -222,7 +233,7 @@ impl Environment for BlackboardData {
 	fn set_env(&mut self, name: &str, value: ScriptingValue) -> Result<(), ScriptingError> {
 		let entry_type_id = if let Some(entry) = self.get_entry(name) {
 			let inner_entry = &entry;
-			(*(inner_entry.0)).type_id()
+			(*(inner_entry.0.0)).type_id()
 		} else {
 			return Err(ScriptingError::GlobalNotDefined(name.into()));
 		};
@@ -298,7 +309,7 @@ impl Environment for BlackboardData {
 // endregion:   --- BlackboardData
 
 // region:      --- Entry
-pub struct Entry(Arc<dyn Any + Send + Sync + 'static>);
+pub struct Entry((Arc<dyn Any + Send + Sync + 'static>, usize));
 
 impl Debug for Entry {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -311,13 +322,13 @@ impl Deref for Entry {
 	type Target = Arc<dyn Any + Send + Sync + 'static>;
 
 	fn deref(&self) -> &Self::Target {
-		&self.0
+		&self.0.0
 	}
 }
 
 impl DerefMut for Entry {
 	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.0
+		&mut self.0.0
 	}
 }
 // endregion:   --- Entry

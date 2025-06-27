@@ -207,6 +207,13 @@ impl BehaviorData {
 		}
 	}
 
+	/// Get the sequence ID of a Blackboard entry.
+	/// # Errors
+	/// - if key is not found in blackboard
+	pub fn get_sequence_id(&self, key: &str) -> Result<usize, crate::blackboard::error::Error> {
+		self.blackboard.get_sequence_id(key)
+	}
+
 	/// Set a value of type `T` into Blackboard.
 	/// Returns old value if any.
 	/// # Errors

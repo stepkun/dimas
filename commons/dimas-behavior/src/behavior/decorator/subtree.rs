@@ -19,7 +19,7 @@ use crate::{
 // region:      --- Subtree
 /// A `Subtree` is a `Decorator` but with its own [`BehaviorType`].
 #[derive(Behavior, Debug, Default)]
-pub struct Subtree {}
+pub struct Subtree;
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Subtree {

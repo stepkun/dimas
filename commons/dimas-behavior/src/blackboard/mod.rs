@@ -51,6 +51,12 @@ pub trait BlackboardInterface {
 	/// Get raw [`Entry`] with key from [`Blackboard`].
 	fn get_entry(&self, key: &str) -> Option<Entry>;
 
+	/// Get the sequence id of a blackboard entry.
+	/// The sequence id will wrap around.
+	/// # Errors
+	/// - if key is not found in blackboard
+	fn get_sequence_id(&self, key: &str) -> Result<usize, Error>;
+
 	/// Set a value of type T with key in the [`Blackboard`].
 	/// Returns an eventually existing value.
 	/// # Errors

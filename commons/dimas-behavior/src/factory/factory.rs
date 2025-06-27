@@ -30,7 +30,7 @@ use crate::{
 		},
 		decorator::{
 			Delay, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful,
-			RunOnce, Subtree, Timeout,
+			RunOnce, Subtree, Timeout, Updated,
 		},
 	},
 	blackboard::SharedBlackboard,
@@ -123,6 +123,7 @@ impl BehaviorTreeFactory {
 
 		// decorators
 		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
+		self.register_groot2_behavior_type::<Updated>("Updated")?;
 
 		Ok(())
 	}

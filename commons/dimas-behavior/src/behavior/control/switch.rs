@@ -102,7 +102,9 @@ impl<const T: u8> BehaviorInstance for Switch<T> {
 		}
 
 		#[allow(clippy::cast_sign_loss)]
-		let state = children[match_index as usize].execute_tick(runtime).await?;
+		let state = children[match_index as usize]
+			.execute_tick(runtime)
+			.await?;
 
 		if state == BehaviorState::Skipped {
 			// if the matching child is Skipped, should default be executed or
