@@ -229,8 +229,8 @@ impl BehaviorTreeElement {
 	/// Halt all children at and beyond `index`.
 	/// # Errors
 	/// - if index is out of childrens bounds.
-	pub fn reset(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
-		self.children.reset(runtime)
+	pub async fn reset(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
+		self.children.reset(runtime).await
 	}
 
 	/// Add a pre state change callback with the given name.

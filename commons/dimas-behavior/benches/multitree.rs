@@ -110,10 +110,14 @@ fn multitree(c: &mut Criterion) {
 	c.bench_function("multitree", |b| {
 		b.iter(|| {
 			runtime.block_on(async {
-				for _ in 1..=50 {
-					tree1.reset().expect("snh");
-					tree2.reset().expect("snh");
-					tree3.reset().expect("snh");
+				for _ in 1..=100 {
+					let h1 = tree1.reset();
+					let h2 = tree2.reset();
+					let h3 = tree3.reset();
+					let (res1, res2, res3) = join!(h1, h2, h3);
+					res1.expect("snh");
+					res2.expect("snh");
+					res3.expect("snh");
 					let h1 = tree1.tick_while_running();
 					let h2 = tree2.tick_while_running();
 					let h3 = tree3.tick_while_running();

@@ -49,9 +49,19 @@ impl BehaviorInstance for ReactiveFallback {
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
 		self.running_child_idx = -1;
-		children.halt(0, runtime)?;
+		children.reset(runtime).await?;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
+	}
+
+	async fn start(
+		&mut self,
+		behavior: &mut BehaviorData,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		self.running_child_idx = -1;
+		self.tick(behavior, children, runtime).await
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
@@ -64,9 +74,7 @@ impl BehaviorInstance for ReactiveFallback {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
-		if behavior.state() == BehaviorState::Idle {
-			self.running_child_idx = -1;
-		}
+		self.running_child_idx = -1;
 
 		behavior.set_state(BehaviorState::Running);
 
@@ -105,14 +113,14 @@ impl BehaviorInstance for ReactiveFallback {
 					child.execute_halt(runtime).await?;
 				}
 				BehaviorState::Success => {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					self.running_child_idx = -1;
 					return Ok(BehaviorState::Success);
 				}
 			}
 		}
 
-		children.reset(runtime)?;
+		children.reset(runtime).await?;
 		self.running_child_idx = -1;
 
 		if all_skipped {

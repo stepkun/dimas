@@ -79,6 +79,9 @@ impl BehaviorTreeFactory {
 	pub fn with_core_behaviors() -> Result<Self, Error> {
 		let mut factory = Self::default();
 		factory.core_behaviors()?;
+		if cfg!(test) {
+			factory.debug_behaviors()?;
+		}
 		Ok(factory)
 	}
 
@@ -96,6 +99,9 @@ impl BehaviorTreeFactory {
 	/// - if behaviors cannot be registered
 	pub fn with_groot2_behaviors() -> Result<Self, Error> {
 		let mut factory = Self::with_extended_behaviors()?;
+		if !cfg!(test) {
+			factory.debug_behaviors()?;
+		}
 		factory.groot2_behaviors()?;
 		Ok(factory)
 	}
@@ -113,11 +119,7 @@ impl BehaviorTreeFactory {
 		// controls
 		self.register_groot2_behavior_type::<Fallback>("Fallback")?;
 		self.register_groot2_behavior_type::<Parallel>("Parallel")?;
-		self.register_groot2_behavior_type::<ParallelAll>("ParallelAll")?;
-		self.register_groot2_behavior_type::<ReactiveFallback>("ReactiveFallback")?;
-		self.register_groot2_behavior_type::<ReactiveSequence>("ReactiveSequence")?;
 		self.register_groot2_behavior_type::<Sequence>("Sequence")?;
-		self.register_groot2_behavior_type::<SequenceWithMemory>("SequenceWithMemory")?;
 
 		// decorators
 		self.register_groot2_behavior_type::<Inverter>("Inverter")?;
@@ -125,10 +127,10 @@ impl BehaviorTreeFactory {
 		Ok(())
 	}
 
-	/// register all behaviors
+	/// register debug behaviors
 	/// # Errors
 	/// - if any registration fails
-	pub fn extended_behaviors(&mut self) -> Result<(), Error> {
+	pub fn debug_behaviors(&mut self) -> Result<(), Error> {
 		// actions
 		let bhvr_desc = BehaviorDescription::new(
 			"AlwaysFailure",
@@ -166,17 +168,11 @@ impl BehaviorTreeFactory {
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
-		self.register_groot2_behavior_type::<Sleep>("Sleep")?;
-
 		// conditions
 
 		// controls
-		self.register_groot2_behavior_type::<IfThenElse>("IfThenElse")?;
-		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
 
 		// decorators
-		self.register_groot2_behavior_type::<Delay>("Delay")?;
-
 		let bhvr_desc = BehaviorDescription::new(
 			"ForceFailure",
 			"ForceFailure",
@@ -201,6 +197,28 @@ impl BehaviorTreeFactory {
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
+		Ok(())
+	}
+
+	/// register extended behaviors
+	/// # Errors
+	/// - if any registration fails
+	pub fn extended_behaviors(&mut self) -> Result<(), Error> {
+		// actions
+		self.register_groot2_behavior_type::<Sleep>("Sleep")?;
+
+		// conditions
+
+		// controls
+		self.register_groot2_behavior_type::<IfThenElse>("IfThenElse")?;
+		self.register_groot2_behavior_type::<ParallelAll>("ParallelAll")?;
+		self.register_groot2_behavior_type::<ReactiveFallback>("ReactiveFallback")?;
+		self.register_groot2_behavior_type::<ReactiveSequence>("ReactiveSequence")?;
+		self.register_groot2_behavior_type::<SequenceWithMemory>("SequenceWithMemory")?;
+		self.register_groot2_behavior_type::<WhileDoElse>("WhileDoElse")?;
+
+		// decorators
+		self.register_groot2_behavior_type::<Delay>("Delay")?;
 		self.register_groot2_behavior_type::<KeepRunningUntilFailure>("KeepRunningUntilFailure")?;
 		self.register_groot2_behavior_type::<Repeat>("Repeat")?;
 		self.register_groot2_behavior_type::<RetryUntilSuccessful>("RetryUntilSuccessful")?;

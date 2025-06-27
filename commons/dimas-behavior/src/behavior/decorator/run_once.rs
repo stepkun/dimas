@@ -59,7 +59,7 @@ impl BehaviorInstance for RunOnce {
 			if state.is_completed() {
 				self.already_ticked = true;
 				self.state = state;
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 			}
 			Ok(state)
 		}

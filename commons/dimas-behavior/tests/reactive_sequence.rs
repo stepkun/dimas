@@ -32,7 +32,11 @@ async fn success() -> anyhow::Result<()> {
 	let mut tree = factory.create_from_text(SUCCESS)?;
 	drop(factory);
 
-	let result = tree.tick_while_running().await?;
+	tree.reset().await?;
+	let mut result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorState::Success);
+	tree.reset().await?;
+	result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);
 	Ok(())
 }
@@ -60,7 +64,11 @@ async fn failure() -> anyhow::Result<()> {
 	let mut tree = factory.create_from_text(FAILURE)?;
 	drop(factory);
 
-	let result = tree.tick_while_running().await?;
+	tree.reset().await?;
+	let mut result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorState::Failure);
+	tree.reset().await?;
+	result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Failure);
 	Ok(())
 }

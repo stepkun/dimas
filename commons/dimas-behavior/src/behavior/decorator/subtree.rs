@@ -11,7 +11,7 @@ use crate as dimas_behavior;
 use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
-	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError},
+	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorStatic, error::BehaviorError},
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -23,17 +23,6 @@ pub struct Subtree {}
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Subtree {
-	async fn halt(
-		&mut self,
-		behavior: &mut BehaviorData,
-		children: &mut BehaviorTreeElementList,
-		runtime: &SharedRuntime,
-	) -> Result<(), BehaviorError> {
-		children[0].execute_halt(runtime).await?;
-		behavior.set_state(BehaviorState::Idle);
-		Ok(())
-	}
-
 	async fn start(
 		&mut self,
 		_behavior: &mut BehaviorData,

@@ -75,16 +75,14 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to stop/cancel/halt a behavior.
 	/// Default implementation halts all children and sets state to idle.
 	/// # Errors
+	#[inline]
 	async fn halt(
 		&mut self,
 		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		for child in &mut **children {
-			child.halt(0, runtime)?;
-		}
-
+		children.reset(runtime).await?;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
 	}
@@ -92,6 +90,7 @@ pub trait BehaviorInstance: core::fmt::Debug + Send + Sync {
 	/// Method called to start ticking a behavior.
 	/// Defaults to calling `self.tick(...)`
 	/// # Errors
+	#[inline]
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,

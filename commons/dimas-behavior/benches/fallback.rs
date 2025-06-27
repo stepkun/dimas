@@ -53,8 +53,8 @@ fn fallback(c: &mut Criterion) {
 	c.bench_function("fallback", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}
@@ -101,8 +101,8 @@ fn reactive_fallback(c: &mut Criterion) {
 	c.bench_function("reactive fallback", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}

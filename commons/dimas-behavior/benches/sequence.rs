@@ -53,8 +53,8 @@ fn sequence(c: &mut Criterion) {
 	c.bench_function("sequence", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}
@@ -101,8 +101,8 @@ fn reactive_sequence(c: &mut Criterion) {
 	c.bench_function("reactive sequence", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}
@@ -149,8 +149,8 @@ fn sequence_with_memory(c: &mut Criterion) {
 	c.bench_function("sequence with memory", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}

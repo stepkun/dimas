@@ -182,8 +182,8 @@ impl BehaviorTree {
 	/// Reset tree to initial state.
 	/// # Errors
 	/// - if reset of children failed
-	pub fn reset(&mut self) -> Result<(), BehaviorError> {
-		self.root.reset(&self.runtime)?;
+	pub async fn reset(&mut self) -> Result<(), BehaviorError> {
+		self.root.reset(&self.runtime).await?;
 		self.runtime.lock().clear();
 		Ok(())
 	}

@@ -86,18 +86,18 @@ impl BehaviorInstance for RetryUntilSuccessful {
 				BehaviorState::Failure => {
 					self.try_count += 1;
 					do_loop = self.try_count < self.max_attempts || self.max_attempts == -1;
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 				}
 				BehaviorState::Idle => {
 					return Err(BehaviorError::State("RetryUntilSuccessful".into(), "Idle".into()));
 				}
 				BehaviorState::Running => return Ok(BehaviorState::Running),
 				BehaviorState::Skipped => {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					return Ok(BehaviorState::Skipped);
 				}
 				BehaviorState::Success => {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					self.try_count = 0;
 					return Ok(BehaviorState::Success);
 				}

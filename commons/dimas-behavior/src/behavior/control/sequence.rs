@@ -54,7 +54,7 @@ impl BehaviorInstance for Sequence {
 
 			match new_state {
 				BehaviorState::Failure => {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					self.child_idx = 0;
 					return Ok(BehaviorState::Failure);
 				}
@@ -71,7 +71,7 @@ impl BehaviorInstance for Sequence {
 		// All children returned Success
 		if self.child_idx >= children.len() {
 			// Reset children
-			children.reset(runtime)?;
+			children.reset(runtime).await?;
 			self.child_idx = 0;
 		}
 

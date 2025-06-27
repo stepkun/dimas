@@ -50,7 +50,7 @@ impl BehaviorInstance for ParallelAll {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		children.halt(0, runtime)?;
+		children.reset(runtime).await?;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
 	}
@@ -119,7 +119,7 @@ impl BehaviorInstance for ParallelAll {
 
 		if skipped_count + self.completed_list.len() >= children_count {
 			// Done!
-			children.reset(runtime)?;
+			children.reset(runtime).await?;
 			self.completed_list.clear();
 
 			let state = if self.failure_count >= self.failure_threshold(children_count as i32) {

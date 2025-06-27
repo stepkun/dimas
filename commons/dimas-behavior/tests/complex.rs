@@ -1,12 +1,9 @@
 // Copyright © 2025 Stephan Kunz
-#![allow(missing_docs)]
 
-//! Benchmarks of complex scenario
+//! Tests a complex [`BehaviorTree`]
 
-#[doc(hidden)]
 extern crate alloc;
 
-use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
@@ -94,11 +91,8 @@ const TREE: &str = r#"
 </root>
 "#;
 
-fn complex(c: &mut Criterion) {
-	let runtime = tokio::runtime::Builder::new_current_thread()
-		.build()
-		.expect("snh");
-
+#[tokio::test]
+async fn complex() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
 	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
@@ -111,22 +105,13 @@ fn complex(c: &mut Criterion) {
 	register_behavior!(factory, SequenceWithMemory, "SequenceWithMemory").expect("snh");
 	register_behavior!(factory, WhileDoElse, "WhileDoElse").expect("snh");
 
-	let mut tree = factory.create_from_text(TREE).expect("snh");
+	let mut tree = factory.create_from_text(TREE)?;
 	drop(factory);
 
-	c.bench_function("complex", |b| {
-		b.iter(|| {
-			for _ in 1..=100 {
-				runtime.block_on(async {
-					tree.reset().await.expect("snh");
-					tree.tick_while_running().await.expect("snh");
-				});
-			}
-			std::hint::black_box(());
-		});
-	});
+	let mut result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorState::Failure);
+	tree.reset().await.expect("snh");
+	result = tree.tick_while_running().await?;
+	assert_eq!(result, BehaviorState::Failure);
+	Ok(())
 }
-
-criterion_group!(benches, complex,);
-
-criterion_main!(benches);

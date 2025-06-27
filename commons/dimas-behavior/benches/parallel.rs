@@ -57,8 +57,8 @@ fn parallel(c: &mut Criterion) {
 	c.bench_function("parallel", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}
@@ -109,8 +109,8 @@ fn parallel_all(c: &mut Criterion) {
 	c.bench_function("parallel all", |b| {
 		b.iter(|| {
 			for _ in 1..=100 {
-				tree.reset().expect("snh");
 				runtime.block_on(async {
+					tree.reset().await.expect("snh");
 					let _result = tree.tick_while_running().await.expect("snh");
 				});
 			}

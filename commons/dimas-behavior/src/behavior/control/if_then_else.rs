@@ -39,10 +39,7 @@ impl BehaviorInstance for IfThenElse {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		for child in &mut **children {
-			child.halt(0, runtime)?;
-		}
-
+		children.reset(runtime).await?;
 		self.child_index = 0;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
@@ -100,7 +97,7 @@ impl BehaviorInstance for IfThenElse {
 				.execute_tick(runtime)
 				.await?;
 			if state != BehaviorState::Running {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				self.child_index = 0;
 			}
 			Ok(state)

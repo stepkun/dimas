@@ -125,7 +125,7 @@ impl BehaviorInstance for Parallel {
 				|| (self.success_threshold < 0 && (self.success_count + skipped_count) >= required_success_count)
 			{
 				self.clear();
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				return Ok(BehaviorState::Success);
 			}
 
@@ -133,7 +133,7 @@ impl BehaviorInstance for Parallel {
 				|| self.failure_count == self.failure_threshold(children_count as i32)
 			{
 				self.clear();
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				return Ok(BehaviorState::Failure);
 			}
 		}

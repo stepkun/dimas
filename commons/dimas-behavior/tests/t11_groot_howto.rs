@@ -123,7 +123,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 
 	#[allow(clippy::reversed_empty_ranges)]
 	for _ in 0..CYCLES {
-		tree.reset()?;
+		tree.reset().await?;
 		let result = tree.tick_while_running().await?;
 		assert_eq!(result, BehaviorState::Success);
 	}

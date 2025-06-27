@@ -36,9 +36,7 @@ impl BehaviorInstance for Timeout {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		for child in &mut **children {
-			child.halt(0, runtime)?;
-		}
+		children.reset(runtime).await?;
 		self.handle = None;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
@@ -67,7 +65,7 @@ impl BehaviorInstance for Timeout {
 		if let Some(handle) = self.handle.as_ref() {
 			let state = children[0].execute_tick(runtime).await?;
 			if state.is_completed() {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				Ok(state)
 			} else if handle.is_finished() {
 				self.handle = None;
@@ -84,7 +82,7 @@ impl BehaviorInstance for Timeout {
 
 impl BehaviorStatic for Timeout {
 	fn kind() -> BehaviorKind {
-		BehaviorKind::Action
+		BehaviorKind::Decorator
 	}
 
 	fn provided_ports() -> PortList {

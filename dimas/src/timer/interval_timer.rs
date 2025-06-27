@@ -81,13 +81,12 @@ impl BehaviorInstance for IntervalTimer {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		children.reset(runtime)?;
 		if let Some(handle) = self.handle.take() {
 			// @TODO: Dirty way to move access to children back from spawned task
 			//        The node is not properly restartable/recoverable
 			let mut my_children: BehaviorTreeElementList = BehaviorTreeElementList::default();
 			std::mem::swap(children, &mut my_children);
-			children.reset(runtime)?;
+			children.reset(runtime).await?;
 
 			handle.abort();
 		}

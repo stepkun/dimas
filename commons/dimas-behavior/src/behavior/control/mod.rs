@@ -11,6 +11,7 @@ mod reactive_fallback;
 mod reactive_sequence;
 mod sequence;
 mod sequence_with_memory;
+mod switch;
 mod while_do_else;
 
 // flatten

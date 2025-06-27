@@ -73,7 +73,7 @@ impl BehaviorInstance for SequenceWithMemory {
 		// All children returned Success
 		if self.child_idx >= children.len() {
 			// Reset children
-			children.reset(runtime)?;
+			children.reset(runtime).await?;
 			self.child_idx = 0;
 		}
 

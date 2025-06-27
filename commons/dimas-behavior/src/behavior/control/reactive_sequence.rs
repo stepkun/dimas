@@ -46,10 +46,20 @@ impl BehaviorInstance for ReactiveSequence {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
+		children.reset(runtime).await?;
 		self.running_child_idx = -1;
-		children.halt(0, runtime)?;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
+	}
+
+	async fn start(
+		&mut self,
+		behavior: &mut BehaviorData,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> BehaviorResult {
+		self.running_child_idx = -1;
+		self.tick(behavior, children, runtime).await
 	}
 
 	#[allow(clippy::cast_possible_truncation)]
@@ -62,9 +72,6 @@ impl BehaviorInstance for ReactiveSequence {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		let mut all_skipped = true;
-		if behavior.state() == BehaviorState::Idle {
-			self.running_child_idx = -1;
-		}
 
 		behavior.set_state(BehaviorState::Running);
 
@@ -78,7 +85,7 @@ impl BehaviorInstance for ReactiveSequence {
 			match new_state {
 				BehaviorState::Failure => {
 					self.running_child_idx = -1;
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					return Ok(BehaviorState::Failure);
 				}
 				BehaviorState::Idle => {
@@ -90,6 +97,7 @@ impl BehaviorInstance for ReactiveSequence {
 						children[self.running_child_idx as usize]
 							.execute_halt(runtime)
 							.await?;
+						self.running_child_idx = -1;
 					}
 					if self.running_child_idx == -1 {
 						self.running_child_idx = child_idx as i32;
@@ -104,6 +112,7 @@ impl BehaviorInstance for ReactiveSequence {
 				BehaviorState::Skipped => {
 					// halt current child
 					child.execute_halt(runtime).await?;
+					self.running_child_idx = -1;
 				}
 				BehaviorState::Success => {
 					self.running_child_idx = -1;
@@ -112,7 +121,7 @@ impl BehaviorInstance for ReactiveSequence {
 		}
 
 		// Reset children
-		// children.reset(runtime)?;
+		children.reset(runtime).await?;
 
 		if all_skipped {
 			Ok(BehaviorState::Skipped)

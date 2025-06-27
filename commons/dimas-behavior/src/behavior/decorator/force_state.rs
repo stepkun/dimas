@@ -38,13 +38,13 @@ impl BehaviorInstance for ForceState {
 
 		match new_state {
 			BehaviorState::Failure => {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				Ok(self.state)
 			}
 			BehaviorState::Idle => Err(BehaviorError::State("ForceFailure".into(), "Idle".into())),
 			state @ (BehaviorState::Running | BehaviorState::Skipped) => Ok(state),
 			BehaviorState::Success => {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				Ok(self.state)
 			}
 		}

@@ -42,7 +42,7 @@ impl BehaviorInstance for KeepRunningUntilFailure {
 
 		match children[0].execute_tick(runtime).await? {
 			BehaviorState::Failure => {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				Ok(BehaviorState::Failure)
 			}
 			BehaviorState::Idle => Err(BehaviorError::Composition(
@@ -53,7 +53,7 @@ impl BehaviorInstance for KeepRunningUntilFailure {
 				"KeepRunningUntilFailure should never return 'Skipped'".into(),
 			)),
 			BehaviorState::Success => {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				Ok(BehaviorState::Running)
 			}
 		}

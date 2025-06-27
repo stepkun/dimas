@@ -37,21 +37,21 @@ async fn tree_observer() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);
-	// AlwaySucces should change state 2 times
+	// AlwaySuccess should change state 3 times
 	assert_eq!(
 		observer
 			.get_statistics(4)
 			.expect("snh")
 			.transitions_count,
-		2
+		3
 	);
-	// AlwayFailure should change state 2 times
+	// AlwayFailure should change state 3 times
 	assert_eq!(
 		observer
 			.get_statistics(4)
 			.expect("snh")
 			.transitions_count,
-		2
+		3
 	);
 	// The tree should change state 3 times
 	assert_eq!(

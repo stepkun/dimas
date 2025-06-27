@@ -36,9 +36,9 @@ impl BehaviorTreeElementList {
 	/// Reset all children
 	/// # Errors
 	/// - if a child errors on `halt()`
-	pub fn reset(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
+	pub async fn reset(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
 		for child in &mut self.0 {
-			child.halt(0, runtime)?;
+			child.execute_halt(runtime).await?;
 		}
 		Ok(())
 	}

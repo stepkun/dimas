@@ -76,18 +76,18 @@ impl BehaviorInstance for Repeat {
 			match new_state {
 				BehaviorState::Failure => {
 					self.repeat_count = 0;
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					Ok(BehaviorState::Failure)
 				}
 				BehaviorState::Idle => Err(BehaviorError::State("RetryUntilSuccessful".into(), "Idle".into())),
 				BehaviorState::Running => return Ok(BehaviorState::Running),
 				BehaviorState::Skipped => {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					Ok(BehaviorState::Skipped)
 				}
 				BehaviorState::Success => {
 					self.repeat_count += 1;
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					Ok(BehaviorState::Running)
 				}
 			}

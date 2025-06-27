@@ -81,7 +81,7 @@ impl BehaviorInstance for WhileDoElse {
 		match status {
 			BehaviorState::Running => Ok(BehaviorState::Running),
 			status => {
-				children.reset(runtime)?;
+				children.reset(runtime).await?;
 				Ok(status)
 			}
 		}

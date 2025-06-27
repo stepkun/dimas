@@ -58,7 +58,7 @@ impl BehaviorInstance for Fallback {
 				}
 				BehaviorState::Running => return Ok(BehaviorState::Running),
 				BehaviorState::Success => {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					self.child_idx = 0;
 					return Ok(BehaviorState::Success);
 				}
@@ -66,7 +66,7 @@ impl BehaviorInstance for Fallback {
 		}
 
 		if self.child_idx >= children.len() {
-			children.reset(runtime)?;
+			children.reset(runtime).await?;
 			self.child_idx = 0;
 		}
 

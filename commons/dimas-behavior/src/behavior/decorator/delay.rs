@@ -37,9 +37,7 @@ impl BehaviorInstance for Delay {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		for child in &mut **children {
-			child.halt(0, runtime)?;
-		}
+		children.reset(runtime).await?;
 		self.handle = None;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
@@ -69,7 +67,7 @@ impl BehaviorInstance for Delay {
 			if handle.is_finished() {
 				let state = children[0].execute_tick(runtime).await?;
 				if state.is_completed() {
-					children.reset(runtime)?;
+					children.reset(runtime).await?;
 					Ok(BehaviorState::Success)
 				} else {
 					Ok(state)
@@ -85,7 +83,7 @@ impl BehaviorInstance for Delay {
 
 impl BehaviorStatic for Delay {
 	fn kind() -> BehaviorKind {
-		BehaviorKind::Action
+		BehaviorKind::Decorator
 	}
 
 	fn provided_ports() -> PortList {
