@@ -184,6 +184,17 @@ impl BehaviorData {
 		}
 	}
 
+	/// Delete an entry of type `T` from Blackboard.
+	/// # Errors
+	/// - if entry is not found
+	/// # Panics
+	pub fn delete<T>(&mut self, key: &str) -> Result<T, crate::blackboard::error::Error>
+	where
+		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync + 'static,
+	{
+		self.blackboard.delete(key)
+	}
+
 	/// Get a value of type `T` from Blackboard.
 	/// # Errors
 	/// - if value is not found

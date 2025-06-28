@@ -10,9 +10,9 @@ use alloc::sync::Arc;
 use dimas_core::ConstString;
 use dimas_scripting::SharedRuntime;
 
+use crate::behavior::BehaviorData;
 use crate::port::PortList;
 use crate::{self as dimas_behavior, input_port, port_list};
-use crate::behavior::BehaviorData;
 use crate::{
 	Behavior,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
@@ -36,11 +36,11 @@ pub struct UpdatedEntry {
 
 impl UpdatedEntry {
 	pub(crate) fn new(state: BehaviorState) -> Self {
-		Self { 
-			sequence_id: 0, 
-			is_running: false, 
-			state_if_not: state, 
-			entry_key: Arc::default()
+		Self {
+			sequence_id: 0,
+			is_running: false,
+			state_if_not: state,
+			entry_key: Arc::default(),
 		}
 	}
 }

@@ -9,7 +9,9 @@ extern crate alloc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
 	behavior::{
-		action::StateAfter, control::{Parallel, ParallelAll, Sequence}, BehaviorState, BehaviorStatic
+		BehaviorState, BehaviorStatic,
+		action::StateAfter,
+		control::{Parallel, ParallelAll, Sequence},
 	},
 	factory::BehaviorTreeFactory,
 	register_behavior,
@@ -57,7 +59,9 @@ fn parallel(c: &mut Criterion) {
 	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, Parallel, "Parallel").expect("snh");
 	register_behavior!(factory, Sequence, "Sequence").expect("snh");
-	factory.register_behavior_tree_from_text(SUBTREE).expect("snh");
+	factory
+		.register_behavior_tree_from_text(SUBTREE)
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(PARALLEL).expect("snh");
@@ -100,7 +104,9 @@ fn parallel_all(c: &mut Criterion) {
 	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");
 	register_behavior!(factory, Sequence, "Sequence").expect("snh");
-	factory.register_behavior_tree_from_text(SUBTREE).expect("snh");
+	factory
+		.register_behavior_tree_from_text(SUBTREE)
+		.expect("snh");
 
 	// create the BT
 	let mut tree = factory

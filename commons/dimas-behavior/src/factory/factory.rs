@@ -22,7 +22,7 @@ use crate::{
 	behavior::{
 		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
 		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::{Script, SetBlackboard, Sleep, StateAfter},
+		action::{Script, SetBlackboard, Sleep, StateAfter, UnsetBlackboard},
 		condition::ScriptCondition,
 		control::{
 			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
@@ -80,7 +80,7 @@ impl BehaviorTreeFactory {
 		let mut factory = Self::default();
 		factory.core_behaviors()?;
 		if cfg!(test) {
-			factory.debug_behaviors()?;
+			factory.test_behaviors()?;
 		}
 		Ok(factory)
 	}
@@ -100,7 +100,7 @@ impl BehaviorTreeFactory {
 	pub fn with_groot2_behaviors() -> Result<Self, Error> {
 		let mut factory = Self::with_extended_behaviors()?;
 		if !cfg!(test) {
-			factory.debug_behaviors()?;
+			factory.test_behaviors()?;
 		}
 		factory.groot2_behaviors()?;
 		Ok(factory)
@@ -151,10 +151,10 @@ impl BehaviorTreeFactory {
 		Ok(())
 	}
 
-	/// register debug behaviors
+	/// register test behaviors
 	/// # Errors
 	/// - if any registration fails
-	pub fn debug_behaviors(&mut self) -> Result<(), Error> {
+	pub fn test_behaviors(&mut self) -> Result<(), Error> {
 		// actions
 		let bhvr_desc = BehaviorDescription::new(
 			"AlwaysFailure",
@@ -258,6 +258,7 @@ impl BehaviorTreeFactory {
 	pub fn groot2_behaviors(&mut self) -> Result<(), Error> {
 		// actions
 		self.register_groot2_behavior_type::<SetBlackboard<String>>("SetBlackboard")?;
+		self.register_groot2_behavior_type::<UnsetBlackboard<String>>("UnsetBlackboard")?;
 
 		// conditions
 
