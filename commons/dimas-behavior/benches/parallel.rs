@@ -9,32 +9,40 @@ extern crate alloc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
 	behavior::{
-		BehaviorState, BehaviorStatic,
-		action::StateAfter,
-		control::{Parallel, ParallelAll},
+		action::StateAfter, control::{Parallel, ParallelAll, Sequence}, BehaviorState, BehaviorStatic
 	},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 };
 
+const SUBTREE: &str = r#"
+<root BTCPP_format="4">
+	<BehaviorTree ID="SubSequence">
+		<Sequence>
+			<AlwaysSuccess	name="sub_step1"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess	name="sub_step2"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess	name="sub_step3"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess	name="sub_step4"/>
+			<AlwaysSuccess/>
+			<AlwaysSuccess	name="sub_step5"/>
+		</Sequence>
+	</BehaviorTree>
+</root>
+"#;
+
 const PARALLEL: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<Parallel name="root_parallel" failure_count="-1" success_count="6">
-			<AlwaysFailure	name="step1"/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess	name="step2"/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure	name="step3"/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess	name="step4"/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure	name="step5"/>
+		<Parallel name="root_parallel" failure_count="-1" success_count="5">
+			<SubTree ID="SubSequence" name="step1"/>
+			<SubTree ID="SubSequence" name="step2"/>
+			<SubTree ID="SubSequence" name="step3"/>
+			<SubTree ID="SubSequence" name="step4"/>
+			<SubTree ID="SubSequence" name="step5"/>
 		</Parallel>
 	</BehaviorTree>
 </root>
@@ -46,9 +54,10 @@ fn parallel(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, Parallel, "Parallel").expect("snh");
+	register_behavior!(factory, Sequence, "Sequence").expect("snh");
+	factory.register_behavior_tree_from_text(SUBTREE).expect("snh");
 
 	// create the BT
 	let mut tree = factory.create_from_text(PARALLEL).expect("snh");
@@ -72,19 +81,11 @@ const PARALLEL_ALL: &str = r#"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
 		<ParallelAll name="root_parallel_all">
-			<AlwaysFailure	name="step1"/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess	name="step2"/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure	name="step3"/>
-			<AlwaysSuccess/>
-			<AlwaysFailure/>
-			<AlwaysSuccess	name="step4"/>
-			<AlwaysFailure/>
-			<AlwaysSuccess/>
-			<AlwaysFailure	name="step5"/>
+			<SubTree ID="SubSequence" name="step1"/>
+			<SubTree ID="SubSequence" name="step2"/>
+			<SubTree ID="SubSequence" name="step3"/>
+			<SubTree ID="SubSequence" name="step4"/>
+			<SubTree ID="SubSequence" name="step5"/>
 		</ParallelAll>
 	</BehaviorTree>
 </root>
@@ -96,9 +97,10 @@ fn parallel_all(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
 	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");
+	register_behavior!(factory, Sequence, "Sequence").expect("snh");
+	factory.register_behavior_tree_from_text(SUBTREE).expect("snh");
 
 	// create the BT
 	let mut tree = factory

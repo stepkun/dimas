@@ -30,7 +30,7 @@ use crate::{
 		},
 		decorator::{
 			Delay, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful,
-			RunOnce, Subtree, Timeout, Updated,
+			RunOnce, Subtree, Timeout, UpdatedEntry,
 		},
 	},
 	blackboard::SharedBlackboard,
@@ -127,24 +127,24 @@ impl BehaviorTreeFactory {
 		let bhvr_desc = BehaviorDescription::new(
 			"SkipUnlessUpdated",
 			"SkipUnlessUpdated",
-			Updated::kind(),
+			UpdatedEntry::kind(),
 			true,
-			Updated::provided_ports(),
+			UpdatedEntry::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(Updated::new(BehaviorState::Skipped)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(UpdatedEntry::new(BehaviorState::Skipped)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
 		let bhvr_desc = BehaviorDescription::new(
 			"WaitValueUpdated",
 			"WaitValueUpdated",
-			Updated::kind(),
+			UpdatedEntry::kind(),
 			true,
-			Updated::provided_ports(),
+			UpdatedEntry::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(Updated::new(BehaviorState::Running)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(UpdatedEntry::new(BehaviorState::Running)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 

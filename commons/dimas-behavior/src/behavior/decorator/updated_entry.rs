@@ -23,7 +23,7 @@ use crate::{
 // region:      --- Updated
 /// The `Updated` behavior is .
 #[derive(Behavior, Debug, Default)]
-pub struct Updated {
+pub struct UpdatedEntry {
 	/// ID of the last checked update
 	sequence_id: usize,
 	/// Still running the child
@@ -34,7 +34,7 @@ pub struct Updated {
 	entry_key: ConstString,
 }
 
-impl Updated {
+impl UpdatedEntry {
 	pub(crate) fn new(state: BehaviorState) -> Self {
 		Self { 
 			sequence_id: 0, 
@@ -46,7 +46,7 @@ impl Updated {
 }
 
 #[async_trait::async_trait]
-impl BehaviorInstance for Updated {
+impl BehaviorInstance for UpdatedEntry {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
@@ -85,7 +85,7 @@ impl BehaviorInstance for Updated {
 	}
 }
 
-impl BehaviorStatic for Updated {
+impl BehaviorStatic for UpdatedEntry {
 	fn kind() -> BehaviorKind {
 		BehaviorKind::Decorator
 	}
