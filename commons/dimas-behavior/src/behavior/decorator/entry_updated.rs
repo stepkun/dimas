@@ -10,8 +10,8 @@ use alloc::sync::Arc;
 use dimas_core::ConstString;
 use dimas_scripting::SharedRuntime;
 
-use crate::behavior::BehaviorData;
-use crate::port::PortList;
+use crate::behavior::{BehaviorData, BehaviorError};
+use crate::port::{is_bb_pointer, strip_bb_pointer, PortList};
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
 	Behavior,
@@ -23,7 +23,7 @@ use crate::{
 // region:      --- Updated
 /// The `Updated` behavior is .
 #[derive(Behavior, Debug, Default)]
-pub struct UpdatedEntry {
+pub struct EntryUpdated {
 	/// ID of the last checked update
 	sequence_id: usize,
 	/// Still running the child
@@ -34,7 +34,7 @@ pub struct UpdatedEntry {
 	entry_key: ConstString,
 }
 
-impl UpdatedEntry {
+impl EntryUpdated {
 	pub(crate) fn new(state: BehaviorState) -> Self {
 		Self {
 			sequence_id: 0,
@@ -46,7 +46,7 @@ impl UpdatedEntry {
 }
 
 #[async_trait::async_trait]
-impl BehaviorInstance for UpdatedEntry {
+impl BehaviorInstance for EntryUpdated {
 	async fn start(
 		&mut self,
 		behavior: &mut BehaviorData,
@@ -54,8 +54,17 @@ impl BehaviorInstance for UpdatedEntry {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		self.sequence_id = 0;
-		self.entry_key = behavior.get::<String>("entry")?.into();
-		self.tick(behavior, children, runtime).await
+		if let Some(key) = behavior.remappings.find(&"entry".into()) {
+			if is_bb_pointer(&key) {
+				let stripped = strip_bb_pointer(&key).expect("snh");
+				self.entry_key = behavior.get::<String>(&stripped)?.into();
+			} else {
+				self.entry_key = behavior.get::<String>(&key)?.into();
+			}
+			self.tick(behavior, children, runtime).await
+		} else {
+			Err(BehaviorError::PortNotDeclared("entry".into(), behavior.description().name().clone()))
+		}
 	}
 
 	async fn tick(
@@ -85,7 +94,7 @@ impl BehaviorInstance for UpdatedEntry {
 	}
 }
 
-impl BehaviorStatic for UpdatedEntry {
+impl BehaviorStatic for EntryUpdated {
 	fn kind() -> BehaviorKind {
 		BehaviorKind::Decorator
 	}

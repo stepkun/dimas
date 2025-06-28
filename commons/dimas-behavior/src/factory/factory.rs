@@ -20,18 +20,12 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
-		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::{Script, SetBlackboard, Sleep, StateAfter, UnsetBlackboard},
-		condition::ScriptCondition,
-		control::{
+		action::{Script, SetBlackboard, Sleep, StateAfter, UnsetBlackboard}, condition::{ScriptCondition, WasEntryUpdated}, control::{
 			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
 			SequenceWithMemory, Switch, WhileDoElse,
-		},
-		decorator::{
-			Delay, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful,
-			RunOnce, Subtree, Timeout, UpdatedEntry,
-		},
+		}, decorator::{
+			Delay, EntryUpdated, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful, RunOnce, Subtree, Timeout
+		}, Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
 	},
 	blackboard::SharedBlackboard,
 	port::PortList,
@@ -115,6 +109,7 @@ impl BehaviorTreeFactory {
 
 		// conditions
 		self.register_groot2_behavior_type::<ScriptCondition>("ScriptCondition")?;
+		self.register_groot2_behavior_type::<WasEntryUpdated>("WasEntryUpdated")?;
 
 		// controls
 		self.register_groot2_behavior_type::<Fallback>("Fallback")?;
@@ -127,24 +122,24 @@ impl BehaviorTreeFactory {
 		let bhvr_desc = BehaviorDescription::new(
 			"SkipUnlessUpdated",
 			"SkipUnlessUpdated",
-			UpdatedEntry::kind(),
+			EntryUpdated::kind(),
 			true,
-			UpdatedEntry::provided_ports(),
+			EntryUpdated::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(UpdatedEntry::new(BehaviorState::Skipped)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(EntryUpdated::new(BehaviorState::Skipped)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
 		let bhvr_desc = BehaviorDescription::new(
 			"WaitValueUpdated",
 			"WaitValueUpdated",
-			UpdatedEntry::kind(),
+			EntryUpdated::kind(),
 			true,
-			UpdatedEntry::provided_ports(),
+			EntryUpdated::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(UpdatedEntry::new(BehaviorState::Running)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(EntryUpdated::new(BehaviorState::Running)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 

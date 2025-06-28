@@ -14,7 +14,7 @@ mod run_once;
 mod script_precondition;
 mod subtree;
 mod timeout;
-mod updated_entry;
+mod entry_updated;
 
 // flatten
 pub use delay::Delay;
@@ -28,4 +28,4 @@ pub use run_once::RunOnce;
 pub use script_precondition::Precondition;
 pub use subtree::Subtree;
 pub use timeout::Timeout;
-pub use updated_entry::UpdatedEntry;
+pub use entry_updated::EntryUpdated;
