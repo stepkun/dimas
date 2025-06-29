@@ -5,13 +5,53 @@
 use std::collections::BTreeMap;
 
 use dimas_scripting::compiling::{Lexer, TokenKind};
+use rstest::rstest;
 
-#[allow(unused)]
-#[allow(clippy::upper_case_acronyms)]
-enum Color {
-	RED = 1,
-	BLUE = 2,
-	GREEN = 3,
+#[rstest]
+#[case("=", TokenKind::Equal)]
+#[case(":", TokenKind::Colon)]
+#[case(":=", TokenKind::ColonEqual)]
+#[case("+", TokenKind::Plus)]
+#[case("+=", TokenKind::PlusEqual)]
+#[case("-", TokenKind::Minus)]
+#[case("-=", TokenKind::MinusEqual)]
+#[case("*", TokenKind::Star)]
+#[case("*=", TokenKind::StarEqual)]
+#[case("/", TokenKind::Slash)]
+#[case("/=", TokenKind::SlashEqual)]
+#[case(";", TokenKind::Semicolon)]
+#[case("&", TokenKind::Ampersand)]
+#[case("|", TokenKind::Pipe)]
+#[case("^", TokenKind::Caret)]
+#[case("~", TokenKind::Tilde)]
+#[case("&&", TokenKind::And)]
+#[case("||", TokenKind::Or)]
+#[case("!", TokenKind::Bang)]
+#[case("!=", TokenKind::BangEqual)]
+#[case("==", TokenKind::EqualEqual)]
+#[case("<", TokenKind::Less)]
+#[case("<=", TokenKind::LessEqual)]
+#[case(">", TokenKind::Greater)]
+#[case(">=", TokenKind::GreaterEqual)]
+#[case("?", TokenKind::QMark)]
+#[case("(", TokenKind::LeftParen)]
+#[case(")", TokenKind::RightParen)]
+#[case("nil", TokenKind::Nil)]
+#[case("true", TokenKind::True)]
+#[case("false", TokenKind::False)]
+#[case("print", TokenKind::Print)]
+#[case("A", TokenKind::Ident)]
+#[case("3.14", TokenKind::FloatNumber)]
+#[case("0xff", TokenKind::HexNumber)]
+#[case("3", TokenKind::IntNumber)]
+#[case("'test'", TokenKind::String)]
+#[case("RED", TokenKind::Enum)]
+fn lexing_token(#[case] input: &str, #[case] expected: TokenKind) {
+	let mut enums: BTreeMap<String, i8> = BTreeMap::default();
+	enums.insert("RED".to_string(), 0);
+	let mut lexer = Lexer::new(&enums, input);
+	assert_eq!(lexer.next().expect("snh").expect("snh").kind, expected);
+	assert!(lexer.next().is_none());
 }
 
 #[allow(clippy::cognitive_complexity)]
@@ -61,11 +101,12 @@ fn lexing() {
 
 #[test]
 fn lexing_keywords() {
-	let tokens = "true false";
+	let tokens = "true false print";
 	let enums: BTreeMap<String, i8> = BTreeMap::default();
 	let mut lexer = Lexer::new(&enums, tokens);
 	assert_eq!(lexer.next().expect("snh").expect("snh").kind, TokenKind::True);
 	assert_eq!(lexer.next().expect("snh").expect("snh").kind, TokenKind::False);
+	assert_eq!(lexer.next().expect("snh").expect("snh").kind, TokenKind::Print);
 	assert!(lexer.next().is_none());
 	assert!(lexer.next().is_none());
 }

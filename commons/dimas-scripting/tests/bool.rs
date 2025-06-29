@@ -1,140 +1,66 @@
 // Copyright © 2025 Stephan Kunz
 
-//! Tests of scripting equality
+//! Tests of scripting equality, inequality & negation
 
 use dimas_scripting::{DefaultEnvironment, Runtime};
 
-#[test]
-#[allow(clippy::too_many_lines)]
-fn equality() {
+use rstest::rstest;
+
+#[rstest]
+#[case("print true == true;", b"true\n")]
+#[case("print true == false;", b"false\n")]
+#[case("print false == true;", b"false\n")]
+#[case("print false == false;", b"true\n")]
+#[case("print true == 1;", b"false\n")]
+#[case("print false == 0;", b"false\n")]
+#[case("print true == 'true';", b"false\n")]
+#[case("print false == 'false';", b"false\n")]
+#[case("print true == '';", b"false\n")]
+#[case("print false == '';", b"false\n")]
+fn equality(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print true == true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print true == false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print false == true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print false == false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print true == 1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print false == 0;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true == 'true';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print false == 'false';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print false == '';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print false == '';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true != false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false != true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false != false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true != 1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false != 0;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print true != 'true';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false != 'false';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false != '';", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn not() {
+#[rstest]
+#[case("print true != true;", b"false\n")]
+#[case("print true != false;", b"true\n")]
+#[case("print false != true;", b"true\n")]
+#[case("print false != false;", b"false\n")]
+#[case("print true != 1;", b"true\n")]
+#[case("print false != 0;", b"true\n")]
+#[case("print true != 'true';", b"true\n")]
+#[case("print false != 'false';", b"true\n")]
+#[case("print true != '';", b"true\n")]
+#[case("print false != '';", b"true\n")]
+fn inequality(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print !true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
+}
 
-	runtime
-		.run("print !false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
+#[rstest]
+#[case("print !true;", b"false\n")]
+#[case("print !false;", b"true\n")]
+#[case("print !!true;", b"true\n")]
+#[case("print !!false;", b"false\n")]
+#[case("print !123;", b"false\n")]
+#[case("print !0;", b"false\n")]
+#[case("print !1;", b"false\n")]
+#[case("print !0.0;", b"false\n")]
+#[case("print !1.0;", b"false\n")]
+#[case("print !nil;", b"true\n")]
+#[case("print !'';", b"false\n")]
+#[case("print !'string';", b"false\n")]
+fn negation(#[case] input: &str, #[case] expected: &[u8]) {
+	let mut env = DefaultEnvironment::default();
+	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print !!true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print !!false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime.run("print !123;", &mut env).expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime.run("print !0;", &mut env).expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime.run("print !nil;", &mut env).expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime.run("print !'';", &mut env).expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }

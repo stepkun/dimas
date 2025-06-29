@@ -4,144 +4,97 @@
 
 use dimas_scripting::{DefaultEnvironment, Runtime};
 
-#[test]
-fn and() {
+use rstest::rstest;
+
+#[rstest]
+#[case("print false && false", b"false\n")]
+#[case("print true && false", b"false\n")]
+#[case("print false && true", b"false\n")]
+#[case("print true && true", b"true\n")]
+#[case("print false && false && false", b"false\n")]
+#[case("print false && false && true", b"false\n")]
+#[case("print true && false && false", b"false\n")]
+#[case("print true && false && true", b"false\n")]
+#[case("print true && true && true", b"true\n")]
+fn and(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print false && false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true && false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true && true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false && true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true && true && false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
-
-	runtime
-		.run("print true && true && true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn or() {
+#[rstest]
+#[case("print false || false", b"false\n")]
+#[case("print true || false", b"true\n")]
+#[case("print false || true", b"true\n")]
+#[case("print true || true", b"true\n")]
+#[case("print false || false || false", b"false\n")]
+#[case("print false || false || true", b"true\n")]
+#[case("print true || false || false", b"true\n")]
+#[case("print true || false || true", b"true\n")]
+#[case("print true || true || true", b"true\n")]
+fn or(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print true || true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false || true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn and_or() {
+#[rstest]
+#[case("print true || true && false;", b"true\n")]
+#[case("print false || true && true;", b"true\n")]
+fn and_or(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print true || true && false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print false || true && true;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn bitwise_and() {
+#[rstest]
+#[case("print 0x1 & 0x1;", b"1\n")]
+#[case("print 0x1 & 0x0;", b"0\n")]
+fn bitwise_and(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print 0x1 & 0x1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"1\n");
-
-	runtime
-		.run("print 0x1 & 0x0;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"0\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn bitwise_or() {
+#[rstest]
+#[case("print 0x1 | 0x1;", b"1\n")]
+#[case("print 0x1 | 0x0;", b"1\n")]
+#[case("print 0x1 | 0x2;", b"3\n")]
+fn bitwise_or(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print 0x1 | 0x1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"1\n");
-
-	runtime
-		.run("print 0x1 | 0x0;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"1\n");
-
-	runtime
-		.run("print 0x1 | 0x2;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"3\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn bitwise_xor() {
+#[rstest]
+#[case("print 0x1 ^ 0x1;", b"0\n")]
+#[case("print 0x1 ^ 0x0;", b"1\n")]
+#[case("print 0x1 ^ 0x2;", b"3\n")]
+fn bitwise_xor(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print 0x1 ^ 0x1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"0\n");
-
-	runtime
-		.run("print 0x1 ^ 0x0;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"1\n");
-
-	runtime
-		.run("print 0x1 ^ 0x2;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"3\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }
 
-#[test]
-fn ternary() {
+#[rstest]
+#[case("print 1 < 2 ? true : false;", b"true\n")]
+#[case("print 1 > 2 ? true : false;", b"false\n")]
+fn ternary(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print 1 < 2 ? true : false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
-
-	runtime
-		.run("print 1 > 2 ? true : false;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"false\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }

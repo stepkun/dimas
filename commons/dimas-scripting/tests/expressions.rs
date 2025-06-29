@@ -4,23 +4,16 @@
 
 use dimas_scripting::{DefaultEnvironment, Runtime};
 
-#[test]
-fn expressions() {
+use rstest::rstest;
+
+#[rstest]
+#[case("print (5 - (3 - 1)) + -1;", b"2\n")]
+#[case("print (5 - (3 - 1)) + +1;", b"4\n")]
+#[case("print !(5 - 4 > 3 * 2 == !nil);", b"true\n")]
+fn expressions(#[case] input: &str, #[case] expected: &[u8]) {
 	let mut env = DefaultEnvironment::default();
 	let mut runtime = Runtime::default();
 
-	runtime
-		.run("print (5 - (3 - 1)) + -1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"2\n");
-
-	runtime
-		.run("print (5 - (3 - 1)) + +1;", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"4\n");
-
-	runtime
-		.run("print !(5 - 4 > 3 * 2 == !nil);", &mut env)
-		.expect("snh");
-	assert_eq!(runtime.stdout(), b"true\n");
+	runtime.run(input, &mut env).expect("snh");
+	assert_eq!(runtime.stdout(), expected);
 }

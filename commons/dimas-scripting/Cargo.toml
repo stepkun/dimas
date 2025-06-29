@@ -48,6 +48,7 @@ rustc-hash = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+rstest = { workspace = true }
 
 [features]
 default = ["std"]

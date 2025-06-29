@@ -10,7 +10,7 @@ use dimas_core::ConstString;
 use dimas_scripting::SharedRuntime;
 
 use crate::behavior::{BehaviorData, BehaviorError};
-use crate::port::{is_bb_pointer, strip_bb_pointer, PortList};
+use crate::port::{PortList, is_bb_pointer, strip_bb_pointer};
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
 	Behavior,
@@ -47,7 +47,10 @@ impl BehaviorInstance for WasEntryUpdated {
 			}
 			self.tick(behavior, children, runtime).await
 		} else {
-			Err(BehaviorError::PortNotDeclared("entry".into(), behavior.description().name().clone()))
+			Err(BehaviorError::PortNotDeclared(
+				"entry".into(),
+				behavior.description().name().clone(),
+			))
 		}
 	}
 

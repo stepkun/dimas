@@ -20,12 +20,18 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		action::{Script, SetBlackboard, Sleep, StateAfter, UnsetBlackboard}, condition::{ScriptCondition, WasEntryUpdated}, control::{
+		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
+		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
+		action::{Script, SetBlackboard, Sleep, StateAfter, UnsetBlackboard},
+		condition::{ScriptCondition, WasEntryUpdated},
+		control::{
 			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
 			SequenceWithMemory, Switch, WhileDoElse,
-		}, decorator::{
-			Delay, EntryUpdated, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat, RetryUntilSuccessful, RunOnce, Subtree, Timeout
-		}, Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic, ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn
+		},
+		decorator::{
+			Delay, EntryUpdated, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat,
+			RetryUntilSuccessful, RunOnce, Subtree, Timeout,
+		},
 	},
 	blackboard::SharedBlackboard,
 	port::PortList,
