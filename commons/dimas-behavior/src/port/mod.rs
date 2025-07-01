@@ -75,7 +75,7 @@ pub fn is_bb_pointer(port: &str) -> bool {
 /// Create a [`PortDefinition`]
 /// # Errors
 /// - if the name violates the conventions.
-pub fn create_port<T: 'static>(
+pub fn create_port<T>(
 	direction: PortDirection,
 	type_name: &str,
 	name: &str,

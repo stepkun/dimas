@@ -36,7 +36,7 @@ where
 #[async_trait::async_trait]
 impl<T> BehaviorInstance for UnsetBlackboard<T>
 where
-	T: Clone + Debug + Default + FromStr + ToString + Send + Sync + 'static,
+	T: Clone + Debug + Default + FromStr + ToString + Send + Sync,
 {
 	async fn tick(
 		&mut self,
@@ -60,7 +60,7 @@ where
 
 impl<T> BehaviorStatic for UnsetBlackboard<T>
 where
-	T: Clone + Debug + Default + FromStr + ToString + Send + Sync + 'static,
+	T: Clone + Debug + Default + FromStr + ToString + Send + Sync,
 {
 	fn kind() -> BehaviorKind {
 		BehaviorKind::Action

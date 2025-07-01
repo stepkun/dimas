@@ -14,10 +14,10 @@ use super::{BehaviorCreationFn, BehaviorExecution, BehaviorInstance, BehaviorRed
 
 // region:      --- types
 /// Signature of a simple registered behavior function called by `SimpleBehavior`'s tick
-pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync + 'static>;
+pub type SimpleBhvrTickFn = Arc<dyn Fn() -> BehaviorResult + Send + Sync>;
 
 /// Signature of a registered behavior function called by `SimpleBehavior`'s tick
-pub type ComplexBhvrTickFn = Arc<dyn Fn(&mut BehaviorData) -> BehaviorResult + Send + Sync + 'static>;
+pub type ComplexBhvrTickFn = Arc<dyn Fn(&mut BehaviorData) -> BehaviorResult + Send + Sync>;
 // endregion:   --- types
 
 // region:      --- BehaviorFunction

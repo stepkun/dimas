@@ -38,7 +38,7 @@ pub trait BlackboardInterface {
 	/// - if key has different type than expected
 	fn delete<T>(&mut self, key: &str) -> Result<T, Error>
 	where
-		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
+		T: Any + Clone + Debug + FromStr + ToString + Send + Sync;
 
 	/// Get a value of type T with key from [`Blackboard`].
 	/// # Errors
@@ -46,7 +46,7 @@ pub trait BlackboardInterface {
 	/// - if key has different type than expected
 	fn get<T>(&self, key: &str) -> Result<T, Error>
 	where
-		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
+		T: Any + Clone + Debug + FromStr + ToString + Send + Sync;
 
 	/// Get raw [`Entry`] with key from [`Blackboard`].
 	fn get_entry(&self, key: &str) -> Option<Entry>;
@@ -63,6 +63,6 @@ pub trait BlackboardInterface {
 	/// - if key already exists with a different type
 	fn set<T>(&mut self, key: &str, value: T) -> Result<Option<T>, Error>
 	where
-		T: Any + Clone + Debug + FromStr + ToString + Send + Sync + 'static;
+		T: Any + Clone + Debug + FromStr + ToString + Send + Sync;
 }
 // endregion:   --- BlackboardInterface

@@ -42,7 +42,7 @@ pub type BehaviorCreationFn = dyn Fn() -> BehaviorPtr + Send + Sync;
 /// [`BehaviorData`] state change callback signature.
 ///
 /// This callback can be used to observe [`BehaviorData`] and manipulate the resulting [`BehaviorState`] of a tick.
-pub type BehaviorTickCallback = dyn Fn(&BehaviorData, &mut BehaviorState) + Send + Sync + 'static;
+pub type BehaviorTickCallback = dyn Fn(&BehaviorData, &mut BehaviorState) + Send + Sync;
 // endregion:   --- types
 
 // region:      --- supertraits
@@ -190,7 +190,7 @@ impl BehaviorData {
 	/// # Panics
 	pub fn delete<T>(&mut self, key: &str) -> Result<T, crate::blackboard::error::Error>
 	where
-		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync + 'static,
+		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync,
 	{
 		self.blackboard.delete(key)
 	}
@@ -201,7 +201,7 @@ impl BehaviorData {
 	/// # Panics
 	pub fn get<T>(&self, key: &str) -> Result<T, Error>
 	where
-		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync + 'static,
+		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync,
 	{
 		if let Some(remapped) = self.remappings.find(&key.into()) {
 			if is_bb_pointer(&remapped) {
@@ -232,7 +232,7 @@ impl BehaviorData {
 	/// # Panics
 	pub fn set<T>(&mut self, key: &str, value: T) -> Result<Option<T>, Error>
 	where
-		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync + 'static,
+		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync,
 	{
 		if let Some(remapped) = self.remappings.find(&key.into()) {
 			if let Some(stripped) = strip_bb_pointer(&remapped) {
