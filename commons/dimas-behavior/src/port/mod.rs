@@ -38,38 +38,14 @@ const FORBIDDEN_NAMES: &[&str] = &[
 // endregion:   --- types
 
 // region:      --- helper
-/// Function handles the special remapping cases
-#[must_use]
-pub fn resolve_special_port(port_name: &str, remapped_port: &str) -> Option<ConstString> {
-	// is the shortcut '{=}' used?
-	if port_name == "{=}" || remapped_port == "{=}" {
-		Some(port_name.into())
-	} else {
-		strip_bb_pointer(remapped_port)
-	}
-}
-
-/// Remove all 'decoration' from port name
+/// Remove blackboard pointer decorations from port name.
 #[must_use]
 pub fn strip_bb_pointer(port: &str) -> Option<ConstString> {
-	// Is bb pointer
-	if port.starts_with('{') && port.ends_with('}') {
-		Some(
-			port.strip_prefix('{')
-				.unwrap_or_else(|| todo!())
-				.strip_suffix('}')
-				.unwrap_or_else(|| todo!())
-				.into(),
-		)
-	} else {
-		None
-	}
-}
-
-/// Check if it is a port
-#[must_use]
-pub fn is_bb_pointer(port: &str) -> bool {
-	port.starts_with('{') && port.ends_with('}')
+	Some(
+		port.strip_prefix('{')?
+			.strip_suffix('}')?
+			.into(),
+	)
 }
 
 /// Create a [`PortDefinition`]
@@ -89,20 +65,32 @@ pub fn create_port<T>(
 	}
 }
 
-/// Check a name to be allowed for ports
-/// # Panics
-/// - if something weird happens.
+/// Check a name to be allowed for ports.
 #[must_use]
 pub fn is_allowed_port_name(name: &str) -> bool {
 	if name.is_empty() {
 		return false;
 	}
-	let first = name.chars().next().expect("snh");
-	if !first.is_alphabetic() && first != '@' {
-		return false;
-	}
+	let mut iter = name.chars();
+	if let Some(first) = iter.next() {
+		if first == '@' {
+			if let Some(second) = iter.next() {
+				if !second.is_alphabetic() {
+					return false;
+				}
+			} else {
+				// it is an '@' without a name
+				return false;
+			}
+		} else if !first.is_alphabetic() {
+			return false;
+		}
 
-	if FORBIDDEN_NAMES.contains(&name) {
+		if FORBIDDEN_NAMES.contains(&name) {
+			return false;
+		}
+	} else {
+		// it is an empty name
 		return false;
 	}
 	true

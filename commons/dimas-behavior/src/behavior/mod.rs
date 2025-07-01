@@ -24,7 +24,7 @@ use dimas_scripting::SharedRuntime;
 
 use crate::{
 	blackboard::{BlackboardInterface, SharedBlackboard},
-	port::{PortList, PortRemappings, error::Error, is_bb_pointer, strip_bb_pointer},
+	port::{PortList, PortRemappings, error::Error, strip_bb_pointer},
 	tree::BehaviorTreeElementList,
 };
 // endregion:   --- modules
@@ -204,14 +204,14 @@ impl BehaviorData {
 		T: Any + Clone + core::fmt::Debug + FromStr + ToString + Send + Sync,
 	{
 		if let Some(remapped) = self.remappings.find(&key.into()) {
-			if is_bb_pointer(&remapped) {
-				let key = strip_bb_pointer(&remapped).expect("snh");
-				Ok(self.blackboard.get::<T>(&key)?)
-			} else {
-				match T::from_str(&remapped) {
-					Ok(res) => Ok(res),
-					Err(_err) => Err(Error::CouldNotConvert(remapped)),
-				}
+			match strip_bb_pointer(&remapped) {
+				Some(key) => Ok(self.blackboard.get::<T>(&key)?),
+				None => {
+					match T::from_str(&remapped) {
+						Ok(res) => Ok(res),
+						Err(_err) => Err(Error::CouldNotConvert(remapped)),
+					}
+				},
 			}
 		} else {
 			Ok(self.blackboard.get::<T>(key)?)
@@ -354,8 +354,8 @@ impl BehaviorDescription {
 			path: "".into(),
 			kind,
 			ports,
-			groot2,
 			groot2_path: "".into(),
+			groot2,
 		}
 	}
 
@@ -425,6 +425,7 @@ impl BehaviorDescription {
 // endregion:	--- BehaviorDescription
 
 // region:		--- BehaviorKind
+// Internal static strings to allow returning a &str
 static ACTION: &str = "Action";
 static CONDITION: &str = "Condition";
 static CONTROL: &str = "Control";
@@ -455,7 +456,7 @@ impl core::fmt::Display for BehaviorKind {
 }
 
 impl BehaviorKind {
-	/// Provide a static str reference
+	/// Provide kind as a static str reference.
 	#[must_use]
 	pub const fn as_str(&self) -> &'static str {
 		match self {
@@ -470,6 +471,13 @@ impl BehaviorKind {
 // endregion:	--- BehaviorKind
 
 // region:      --- BehaviorState
+// Internal static strings to allow returning a &str
+static FAILURE: &str = "Failure";
+static IDLE: &str = "Idle";
+static RUNNING: &str = "Running";
+static SKIPPED: &str = "Skipped";
+static SUCCESS: &str = "Success";
+
 /// Behavior state
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(u8)]
@@ -499,19 +507,23 @@ impl BehaviorState {
 	pub const fn is_completed(&self) -> bool {
 		matches!(self, Self::Success | Self::Failure)
 	}
+
+	/// Provide kind as a static str reference.
+	#[must_use]
+	pub const fn as_str(&self) -> &'static str {
+		match self {
+			Self::Failure => FAILURE,
+			Self::Idle => IDLE,
+			Self::Running => RUNNING,
+			Self::Skipped => SKIPPED,
+			Self::Success => SUCCESS,
+		}
+	}
 }
 
 impl core::fmt::Display for BehaviorState {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		let text = match self {
-			Self::Failure => "Failure",
-			Self::Idle => "Idle",
-			Self::Running => "Running",
-			Self::Skipped => "Skipped",
-			Self::Success => "Success",
-		};
-
-		write!(f, "{text}")
+		write!(f, "{}", self.as_str())
 	}
 }
 

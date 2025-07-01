@@ -11,7 +11,7 @@ use dimas_core::ConstString;
 use dimas_scripting::SharedRuntime;
 
 use crate::behavior::{BehaviorData, BehaviorError};
-use crate::port::{PortList, is_bb_pointer, strip_bb_pointer};
+use crate::port::{PortList, strip_bb_pointer};
 use crate::{self as dimas_behavior, input_port, port_list};
 use crate::{
 	Behavior,
@@ -55,11 +55,9 @@ impl BehaviorInstance for EntryUpdated {
 	) -> BehaviorResult {
 		self.sequence_id = 0;
 		if let Some(key) = behavior.remappings.find(&"entry".into()) {
-			if is_bb_pointer(&key) {
-				let stripped = strip_bb_pointer(&key).expect("snh");
-				self.entry_key = behavior.get::<String>(&stripped)?.into();
-			} else {
-				self.entry_key = behavior.get::<String>(&key)?.into();
+			match strip_bb_pointer(&key) {
+				Some(stripped) => self.entry_key = behavior.get::<String>(&stripped)?.into(),
+				None => self.entry_key = behavior.get::<String>(&key)?.into(),
 			}
 			self.tick(behavior, children, runtime).await
 		} else {

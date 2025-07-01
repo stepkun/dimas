@@ -8,7 +8,7 @@ extern crate alloc;
 use core::ops::{Deref, DerefMut};
 
 // region:      --- modules
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 use dimas_core::ConstString;
 
 use super::error::Error;
@@ -65,7 +65,12 @@ impl PortRemappings {
 	pub fn find(&self, name: &ConstString) -> Option<ConstString> {
 		for (original, remapped) in &self.0 {
 			if original == name {
-				return Some(remapped.clone());
+					// is the shortcut '{=}' used?
+				return if remapped.as_ref() == "{=}" {
+					Some((String::from("{") + name + "}").into())
+				} else {
+					Some(remapped.clone())
+				};
 			}
 		}
 		None

@@ -30,7 +30,7 @@ pub struct SetBlackboard<T>
 where
 	T: Clone + Debug + Default + FromStr + ToString + Send + Sync + 'static,
 {
-	phantom: PhantomData<T>,
+	_marker: PhantomData<T>,
 }
 
 #[async_trait::async_trait]
