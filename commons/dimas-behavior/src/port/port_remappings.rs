@@ -65,7 +65,7 @@ impl PortRemappings {
 	pub fn find(&self, name: &ConstString) -> Option<ConstString> {
 		for (original, remapped) in &self.0 {
 			if original == name {
-					// is the shortcut '{=}' used?
+				// is the shortcut '{=}' used?
 				return if remapped.as_ref() == "{=}" {
 					Some((String::from("{") + name + "}").into())
 				} else {

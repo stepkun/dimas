@@ -70,6 +70,7 @@ xml_writer = { workspace = true }
 anyhow = { workspace = true }
 criterion = { workspace = true }
 #rand = { workspace = true }
+rstest = { workspace = true }
 #serial_test = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time"] }
 

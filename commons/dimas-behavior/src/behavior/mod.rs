@@ -206,11 +206,9 @@ impl BehaviorData {
 		if let Some(remapped) = self.remappings.find(&key.into()) {
 			match strip_bb_pointer(&remapped) {
 				Some(key) => Ok(self.blackboard.get::<T>(&key)?),
-				None => {
-					match T::from_str(&remapped) {
-						Ok(res) => Ok(res),
-						Err(_err) => Err(Error::CouldNotConvert(remapped)),
-					}
+				None => match T::from_str(&remapped) {
+					Ok(res) => Ok(res),
+					Err(_err) => Err(Error::CouldNotConvert(remapped)),
 				},
 			}
 		} else {

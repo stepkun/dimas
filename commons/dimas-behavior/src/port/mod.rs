@@ -41,11 +41,7 @@ const FORBIDDEN_NAMES: &[&str] = &[
 /// Remove blackboard pointer decorations from port name.
 #[must_use]
 pub fn strip_bb_pointer(port: &str) -> Option<ConstString> {
-	Some(
-		port.strip_prefix('{')?
-			.strip_suffix('}')?
-			.into(),
-	)
+	Some(port.strip_prefix('{')?.strip_suffix('}')?.into())
 }
 
 /// Create a [`PortDefinition`]
