@@ -22,7 +22,7 @@ use crate::{
 	behavior::{
 		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
 		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::{Script, SetBlackboard, Sleep, StateAfter, UnsetBlackboard},
+		action::{Script, SetBlackboard, Sleep, ChangeStateAfter, UnsetBlackboard},
 		condition::{ScriptCondition, WasEntryUpdated},
 		control::{
 			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
@@ -160,36 +160,36 @@ impl BehaviorTreeFactory {
 		let bhvr_desc = BehaviorDescription::new(
 			"AlwaysFailure",
 			"AlwaysFailure",
-			StateAfter::kind(),
+			ChangeStateAfter::kind(),
 			true,
-			StateAfter::provided_ports(),
+			ChangeStateAfter::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Failure, 0)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Failure, 0)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
 		let bhvr_desc = BehaviorDescription::new(
 			"AlwaysRunning",
 			"AlwaysRunning",
-			StateAfter::kind(),
+			ChangeStateAfter::kind(),
 			false,
-			StateAfter::provided_ports(),
+			ChangeStateAfter::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Running, 0)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Running, 0)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
 		let bhvr_desc = BehaviorDescription::new(
 			"AlwaysSuccess",
 			"AlwaysSuccess",
-			StateAfter::kind(),
+			ChangeStateAfter::kind(),
 			true,
-			StateAfter::provided_ports(),
+			ChangeStateAfter::provided_ports(),
 		);
 		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(StateAfter::new(BehaviorState::Success, 0)) });
+			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Success, 0)) });
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 

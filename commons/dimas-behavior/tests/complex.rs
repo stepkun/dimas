@@ -7,7 +7,7 @@ extern crate alloc;
 use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
-		action::StateAfter,
+		action::ChangeStateAfter,
 		control::{
 			Fallback, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence, SequenceWithMemory,
 			WhileDoElse,
@@ -94,8 +94,8 @@ const TREE: &str = r#"
 #[tokio::test]
 async fn complex() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 	register_behavior!(factory, Parallel, "Parallel").expect("snh");
 	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");

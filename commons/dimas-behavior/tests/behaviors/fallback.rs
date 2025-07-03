@@ -8,7 +8,7 @@ use dimas_behavior::{
 	behavior::{
 		BehaviorState::{self, *},
 		BehaviorStatic,
-		action::StateAfter,
+		action::ChangeStateAfter,
 		control::Fallback,
 	},
 	factory::BehaviorTreeFactory,
@@ -52,9 +52,9 @@ async fn fallback(
 	#[case] expected: BehaviorState,
 ) -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "Behavior1", input1, 0)?;
-	register_behavior!(factory, StateAfter, "Behavior2", input2, 0)?;
-	register_behavior!(factory, StateAfter, "Behavior3", input3, 0)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior1", BehaviorState::Running, input1, 0)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior2", BehaviorState::Running, input2, 0)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior3", BehaviorState::Running, input3, 0)?;
 	register_behavior!(factory, Fallback, "Fallback")?;
 
 	let mut tree = factory.create_from_text(TREE_DEFINITION)?;
@@ -84,9 +84,9 @@ async fn fallback_errors(
 	#[case] input3: BehaviorState,
 ) -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "Behavior1", input1, 0)?;
-	register_behavior!(factory, StateAfter, "Behavior2", input2, 0)?;
-	register_behavior!(factory, StateAfter, "Behavior3", input3, 0)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior1", BehaviorState::Running, input1, 0)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior2", BehaviorState::Running, input2, 0)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior3", BehaviorState::Running, input3, 0)?;
 	register_behavior!(factory, Fallback, "Fallback")?;
 
 	let mut tree = factory.create_from_text(TREE_DEFINITION)?;

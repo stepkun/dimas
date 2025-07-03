@@ -88,7 +88,7 @@ roxmltree = "0.20.0"
 rustc-hash = "2.1.1"
 serial_test = "3.2.0"
 thiserror = "2.0.12"
-tokio = { version = "1.45.1", features = ["rt-multi-thread", "parking_lot"]}
+tokio = { version = "1.46.0", features = ["rt-multi-thread", "parking_lot"]}
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features=["env-filter"]}
 rstest = "0.25.0"

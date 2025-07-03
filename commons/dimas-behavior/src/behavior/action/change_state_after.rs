@@ -16,21 +16,23 @@ use crate::{
 };
 //endregion:    --- modules
 
-// region:		--- StateAfter
-/// The `StateAfter` behavior returns the stored [`BehaviorState`] after a certain amount of ticks,
-/// depending on the stored state and count value.
-/// Until then Running is returned.
+// region:		--- ChangeStateAfter
+/// The `ChangeStateAfter` behavior returns the stored [`BehaviorState`] `state1` 
+/// and after the amount of ticks given by `count` the [`BehaviorState`] `state2`.
 #[derive(Behavior, Debug, Default)]
-pub struct StateAfter {
+pub struct ChangeStateAfter {
+	/// The [`BehaviorState`] to return initially.
+	state1: BehaviorState,
 	/// The [`BehaviorState`] to return finally.
-	state: BehaviorState,
-	/// The amount of ticks after whih the state will be returned.
+	state2: BehaviorState,
+	/// The amount of ticks after which the state2 will be returned.
 	count: u8,
+	/// The remainig ticks until state2 will be returned.
 	remaining: u8,
 }
 
 #[async_trait::async_trait]
-impl BehaviorInstance for StateAfter {
+impl BehaviorInstance for ChangeStateAfter {
 	async fn halt(
 		&mut self,
 		_behavior: &mut BehaviorData,
@@ -59,37 +61,39 @@ impl BehaviorInstance for StateAfter {
 	) -> BehaviorResult {
 		if self.remaining == 0 {
 			// self.remaining self.count;
-			behavior.set_state(self.state);
+			behavior.set_state(self.state2);
 		} else {
 			self.remaining -= 1;
-			behavior.set_state(BehaviorState::Running);
+			behavior.set_state(self.state1);
 		}
 		Ok(behavior.state())
 	}
 }
 
-impl BehaviorStatic for StateAfter {
+impl BehaviorStatic for ChangeStateAfter {
 	fn kind() -> BehaviorKind {
 		BehaviorKind::Action
 	}
 }
 
-impl StateAfter {
+impl ChangeStateAfter {
 	/// Constructor with arguments.
 	#[must_use]
-	pub const fn new(state: BehaviorState, count: u8) -> Self {
+	pub const fn new(state1: BehaviorState, state2: BehaviorState, count: u8) -> Self {
 		Self {
-			state,
+			state1,
+			state2,
 			count,
 			remaining: count,
 		}
 	}
 
 	/// Initialization function.
-	pub const fn initialize(&mut self, state: BehaviorState, count: u8) {
-		self.state = state;
+	pub const fn initialize(&mut self, state1: BehaviorState, state2: BehaviorState, count: u8) {
+		self.state1 = state1;
+		self.state2 = state2;
 		self.count = count;
 		self.remaining = count;
 	}
 }
-// endregion:	--- StateAfter
+// endregion:	--- ChangeStateAfter

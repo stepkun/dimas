@@ -3,15 +3,15 @@
 //! Action behavior library
 //!
 
+mod change_state_after;
 mod script;
 mod set_blackboard;
 mod sleep;
-mod state_after;
 mod unset_blackboard;
 
 // flatten
+pub use change_state_after::ChangeStateAfter;
 pub use script::Script;
 pub use set_blackboard::SetBlackboard;
 pub use sleep::Sleep;
-pub use state_after::StateAfter;
 pub use unset_blackboard::UnsetBlackboard;

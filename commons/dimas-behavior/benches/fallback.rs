@@ -10,7 +10,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
-		action::StateAfter,
+		action::ChangeStateAfter,
 		control::{Fallback, ReactiveFallback},
 	},
 	factory::BehaviorTreeFactory,
@@ -42,8 +42,8 @@ fn fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 
 	// create the BT
@@ -88,8 +88,8 @@ fn reactive_fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 5).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
 	register_behavior!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
 
 	// create the BT

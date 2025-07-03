@@ -5,7 +5,7 @@
 extern crate alloc;
 
 use dimas_behavior::{
-	behavior::{BehaviorState, BehaviorStatic, action::StateAfter, control::Fallback},
+	behavior::{BehaviorState, BehaviorStatic, action::ChangeStateAfter, control::Fallback},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 	tree::observer::tree_observer::BehaviorTreeObserver,
@@ -27,8 +27,8 @@ const TREE: &str = r#"
 #[tokio::test]
 async fn tree_observer() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, StateAfter, "AlwaysFailure", BehaviorState::Failure, 3).expect("snh");
-	register_behavior!(factory, StateAfter, "AlwaysSuccess", BehaviorState::Success, 3).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 3).expect("snh");
+	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 3).expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE)?;
