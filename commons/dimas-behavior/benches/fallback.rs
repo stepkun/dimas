@@ -42,8 +42,24 @@ fn fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 
 	// create the BT
@@ -88,8 +104,24 @@ fn reactive_fallback(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, ReactiveFallback, "ReactiveFallback").expect("snh");
 
 	// create the BT

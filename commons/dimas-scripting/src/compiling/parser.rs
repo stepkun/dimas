@@ -28,8 +28,8 @@ use crate::{
 
 use super::{
 	parselets::{
-		AssignmentParselet, BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet, LogicParselet,
-		PrefixParselet, UnaryParselet, ValueParselet,
+		AssignmentParselet, BinaryParselet, GroupingParselet, InfixParselet, LiteralParselet, LogicParselet, PrefixParselet,
+		UnaryParselet, ValueParselet,
 	},
 	precedence::Precedence,
 	token::{Token, TokenKind},
@@ -87,31 +87,27 @@ impl Parser {
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Bang, Arc::from(UnaryParselet));
-		parser.infix_parselets.insert(
-			TokenKind::BangEqual,
-			Arc::from(BinaryParselet::new(Precedence::Equality)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::BangEqual, Arc::from(BinaryParselet::new(Precedence::Equality)));
 		parser
 			.infix_parselets
 			.insert(TokenKind::Caret, Arc::from(LogicParselet::new(Precedence::BitXor)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Enum, Arc::from(ValueParselet));
-		parser.infix_parselets.insert(
-			TokenKind::EqualEqual,
-			Arc::from(BinaryParselet::new(Precedence::Equality)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::EqualEqual, Arc::from(BinaryParselet::new(Precedence::Equality)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::False, Arc::from(LiteralParselet));
-		parser.infix_parselets.insert(
-			TokenKind::Greater,
-			Arc::from(BinaryParselet::new(Precedence::Comparison)),
-		);
-		parser.infix_parselets.insert(
-			TokenKind::GreaterEqual,
-			Arc::from(BinaryParselet::new(Precedence::Equality)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::Greater, Arc::from(BinaryParselet::new(Precedence::Comparison)));
+		parser
+			.infix_parselets
+			.insert(TokenKind::GreaterEqual, Arc::from(BinaryParselet::new(Precedence::Equality)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::HexNumber, Arc::from(ValueParselet));
@@ -127,10 +123,9 @@ impl Parser {
 		parser
 			.infix_parselets
 			.insert(TokenKind::Less, Arc::from(BinaryParselet::new(Precedence::Comparison)));
-		parser.infix_parselets.insert(
-			TokenKind::LessEqual,
-			Arc::from(BinaryParselet::new(Precedence::Equality)),
-		);
+		parser
+			.infix_parselets
+			.insert(TokenKind::LessEqual, Arc::from(BinaryParselet::new(Precedence::Equality)));
 		parser
 			.prefix_parselets
 			.insert(TokenKind::Minus, Arc::from(UnaryParselet));

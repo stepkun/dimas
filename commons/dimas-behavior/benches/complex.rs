@@ -11,10 +11,7 @@ use dimas_behavior::{
 	behavior::{
 		BehaviorState, BehaviorStatic,
 		action::ChangeStateAfter,
-		control::{
-			Fallback, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence, SequenceWithMemory,
-			WhileDoElse,
-		},
+		control::{Fallback, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence, SequenceWithMemory},
 	},
 	factory::BehaviorTreeFactory,
 	register_behavior,
@@ -52,18 +49,6 @@ const TREE: &str = r#"
 					</ReactiveFallback>
 					<AlwaysSuccess/>
 				</SequenceWithMemory>
-				<WhileDoElse>
-					<ReactiveSequence>
-						<AlwaysSuccess/>
-						<AlwaysSuccess/>
-						<AlwaysSuccess/>
-					</ReactiveSequence>
-					<SubTree ID="subtree1" />
-					<Fallback>
-						<AlwaysFailure/>
-						<AlwaysSuccess/>
-					</Fallback>
-				</WhileDoElse>
 			</ParallelAll>
 		</Fallback>
 	</BehaviorTree>
@@ -100,8 +85,24 @@ fn complex(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 	register_behavior!(factory, Parallel, "Parallel").expect("snh");
 	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");
@@ -109,7 +110,6 @@ fn complex(c: &mut Criterion) {
 	register_behavior!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
 	register_behavior!(factory, Sequence, "Sequence").expect("snh");
 	register_behavior!(factory, SequenceWithMemory, "SequenceWithMemory").expect("snh");
-	register_behavior!(factory, WhileDoElse, "WhileDoElse").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE).expect("snh");
 	drop(factory);

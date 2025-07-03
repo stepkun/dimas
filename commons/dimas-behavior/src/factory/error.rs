@@ -35,9 +35,7 @@ pub enum Error {
 	#[error("children are not allowed for behavior category [{0}]")]
 	ChildrenNotAllowed(ConstString),
 	/// Deadlock situation
-	#[error(
-		"search for subtree in registry [{0}] caused a deadlock, most probably because this subtree contains himself"
-	)]
+	#[error("search for subtree in registry [{0}] caused a deadlock, most probably because this subtree contains himself")]
 	DeadLock(ConstString),
 	/// Passthrough for libloading Errors
 	#[cfg(feature = "std")]

@@ -162,9 +162,7 @@ where
 				Ok(self.state)
 			}
 		} else {
-			Err(BehaviorError::Composition(
-				"Queue was not initiialized properly!".into(),
-			))
+			Err(BehaviorError::Composition("Queue was not initiialized properly!".into()))
 		}
 	}
 }

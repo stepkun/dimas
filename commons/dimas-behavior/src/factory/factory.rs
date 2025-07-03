@@ -20,13 +20,13 @@ use roxmltree::Document;
 
 use crate::{
 	behavior::{
-		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic,
-		ComplexBhvrTickFn, SimpleBehavior, SimpleBhvrTickFn,
-		action::{Script, SetBlackboard, Sleep, ChangeStateAfter, UnsetBlackboard},
+		Behavior, BehaviorDescription, BehaviorExecution, BehaviorKind, BehaviorState, BehaviorStatic, ComplexBhvrTickFn,
+		SimpleBehavior, SimpleBhvrTickFn,
+		action::{ChangeStateAfter, Script, SetBlackboard, Sleep, UnsetBlackboard},
 		condition::{ScriptCondition, WasEntryUpdated},
 		control::{
-			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence,
-			SequenceWithMemory, Switch, WhileDoElse,
+			Fallback, IfThenElse, Parallel, ParallelAll, ReactiveFallback, ReactiveSequence, Sequence, SequenceWithMemory,
+			Switch, WhileDoElse,
 		},
 		decorator::{
 			Delay, EntryUpdated, ForceState, Inverter, KeepRunningUntilFailure, Loop, Precondition, Repeat,
@@ -164,8 +164,9 @@ impl BehaviorTreeFactory {
 			true,
 			ChangeStateAfter::provided_ports(),
 		);
-		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Failure, 0)) });
+		let bhvr_creation_fn = Box::new(move || -> Box<dyn BehaviorExecution> {
+			Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Failure, 0))
+		});
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
@@ -176,8 +177,9 @@ impl BehaviorTreeFactory {
 			false,
 			ChangeStateAfter::provided_ports(),
 		);
-		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Running, 0)) });
+		let bhvr_creation_fn = Box::new(move || -> Box<dyn BehaviorExecution> {
+			Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Running, 0))
+		});
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
@@ -188,8 +190,9 @@ impl BehaviorTreeFactory {
 			true,
 			ChangeStateAfter::provided_ports(),
 		);
-		let bhvr_creation_fn =
-			Box::new(move || -> Box<dyn BehaviorExecution> { Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Success, 0)) });
+		let bhvr_creation_fn = Box::new(move || -> Box<dyn BehaviorExecution> {
+			Box::new(ChangeStateAfter::new(BehaviorState::Running, BehaviorState::Success, 0))
+		});
 		self.registry_mut()
 			.add_behavior(bhvr_desc, bhvr_creation_fn)?;
 
@@ -401,8 +404,7 @@ impl BehaviorTreeFactory {
 
 		let lib = unsafe {
 			let lib = libloading::Library::new(libname)?;
-			let registration_fn: libloading::Symbol<unsafe extern "Rust" fn(&mut Self) -> u32> =
-				lib.get(b"register")?;
+			let registration_fn: libloading::Symbol<unsafe extern "Rust" fn(&mut Self) -> u32> = lib.get(b"register")?;
 			let res = registration_fn(&mut *self);
 			if res != 0 {
 				return Err(Error::RegisterLib(name.into(), res));

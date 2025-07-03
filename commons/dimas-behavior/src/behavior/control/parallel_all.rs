@@ -26,18 +26,18 @@ pub struct ParallelAll {
 	/// The maximum allowed failures.
 	/// "-1" signals any number.
 	failure_threshold: i32,
+	/// The amount of completed sub behaviors that failed.
+	failure_count: i32,
 	/// The list of completed sub behaviors
 	completed_list: BTreeSet<usize>,
-	/// The amount of completed sub behaviors that failed.
-	failure_count: usize,
 }
 
 impl Default for ParallelAll {
 	fn default() -> Self {
 		Self {
 			failure_threshold: -1,
-			completed_list: BTreeSet::default(),
 			failure_count: 0,
+			completed_list: BTreeSet::default(),
 		}
 	}
 }
@@ -51,6 +51,9 @@ impl BehaviorInstance for ParallelAll {
 		runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
 		children.reset(runtime).await?;
+		self.failure_threshold = -1;
+		self.completed_list.clear();
+		self.failure_count = 0;
 		behavior.set_state(BehaviorState::Idle);
 		Ok(())
 	}
@@ -64,7 +67,7 @@ impl BehaviorInstance for ParallelAll {
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		// check composition only once at start
-		self.failure_threshold = behavior.get("max_failures").unwrap_or(-1_i32);
+		self.failure_threshold = behavior.get("max_failures").unwrap_or(-1);
 
 		if (children.len() as i32) < self.failure_threshold {
 			return Err(BehaviorError::Composition(
@@ -107,9 +110,7 @@ impl BehaviorInstance for ParallelAll {
 				BehaviorState::Skipped => skipped_count += 1,
 				BehaviorState::Running => {}
 				// Throw error, should never happen
-				BehaviorState::Idle => {
-					return Err(BehaviorError::State("ParallelAll".into(), "Idle".into()));
-				}
+				BehaviorState::Idle => return Err(BehaviorError::State("ParallelAll".into(), "Idle".into())),
 			}
 		}
 
@@ -117,19 +118,17 @@ impl BehaviorInstance for ParallelAll {
 			return Ok(BehaviorState::Skipped);
 		}
 
-		if skipped_count + self.completed_list.len() >= children_count {
-			// Done!
-			children.reset(runtime).await?;
-			self.completed_list.clear();
-
-			let state = if self.failure_count >= self.failure_threshold(children_count as i32) {
+		let sum = skipped_count + self.completed_list.len();
+		if sum >= children_count {
+			let state = if (self.failure_threshold >= 0) && (self.failure_threshold <= self.failure_count) {
 				BehaviorState::Failure
 			} else {
 				BehaviorState::Success
 			};
 
-			// Reset failure_count after using it
-			self.failure_count = 0;
+			// Done!
+			children.reset(runtime).await?;
+			self.completed_list.clear();
 
 			return Ok(state);
 		}
@@ -144,17 +143,7 @@ impl BehaviorStatic for ParallelAll {
 	}
 
 	fn provided_ports() -> PortList {
-		port_list![input_port!(i32, "max_failures", "1")]
-	}
-}
-impl ParallelAll {
-	#[allow(clippy::cast_sign_loss)]
-	fn failure_threshold(&self, n_children: i32) -> usize {
-		if self.failure_threshold < 0 {
-			(n_children + self.failure_threshold + 1).max(0) as usize
-		} else {
-			self.failure_threshold as usize
-		}
+		port_list![input_port!(i32, "max_failures")]
 	}
 }
 // endregion:   --- ParallelAll

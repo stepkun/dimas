@@ -54,16 +54,6 @@ impl BehaviorInstance for ReactiveFallback {
 		Ok(())
 	}
 
-	async fn start(
-		&mut self,
-		behavior: &mut BehaviorData,
-		children: &mut BehaviorTreeElementList,
-		runtime: &SharedRuntime,
-	) -> BehaviorResult {
-		self.running_child_idx = -1;
-		self.tick(behavior, children, runtime).await
-	}
-
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
 	#[allow(clippy::cast_sign_loss)]

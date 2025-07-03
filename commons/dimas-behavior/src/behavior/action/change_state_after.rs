@@ -17,8 +17,10 @@ use crate::{
 //endregion:    --- modules
 
 // region:		--- ChangeStateAfter
-/// The `ChangeStateAfter` behavior returns the stored [`BehaviorState`] `state1` 
-/// and after the amount of ticks given by `count` the [`BehaviorState`] `state2`.
+/// The `ChangeStateAfter` behavior returns
+/// - the stored [`BehaviorState`] `state2` after the amount of ticks given by `count`,
+/// - the [`BehaviorState`] `state1` just one tick before reaching `count`,
+/// - before that the [`BehaviorState::Running`].
 #[derive(Behavior, Debug, Default)]
 pub struct ChangeStateAfter {
 	/// The [`BehaviorState`] to return initially.
@@ -27,7 +29,7 @@ pub struct ChangeStateAfter {
 	state2: BehaviorState,
 	/// The amount of ticks after which the state2 will be returned.
 	count: u8,
-	/// The remainig ticks until state2 will be returned.
+	/// The remaining ticks until state2 will be returned.
 	remaining: u8,
 }
 
@@ -39,7 +41,7 @@ impl BehaviorInstance for ChangeStateAfter {
 		_children: &mut BehaviorTreeElementList,
 		_runtime: &SharedRuntime,
 	) -> Result<(), BehaviorError> {
-		self.remaining = 0;
+		self.remaining = self.count;
 		Ok(())
 	}
 
@@ -60,11 +62,13 @@ impl BehaviorInstance for ChangeStateAfter {
 		_runtime: &SharedRuntime,
 	) -> BehaviorResult {
 		if self.remaining == 0 {
-			// self.remaining self.count;
 			behavior.set_state(self.state2);
-		} else {
+		} else if self.remaining == 1 {
 			self.remaining -= 1;
 			behavior.set_state(self.state1);
+		} else {
+			self.remaining -= 1;
+			behavior.set_state(BehaviorState::Running);
 		}
 		Ok(behavior.state())
 	}

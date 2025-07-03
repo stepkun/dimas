@@ -16,9 +16,7 @@ use std::{
 
 use dimas_behavior::{
 	Behavior, SharedRuntime,
-	behavior::{
-		BehaviorData, BehaviorError, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
-	},
+	behavior::{BehaviorData, BehaviorError, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
 	blackboard::BlackboardInterface,
 	factory::BehaviorTreeFactory,
 	input_port,
@@ -119,11 +117,11 @@ impl BehaviorStatic for BehaviorWithDefaultPoints {
 
 	fn provided_ports() -> PortList {
 		port_list!(
-			input_port!(String, "input"),                           // default value from XML is [-1,-2]
-			input_port!(Point2D, "pointA", Point2D { x: 1, y: 2 }), // default value is [1,2]
-			input_port!(Point2D, "pointB", "{point}"),              // default value inside blackboard {pointB}
-			input_port!(Point2D, "pointC", "5,6"),                  // default value is [5,6],
-			input_port!(Point2D, "pointD", "{=}"),                  // default value inside blackboard {pointD}
+			input_port!(String, "input"),                               // default value from XML is [-1,-2]
+			input_port!(Point2D, "pointA", Point2D { x: 1, y: 2 }),     // default value is [1,2]
+			input_port!(Point2D, "pointB", "{point}"),                  // default value inside blackboard {pointB}
+			input_port!(Point2D, "pointC", "5,6"),                      // default value is [5,6],
+			input_port!(Point2D, "pointD", "{=}"),                      // default value inside blackboard {pointD}
 			input_port!(Point2D, "pointE", r#"(json:{"x':9,"y":10})"#)  // default value is [9,10]
 		)
 	}

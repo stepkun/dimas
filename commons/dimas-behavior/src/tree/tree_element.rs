@@ -176,13 +176,16 @@ impl BehaviorTreeElement {
 	/// # Errors
 	#[allow(clippy::unused_async)]
 	pub async fn execute_halt(&mut self, runtime: &SharedRuntime) -> Result<(), BehaviorError> {
-		self.halt(0, runtime)?;
-		if let Some(script) = self.post_conditions.get("_onHalted") {
-			let _ = runtime
-				.lock()
-				.run(script, self.data.blackboard_mut())?;
+		if self.data.state() != BehaviorState::Idle {
+			self.behavior
+				.halt(&mut self.data, &mut self.children, runtime)
+				.await?;
+			if let Some(script) = self.post_conditions.get("_onHalted") {
+				let _ = runtime
+					.lock()
+					.run(script, self.data.blackboard_mut())?;
+			}
 		}
-		self.data.set_state(BehaviorState::Idle);
 		Ok(())
 	}
 

@@ -48,9 +48,24 @@ const TREE3: &str = r#"
 		main_tree_to_execute="MainTree3">
 	<BehaviorTree ID="MainTree3">
 		<ParallelAll name="root_parallel">
-			<AlwaysFailure/>
+			<ReactiveSequence>
+				<AlwaysSuccess/>
+				<AlwaysSuccess/>
+				<AlwaysSuccess/>
+			</ReactiveSequence>
+			<ReactiveFallback>
+				<AlwaysFailure/>
+				<AlwaysFailure/>
+				<AlwaysSuccess/>
+			</ReactiveFallback>
 			<SubTree ID="subtree"/>
-			<AlwaysSuccess/>
+			<Sequence>
+				<AlwaysSuccess/>
+				<AlwaysSuccess/>
+				<AlwaysSuccess/>
+				<AlwaysSuccess/>
+				<AlwaysSuccess/>
+			</Sequence>
 		</ParallelAll>
 	</BehaviorTree>
 </root>
@@ -66,13 +81,13 @@ const SUBTREE: &str = r#"
 				<AlwaysSuccess/>
 				<Fallback>
 					<AlwaysFailure/>
-					<ReactiveSequence>
+					<Sequence>
 						<ReactiveFallback>
 							<AlwaysFailure/>
 							<AlwaysSuccess/>
 						</ReactiveFallback>
 						<AlwaysFailure/>
-					</ReactiveSequence>
+					</Sequence>
 					<AlwaysSuccess/>
 				</Fallback>
 				<AlwaysSuccess/>
@@ -90,8 +105,24 @@ fn multitree(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 	register_behavior!(factory, Parallel, "Parallel").expect("snh");
 	register_behavior!(factory, ParallelAll, "ParallelAll").expect("snh");

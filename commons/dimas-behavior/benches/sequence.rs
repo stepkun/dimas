@@ -42,8 +42,24 @@ fn sequence(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, Sequence, "Sequence").expect("snh");
 
 	// create the BT
@@ -88,8 +104,24 @@ fn reactive_sequence(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, ReactiveSequence, "ReactiveSequence").expect("snh");
 
 	// create the BT
@@ -136,8 +168,24 @@ fn sequence_with_memory(c: &mut Criterion) {
 		.expect("snh");
 
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 5).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 5).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		5
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		5
+	)
+	.expect("snh");
 	register_behavior!(factory, SequenceWithMemory, "SequenceWithMemory").expect("snh");
 
 	// create the BT

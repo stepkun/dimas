@@ -24,26 +24,43 @@ use crate::{
 ///
 /// While running, the loop is not restarted, first the running child will be ticked again.
 /// If that tick succeeds the sequence continues, children that already succeeded will not be ticked again.
-#[derive(Behavior, Debug, Default)]
+#[derive(Behavior, Debug)]
 pub struct Sequence {
 	/// Defaults to '0'
 	child_idx: usize,
-	/// Defaults to 'false'
+	/// Defaults to 'true'
 	all_skipped: bool,
+}
+
+impl Default for Sequence {
+	fn default() -> Self {
+		Self {
+			child_idx: 0,
+			all_skipped: true,
+		}
+	}
 }
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Sequence {
+	async fn halt(
+		&mut self,
+		behavior: &mut BehaviorData,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		self.child_idx = 0;
+		self.all_skipped = true;
+		children.reset(runtime).await?;
+		behavior.set_state(BehaviorState::Idle);
+		Ok(())
+	}
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if behavior.state() == BehaviorState::Idle {
-			self.all_skipped = true;
-		}
-
 		behavior.set_state(BehaviorState::Running);
 
 		while self.child_idx < children.len() {

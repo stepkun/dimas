@@ -21,7 +21,7 @@ const TREE_DEFINITION: &str = r#"
 <root BTCPP_format="4"
 		main_tree_to_execute="MainTree">
 	<BehaviorTree ID="MainTree">
-		<Sequence name="sequence">
+		<Sequence name="simple_sequence">
 			<Behavior1	name="step1"/>
 			<Behavior2	name="step2"/>
 			<Behavior3	name="step3"/>
@@ -48,7 +48,7 @@ const TREE_DEFINITION: &str = r#"
 #[case(Skipped, Skipped, Failure, Failure)]
 #[case(Success, Skipped, Success, Success)]
 #[case(Success, Success, Success, Success)]
-async fn sequence(
+async fn simple_sequence(
 	#[case] input1: BehaviorState,
 	#[case] input2: BehaviorState,
 	#[case] input3: BehaviorState,
@@ -67,7 +67,11 @@ async fn sequence(
 	assert_eq!(result, expected);
 	result = tree.tick_once().await?;
 	assert_eq!(result, expected);
+
 	tree.reset().await?;
+
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected);
 	result = tree.tick_once().await?;
 	assert_eq!(result, expected);
 	Ok(())
@@ -82,7 +86,7 @@ async fn sequence(
 #[case(Idle, Skipped, Idle)]
 #[case(Skipped, Skipped, Idle)]
 #[case(Success, Idle, Idle)]
-async fn sequence_errors(
+async fn simple_sequence_errors(
 	#[case] input1: BehaviorState,
 	#[case] input2: BehaviorState,
 	#[case] input3: BehaviorState,
@@ -98,5 +102,93 @@ async fn sequence_errors(
 
 	let result = tree.tick_once().await;
 	assert!(result.is_err());
+	Ok(())
+}
+
+#[tokio::test]
+#[rstest]
+#[case(Success, Failure, Running, Running, Running, Success)]
+#[case(Failure, Success, Failure, Failure, Failure, Failure)]
+async fn simple_sequence_reactiveness1(
+	#[case] input1: BehaviorState,
+	#[case] input2: BehaviorState,
+	#[case] expected1: BehaviorState,
+	#[case] expected2: BehaviorState,
+	#[case] expected3: BehaviorState,
+	#[case] expected4: BehaviorState,
+) -> anyhow::Result<()> {
+	let mut factory = BehaviorTreeFactory::default();
+	register_behavior!(factory, ChangeStateAfter, "Behavior1", input1, input2, 1)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior2", input1, input2, 2)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior3", input1, input2, 3)?;
+	register_behavior!(factory, Sequence, "Sequence")?;
+
+	let mut tree = factory.create_from_text(TREE_DEFINITION)?;
+	drop(factory);
+
+	let mut result = tree.tick_once().await?;
+	assert_eq!(result, expected1);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected2);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected3);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected4);
+
+	tree.reset().await?;
+
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected1);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected2);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected3);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected4);
+
+	Ok(())
+}
+
+#[tokio::test]
+#[rstest]
+#[case(Success, Failure, Running, Running, Running, Success)]
+#[case(Failure, Success, Running, Running, Failure, Running)]
+async fn simple_sequence_reactiveness2(
+	#[case] input1: BehaviorState,
+	#[case] input2: BehaviorState,
+	#[case] expected1: BehaviorState,
+	#[case] expected2: BehaviorState,
+	#[case] expected3: BehaviorState,
+	#[case] expected4: BehaviorState,
+) -> anyhow::Result<()> {
+	let mut factory = BehaviorTreeFactory::default();
+	register_behavior!(factory, ChangeStateAfter, "Behavior1", input1, input2, 3)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior2", input1, input2, 2)?;
+	register_behavior!(factory, ChangeStateAfter, "Behavior3", input1, input2, 1)?;
+	register_behavior!(factory, Sequence, "Sequence")?;
+
+	let mut tree = factory.create_from_text(TREE_DEFINITION)?;
+	drop(factory);
+
+	let mut result = tree.tick_once().await?;
+	assert_eq!(result, expected1);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected2);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected3);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected4);
+
+	tree.reset().await?;
+
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected1);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected2);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected3);
+	result = tree.tick_once().await?;
+	assert_eq!(result, expected4);
+
 	Ok(())
 }

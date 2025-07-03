@@ -44,11 +44,7 @@ pub fn print_tree(start_node: &BehaviorTreeElement) -> Result<(), Error> {
 #[cfg(feature = "std")]
 fn print_recursively(level: i8, node: &BehaviorTreeElement) -> Result<(), Error> {
 	if level == i8::MAX {
-		return Err(Error::Unexpected(
-			"recursion limit reached".into(),
-			file!().into(),
-			line!(),
-		));
+		return Err(Error::Unexpected("recursion limit reached".into(), file!().into(), line!()));
 	}
 
 	let next_level = level + 1;

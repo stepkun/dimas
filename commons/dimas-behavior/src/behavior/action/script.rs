@@ -37,11 +37,7 @@ impl BehaviorInstance for Script {
 
 		let state = if value.is_bool() {
 			let val = value.as_bool()?;
-			if val {
-				BehaviorState::Success
-			} else {
-				BehaviorState::Failure
-			}
+			if val { BehaviorState::Success } else { BehaviorState::Failure }
 		} else {
 			BehaviorState::Success
 		};

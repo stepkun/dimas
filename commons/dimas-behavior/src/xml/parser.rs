@@ -127,9 +127,7 @@ impl XmlParser {
 					}
 				}
 				NodeType::PI => {
-					return Err(Error::UnsupportedProcessingInstruction(
-						element.tag_name().name().into(),
-					));
+					return Err(Error::UnsupportedProcessingInstruction(element.tag_name().name().into()));
 				}
 			}
 		}
@@ -175,9 +173,7 @@ impl XmlParser {
 					} else if is_allowed_port_name(stripped) {
 						remappings.add(port_definition.name(), &default_value)?;
 					} else {
-						return Err(crate::factory::error::Error::NameNotAllowed(
-							port_definition.name().clone(),
-						));
+						return Err(crate::factory::error::Error::NameNotAllowed(port_definition.name().clone()));
 					}
 				} else {
 					remappings.add(port_definition.name(), &default_value)?;
@@ -413,18 +409,11 @@ impl XmlParser {
 							let doc = Document::parse(&definition)?;
 							let node = doc.root_element();
 							// A SubTree gets a new Blackboard with parent and remappings.
-							let blackboard1 =
-								SharedBlackboard::with_parent(&node_name, blackboard, remappings, autoremap);
+							let blackboard1 = SharedBlackboard::with_parent(&node_name, blackboard, remappings, autoremap);
 							let children = self.build_children(&path, node, registry, &blackboard1)?;
 							// the PortRemappings have been used against parent BlackBoard
-							let bhvr_data = BehaviorData::new(
-								uid,
-								&node_name,
-								&path,
-								PortRemappings::default(),
-								blackboard1,
-								bhvr_desc,
-							);
+							let bhvr_data =
+								BehaviorData::new(uid, &node_name, &path, PortRemappings::default(), blackboard1, bhvr_desc);
 							BehaviorTreeElement::create_subtree(bhvr_data, children, bhvr, conditions)
 						}
 						None => {

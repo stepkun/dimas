@@ -25,26 +25,43 @@ use crate::{
 /// - If a child returns FAILURE, stop the loop and return FAILURE.
 ///
 ///   Loop is NOT restarted, the same running child will be ticked again.
-#[derive(Behavior, Debug, Default)]
+#[derive(Behavior, Debug)]
 pub struct SequenceWithMemory {
 	/// Defaults to '0'
 	child_idx: usize,
-	/// Defaults to 'false'
+	/// Defaults to 'true'
 	all_skipped: bool,
+}
+
+impl Default for SequenceWithMemory {
+	fn default() -> Self {
+		Self {
+			child_idx: 0,
+			all_skipped: true,
+		}
+	}
 }
 
 #[async_trait::async_trait]
 impl BehaviorInstance for SequenceWithMemory {
+	async fn halt(
+		&mut self,
+		behavior: &mut BehaviorData,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		children.reset(runtime).await?;
+		self.child_idx = 0;
+		self.all_skipped = true;
+		behavior.set_state(BehaviorState::Idle);
+		Ok(())
+	}
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if behavior.state() == BehaviorState::Idle {
-			self.all_skipped = true;
-		}
-
 		behavior.set_state(BehaviorState::Running);
 
 		while self.child_idx < children.len() {

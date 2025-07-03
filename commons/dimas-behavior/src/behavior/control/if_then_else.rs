@@ -51,7 +51,6 @@ impl BehaviorInstance for IfThenElse {
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		self.child_index = 0;
 		// check composition only once at start
 		if !(2..=3).contains(&children.len()) {
 			return Err(BehaviorError::Composition(

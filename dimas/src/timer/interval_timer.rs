@@ -7,8 +7,7 @@ use core::time::Duration;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{
-		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic,
-		error::BehaviorError,
+		BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic, error::BehaviorError,
 	},
 	input_port,
 	port::PortList,

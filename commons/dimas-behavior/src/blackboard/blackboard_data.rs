@@ -100,12 +100,7 @@ impl BlackboardInterface for BlackboardData {
 							},
 							|s| {
 								T::from_str(s).map_or_else(
-									|_| {
-										Err(Error::ParsePortValue(
-											key.into(),
-											format!("{:?}", TypeId::of::<T>()).into(),
-										))
-									},
+									|_| Err(Error::ParsePortValue(key.into(), format!("{:?}", TypeId::of::<T>()).into())),
 									|val| Ok(val),
 								)
 							},

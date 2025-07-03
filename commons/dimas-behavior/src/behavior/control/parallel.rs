@@ -30,12 +30,12 @@ pub struct Parallel {
 	/// The maximum allowed failures.
 	/// "-1" signals any number.
 	failure_threshold: i32,
+	/// The amount of completed sub behaviors that succeeded.
+	success_count: i32,
+	/// The amount of completed sub behaviors that failed.
+	failure_count: i32,
 	/// The list of completed sub behaviors
 	completed_list: BTreeSet<usize>,
-	/// The amount of completed sub behaviors that succeeded.
-	success_count: usize,
-	/// The amount of completed sub behaviors that failed.
-	failure_count: usize,
 }
 
 impl Default for Parallel {
@@ -43,15 +43,31 @@ impl Default for Parallel {
 		Self {
 			success_threshold: -1,
 			failure_threshold: -1,
-			completed_list: BTreeSet::default(),
 			success_count: 0,
 			failure_count: 0,
+			completed_list: BTreeSet::default(),
 		}
 	}
 }
 
 #[async_trait::async_trait]
 impl BehaviorInstance for Parallel {
+	async fn halt(
+		&mut self,
+		behavior: &mut BehaviorData,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		children.reset(runtime).await?;
+		self.success_threshold = -1;
+		self.failure_threshold = -1;
+		self.completed_list.clear();
+		self.success_count = 0;
+		self.failure_count = 0;
+		behavior.set_state(BehaviorState::Idle);
+		Ok(())
+	}
+
 	#[allow(clippy::cast_possible_truncation)]
 	#[allow(clippy::cast_possible_wrap)]
 	#[allow(clippy::match_same_arms)]
@@ -67,13 +83,13 @@ impl BehaviorInstance for Parallel {
 
 		let children_count = children.len();
 
-		if children_count < self.success_threshold(children_count as i32) {
+		if (children_count as i32) < self.success_threshold {
 			return Err(BehaviorError::Composition(
 				"Number of children is less than the threshold. Can never succeed.".into(),
 			));
 		}
 
-		if children_count < self.failure_threshold(children_count as i32) {
+		if (children_count as i32) < self.failure_threshold {
 			return Err(BehaviorError::Composition(
 				"Number of children is less than the threshold. Can never fail.".into(),
 			));
@@ -98,6 +114,7 @@ impl BehaviorInstance for Parallel {
 		let mut skipped_count = 0;
 
 		for i in 0..children_count {
+			// Skip completed node
 			if !self.completed_list.contains(&i) {
 				let child = &mut children[i];
 				match child.execute_tick(runtime).await? {
@@ -112,39 +129,38 @@ impl BehaviorInstance for Parallel {
 					}
 					BehaviorState::Running => {}
 					// Throw error, should never happen
-					BehaviorState::Idle => {
-						todo!()
-					}
+					BehaviorState::Idle => return Err(BehaviorError::State("Parallel".into(), "Idle".into())),
 				}
 			}
 
-			let required_success_count = self.success_threshold(children_count as i32);
+			let sum = self.failure_count + self.success_count + skipped_count;
+			if sum >= children_count as i32 {
+				let state = if skipped_count == children_count as i32 {
+					BehaviorState::Skipped
+				} else if self.failure_threshold <= 0 && self.success_threshold <= 0 {
+					BehaviorState::Success
+				} else if self.failure_threshold <= 0 {
+					if self.success_count >= self.success_threshold {
+						BehaviorState::Success
+					} else {
+						BehaviorState::Failure
+					}
+				} else if self.failure_count >= self.failure_threshold {
+					BehaviorState::Failure
+				} else {
+					BehaviorState::Success
+				};
 
-			// Check if success condition has been met
-			if self.success_count >= required_success_count
-				|| (self.success_threshold < 0 && (self.success_count + skipped_count) >= required_success_count)
-			{
-				self.clear();
+				self.completed_list.clear();
+				self.success_count = 0;
+				self.failure_count = 0;
 				children.reset(runtime).await?;
-				return Ok(BehaviorState::Success);
-			}
 
-			if (children_count - self.failure_count) < required_success_count
-				|| self.failure_count == self.failure_threshold(children_count as i32)
-			{
-				self.clear();
-				children.reset(runtime).await?;
-				return Ok(BehaviorState::Failure);
+				return Ok(state);
 			}
 		}
 
-		// If all children were skipped, return Skipped
-		// Otherwise return Running
-		if skipped_count == children_count {
-			Ok(BehaviorState::Skipped)
-		} else {
-			Ok(BehaviorState::Running)
-		}
+		Ok(BehaviorState::Running)
 	}
 }
 
@@ -158,31 +174,6 @@ impl BehaviorStatic for Parallel {
 			input_port!(i32, "failure_count"),
 			input_port!(i32, "success_count")
 		]
-	}
-}
-impl Parallel {
-	#[allow(clippy::cast_sign_loss)]
-	fn success_threshold(&self, n_children: i32) -> usize {
-		if self.success_threshold < 0 {
-			(n_children + self.success_threshold + 1).max(0) as usize
-		} else {
-			self.success_threshold as usize
-		}
-	}
-
-	#[allow(clippy::cast_sign_loss)]
-	fn failure_threshold(&self, n_children: i32) -> usize {
-		if self.failure_threshold < 0 {
-			(n_children + self.failure_threshold + 1).max(0) as usize
-		} else {
-			self.failure_threshold as usize
-		}
-	}
-
-	fn clear(&mut self) {
-		self.completed_list.clear();
-		self.success_count = 0;
-		self.failure_count = 0;
 	}
 }
 // endregion:   --- Parallel

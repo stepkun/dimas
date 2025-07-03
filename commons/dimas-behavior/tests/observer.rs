@@ -27,8 +27,24 @@ const TREE: &str = r#"
 #[tokio::test]
 async fn tree_observer() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::default();
-	register_behavior!(factory, ChangeStateAfter, "AlwaysFailure", BehaviorState::Running, BehaviorState::Failure, 3).expect("snh");
-	register_behavior!(factory, ChangeStateAfter, "AlwaysSuccess", BehaviorState::Running, BehaviorState::Success, 3).expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysFailure",
+		BehaviorState::Running,
+		BehaviorState::Failure,
+		3
+	)
+	.expect("snh");
+	register_behavior!(
+		factory,
+		ChangeStateAfter,
+		"AlwaysSuccess",
+		BehaviorState::Running,
+		BehaviorState::Success,
+		3
+	)
+	.expect("snh");
 	register_behavior!(factory, Fallback, "Fallback").expect("snh");
 
 	let mut tree = factory.create_from_text(TREE)?;
@@ -37,21 +53,21 @@ async fn tree_observer() -> anyhow::Result<()> {
 
 	let result = tree.tick_while_running().await?;
 	assert_eq!(result, BehaviorState::Success);
-	// AlwaySuccess should change state 3 times
+	// AlwaySuccess should change state 2 times
 	assert_eq!(
 		observer
 			.get_statistics(4)
 			.expect("snh")
 			.transitions_count,
-		3
+		2
 	);
-	// AlwayFailure should change state 3 times
+	// AlwayFailure should change state 2 times
 	assert_eq!(
 		observer
 			.get_statistics(4)
 			.expect("snh")
 			.transitions_count,
-		3
+		2
 	);
 	// The tree should change state 3 times
 	assert_eq!(

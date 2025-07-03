@@ -22,25 +22,43 @@ use crate::{
 /// - If all the children return FAILURE, this node returns FAILURE.
 /// - If a child returns RUNNING, this node returns RUNNING.
 /// - If a child returns SUCCESS, stop the loop and return SUCCESS.
-#[derive(Behavior, Debug, Default)]
+#[derive(Behavior, Debug)]
 pub struct Fallback {
 	/// Defaults to '0'
 	child_idx: usize,
-	/// Defaults to 'false'
+	/// Defaults to 'true'
 	all_skipped: bool,
 }
 
+impl Default for Fallback {
+	fn default() -> Self {
+		Self {
+			child_idx: 0,
+			all_skipped: true,
+		}
+	}
+}
 #[async_trait::async_trait]
 impl BehaviorInstance for Fallback {
+	async fn halt(
+		&mut self,
+		behavior: &mut BehaviorData,
+		children: &mut BehaviorTreeElementList,
+		runtime: &SharedRuntime,
+	) -> Result<(), BehaviorError> {
+		children.reset(runtime).await?;
+		self.child_idx = 0;
+		self.all_skipped = true;
+		behavior.set_state(BehaviorState::Idle);
+		Ok(())
+	}
+
 	async fn tick(
 		&mut self,
 		behavior: &mut BehaviorData,
 		children: &mut BehaviorTreeElementList,
 		runtime: &SharedRuntime,
 	) -> BehaviorResult {
-		if behavior.state() == BehaviorState::Idle {
-			self.all_skipped = true;
-		}
 		behavior.set_state(BehaviorState::Running);
 
 		while self.child_idx < children.len() {

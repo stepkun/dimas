@@ -61,11 +61,7 @@ impl BehaviorInstance for Precondition {
 							.run(&else_branch, behavior.blackboard_mut())?;
 						if value.is_bool() {
 							let val = value.as_bool()?;
-							if val {
-								BehaviorState::Success
-							} else {
-								BehaviorState::Failure
-							}
+							if val { BehaviorState::Success } else { BehaviorState::Failure }
 						} else {
 							return Err(BehaviorError::NotABool);
 						}

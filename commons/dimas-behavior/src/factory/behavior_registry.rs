@@ -99,10 +99,9 @@ impl BehaviorRegistry {
 	/// # Errors
 	/// - if the behavior is not found in the registry
 	pub(crate) fn fetch(&self, id: &str) -> Result<(BehaviorDescription, Arc<BehaviorCreationFn>), Error> {
-		self.behaviors.get(id).map_or_else(
-			|| Err(Error::BehaviorNotRegistered(id.into())),
-			|value| Ok(value.clone()),
-		)
+		self.behaviors
+			.get(id)
+			.map_or_else(|| Err(Error::BehaviorNotRegistered(id.into())), |value| Ok(value.clone()))
 	}
 
 	pub(crate) fn find_tree_definition(&self, name: &str) -> Option<ConstString> {
