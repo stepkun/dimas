@@ -1,4 +1,4 @@
-# Copyright © 2024 Stephan Kunz
+# Copyright © 2025 Stephan Kunz
 
 [package]
 name = "dimas-scripting"
@@ -39,7 +39,6 @@ harness = false
 workspace = true
 
 [dependencies]
-dimas-core = { workspace = true }
 parking_lot = { workspace = true }
 thiserror = { workspace = true }
 rustc-hash = { workspace = true }

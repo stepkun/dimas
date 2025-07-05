@@ -17,7 +17,6 @@ use syn::{DeriveInput, Expr, Lit};
 fn derive_scripting_enum(input: &DeriveInput) -> TokenStream {
 	// structure name
 	let ident = &input.ident;
-	// let ident_str = ident.to_string();
 
 	// Check type of input and handle enums
 	let mut discriminant = -1_i8;
@@ -71,7 +70,8 @@ fn derive_scripting_enum(input: &DeriveInput) -> TokenStream {
 	}
 }
 
-/// Derive macro for [`ScriptEnum`].
+/// Derive macro [`ScriptEnum`].
+/// Enables a Rust enum to be used in a 'C' like mannner within the `DiMAS` scripting language.
 ///
 /// # Usage
 /// ```no_test

@@ -1,11 +1,17 @@
 // Copyright © 2025 Stephan Kunz
 
-//! `DiMAS` scripting compiletime errors
+//! `DiMAS` scripting errors
 
 // region		--- modules
-use dimas_core::ConstString;
+use alloc::sync::Arc;
 use thiserror::Error;
 // endregion:	--- modules
+
+// region		--- types
+/// An immutable thread safe `String` type
+/// see: [Logan Smith](https://www.youtube.com/watch?v=A4cKi7PTJSs).
+pub type ConstString = Arc<str>;
+// endregion:   --- types
 
 // region:		--- Error
 /// `scripting` error type
@@ -41,10 +47,6 @@ pub enum Error {
 	/// Missing string termination.
 	#[error("unterminated String {0} at line {1}")]
 	UnterminatedString(ConstString, usize),
-
-	/// Pass through core error.
-	#[error("{0}")]
-	Core(#[from] dimas_core::error::Error),
 	/// No arithemetic with boolean for now.
 	#[error("Boolean values do not allow arithmetic operations")]
 	BoolNoArithmetic,
@@ -101,7 +103,7 @@ pub enum Error {
 	#[error("unexpected [{0}] in file [{1}] at line [{2}]")]
 	Unexpected(ConstString, ConstString, u32),
 	/// This code line never should have been reached.
-	#[error("should be unreachable in {0} at line {1}")]
+	#[error("{0} at line {1} should be unreachable")]
 	Unreachable(ConstString, u32),
 }
 // region:		--- Error

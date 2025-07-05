@@ -1,7 +1,5 @@
-# ⚠️ WARNING ⚠️
+# A 'C' style scripting language for [DiMAS](https://github.com/dimas-fw/dimas/tree/main/dimas). 
 
-This crate is intended for DiMAS internal use.
-
-- [Click here for DiMAS main repository](https://github.com/dimas-fw/dimas)
-- [Click here for DiMAS documentation](https://dimas-fw.github.io/)
+This crate is primarily designed for DiMAS, but can also be used independently.
+It implements a virtual machine for a 'C' style scripting language.
 

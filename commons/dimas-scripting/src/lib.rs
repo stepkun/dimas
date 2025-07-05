@@ -1,12 +1,11 @@
 // Copyright © 2025 Stephan Kunz
 #![no_std]
 
-//! A scripting language for `DiMAS`
+#![doc = include_str!("../README.md")]
+
+//! The implementation follows the pattern of clox as described in Part III of [crafting interpreters](https://craftinginterpreters.com/)
 //!
-//! This scripting language follows the pattern of clox as described in Part III of [crafting interpreters](https://craftinginterpreters.com/)
-//!
-//! Definition of the grammer following this [notation](https://craftinginterpreters.com/representing-code.html#rules-for-grammars)
-//!
+//! Definition of the grammer (following this [notation](https://craftinginterpreters.com/representing-code.html#rules-for-grammars)):
 //! ```no-test
 //! script      → statement* EoF ;
 //! statement   → expression ";" ;
@@ -49,8 +48,8 @@ use alloc::{
 	string::{String, ToString},
 	vec::Vec,
 };
+
 // flatten
-// pub use compiling::{Lexer, Parser, TokenKind};
 pub use error::Error;
 pub use execution::Chunk;
 pub use runtime::{Runtime, SharedRuntime};

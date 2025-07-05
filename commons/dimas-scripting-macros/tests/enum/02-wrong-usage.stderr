@@ -1,0 +1,5 @@
+error: expected attribute, found derive macro `dimas_scripting_macros::ScriptEnum`
+ --> tests/enum/02-wrong-usage.rs:5:3
+  |
+5 | #[dimas_scripting_macros::ScriptEnum]
+  |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not an attribute

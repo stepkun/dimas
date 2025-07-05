@@ -1,0 +1,5 @@
+error: expected attribute, found derive macro `dimas_behavior_macros::Behavior`
+ --> tests/behavior/02-wrong-usage.rs:5:3
+  |
+5 | #[dimas_behavior_macros::Behavior]
+  |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not an attribute
