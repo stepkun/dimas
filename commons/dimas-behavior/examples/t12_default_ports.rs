@@ -127,8 +127,8 @@ impl BehaviorStatic for BehaviorWithDefaultPoints {
 	}
 }
 
-#[tokio::test]
-async fn default_ports() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, BehaviorWithDefaultPoints, "NodeWithDefaultPoints")?;

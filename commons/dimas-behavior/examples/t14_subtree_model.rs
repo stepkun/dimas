@@ -7,8 +7,9 @@
 //!
 
 extern crate alloc;
-mod test_data;
+mod common;
 
+use common::test_data::SaySomething;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
 	behavior::{BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
@@ -18,7 +19,6 @@ use dimas_behavior::{
 	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
-use test_data::SaySomething;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -46,8 +46,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn subtree_model() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
@@ -67,11 +67,11 @@ async fn subtree_model() -> anyhow::Result<()> {
 
 /// Implementation of `MoveRobot` tree
 mod move_robot {
+	#[allow(clippy::wildcard_imports)]
+	use super::*;
 	use dimas_behavior::{behavior::BehaviorData, factory::error::Error};
 
-	use crate::test_data::Pose2D;
-
-	use super::*;
+	use common::test_data::Pose2D;
 
 	/// Behavior `MoveBase`
 	#[derive(Behavior, Debug, Default)]

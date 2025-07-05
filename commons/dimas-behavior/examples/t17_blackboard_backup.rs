@@ -35,9 +35,9 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-#[ignore = "not yet available"]
-async fn blackboard_backup() -> anyhow::Result<()> {
+// @TODO: implement
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// register_behavior!(factory, SaySomething, "SaySomething")?;

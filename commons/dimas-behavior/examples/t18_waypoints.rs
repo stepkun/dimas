@@ -8,10 +8,9 @@
 // //! [tutorial:](https://www.behaviortree.dev/docs/tutorial-advanced/tutorial_18_XXX)
 
 extern crate alloc;
-mod test_data;
+mod common;
 
-use std::time::Duration;
-
+use common::test_data::Pose2D;
 use dimas_behavior::behavior::decorator::SharedQueue;
 use dimas_behavior::{
 	Behavior, SharedRuntime,
@@ -24,7 +23,7 @@ use dimas_behavior::{
 	port_list, register_behavior,
 	tree::BehaviorTreeElementList,
 };
-use test_data::Pose2D;
+use std::time::Duration;
 
 #[derive(Behavior, Debug, Default)]
 struct GenerateWaypoints;
@@ -138,8 +137,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn waypoints() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// @TODO:

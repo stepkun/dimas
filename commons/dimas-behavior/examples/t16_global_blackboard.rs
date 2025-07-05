@@ -83,8 +83,8 @@ impl BehaviorStatic for PrintNumber {
 	}
 }
 
-#[tokio::test]
-async fn global_blackboard() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	// create an external blackboard which will survive the tree
 	let mut global_blackboard = SharedBlackboard::default();
 	// BT-Trees blackboard has global blackboard as parent

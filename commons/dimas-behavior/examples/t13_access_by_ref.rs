@@ -163,9 +163,9 @@ impl BehaviorStatic for SegmentObject {
 	}
 }
 
-#[tokio::test]
-#[ignore]
-async fn access_by_ref() -> anyhow::Result<()> {
+// @TODO: implement
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, AcquirePointCloud, "AcquirePointCloud")?;

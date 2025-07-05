@@ -6,9 +6,9 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t01_build_your_first_tree.cpp)
 //!
 
-mod cross_door;
+mod common;
 
-use cross_door::CrossDoor;
+use common::cross_door::CrossDoor;
 use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory};
 
 const XML: &str = r#"
@@ -37,8 +37,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn crossdoor() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	CrossDoor::register_behaviors(&mut factory)?;

@@ -6,20 +6,17 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t04_reactive_sequence.cpp)
 //!
 
-mod test_data;
+#[doc(hidden)]
+extern crate alloc;
+mod common;
 
-use std::time::Duration;
-
-use test_data::{MoveBaseAction, SaySomething, check_battery};
-
+use common::test_data::{MoveBaseAction, SaySomething, check_battery};
 use dimas_behavior::{
 	behavior::{BehaviorKind, BehaviorState},
 	factory::BehaviorTreeFactory,
 	register_behavior,
 };
-
-#[doc(hidden)]
-extern crate alloc;
+use std::time::Duration;
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -35,31 +32,10 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn std_sequence() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
-
-	register_behavior!(factory, check_battery, "BatteryOK", BehaviorKind::Condition)?;
-	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
-	register_behavior!(factory, SaySomething, "SaySomething")?;
-
-	let mut tree = factory.create_from_text(XML)?;
-	drop(factory);
-
-	// run the BT using own loop with sleep to avoid busy loop
-	let mut result = tree.tick_once().await?;
-	while result == BehaviorState::Running {
-		tokio::time::sleep(Duration::from_millis(100)).await;
-		result = tree.tick_once().await?;
-	}
-	assert_eq!(result, BehaviorState::Success);
-	Ok(())
-}
-
 const XML_REACTIVE: &str = r#"
 <root BTCPP_format="4"
-		main_tree_to_execute="MainTree">
-	<BehaviorTree ID="MainTree">
+		main_tree_to_execute="ReactiveMainTree">
+	<BehaviorTree ID="ReactiveMainTree">
 		<ReactiveSequence name="reactive root sequence">
             <BatteryOK/>
             <Sequence name = "inner std sequence">
@@ -72,21 +48,33 @@ const XML_REACTIVE: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn reactive_sequence() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, check_battery, "BatteryOK", BehaviorKind::Condition)?;
 	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
 	register_behavior!(factory, SaySomething, "SaySomething")?;
 
-	let mut tree = factory.create_from_text(XML_REACTIVE)?;
+	let mut tree = factory.create_from_text(XML)?;
+	let mut reactive_tree = factory.create_from_text(XML_REACTIVE)?;
+	drop(factory);
 
 	// run the BT using own loop with sleep to avoid busy loop
+	println!("=> Running BT with std sequence:");
 	let mut result = tree.tick_once().await?;
 	while result == BehaviorState::Running {
 		tokio::time::sleep(Duration::from_millis(100)).await;
 		result = tree.tick_once().await?;
+	}
+	assert_eq!(result, BehaviorState::Success);
+
+	// run the reactive BT using own loop with sleep to avoid busy loop
+	println!("\n\n=> Running BT with reactive sequence:");
+	let mut result = reactive_tree.tick_once().await?;
+	while result == BehaviorState::Running {
+		tokio::time::sleep(Duration::from_millis(100)).await;
+		result = reactive_tree.tick_once().await?;
 	}
 	assert_eq!(result, BehaviorState::Success);
 	Ok(())

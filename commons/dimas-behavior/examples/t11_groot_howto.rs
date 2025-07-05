@@ -7,10 +7,10 @@
 //!
 
 extern crate alloc;
-mod cross_door;
-mod test_data;
+mod common;
 
-use cross_door::CrossDoor;
+use common::cross_door::CrossDoor;
+use common::test_data::Position2D;
 use dimas_behavior::{
 	Behavior, Groot2Connector, SharedRuntime, XmlCreator,
 	behavior::{BehaviorData, BehaviorInstance, BehaviorKind, BehaviorResult, BehaviorState, BehaviorStatic},
@@ -21,9 +21,6 @@ use dimas_behavior::{
 	tree::BehaviorTreeElementList,
 };
 
-use crate::test_data::Position2D;
-
-const CYCLES: u8 = 0;
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -84,9 +81,9 @@ impl BehaviorStatic for UpdatePosition {
 	}
 }
 
-#[tokio::test]
-#[ignore = "groot publishing missing"]
-async fn groot_howto() -> anyhow::Result<()> {
+// @TODO: groot publishing missing
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// Nodes registration, as usual
@@ -122,7 +119,7 @@ async fn groot_howto() -> anyhow::Result<()> {
 	let _publisher = Groot2Connector::new(&tree, 1667);
 
 	#[allow(clippy::reversed_empty_ranges)]
-	for _ in 0..CYCLES {
+	for _ in 0..2 {
 		tree.reset().await?;
 		let result = tree.tick_while_running().await?;
 		assert_eq!(result, BehaviorState::Success);

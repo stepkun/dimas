@@ -34,9 +34,9 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-#[ignore = "not yet implemented"]
-async fn nodes_mocking() -> anyhow::Result<()> {
+// @TODO: implement
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// register_behavior!(factory, SaySomething, "SaySomething")?;

@@ -40,8 +40,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn observer() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	factory.register_behavior_tree_from_text(XML)?;

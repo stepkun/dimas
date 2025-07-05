@@ -8,14 +8,14 @@
 
 #[doc(hidden)]
 extern crate alloc;
-mod test_data;
+mod common;
 
+use common::test_data::{SaySomething, ThinkWhatToSay, say_something_simple};
 use dimas_behavior::{
 	behavior::{BehaviorKind, BehaviorState},
 	factory::BehaviorTreeFactory,
 	input_port, port_list, register_behavior,
 };
-use test_data::{SaySomething, ThinkWhatToSay, say_something_simple};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -32,8 +32,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn basic_ports() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	// The struct SaySomething has a method called ports() that defines the INPUTS.

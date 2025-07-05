@@ -6,10 +6,10 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t06_subtree_port_remapping.cpp)
 //!
 
-mod test_data;
+mod common;
 
+use common::test_data::{MoveBaseAction, SaySomething};
 use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
-use test_data::{MoveBaseAction, SaySomething};
 
 const XML: &str = r#"
 <root BTCPP_format="4">
@@ -35,8 +35,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn subtree_port_remapping() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, SaySomething, "SaySomething")?;
@@ -52,26 +52,5 @@ async fn subtree_port_remapping() -> anyhow::Result<()> {
 	// @TODO: tree.subtree(0)?.blackboard().debug_message();
 	println!("----- Second BB -----");
 	// @TODO: tree.subtree(1)?.blackboard().debug_message();
-	Ok(())
-}
-
-#[tokio::test]
-#[ignore]
-async fn subtree_blackboard_access_reminder() -> anyhow::Result<()> {
-	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
-
-	register_behavior!(factory, SaySomething, "SaySomething")?;
-	register_behavior!(factory, MoveBaseAction, "MoveBase")?;
-
-	factory.register_behavior_tree_from_text(XML)?;
-	let mut tree = factory.create_tree("MainTree")?;
-	drop(factory);
-
-	let result = tree.tick_while_running().await?;
-	assert_eq!(result, BehaviorState::Success);
-	println!("------ Root BB ------");
-	// tree.subtree(0)?.blackboard().debug_message();
-	println!("----- Second BB -----");
-	// tree.subtree(1)?.blackboard().debug_message();
 	Ok(())
 }

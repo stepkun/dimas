@@ -8,12 +8,12 @@
 
 #[doc(hidden)]
 extern crate alloc;
-mod test_data;
+mod common;
 
+use common::test_data::SaySomething;
 use dimas_behavior::{
 	ScriptEnum, behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior, register_scripting_enum,
 };
-use test_data::SaySomething;
 
 const XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
@@ -43,8 +43,8 @@ enum Color {
 	GREEN = 4,
 }
 
-#[tokio::test]
-async fn scripting() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_scripting_enum!(factory, Color);

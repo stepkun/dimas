@@ -6,14 +6,12 @@
 //! [cpp-source:](https://github.com/BehaviorTree/BehaviorTree.CPP/blob/master/examples/t03_generic_ports.cpp)
 //!
 
-mod test_data;
-
-use test_data::{CalculateGoal, PrintTarget};
-
-use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
-
 #[doc(hidden)]
 extern crate alloc;
+mod common;
+
+use common::test_data::{CalculateGoal, PrintTarget};
+use dimas_behavior::{behavior::BehaviorState, factory::BehaviorTreeFactory, register_behavior};
 
 const XML: &str = r#"
 <root BTCPP_format="4"
@@ -29,8 +27,8 @@ const XML: &str = r#"
 </root>
 "#;
 
-#[tokio::test]
-async fn generic_ports() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
 	let mut factory = BehaviorTreeFactory::with_groot2_behaviors()?;
 
 	register_behavior!(factory, CalculateGoal, "CalculateGoal")?;
